@@ -4,6 +4,7 @@
  * For production-grade security we'll move to httpOnly cookies in Phase 7
  * when we wire Stripe; for now, localStorage keeps the API simple.
  */
+/** No trailing slash; paths passed to api() start with `/` (e.g. prod: https://translify.app/api). */
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const TOKEN_KEY = "translify_jwt";
 

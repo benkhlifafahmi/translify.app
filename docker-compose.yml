@@ -4,8 +4,8 @@
 #   - Postgres runs on the host (or elsewhere) and is reachable via POSTGRES_DSN.
 #   - Redis is provided by the redis service below (or override REDIS_URL to
 #     point to an external instance).
-#   - Apache (Virtualmin) reverse-proxies to localhost ports 8000 (api)
-#     and 9000 (minio). See DEPLOY.md.
+#   - Apache (Virtualmin) reverse-proxies /api/ → :8000 and /files/ → :9000.
+#     See DEPLOY.md.
 #
 # All services bind to 127.0.0.1 — Apache is the only public-facing surface.
 

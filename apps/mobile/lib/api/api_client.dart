@@ -41,7 +41,7 @@ String describeError(Object error) {
 class ApiClient {
   ApiClient({String? baseUrl})
       : dio = Dio(BaseOptions(
-          baseUrl: baseUrl ?? _defaultBaseUrl,
+          baseUrl: _normalizeBaseUrl(baseUrl ?? _defaultBaseUrl),
           connectTimeout: const Duration(seconds: 20),
           receiveTimeout: const Duration(minutes: 5),
           sendTimeout: const Duration(minutes: 30),
@@ -64,7 +64,7 @@ class ApiClient {
   static const _storage = FlutterSecureStorage();
 
   // Android emulator → host: 10.0.2.2; iOS simulator → localhost.
-  // Override at build time with --dart-define=API_URL=https://api.example.com
+  // Override: --dart-define=API_URL=https://translify.app/api
   static String get _defaultBaseUrl {
     const fromEnv = String.fromEnvironment('API_URL');
     if (fromEnv.isNotEmpty) return fromEnv;
@@ -73,6 +73,18 @@ class ApiClient {
     }
     return 'http://localhost:8000';
   }
+
+  /// Dio merges paths with [Uri.resolve]: a path starting with `/` would
+  /// replace the whole URL path. We always use a trailing slash on the base
+  /// and strip a leading `/` from request paths so `/books` and `books` both work.
+  static String _normalizeBaseUrl(String url) {
+    final u = url.trim();
+    if (u.isEmpty) return 'http://localhost:8000/';
+    return u.endsWith('/') ? u : '$u/';
+  }
+
+  static String _dioPath(String path) =>
+      path.startsWith('/') ? path.substring(1) : path;
 
   final Dio dio;
 
@@ -86,18 +98,19 @@ class ApiClient {
   }
 
   Future<T> get<T>(String path, {Map<String, dynamic>? query}) async =>
-      _unwrap(await dio.get(path, queryParameters: query));
+      _unwrap(await dio.get(_dioPath(path), queryParameters: query));
 
   Future<T> post<T>(String path,
       {Object? body, Map<String, dynamic>? query, Options? options}) async =>
-      _unwrap(await dio.post(path,
+      _unwrap(await dio.post(_dioPath(path),
           data: body, queryParameters: query, options: options));
 
-  Future<T> delete<T>(String path) async => _unwrap(await dio.delete(path));
+  Future<T> delete<T>(String path) async =>
+      _unwrap(await dio.delete(_dioPath(path)));
 
   Future<T> postForm<T>(String path, Map<String, String> form) async => _unwrap(
         await dio.post(
-          path,
+          _dioPath(path),
           data: form.entries
               .map((e) =>
                   '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')

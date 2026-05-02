@@ -26,7 +26,7 @@ flutter pub get
 #   - Android emulator: http://10.0.2.2:8000  (host loopback)
 #   - iOS simulator:    http://localhost:8000
 # Override at run time:
-flutter run --dart-define=API_URL=https://api.translify.app
+flutter run --dart-define=API_URL=https://translify.app/api
 ```
 
 Tests:
