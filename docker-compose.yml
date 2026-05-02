@@ -4,7 +4,7 @@
 #   - Postgres runs on the host (or elsewhere) and is reachable via POSTGRES_DSN.
 #   - Redis is provided by the redis service below (or override REDIS_URL to
 #     point to an external instance).
-#   - Apache (Virtualmin) reverse-proxies /api/ → :8000 and /files/ → :9000.
+#   - Apache (Virtualmin) reverse-proxies / → :3000, /api/ → :8000, /files/ → :9000.
 #     See DEPLOY.md.
 #
 # All services bind to 127.0.0.1 — Apache is the only public-facing surface.
@@ -53,6 +53,19 @@ services:
       - api
       - minio
     command: python -m app.workers.worker
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://translify.app/api}
+    image: translify-web:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5632:3000"
+    depends_on:
+      - api
 
   minio:
     image: minio/minio:latest
