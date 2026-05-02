@@ -25,15 +25,17 @@ def get_s3_client():
 
 @lru_cache
 def get_s3_public_client():
-    """Public client — used to mint presigned URLs that browsers will hit.
+    """Public client — used only to generate presigned URLs (never makes real requests).
 
-    Same credentials, but signed against the *public* endpoint so the
-    signature matches when the browser sends the request through Apache
-    to MinIO.
+    Signed against http://127.0.0.1:9000 because that is the Host header Apache
+    sends to MinIO when proxying (ProxyPreserveHost off, the default).  The
+    generated URL base is then swapped to the browser-facing public URL by
+    _rebase_to_public() so the path in the signature matches the path MinIO
+    actually receives after Apache strips the /files/ prefix.
     """
     return boto3.client(
         "s3",
-        endpoint_url=settings.minio_public_url,
+        endpoint_url="http://127.0.0.1:9000",
         aws_access_key_id=settings.minio_root_user,
         aws_secret_access_key=settings.minio_root_password,
         config=Config(signature_version="s3v4", s3={"addressing_style": "path"}),
@@ -41,8 +43,23 @@ def get_s3_public_client():
     )
 
 
+def _rebase_to_public(url: str) -> str:
+    """Swap the internal MinIO base for the browser-facing public URL."""
+    from urllib.parse import urlparse, urlunparse
+    internal = urlparse(url)
+    public = urlparse(settings.minio_public_url)
+    return urlunparse((
+        public.scheme,
+        public.netloc,
+        public.path.rstrip("/") + internal.path,
+        internal.params,
+        internal.query,
+        internal.fragment,
+    ))
+
+
 def presigned_put_url(key: str, content_type: str, expires: timedelta = timedelta(minutes=15)) -> str:
-    return get_s3_public_client().generate_presigned_url(
+    url = get_s3_public_client().generate_presigned_url(
         ClientMethod="put_object",
         Params={
             "Bucket": settings.minio_bucket,
@@ -51,14 +68,16 @@ def presigned_put_url(key: str, content_type: str, expires: timedelta = timedelt
         },
         ExpiresIn=int(expires.total_seconds()),
     )
+    return _rebase_to_public(url)
 
 
 def presigned_get_url(key: str, expires: timedelta = timedelta(hours=1)) -> str:
-    return get_s3_public_client().generate_presigned_url(
+    url = get_s3_public_client().generate_presigned_url(
         ClientMethod="get_object",
         Params={"Bucket": settings.minio_bucket, "Key": key},
         ExpiresIn=int(expires.total_seconds()),
     )
+    return _rebase_to_public(url)
 
 
 def get_object_bytes(key: str) -> bytes:
