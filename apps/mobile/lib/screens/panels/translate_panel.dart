@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../api/api_client.dart';
 import '../../api/models.dart';
 import '../../state/progress.dart';
 import '../../state/session.dart';
@@ -85,7 +86,7 @@ class _TranslatePanelState extends State<TranslatePanel> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = e.toString();
+        _error = describeError(e);
       });
     }
   }
@@ -98,7 +99,7 @@ class _TranslatePanelState extends State<TranslatePanel> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+          .showSnackBar(SnackBar(content: Text(describeError(e))));
     }
   }
 

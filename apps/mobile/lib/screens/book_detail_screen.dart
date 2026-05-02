@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../api/api_client.dart';
 import '../api/models.dart';
 import '../state/session.dart';
 import '../theme/tokens.dart';
@@ -24,7 +25,7 @@ class BookDetailScreen extends StatefulWidget {
 
 class _BookDetailScreenState extends State<BookDetailScreen> {
   Book? _book;
-  Object? _error;
+  String? _error;
   Timer? _poll;
   String? _selectedTranslationId;
   int _tab = 0;
@@ -61,7 +62,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e);
+      setState(() => _error = describeError(e));
     }
   }
 
@@ -315,47 +316,50 @@ class _Loading extends StatelessWidget {
 
 class _Error extends StatelessWidget {
   const _Error({required this.error, required this.onRetry});
-  final Object error;
+  final String error;
   final VoidCallback onRetry;
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: StickerCard(
-          color: T.candy.withValues(alpha: 0.12),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const OwlMascot(mood: OwlMood.sad, size: 80),
-              const SizedBox(height: 8),
-              Text('Couldn\'t open this book',
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 6),
-              Text(
-                '$error',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontWeight: FontWeight.w700,
-                  color: T.inkSoft,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: onRetry,
-                child: const Text(
-                  'Try again',
-                  style: TextStyle(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: StickerCard(
+            color: T.candy.withValues(alpha: 0.12),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const OwlMascot(mood: OwlMood.sad, size: 80),
+                const SizedBox(height: 8),
+                Text('Couldn\'t open this book',
+                    style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 6),
+                Text(
+                  error,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
                     fontFamily: 'Nunito',
-                    fontWeight: FontWeight.w900,
-                    color: T.skyDeep,
-                    decoration: TextDecoration.underline,
+                    fontWeight: FontWeight.w700,
+                    color: T.inkSoft,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: onRetry,
+                  child: const Text(
+                    'Try again',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontWeight: FontWeight.w900,
+                      color: T.skyDeep,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

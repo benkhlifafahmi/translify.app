@@ -4,6 +4,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../api/api_client.dart';
 import '../../api/models.dart';
 import '../../state/progress.dart';
 import '../../state/session.dart';
@@ -54,7 +55,7 @@ class _QuizPanelState extends State<QuizPanel> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+          .showSnackBar(SnackBar(content: Text(describeError(e))));
     } finally {
       if (mounted) setState(() => _generating = false);
     }
@@ -92,7 +93,7 @@ class _QuizPanelState extends State<QuizPanel> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+          .showSnackBar(SnackBar(content: Text(describeError(e))));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

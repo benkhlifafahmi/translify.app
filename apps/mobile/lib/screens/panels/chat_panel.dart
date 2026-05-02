@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 
+import '../../api/api_client.dart';
 import '../../api/models.dart';
 import '../../state/progress.dart';
 import '../../state/session.dart';
@@ -53,7 +54,7 @@ class _ChatPanelState extends State<ChatPanel> {
       _chat = chats.isNotEmpty ? chats.first : await session.chats.create(widget.bookId);
       _messages = await session.chats.messages(_chat!.id);
     } catch (e) {
-      _error = e.toString();
+      _error = describeError(e);
     }
     if (!mounted) return;
     setState(() => _booting = false);

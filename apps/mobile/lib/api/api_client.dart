@@ -10,6 +10,34 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+/// Render a short, user-friendly message from any error our API surface emits.
+/// Avoids dumping multi-line stack traces into UI cards.
+String describeError(Object error) {
+  if (error is ApiException) return error.message;
+  if (error is DioException) {
+    final base = error.requestOptions.uri.toString();
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+        return "Couldn't reach the server in time.\nCheck your connection and try again.";
+      case DioExceptionType.receiveTimeout:
+        return 'The server took too long to reply.\nGive it another shot in a moment.';
+      case DioExceptionType.connectionError:
+        return "Can't connect to $base.\nIs the API up and on the same network?";
+      case DioExceptionType.badCertificate:
+        return 'The server certificate looks off.';
+      case DioExceptionType.cancel:
+        return 'Request cancelled.';
+      case DioExceptionType.badResponse:
+        final code = error.response?.statusCode;
+        return 'Server responded with ${code ?? "an error"}.';
+      case DioExceptionType.unknown:
+        return error.message ?? 'Something went sideways.';
+    }
+  }
+  return error.toString();
+}
+
 class ApiClient {
   ApiClient({String? baseUrl})
       : dio = Dio(BaseOptions(

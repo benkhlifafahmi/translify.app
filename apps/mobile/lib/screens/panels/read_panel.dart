@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:provider/provider.dart';
 
+import '../../api/api_client.dart';
 import '../../api/models.dart';
 import '../../state/session.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/owl_mascot.dart';
+import '../../widgets/quest_button.dart';
 import '../../widgets/sticker_card.dart';
 
 class ReadPanel extends StatefulWidget {
@@ -29,7 +31,7 @@ class ReadPanel extends StatefulWidget {
 
 class _ReadPanelState extends State<ReadPanel> {
   PdfControllerPinch? _pdf;
-  Object? _error;
+  String? _error;
   String? _resolvedKey;
   int _page = 1;
   int _total = 1;
@@ -76,7 +78,7 @@ class _ReadPanelState extends State<ReadPanel> {
       setState(() => _total = doc.pagesCount);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e);
+      setState(() => _error = describeError(e));
     }
   }
 
@@ -93,19 +95,32 @@ class _ReadPanelState extends State<ReadPanel> {
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: StickerCard(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const OwlMascot(mood: OwlMood.sad, size: 80),
-                const SizedBox(height: 6),
-                Text('$_error',
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: StickerCard(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const OwlMascot(mood: OwlMood.sad, size: 80),
+                  const SizedBox(height: 8),
+                  Text(
+                    _error!,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium),
-              ],
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 14),
+                  QuestButton(
+                    label: 'Try again',
+                    icon: Icons.refresh_rounded,
+                    color: T.saffron,
+                    expand: false,
+                    onPressed: _open,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

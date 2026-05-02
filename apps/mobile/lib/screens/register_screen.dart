@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../api/api_client.dart';
 import '../state/session.dart';
 import '../theme/tokens.dart';
 import '../widgets/owl_mascot.dart';
@@ -45,7 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       Navigator.of(context).pushReplacementNamed('/library');
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.toString());
+      setState(() => _error = describeError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
