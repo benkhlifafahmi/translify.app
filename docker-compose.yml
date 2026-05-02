@@ -1,0 +1,72 @@
+# Production docker-compose.
+#
+# Assumes:
+#   - Postgres runs on the host (or elsewhere) and is reachable via POSTGRES_DSN.
+#   - Redis is provided by the redis service below (or override REDIS_URL to
+#     point to an external instance).
+#   - Apache (Virtualmin) reverse-proxies to localhost ports 8000 (api)
+#     and 9000 (minio). See DEPLOY.md.
+#
+# All services bind to 127.0.0.1 — Apache is the only public-facing surface.
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    image: translify-api:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "127.0.0.1:8000:8000"
+    extra_hosts:
+      # Allows containers to reach Postgres on the host
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
+      - minio
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000
+      --proxy-headers --forwarded-allow-ips '*'
+
+  worker:
+    image: translify-api:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
+      - api
+      - minio
+    command: python -m app.workers.worker
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "127.0.0.1:9000:9000"   # S3 API
+      - "127.0.0.1:9001:9001"   # MinIO console
+    command: server /data --console-address ":9001"
+
+volumes:
+  redis_data:
+  minio_data:

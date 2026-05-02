@@ -1,0 +1,241 @@
+@import "tailwindcss";
+
+/* ===== Sunlit Library — palette, type, motion =====
+   Paper-cream backgrounds, deep ink text, saffron + sage + coral accents.
+   Friendly enough for kids, refined enough for students. */
+
+@theme {
+  /* Surfaces */
+  --color-paper: #FAF6EE;
+  --color-paper-2: #F4ECDB;
+  --color-paper-3: #EFE5CF;
+  --color-background: #FAF6EE;
+  --color-foreground: #20283A;
+  --color-ink: #20283A;
+  --color-ink-soft: #4A5263;
+
+  --color-muted: #F0E8D6;
+  --color-muted-foreground: #6B6557;
+  --color-border: #E5D8BC;
+  --color-border-strong: #D4C29C;
+
+  /* Brand */
+  --color-saffron: #E0A458;
+  --color-saffron-deep: #C8893E;
+  --color-sage: #7BA17C;
+  --color-sage-deep: #5F8763;
+  --color-coral: #E2786C;
+  --color-coral-deep: #C5594D;
+  --color-plum: #6B5B95;
+
+  /* Roles */
+  --color-primary: #20283A;
+  --color-primary-foreground: #FAF6EE;
+  --color-accent: #E0A458;
+  --color-accent-foreground: #2A1F0F;
+  --color-success: #7BA17C;
+  --color-warning: #E0A458;
+  --color-destructive: #C5594D;
+
+  /* Shape */
+  --radius: 0.875rem;
+  --radius-sm: 0.5rem;
+  --radius-lg: 1.25rem;
+  --radius-pill: 999px;
+
+  /* Shadows — soft paper depth */
+  --shadow-paper: 0 1px 0 rgba(74, 60, 30, 0.06), 0 8px 22px -12px rgba(74, 60, 30, 0.18);
+  --shadow-paper-lg: 0 2px 0 rgba(74, 60, 30, 0.05), 0 22px 44px -18px rgba(74, 60, 30, 0.22);
+  --shadow-inset: inset 0 0 0 1px rgba(74, 60, 30, 0.05);
+
+  /* Type */
+  --font-display: var(--font-fraunces), "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+  --font-body: var(--font-hanken), "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+}
+
+@layer base {
+  html, body {
+    height: 100%;
+  }
+  html {
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-feature-settings: "ss01", "cv11";
+    letter-spacing: -0.005em;
+    /* Soft paper grain — almost invisible, gives warmth */
+    background-image:
+      radial-gradient(at 18% 4%, rgba(224, 164, 88, 0.10) 0, transparent 42%),
+      radial-gradient(at 96% 8%, rgba(123, 161, 124, 0.08) 0, transparent 38%),
+      radial-gradient(at 80% 96%, rgba(226, 120, 108, 0.07) 0, transparent 36%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.13  0 0 0 0 0.08  0 0 0 0.035 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  ::selection {
+    background: rgba(224, 164, 88, 0.45);
+    color: var(--color-ink);
+  }
+
+  /* Scrollbars */
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: rgba(74, 60, 30, 0.18);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(74, 60, 30, 0.32);
+    background-clip: padding-box;
+  }
+}
+
+@layer components {
+  .card-paper {
+    background: linear-gradient(180deg, #FFFBF0 0%, var(--color-paper) 100%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-paper);
+  }
+
+  .card-paper-lifted {
+    background: linear-gradient(180deg, #FFFCF3 0%, #FBF4E2 100%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-paper-lg);
+  }
+
+  .ring-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    --tw-ring-color: var(--color-saffron);
+    --tw-ring-offset-color: var(--color-paper);
+  }
+
+  .deco-doodle::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border: 2px dashed var(--color-border-strong);
+    border-radius: inherit;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* Chat markdown polish */
+  .prose-chat p code,
+  .prose-chat li code {
+    background: rgba(32, 40, 58, 0.06);
+    color: var(--color-ink);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.85em;
+  }
+  .prose-chat pre code {
+    background: transparent;
+  }
+  .prose-chat pre {
+    background: rgba(32, 40, 58, 0.05);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 0.75rem 0.9rem;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+  }
+
+  /* PDF citation highlight */
+  .translify-cite-mark {
+    background: linear-gradient(180deg, transparent 60%, rgba(224, 164, 88, 0.55) 60%);
+    color: inherit;
+    padding: 0;
+    border-radius: 2px;
+  }
+
+  /* React-PDF page surface — paper inside paper */
+  .react-pdf__Page {
+    background: #fff !important;
+    border-radius: 10px;
+    box-shadow: var(--shadow-paper-lg);
+    overflow: hidden;
+  }
+  .react-pdf__Page__canvas {
+    border-radius: 10px;
+  }
+}
+
+/* Animations */
+@keyframes float-in {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.96); }
+  60% { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-2deg); }
+  75% { transform: rotate(2deg); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-float-in { animation: float-in 0.5s ease-out both; }
+.animate-pop-in { animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.hover-wiggle:hover { animation: wiggle 0.4s ease-in-out; }
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-muted) 0%,
+    var(--color-paper-2) 50%,
+    var(--color-muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* Utility — staggered child reveals */
+.stagger > * { animation: float-in 0.55s ease-out both; }
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.12s; }
+.stagger > *:nth-child(3) { animation-delay: 0.19s; }
+.stagger > *:nth-child(4) { animation-delay: 0.26s; }
+.stagger > *:nth-child(5) { animation-delay: 0.33s; }
+.stagger > *:nth-child(6) { animation-delay: 0.40s; }
+.stagger > *:nth-child(7) { animation-delay: 0.47s; }
+.stagger > *:nth-child(8) { animation-delay: 0.54s; }
