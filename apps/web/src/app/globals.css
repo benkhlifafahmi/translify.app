@@ -239,3 +239,173 @@
 .stagger > *:nth-child(6) { animation-delay: 0.40s; }
 .stagger > *:nth-child(7) { animation-delay: 0.47s; }
 .stagger > *:nth-child(8) { animation-delay: 0.54s; }
+
+/* ===== Live Demo — stop-motion reel animations ===== */
+@keyframes drop-in {
+  0% { opacity: 0; transform: translateY(-28px) rotate(-3deg); }
+  60% { transform: translateY(4px) rotate(1deg); }
+  100% { opacity: 1; transform: translateY(0) rotate(0); }
+}
+@keyframes scale-pop {
+  0% { opacity: 0; transform: scale(0.7); }
+  60% { transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes stamp {
+  0% { opacity: 0; transform: scale(1.6) rotate(-18deg); }
+  55% { transform: scale(0.92) rotate(-4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-6deg); }
+}
+@keyframes slide-up {
+  0% { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-right {
+  0% { opacity: 0; transform: translateX(-18px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-left {
+  0% { opacity: 0; transform: translateX(18px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes fill-bar {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+@keyframes typewriter {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+@keyframes blink-caret {
+  50% { border-color: transparent; }
+}
+@keyframes thinking-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
+  40% { transform: translateY(-5px); opacity: 1; }
+}
+@keyframes badge-slam {
+  0% { opacity: 0; transform: scale(2.3) rotate(-22deg); }
+  60% { transform: scale(0.92) rotate(-7deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-9deg); }
+}
+@keyframes confetti-fly {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0); }
+  10% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--cfx, 0), var(--cfy, 0)) rotate(var(--cfr, 360deg)); }
+}
+@keyframes cursor-tap {
+  0% { transform: translate(0, 0) scale(1); }
+  60% { transform: translate(var(--tapx, 0), var(--tapy, 0)) scale(1); }
+  72% { transform: translate(var(--tapx, 0), var(--tapy, 0)) scale(0.78); }
+  100% { transform: translate(var(--tapx, 0), var(--tapy, 0)) scale(1); }
+}
+@keyframes cursor-click {
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(0.72); }
+  65% { transform: scale(1.06); }
+}
+@keyframes click-ripple {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.15); }
+  18% { opacity: 0.85; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
+}
+@keyframes click-ripple-outer {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.15); }
+  25% { opacity: 0.55; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(3.1); }
+}
+@keyframes type-input {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+@keyframes input-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(224, 164, 88, 0.0); border-color: var(--color-border); }
+  50% { box-shadow: 0 0 0 4px rgba(224, 164, 88, 0.18); border-color: var(--color-saffron-deep); }
+}
+@keyframes fade-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Cursor paths — coordinates assume ~800px × 380px stage */
+@keyframes cursor-path-upload {
+  0%   { left: 90%;  top: 105%; opacity: 0; }
+  8%   { opacity: 1; }
+  22%  { left: 24%;  top: 48%;  opacity: 1; }
+  /* dwells at dropzone — click happens around 24-28% */
+  44%  { left: 24%;  top: 48%;  opacity: 1; }
+  72%  { left: 76%;  top: 76%;  opacity: 0.7; }
+  100% { left: 110%; top: -10%; opacity: 0; }
+}
+@keyframes cursor-path-translate {
+  0%   { left: -8%;  top: 105%; opacity: 0; }
+  10%  { opacity: 1; }
+  20%  { left: 78%;  top: 14%;  opacity: 1; }
+  /* dwells on Français pill — click at 22% */
+  44%  { left: 78%;  top: 14%;  opacity: 1; }
+  68%  { left: 50%;  top: 40%;  opacity: 0.7; }
+  100% { left: 110%; top: -10%; opacity: 0; }
+}
+@keyframes cursor-path-chat {
+  0%   { left: 90%;  top: 105%; opacity: 0; }
+  6%   { opacity: 1; }
+  16%  { left: 18%;  top: 84%;  opacity: 1; }
+  /* dwells on input — click at 18% */
+  32%  { left: 18%;  top: 84%;  opacity: 1; }
+  44%  { left: 88%;  top: 84%;  opacity: 1; }
+  /* dwells on send — click at 46% */
+  60%  { left: 88%;  top: 84%;  opacity: 1; }
+  85%  { left: 60%;  top: 30%;  opacity: 0.45; }
+  100% { left: 110%; top: -10%; opacity: 0; }
+}
+@keyframes cursor-path-quiz {
+  0%   { left: 90%;  top: -10%; opacity: 0; }
+  8%   { opacity: 1; }
+  28%  { left: 28%;  top: 56%;  opacity: 1; }
+  /* dwells on option B — click at 30% */
+  56%  { left: 28%;  top: 56%;  opacity: 1; }
+  78%  { left: 80%;  top: 88%;  opacity: 0.6; }
+  100% { left: 110%; top: 110%; opacity: 0; }
+}
+@keyframes lang-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@keyframes paper-shuffle {
+  0% { opacity: 0; transform: translateY(20px) rotate(2deg); }
+  100% { opacity: 1; transform: translateY(0) rotate(0); }
+}
+@keyframes filmstrip-progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+@keyframes scene-in {
+  0% { opacity: 0; transform: scale(0.97) translateY(8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes scene-tape {
+  0% { opacity: 0; transform: translateY(-8px) rotate(-8deg); }
+  100% { opacity: 0.85; transform: translateY(0) rotate(-8deg); }
+}
+
+.demo-typewriter {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid currentColor;
+  animation:
+    typewriter var(--type-dur, 1.4s) steps(var(--type-steps, 30)) both,
+    blink-caret 0.7s step-end infinite;
+  animation-delay: var(--type-delay, 0s), var(--type-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-typewriter,
+  .demo-anim {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    width: auto !important;
+    border-right-color: transparent !important;
+  }
+}
