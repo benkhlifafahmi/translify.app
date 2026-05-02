@@ -3,7 +3,9 @@
     "allow": [
       "Bash(pnpm typecheck *)",
       "Bash(uv sync *)",
-      "Bash(pnpm install *)"
+      "Bash(pnpm install *)",
+      "Bash(flutter analyze *)",
+      "Bash(~/development/flutter/bin/flutter analyze *)"
     ]
   }
 }

@@ -12,6 +12,7 @@ import '../../theme/tokens.dart';
 import '../../widgets/owl_mascot.dart';
 import '../../widgets/quest_button.dart';
 import '../../widgets/sticker_card.dart';
+import '../pdf_reader_screen.dart';
 
 class ReadPanel extends StatefulWidget {
   const ReadPanel({
@@ -31,6 +32,7 @@ class ReadPanel extends StatefulWidget {
 
 class _ReadPanelState extends State<ReadPanel> {
   PdfControllerPinch? _pdf;
+  Uint8List? _bytes;
   String? _error;
   String? _resolvedKey;
   int _page = 1;
@@ -61,21 +63,28 @@ class _ReadPanelState extends State<ReadPanel> {
     setState(() {
       _resolvedKey = key;
       _error = null;
+      _bytes = null;
     });
     try {
-      final url = widget.translationId != null
-          ? (await session.translations.fileUrl(widget.translationId!)).url
-          : (await session.books.fileUrl(widget.bookId)).url;
-      if (!mounted) return;
       if (widget.format == BookFormat.epub) {
         setState(() => _error = 'EPUB preview is on the way.');
         return;
       }
-      final doc = await PdfDocument.openData(await _downloadBytes(url));
+      final url = widget.translationId != null
+          ? (await session.translations.fileUrl(widget.translationId!)).url
+          : (await session.books.fileUrl(widget.bookId)).url;
+      if (!mounted) return;
+      final bytes = await _downloadBytes(url);
+      if (!mounted) return;
+      final doc = await PdfDocument.openData(bytes);
       _pdf?.dispose();
       _pdf = PdfControllerPinch(document: Future.value(doc));
       if (!mounted) return;
-      setState(() => _total = doc.pagesCount);
+      setState(() {
+        _bytes = bytes;
+        _total = doc.pagesCount;
+        _page = 1;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = describeError(e));
@@ -83,13 +92,36 @@ class _ReadPanelState extends State<ReadPanel> {
   }
 
   Future<Uint8List> _downloadBytes(String url) async {
-    final api = context.read<Session>().api;
-    final res = await api.dio.get<List<int>>(
+    // Fresh Dio — presigned MinIO URLs reject requests with an Authorization header.
+    final res = await Dio().get<List<int>>(
       url,
       options: Options(responseType: ResponseType.bytes),
     );
-    final bytes = res.data ?? const <int>[];
-    return Uint8List.fromList(bytes);
+    if ((res.statusCode ?? 0) >= 300) {
+      throw ApiException(
+          res.statusCode ?? 0, 'Could not download file (${res.statusCode}).');
+    }
+    return Uint8List.fromList(res.data ?? const <int>[]);
+  }
+
+  Future<void> _expandToFullscreen() async {
+    final bytes = _bytes;
+    if (bytes == null) return;
+    final returnPage = await Navigator.push<int>(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => PdfReaderScreen(
+          bytes: bytes,
+          totalPages: _total,
+          initialPage: _page,
+        ),
+      ),
+    );
+    if (returnPage != null && returnPage != _page) {
+      _pdf?.jumpToPage(returnPage);
+      setState(() => _page = returnPage);
+    }
   }
 
   @override
@@ -126,6 +158,7 @@ class _ReadPanelState extends State<ReadPanel> {
         ),
       );
     }
+
     if (_pdf == null) {
       return const Center(
         child: Column(
@@ -145,20 +178,31 @@ class _ReadPanelState extends State<ReadPanel> {
         ),
       );
     }
+
     return Stack(
       children: [
+        // Inline PDF viewer
         PdfViewPinch(
           controller: _pdf!,
           onPageChanged: (p) => setState(() => _page = p),
         ),
+
+        // Transparent tap layer — opens fullscreen reader on tap.
+        // HitTestBehavior.translucent lets pinch/pan pass through to PdfViewPinch.
+        GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: _expandToFullscreen,
+          child: const SizedBox.expand(),
+        ),
+
+        // Page counter pill (bottom-centre)
         Positioned(
           left: 16,
           right: 16,
           bottom: 14,
           child: Center(
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 color: T.paper.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(99),
@@ -175,6 +219,26 @@ class _ReadPanelState extends State<ReadPanel> {
                   letterSpacing: 0.4,
                 ),
               ),
+            ),
+          ),
+        ),
+
+        // Expand hint (top-right)
+        Positioned(
+          top: 10,
+          right: 12,
+          child: GestureDetector(
+            onTap: _expandToFullscreen,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: T.paper.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: T.ink, width: 1.4),
+                boxShadow: T.stickerShadow(y: 2),
+              ),
+              child: const Icon(Icons.fullscreen_rounded,
+                  size: 20, color: T.ink),
             ),
           ),
         ),
