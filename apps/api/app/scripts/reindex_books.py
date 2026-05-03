@@ -12,11 +12,12 @@ prior chunks first — see ``app.ingest.pipeline``).
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import sys
 
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 import app.auth.models  # noqa: F401 — register User mapper for FK resolution
 import app.models  # noqa: F401 — register all model mappers
@@ -28,30 +29,25 @@ from app.workers.queue import QUEUE_INGEST, get_queue
 log = logging.getLogger(__name__)
 
 
-def main() -> int:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(message)s",
-    )
-
-    engine = create_engine(settings.sync_postgres_dsn)
-    queue = get_queue(QUEUE_INGEST)
-
-    with Session(engine) as session:
-        books = (
-            session.execute(
+async def amain() -> int:
+    engine = create_async_engine(settings.async_postgres_dsn, pool_pre_ping=True)
+    session_maker = async_sessionmaker(engine, expire_on_commit=False)
+    try:
+        async with session_maker() as session:
+            result = await session.execute(
                 select(Book).where(
                     Book.status.in_([BookStatus.ready, BookStatus.failed])
                 )
             )
-            .scalars()
-            .all()
-        )
+            books = list(result.scalars().all())
+    finally:
+        await engine.dispose()
 
     if not books:
         log.info("no books to reindex")
         return 0
 
+    queue = get_queue(QUEUE_INGEST)
     log.info("queueing %d books on the %s queue", len(books), QUEUE_INGEST)
     for i, book in enumerate(books, 1):
         queue.enqueue(
@@ -69,6 +65,14 @@ def main() -> int:
         len(books),
     )
     return 0
+
+
+def main() -> int:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(message)s",
+    )
+    return asyncio.run(amain())
 
 
 if __name__ == "__main__":
