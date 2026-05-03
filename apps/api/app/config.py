@@ -36,7 +36,6 @@ class Settings(BaseSettings):
     jwt_lifetime_seconds: int = 60 * 60 * 24 * 30  # 30 days
 
     anthropic_api_key: str = ""
-    voyage_api_key: str = ""
     deepl_api_key: str = ""
 
     # Stripe billing

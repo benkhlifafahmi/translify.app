@@ -28,9 +28,9 @@ class TextChunk:
 
 @lru_cache(maxsize=1)
 def _encoding() -> tiktoken.Encoding:
-    # cl100k is a reasonable proxy for token count across most modern models.
-    # Voyage uses its own tokenizer, but cl100k gets us close enough for
-    # chunk-budget bookkeeping.
+    # cl100k is a rough proxy for chunk-budget bookkeeping; BGE-M3 uses XLM-R's
+    # SentencePiece tokenizer at inference. Our 600-token target stays well
+    # under BGE-M3's 8192 max regardless.
     return tiktoken.get_encoding("cl100k_base")
 
 

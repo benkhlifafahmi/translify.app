@@ -15,7 +15,7 @@ from app.db import Base
 if TYPE_CHECKING:
     from app.models.book import Book
 
-# Voyage voyage-4-large with output_dimension=1024 (Matryoshka).
+# BGE-M3 dense embeddings (1024-dim, native).
 # Changing this requires a migration + reindex of all existing chunks.
 EMBEDDING_DIM = 1024
 

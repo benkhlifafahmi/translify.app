@@ -107,7 +107,8 @@ Important values to set:
 - `WEB_PUBLIC_URL=https://translify.app`
 - `CORS_ORIGINS=https://translify.app` (comma-separated if you add more
   origins later)
-- API keys: `ANTHROPIC_API_KEY`, `VOYAGE_API_KEY`, `DEEPL_API_KEY`
+- API keys: `ANTHROPIC_API_KEY`, `DEEPL_API_KEY`
+  (embeddings run locally via FastEmbed/BGE-M3 — no API key needed)
 
 Compose overrides `REDIS_URL` for the `api` and `worker` services to the
 in-cluster `redis` container; you do not need host Redis for the default

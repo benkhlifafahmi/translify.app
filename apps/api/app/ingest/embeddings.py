@@ -1,81 +1,68 @@
-"""Voyage embedding client.
+"""Local BGE-M3 embeddings via sentence-transformers (CPU).
 
-``voyage-4-large`` supports Matryoshka output dimensions (256/512/1024/2048).
-We pin to 1024 to match the ``Vector(1024)`` column + HNSW index on
-``chunks.embedding`` (see ``app.models.chunk.EMBEDDING_DIM``).
+BGE-M3 emits 1024-dim dense vectors, matching the ``Vector(1024)`` column +
+HNSW index on ``chunks.embedding`` (see ``app.models.chunk.EMBEDDING_DIM``).
+
+Vectors are L2-normalized so cosine distance == 1 - dot product, which keeps
+pgvector's ``cosine_distance`` operator well-behaved. BGE-M3 is trained
+without query/document prefixes, so we use the same path for both.
+
+Inference is synchronous and CPU-bound; we offload to a thread so the async
+surface is unchanged for callers. The model is loaded lazily on first use
+and kept resident.
 """
 from __future__ import annotations
 
 import asyncio
 import logging
+import threading
 from collections.abc import Sequence
 
-import voyageai
+from sentence_transformers import SentenceTransformer
 
-from app.config import settings
 from app.models.chunk import EMBEDDING_DIM
 
 log = logging.getLogger(__name__)
 
-EMBED_MODEL = "voyage-4-large"
-EMBED_DIM = EMBEDDING_DIM  # Pinned — must match the DB column.
-BATCH_SIZE = 64  # Voyage allows up to 128, leave headroom for token-count limits
+EMBED_MODEL = "BAAI/bge-m3"
+EMBED_DIM = EMBEDDING_DIM
+BATCH_SIZE = 32
 
 
-_client: voyageai.AsyncClient | None = None
+_model: SentenceTransformer | None = None
+_model_lock = threading.Lock()
 
 
-def _get_client() -> voyageai.AsyncClient:
-    global _client
-    if _client is None:
-        if not settings.voyage_api_key:
-            raise RuntimeError("VOYAGE_API_KEY is not configured")
-        _client = voyageai.AsyncClient(api_key=settings.voyage_api_key)
-    return _client
+def _get_model() -> SentenceTransformer:
+    global _model
+    if _model is None:
+        with _model_lock:
+            if _model is None:
+                log.info("loading BGE-M3 (first call downloads ~2.3GB to HF cache)")
+                _model = SentenceTransformer(EMBED_MODEL, device="cpu")
+    return _model
+
+
+def _embed_sync(texts: list[str]) -> list[list[float]]:
+    model = _get_model()
+    arr = model.encode(
+        texts,
+        batch_size=BATCH_SIZE,
+        normalize_embeddings=True,
+        convert_to_numpy=True,
+        show_progress_bar=False,
+    )
+    return arr.tolist()
 
 
 async def embed_documents(texts: Sequence[str]) -> list[list[float]]:
     """Return one embedding per input text, preserving order."""
     if not texts:
         return []
-
-    client = _get_client()
-    out: list[list[float]] = []
-    for start in range(0, len(texts), BATCH_SIZE):
-        batch = list(texts[start : start + BATCH_SIZE])
-        result = await _embed_with_retry(client, batch, input_type="document")
-        out.extend(result.embeddings)
-    return out
+    return await asyncio.to_thread(_embed_sync, list(texts))
 
 
 async def embed_query(text: str) -> list[float]:
-    """Embed a single search query using the query input type."""
-    client = _get_client()
-    result = await _embed_with_retry(client, [text], input_type="query")
-    return result.embeddings[0]
-
-
-async def _embed_with_retry(
-    client: voyageai.AsyncClient, batch: list[str], *, input_type: str, attempts: int = 3
-) -> "voyageai.object.embeddings.EmbeddingsObject":
-    delay = 1.0
-    last_exc: Exception | None = None
-    for attempt in range(1, attempts + 1):
-        try:
-            return await client.embed(
-                batch,
-                model=EMBED_MODEL,
-                input_type=input_type,
-                output_dimension=EMBED_DIM,
-            )
-        except Exception as exc:
-            last_exc = exc
-            log.warning(
-                "voyage embed attempt %d/%d failed: %s", attempt, attempts, exc
-            )
-            if attempt == attempts:
-                break
-            await asyncio.sleep(delay)
-            delay *= 2
-    assert last_exc is not None
-    raise last_exc
+    """Embed a single search query."""
+    result = await asyncio.to_thread(_embed_sync, [text])
+    return result[0]
