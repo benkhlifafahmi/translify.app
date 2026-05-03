@@ -108,7 +108,9 @@ Important values to set:
 - `CORS_ORIGINS=https://translify.app` (comma-separated if you add more
   origins later)
 - API keys: `ANTHROPIC_API_KEY`, `DEEPL_API_KEY`
-  (embeddings run locally via FastEmbed/BGE-M3 — no API key needed)
+  (embeddings run locally via BGE-M3 + sentence-transformers — no API key.
+  First ingest/chat after a fresh deploy downloads ~2.3GB of model weights
+  into the `hf_cache` docker volume; subsequent restarts reuse it.)
 
 Compose overrides `REDIS_URL` for the `api` and `worker` services to the
 in-cluster `redis` container; you do not need host Redis for the default

@@ -28,6 +28,10 @@ services:
     env_file: .env
     environment:
       REDIS_URL: redis://redis:6379/0
+      HF_HOME: /models
+    volumes:
+      # Persist BGE-M3 weights (~2.3GB) across rebuilds/restarts.
+      - hf_cache:/models
     ports:
       - "127.0.0.1:8000:8000"
     extra_hosts:
@@ -46,6 +50,9 @@ services:
     env_file: .env
     environment:
       REDIS_URL: redis://redis:6379/0
+      HF_HOME: /models
+    volumes:
+      - hf_cache:/models
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -83,3 +90,4 @@ services:
 volumes:
   redis_data:
   minio_data:
+  hf_cache:
