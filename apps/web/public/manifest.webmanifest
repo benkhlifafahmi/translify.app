@@ -1,0 +1,20 @@
+{
+  "name": "Translify",
+  "short_name": "Translify",
+  "description": "Read any book in your language. Translate PDFs and EPUBs while keeping the layout, chat with citations, and quiz yourself.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF6EE",
+  "theme_color": "#20283A",
+  "lang": "en",
+  "dir": "auto",
+  "categories": ["books", "education", "productivity"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ]
+}
