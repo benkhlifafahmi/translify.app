@@ -237,6 +237,47 @@ export const en: Dict = {
   "auth.shell.body":
     "Translate any PDF, chat with it, then quiz yourself. Made for classrooms, homework, and rainy Sunday afternoons.",
   "auth.shell.foot": "Read · Translate · Chat · Quiz",
+
+  "auth.forgot.eyebrow": "Forgot password",
+  "auth.forgot.title": "A new key, by post.",
+  "auth.forgot.subtitle":
+    "Tell us your email and we'll send a one-hour link to set a new password.",
+  "auth.forgot.email": "Email",
+  "auth.forgot.submit": "Send the link",
+  "auth.forgot.submitting": "Posting your link…",
+  "auth.forgot.sent.title": "Check your inbox.",
+  "auth.forgot.sent.body":
+    "If we have an account for that email, a reset link is on its way. It expires in one hour. Don't see it? Look in spam, or try a different email.",
+  "auth.forgot.back": "← Back to login",
+
+  "auth.reset.eyebrow": "Set a new password",
+  "auth.reset.title": "Choose a new password.",
+  "auth.reset.subtitle":
+    "Eight characters or more. Make it one your future self will thank you for.",
+  "auth.reset.password": "New password",
+  "auth.reset.confirm": "Type it once more",
+  "auth.reset.submit": "Set new password",
+  "auth.reset.submitting": "Locking the cabinet…",
+  "auth.reset.done.title": "Password reset.",
+  "auth.reset.done.body":
+    "All done. You can now log in with your new password.",
+  "auth.reset.done.cta": "Take me to login",
+  "auth.reset.invalid":
+    "This link has expired or is invalid. Request a fresh one — they only last an hour.",
+  "auth.reset.mismatch": "Those two passwords don't match.",
+
+  "auth.verify.eyebrow": "Verifying your email",
+  "auth.verify.title.checking": "One moment, opening the seal…",
+  "auth.verify.title.done": "Welcome to your shelf.",
+  "auth.verify.title.failed": "We couldn't verify that link.",
+  "auth.verify.body.checking":
+    "Reading the token, checking the wax. This usually takes a heartbeat.",
+  "auth.verify.body.done":
+    "Your email is verified. Your books are waiting — drop one in and we'll keep its layout exactly the same, just translated.",
+  "auth.verify.body.failed":
+    "The link may have expired (they only last an hour) or already been used. You can ask for a fresh one below.",
+  "auth.verify.cta.library": "Open my shelf →",
+  "auth.verify.cta.resend": "Send a new verification email",
 };
 
 export const enTestimonials: Testimonial[] = [

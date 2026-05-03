@@ -1,6 +1,7 @@
 """FastAPI-Users wiring: user manager, JWT strategy, dependency factory."""
 from __future__ import annotations
 
+import logging
 import uuid
 from collections.abc import AsyncGenerator
 from typing import Optional
@@ -18,6 +19,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models import User
 from app.config import settings
 from app.db import get_async_session
+from app.emails import client as email_client
+from app.emails import templates as email_templates
+
+log = logging.getLogger(__name__)
 
 
 async def get_user_db(
@@ -26,25 +31,55 @@ async def get_user_db(
     yield SQLAlchemyUserDatabase(session, User)
 
 
+def _verify_url(token: str) -> str:
+    return f"{settings.web_public_url}/verify-email?token={token}"
+
+
+def _reset_url(token: str) -> str:
+    return f"{settings.web_public_url}/reset-password?token={token}"
+
+
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     reset_password_token_secret = settings.jwt_secret
     verification_token_secret = settings.jwt_secret
 
     async def on_after_register(self, user: User, request: Optional[Request] = None) -> None:
-        # TODO: send verification email
-        pass
+        # Trigger the verification flow — that hook delivers the actual email
+        # (we get the token there, not here).
+        try:
+            await self.request_verify(user, request)
+        except Exception:
+            log.exception("Failed to request verification for %s", user.email)
 
     async def on_after_forgot_password(
         self, user: User, token: str, request: Optional[Request] = None
     ) -> None:
-        # TODO: send reset email with token
-        pass
+        subject, html, text = email_templates.password_reset(
+            name=user.display_name,
+            reset_url=_reset_url(token),
+        )
+        await email_client.send(
+            to=user.email,
+            subject=subject,
+            html=html,
+            text=text,
+            tag="password-reset",
+        )
 
     async def on_after_request_verify(
         self, user: User, token: str, request: Optional[Request] = None
     ) -> None:
-        # TODO: send verification email with token
-        pass
+        subject, html, text = email_templates.welcome_verify(
+            name=user.display_name,
+            verify_url=_verify_url(token),
+        )
+        await email_client.send(
+            to=user.email,
+            subject=subject,
+            html=html,
+            text=text,
+            tag="welcome-verify",
+        )
 
 
 async def get_user_manager(

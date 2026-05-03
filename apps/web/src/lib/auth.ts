@@ -54,3 +54,33 @@ export async function updateProfile(input: UpdateProfileInput): Promise<User> {
   return await api<User>("/users/me", { method: "PATCH", body: input });
 }
 
+/** Sends a password-reset email. Always succeeds from the client's POV
+ * (the API returns 202 even if the email isn't on file — anti-enumeration). */
+export async function requestPasswordReset(email: string): Promise<void> {
+  await api("/auth/forgot-password", {
+    method: "POST",
+    body: { email },
+  });
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  await api("/auth/reset-password", {
+    method: "POST",
+    body: { token, password },
+  });
+}
+
+export async function verifyEmail(token: string): Promise<User> {
+  return await api<User>("/auth/verify", {
+    method: "POST",
+    body: { token },
+  });
+}
+
+export async function requestVerificationResend(email: string): Promise<void> {
+  await api("/auth/request-verify-token", {
+    method: "POST",
+    body: { email },
+  });
+}
+

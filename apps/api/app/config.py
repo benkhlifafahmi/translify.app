@@ -52,6 +52,12 @@ class Settings(BaseSettings):
     # First-month discount applied via Stripe coupon (created in dashboard).
     stripe_first_month_coupon: str = ""
 
+    # Transactional email (Resend)
+    resend_api_key: str = ""
+    email_from_name: str = "Translify"
+    email_from_address: str = "hello@translify.app"
+    email_reply_to: str = "hello@translify.app"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
