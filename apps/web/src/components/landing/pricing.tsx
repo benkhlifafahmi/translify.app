@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 type Cycle = "monthly" | "yearly";
 
@@ -74,17 +75,18 @@ const PLANS: Plan[] = [
 
 export function Pricing() {
   const [cycle, setCycle] = useState<Cycle>("yearly");
+  const { t } = useI18n();
 
   return (
     <section id="pricing" className="relative z-10 mx-auto max-w-6xl px-8 pb-24 pt-12 lg:px-14 lg:pt-20">
       <div className="text-center">
         <span className="badge-pill bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-saffron)]" />
-          Honest pricing · cancel anytime
+          {t("pricing.badge")}
         </span>
         <h2 className="mt-4 font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight tracking-tight">
-          Pick a plan. <span className="italic text-[color:var(--color-saffron-deep)]">Read better in 30 days</span>
-          <br />— or get every cent back.
+          {t("pricing.title.1")} <span className="italic text-[color:var(--color-saffron-deep)]">{t("pricing.title.2")}</span>
+          <br />{t("pricing.title.3")}
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-[1.05rem] leading-relaxed text-[color:var(--color-ink-soft)]">
           We don&apos;t offer a free tier because translating books well isn&apos;t free for us either —
@@ -108,7 +110,7 @@ export function Pricing() {
               cycle === "monthly" ? "text-[color:var(--color-paper)]" : "text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)]"
             }`}
           >
-            Monthly
+            {t("pricing.monthly")}
           </button>
           <button
             role="tab"
@@ -118,7 +120,7 @@ export function Pricing() {
               cycle === "yearly" ? "text-[color:var(--color-paper)]" : "text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)]"
             }`}
           >
-            Yearly
+            {t("pricing.yearly")}
             <span
               className={`rounded-full px-1.5 py-0.5 text-[0.65rem] font-bold ${
                 cycle === "yearly"
@@ -126,7 +128,7 @@ export function Pricing() {
                   : "bg-[color:var(--color-sage)]/20 text-[color:var(--color-sage-deep)]"
               }`}
             >
-              Save 20%
+              {t("pricing.save")}
             </span>
           </button>
           <span
@@ -163,7 +165,7 @@ export function Pricing() {
             </p>
           </div>
           <Link
-            href="/register"
+            href="/onboarding"
             className="group inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-[color:var(--color-ink)] px-6 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)] transition-transform hover:-translate-y-[1px]"
           >
             Try it for 30 days

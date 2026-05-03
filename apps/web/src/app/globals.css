@@ -409,3 +409,47 @@
     border-right-color: transparent !important;
   }
 }
+
+/* ===== RTL polish — flip directional motion & ornament =====
+   We use `dir="rtl"` on <html> so logical properties handle most layout.
+   These rules tame the few transforms / decorations that still need flipping. */
+
+[dir="rtl"] body {
+  letter-spacing: 0; /* Tightening hurts Arabic glyph shaping */
+}
+
+[dir="rtl"] {
+  /* Arabic + serif feels off in Fraunces — fall back to a system Arabic stack
+     for headings while preserving the warm body tone elsewhere. */
+  --font-display: ui-serif, "Noto Naskh Arabic", "Amiri", "Scheherazade New", Georgia, serif;
+}
+
+/* Mirror arrow icons that use the → glyph or path d="M5 12h14..." style chevrons.
+   Using CSS so we don't have to flip every icon by hand. */
+[dir="rtl"] .rtl\:rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Cards rotated for "messy desk" feel look wrong mirrored — keep them
+   straight in RTL so the composition still reads. */
+[dir="rtl"] [class*="rotate-["] {
+  transform: none;
+}
+
+/* Logical-property fixes for Tailwind utilities that still use left/right */
+[dir="rtl"] .demo-typewriter {
+  border-right: none;
+  border-left: 2px solid currentColor;
+  animation:
+    typewriter var(--type-dur, 1.4s) steps(var(--type-steps, 30)) both,
+    blink-caret-rtl 0.7s step-end infinite;
+}
+
+@keyframes blink-caret-rtl {
+  50% { border-left-color: transparent; }
+}
+
+/* Origin for the language switcher dropdown popups, RTL-aware.
+   In LTR `end` = right; in RTL `end` = left. */
+.origin-top-end { transform-origin: top right; }
+[dir="rtl"] .origin-top-end { transform-origin: top left; }

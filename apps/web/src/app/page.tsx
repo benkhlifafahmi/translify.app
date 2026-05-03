@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { FAQ } from "@/components/landing/faq";
 import { LiveDemo } from "@/components/landing/live-demo";
 import { Pricing } from "@/components/landing/pricing";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useI18n } from "@/lib/i18n";
 
 export default function Home() {
   return (
@@ -28,27 +32,29 @@ export default function Home() {
 /* ───────────────────────────── NAV ───────────────────────────── */
 
 function SiteNav() {
+  const { t } = useI18n();
   return (
     <nav className="relative z-20 flex items-center justify-between px-8 py-6 lg:px-14">
       <Logo />
       <div className="hidden items-center gap-7 text-sm font-medium text-[color:var(--color-ink-soft)] md:flex">
-        <a href="#how" className="transition-colors hover:text-[color:var(--color-ink)]">How it works</a>
-        <a href="#features" className="transition-colors hover:text-[color:var(--color-ink)]">Features</a>
-        <a href="#pricing" className="transition-colors hover:text-[color:var(--color-ink)]">Pricing</a>
-        <a href="#faq" className="transition-colors hover:text-[color:var(--color-ink)]">FAQ</a>
+        <a href="#how" className="transition-colors hover:text-[color:var(--color-ink)]">{t("nav.how")}</a>
+        <a href="#features" className="transition-colors hover:text-[color:var(--color-ink)]">{t("nav.features")}</a>
+        <a href="#pricing" className="transition-colors hover:text-[color:var(--color-ink)]">{t("nav.pricing")}</a>
+        <a href="#faq" className="transition-colors hover:text-[color:var(--color-ink)]">{t("nav.faq")}</a>
       </div>
       <div className="flex items-center gap-2 text-sm">
+        <LanguageSwitcher />
         <Link
           href="/login"
           className="rounded-full px-4 py-2 font-medium text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)]"
         >
-          Log in
+          {t("nav.login")}
         </Link>
         <Link
-          href="/register"
+          href="/onboarding"
           className="rounded-full bg-[color:var(--color-ink)] px-5 py-2 font-semibold text-[color:var(--color-primary-foreground)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_8px_18px_-8px_rgba(20,16,8,0.5)] transition-transform hover:-translate-y-[1px]"
         >
-          Get started
+          {t("nav.cta")}
         </Link>
       </div>
     </nav>
@@ -71,20 +77,21 @@ function Logo() {
 /* ───────────────────────────── HERO ───────────────────────────── */
 
 function Hero() {
+  const { t } = useI18n();
   return (
     <section className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-8 pb-16 pt-10 lg:grid-cols-12 lg:gap-10 lg:px-14 lg:pt-20">
       <div className="lg:col-span-7 stagger">
         <span className="badge-pill bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
-          For curious readers, big & small
+          {t("hero.badge")}
         </span>
 
         <h1 className="mt-5 font-[family-name:var(--font-display)] text-[clamp(2.6rem,6vw,4.8rem)] font-semibold leading-[1.02] tracking-tight">
-          Read any book,
+          {t("hero.title.1")}
           <br />
           <span className="relative inline-block">
             <span className="relative z-10 italic text-[color:var(--color-saffron-deep)]">
-              in your language
+              {t("hero.title.2")}
             </span>
             <Underline />
           </span>
@@ -92,19 +99,16 @@ function Hero() {
         </h1>
 
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-[color:var(--color-ink-soft)]">
-          Drop in a PDF or EPUB and Translify keeps the layout exactly the same — just translated.
-          Then chat with your book and quiz yourself, so you actually
-          {" "}
-          <em className="font-[family-name:var(--font-display)]">remember</em> what you read.
+          {t("hero.subtitle")}
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-3">
           <Link
-            href="/register"
+            href="/onboarding"
             className="group inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-saffron)] px-6 font-semibold text-[color:var(--color-accent-foreground)] shadow-[0_2px_0_rgba(140,90,30,0.5),0_10px_22px_-8px_rgba(200,137,62,0.6)] transition-transform hover:-translate-y-[2px]"
           >
-            Start your 30-day trial
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1">
+            {t("hero.cta.primary")}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1 rtl:rotate-180">
               <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
             </svg>
           </Link>
@@ -112,14 +116,14 @@ function Hero() {
             href="#pricing"
             className="inline-flex h-12 items-center rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)]/60 px-6 font-semibold text-[color:var(--color-ink)] hover:bg-[color:var(--color-paper-2)]"
           >
-            See plans
+            {t("hero.cta.secondary")}
           </a>
         </div>
 
         <ul className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-[color:var(--color-ink-soft)]">
-          <li className="flex items-center gap-2"><Tick /> Layout preserved, page by page</li>
-          <li className="flex items-center gap-2"><Tick /> 14 languages, every script</li>
-          <li className="flex items-center gap-2"><Tick /> Money-back in 30 days, no questions</li>
+          <li className="flex items-center gap-2"><Tick /> {t("hero.bullet.1")}</li>
+          <li className="flex items-center gap-2"><Tick /> {t("hero.bullet.2")}</li>
+          <li className="flex items-center gap-2"><Tick /> {t("hero.bullet.3")}</li>
         </ul>
       </div>
 
@@ -763,7 +767,7 @@ function FinalCTA() {
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
-              href="/register"
+              href="/onboarding"
               className="group inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-ink)] px-7 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.5)] transition-transform hover:-translate-y-[2px]"
             >
               Start your 30-day trial
