@@ -9,9 +9,11 @@ import { Label } from "@/components/ui/label";
 import { login } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 import { AuthShell } from "@/components/auth-shell";
+import { useI18n } from "@/lib/i18n";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -33,13 +35,13 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      eyebrow="Welcome back"
-      title="Pick up where you left off."
-      subtitle="Your books, your highlights, your half-finished chapters — they're all waiting."
+      eyebrow={t("auth.login.eyebrow")}
+      title={t("auth.login.title")}
+      subtitle={t("auth.login.subtitle")}
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("auth.login.email")}</Label>
           <Input
             id="email"
             type="email"
@@ -51,7 +53,7 @@ export default function LoginPage() {
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t("auth.login.password")}</Label>
           <Input
             id="password"
             type="password"
@@ -70,17 +72,17 @@ export default function LoginPage() {
         )}
 
         <Button type="submit" variant="accent" size="lg" disabled={submitting}>
-          {submitting ? "Just a moment…" : "Log in"}
+          {submitting ? t("auth.login.submitting") : t("auth.login.submit")}
         </Button>
       </form>
 
       <p className="mt-7 text-center text-sm text-[color:var(--color-ink-soft)]">
-        New here?{" "}
+        {t("auth.login.new")}{" "}
         <Link
           href="/register"
           className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4 hover:decoration-[color:var(--color-saffron-deep)]"
         >
-          Make an account
+          {t("auth.login.makeAccount")}
         </Link>
       </p>
     </AuthShell>

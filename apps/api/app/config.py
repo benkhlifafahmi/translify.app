@@ -39,6 +39,19 @@ class Settings(BaseSettings):
     voyage_api_key: str = ""
     deepl_api_key: str = ""
 
+    # Stripe billing
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_publishable_key: str = ""
+    stripe_price_reader_monthly: str = ""
+    stripe_price_reader_yearly: str = ""
+    stripe_price_scholar_monthly: str = ""
+    stripe_price_scholar_yearly: str = ""
+    stripe_price_family_monthly: str = ""
+    stripe_price_family_yearly: str = ""
+    # First-month discount applied via Stripe coupon (created in dashboard).
+    stripe_first_month_coupon: str = ""
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

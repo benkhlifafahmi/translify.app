@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   eyebrow: string;
@@ -8,6 +11,7 @@ interface Props {
 }
 
 export function AuthShell({ eyebrow, title, subtitle, children }: Props) {
+  const { t } = useI18n();
   return (
     <main className="relative grid min-h-screen grid-cols-1 lg:grid-cols-[1fr_minmax(420px,540px)]">
       {/* Left: warm brand panel — hidden on mobile */}
@@ -36,16 +40,15 @@ export function AuthShell({ eyebrow, title, subtitle, children }: Props) {
         <div className="relative z-10 max-w-md">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-[color:var(--color-ink-soft)] shadow-sm backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
-            For students of every age
+            {t("auth.shell.badge")}
           </p>
           <h2 className="font-[family-name:var(--font-display)] text-[2.6rem] font-semibold leading-[1.05] tracking-tight text-[color:var(--color-ink)]">
-            “The book stayed the same.{" "}
-            <em className="text-[color:var(--color-saffron-deep)]">My understanding of it</em>
-            {" "}did not.”
+            {t("auth.shell.quote.1")}{" "}
+            <em className="text-[color:var(--color-saffron-deep)]">{t("auth.shell.quote.2")}</em>
+            {" "}{t("auth.shell.quote.3")}
           </h2>
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
-            Translate any PDF, chat with it, then quiz yourself. Made for
-            classrooms, homework, and rainy Sunday afternoons.
+            {t("auth.shell.body")}
           </p>
         </div>
 
@@ -55,7 +58,7 @@ export function AuthShell({ eyebrow, title, subtitle, children }: Props) {
             <span className="grid h-7 w-7 place-items-center rounded-full bg-[color:var(--color-sage)] text-white ring-2 ring-[#F8E9C5]">💬</span>
             <span className="grid h-7 w-7 place-items-center rounded-full bg-[color:var(--color-coral)] text-white ring-2 ring-[#F8E9C5]">★</span>
           </span>
-          <span>Read · Translate · Chat · Quiz</span>
+          <span>{t("auth.shell.foot")}</span>
         </div>
       </section>
 

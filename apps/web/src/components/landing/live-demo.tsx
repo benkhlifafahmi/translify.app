@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 type Phase = 0 | 1 | 2 | 3;
 const PHASE_DURATION_MS = 6500;
@@ -14,6 +15,7 @@ const SCENES: { label: string; eyebrow: string; tone: "saffron" | "sage" | "cora
 ];
 
 export function LiveDemo() {
+  const { t } = useI18n();
   const [phase, setPhase] = useState<Phase>(0);
   const [cycle, setCycle] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -45,10 +47,10 @@ export function LiveDemo() {
       <div className="mb-8 flex flex-col items-center text-center">
         <span className="badge-pill bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[color:var(--color-coral)]" />
-          Watch it work · live demo
+          {t("demo.badge")}
         </span>
         <h2 className="mt-4 font-[family-name:var(--font-display)] text-[clamp(1.7rem,3.5vw,2.6rem)] font-semibold leading-tight tracking-tight">
-          A whole reading day, in <em className="text-[color:var(--color-saffron-deep)]">twenty-six seconds</em>.
+          {t("demo.title.1")} <em className="text-[color:var(--color-saffron-deep)]">{t("demo.title.2")}</em>.
         </h2>
       </div>
 

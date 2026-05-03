@@ -6,71 +6,18 @@ import { useI18n } from "@/lib/i18n";
 
 type Cycle = "monthly" | "yearly";
 
-interface Plan {
-  id: string;
-  name: string;
-  tagline: string;
+interface PlanShape {
+  id: "reader" | "scholar" | "family";
   monthly: number;
   yearly: number;
   best?: boolean;
   tone: "paper" | "saffron" | "sage";
-  features: string[];
-  cta: string;
 }
 
-const PLANS: Plan[] = [
-  {
-    id: "reader",
-    name: "Reader",
-    tagline: "For the curious — finish a few books a month in a new language.",
-    monthly: 9,
-    yearly: 7,
-    tone: "paper",
-    features: [
-      "Up to 10 books / month",
-      "All 14 languages",
-      "Side-by-side reading",
-      "Chat with citations",
-      "Quiz mode (10 q / book)",
-      "PDF & EPUB",
-    ],
-    cta: "Start as a Reader",
-  },
-  {
-    id: "scholar",
-    name: "Scholar",
-    tagline: "For students and serious readers — your whole syllabus, translated.",
-    monthly: 19,
-    yearly: 15,
-    best: true,
-    tone: "saffron",
-    features: [
-      "Unlimited books",
-      "All 14 languages — priority queue",
-      "Unlimited quizzes & study packs",
-      "Export annotated translations (PDF)",
-      "Smart vocabulary lists",
-      "Email support · 1-day reply",
-    ],
-    cta: "Become a Scholar",
-  },
-  {
-    id: "family",
-    name: "Family",
-    tagline: "Share the shelf — one library, up to five readers, kids welcome.",
-    monthly: 29,
-    yearly: 23,
-    tone: "sage",
-    features: [
-      "Everything in Scholar",
-      "5 reader profiles",
-      "Kid-safe mode + reading-age controls",
-      "Shared family library",
-      "Parent progress dashboard",
-      "Priority support",
-    ],
-    cta: "Choose Family",
-  },
+const PLAN_SHAPES: PlanShape[] = [
+  { id: "reader",  monthly: 9,  yearly: 7,  tone: "paper" },
+  { id: "scholar", monthly: 19, yearly: 15, tone: "saffron", best: true },
+  { id: "family",  monthly: 29, yearly: 23, tone: "sage" },
 ];
 
 export function Pricing() {
@@ -89,9 +36,7 @@ export function Pricing() {
           <br />{t("pricing.title.3")}
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-[1.05rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-          We don&apos;t offer a free tier because translating books well isn&apos;t free for us either —
-          but we stand behind the result. If Translify doesn&apos;t change how you read in your first month,
-          email us and we&apos;ll refund you. No forms, no friction.
+          {t("pricing.preamble")}
         </p>
       </div>
 
@@ -141,7 +86,7 @@ export function Pricing() {
 
       {/* Plan grid */}
       <div className="mt-12 grid gap-6 lg:grid-cols-3 lg:gap-7">
-        {PLANS.map((plan) => (
+        {PLAN_SHAPES.map((plan) => (
           <PlanCard key={plan.id} plan={plan} cycle={cycle} />
         ))}
       </div>
@@ -152,24 +97,23 @@ export function Pricing() {
           <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[3px] border-[color:var(--color-saffron-deep)] bg-[color:var(--color-paper)] font-[family-name:var(--font-display)] text-[color:var(--color-saffron-deep)] shadow-[inset_0_0_0_3px_rgba(224,164,88,0.25)]">
             <div className="text-center leading-none">
               <div className="text-[1.6rem] font-semibold">30</div>
-              <div className="text-[0.55rem] uppercase tracking-[0.2em] text-[color:var(--color-ink-soft)]">days</div>
+              <div className="text-[0.55rem] uppercase tracking-[0.2em] text-[color:var(--color-ink-soft)]">{t("pricing.days")}</div>
             </div>
           </div>
           <div className="flex-1">
             <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">
-              Risk-free, full refund — full stop.
+              {t("pricing.refund.title")}
             </h3>
             <p className="mt-2 max-w-2xl text-[0.95rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-              You have a full month to try every feature, on every plan. If you decide it&apos;s not for you,
-              reply to your welcome email and we&apos;ll refund you in full — usually the same day.
+              {t("pricing.refund.body")}
             </p>
           </div>
           <Link
             href="/onboarding"
             className="group inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-[color:var(--color-ink)] px-6 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)] transition-transform hover:-translate-y-[1px]"
           >
-            Try it for 30 days
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1">
+            {t("pricing.refund.cta")}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1 rtl:rotate-180">
               <path d="M5 12h14" />
               <path d="m12 5 7 7-7 7" />
             </svg>
@@ -180,9 +124,10 @@ export function Pricing() {
   );
 }
 
-function PlanCard({ plan, cycle }: { plan: Plan; cycle: Cycle }) {
+function PlanCard({ plan, cycle }: { plan: PlanShape; cycle: Cycle }) {
+  const { t } = useI18n();
   const price = cycle === "monthly" ? plan.monthly : plan.yearly;
-  const tones: Record<Plan["tone"], { card: string; ring: string; chip: string; chipText: string }> = {
+  const tones: Record<PlanShape["tone"], { card: string; ring: string; chip: string; chipText: string }> = {
     paper: {
       card: "bg-[color:var(--color-paper)]",
       ring: "border-[color:var(--color-border)]",
@@ -202,42 +147,53 @@ function PlanCard({ plan, cycle }: { plan: Plan; cycle: Cycle }) {
       chipText: "text-[color:var(--color-sage-deep)]",
     },
   };
-  const t = tones[plan.tone];
+  const tone = tones[plan.tone];
+
+  const features = [
+    t(`plan.${plan.id}.f1`),
+    t(`plan.${plan.id}.f2`),
+    t(`plan.${plan.id}.f3`),
+    t(`plan.${plan.id}.f4`),
+    t(`plan.${plan.id}.f5`),
+    t(`plan.${plan.id}.f6`),
+  ];
 
   return (
     <div
-      className={`relative flex flex-col rounded-[1.3rem] border-[1.5px] ${t.ring} ${t.card} p-7 shadow-[var(--shadow-paper)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-paper-lg)] ${
+      className={`relative flex flex-col rounded-[1.3rem] border-[1.5px] ${tone.ring} ${tone.card} p-7 shadow-[var(--shadow-paper)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-paper-lg)] ${
         plan.best ? "lg:-translate-y-3 lg:scale-[1.02]" : ""
       }`}
     >
       {plan.best && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 -rotate-[3deg]">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-coral)] px-3.5 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.15em] text-white shadow-[0_8px_18px_-6px_rgba(197,89,77,0.55)]">
-            ★ Most loved
+            {t("pricing.best")}
           </span>
         </div>
       )}
 
       <div className="flex items-center gap-3">
-        <span className={`badge-pill ${t.chip} ${t.chipText}`}>{plan.name}</span>
+        <span className={`badge-pill ${tone.chip} ${tone.chipText}`}>{t(`plan.${plan.id}.name`)}</span>
       </div>
       <p className="mt-3 min-h-[3rem] text-[0.92rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-        {plan.tagline}
+        {t(`plan.${plan.id}.tagline`)}
       </p>
 
       <div className="mt-6 flex items-baseline gap-1">
         <span className="font-[family-name:var(--font-display)] text-[3.4rem] font-semibold leading-none tracking-tight">
           €{price}
         </span>
-        <span className="text-sm text-[color:var(--color-ink-soft)]">/mo</span>
+        <span className="text-sm text-[color:var(--color-ink-soft)]">{t("pricing.month")}</span>
       </div>
       <p className="mt-1 text-xs text-[color:var(--color-ink-soft)]">
-        {cycle === "yearly" ? `billed €${price * 12} yearly` : "billed monthly"}
+        {cycle === "yearly"
+          ? `${t("pricing.billed.yearly.before")}${price * 12}${t("pricing.billed.yearly.after")}`
+          : t("pricing.billed.monthly")}
       </p>
 
       <ul className="mt-6 space-y-2.5 text-[0.92rem] text-[color:var(--color-ink)]">
-        {plan.features.map((f) => (
-          <li key={f} className="flex items-start gap-2.5">
+        {features.map((f, i) => (
+          <li key={i} className="flex items-start gap-2.5">
             <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[color:var(--color-sage)]/20 text-[color:var(--color-sage-deep)]">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 6 9 17l-5-5" />
@@ -251,17 +207,17 @@ function PlanCard({ plan, cycle }: { plan: Plan; cycle: Cycle }) {
       <div className="mt-7 flex-1" />
 
       <Link
-        href="/register"
+        href="/onboarding"
         className={`mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-full font-semibold transition-transform hover:-translate-y-[1px] ${
           plan.best
             ? "bg-[color:var(--color-ink)] text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.4)]"
             : "border-[1.5px] border-[color:var(--color-ink)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)]"
         }`}
       >
-        {plan.cta}
+        {t(`plan.${plan.id}.cta`)}
       </Link>
       <p className="mt-3 text-center text-[0.7rem] text-[color:var(--color-ink-soft)]">
-        30-day money-back · cancel anytime
+        {t("pricing.guarantee")}
       </p>
     </div>
   );

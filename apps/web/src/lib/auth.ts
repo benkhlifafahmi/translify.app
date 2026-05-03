@@ -42,3 +42,15 @@ export async function logout(): Promise<void> {
   }
   setToken(null);
 }
+
+export interface UpdateProfileInput {
+  display_name?: string | null;
+  preferred_language?: string;
+  password?: string;
+  email?: string;
+}
+
+export async function updateProfile(input: UpdateProfileInput): Promise<User> {
+  return await api<User>("/users/me", { method: "PATCH", body: input });
+}
+

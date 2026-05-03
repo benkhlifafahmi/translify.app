@@ -1,7 +1,8 @@
 """Voyage embedding client.
 
-Voyage's ``voyage-3`` model returns 1024-dim vectors — must match ``EMBEDDING_DIM``
-in ``app.models.chunk``.
+``voyage-4-large`` supports Matryoshka output dimensions (256/512/1024/2048).
+We pin to 1024 to match the ``Vector(1024)`` column + HNSW index on
+``chunks.embedding`` (see ``app.models.chunk.EMBEDDING_DIM``).
 """
 from __future__ import annotations
 
@@ -12,10 +13,12 @@ from collections.abc import Sequence
 import voyageai
 
 from app.config import settings
+from app.models.chunk import EMBEDDING_DIM
 
 log = logging.getLogger(__name__)
 
-EMBED_MODEL = "voyage-3"
+EMBED_MODEL = "voyage-4-large"
+EMBED_DIM = EMBEDDING_DIM  # Pinned — must match the DB column.
 BATCH_SIZE = 64  # Voyage allows up to 128, leave headroom for token-count limits
 
 
@@ -59,7 +62,12 @@ async def _embed_with_retry(
     last_exc: Exception | None = None
     for attempt in range(1, attempts + 1):
         try:
-            return await client.embed(batch, model=EMBED_MODEL, input_type=input_type)
+            return await client.embed(
+                batch,
+                model=EMBED_MODEL,
+                input_type=input_type,
+                output_dimension=EMBED_DIM,
+            )
         except Exception as exc:
             last_exc = exc
             log.warning(

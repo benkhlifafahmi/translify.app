@@ -90,6 +90,12 @@ export default function LibraryPage() {
           <span className="hidden rounded-full bg-[color:var(--color-paper-3)]/70 px-3 py-1.5 text-xs font-medium text-[color:var(--color-ink-soft)] sm:inline-flex">
             {user?.email}
           </span>
+          <Link
+            href="/account"
+            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3.5 text-xs font-semibold text-[color:var(--color-ink)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-border-strong)]"
+          >
+            <span aria-hidden>✦</span> Account
+          </Link>
           <Button variant="ghost" size="sm" onClick={onLogout}>
             Log out
           </Button>

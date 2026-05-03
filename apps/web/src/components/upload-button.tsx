@@ -37,6 +37,11 @@ export function UploadButton() {
       void queryClient.invalidateQueries({ queryKey: ["books"] });
     },
     onError: (err) => {
+      // 402 → quota exceeded → nudge to /account?upgrade=1
+      if (err instanceof ApiError && err.status === 402) {
+        window.location.href = "/account?upgrade=quota";
+        return;
+      }
       setError(err instanceof ApiError ? err.message : err.message || "Upload failed");
     },
   });

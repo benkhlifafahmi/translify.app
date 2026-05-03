@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "@/lib/api";
 import { register } from "@/lib/auth";
+import { startCheckout } from "@/lib/billing";
 import { useI18n, LOCALES, type Locale } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
@@ -87,6 +88,22 @@ export default function OnboardingPage() {
     setSubmitting(true);
     try {
       await register(email, password, name || undefined);
+
+      // Send the user straight to Stripe Checkout for the recommended plan,
+      // with the first-month discount that the timer was advertising.
+      if (personality) {
+        try {
+          const { url } = await startCheckout({
+            plan: personality.recommendedPlan,
+            cycle: "yearly",
+            applyFirstMonthDiscount: true,
+          });
+          window.location.href = url;
+          return;
+        } catch {
+          // Stripe not configured, or transient failure — fall through to library.
+        }
+      }
       router.push("/library");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Registration failed");

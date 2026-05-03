@@ -15,7 +15,8 @@ from app.db import Base
 if TYPE_CHECKING:
     from app.models.book import Book
 
-# Voyage voyage-3 returns 1024-dim embeddings
+# Voyage voyage-4-large with output_dimension=1024 (Matryoshka).
+# Changing this requires a migration + reindex of all existing chunks.
 EMBEDDING_DIM = 1024
 
 

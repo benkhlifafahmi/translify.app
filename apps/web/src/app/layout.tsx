@@ -54,15 +54,9 @@ export const metadata: Metadata = {
   category: "Education",
   alternates: {
     canonical: "/",
-    languages: {
-      "x-default": "/",
-      en: "/?lang=en",
-      fr: "/?lang=fr",
-      es: "/?lang=es",
-      de: "/?lang=de",
-      ja: "/?lang=ja",
-      ar: "/?lang=ar",
-    },
+    // hreflang alternates are emitted manually in <head> below — Next's
+    // metadata.alternates.languages strips query strings, which collapses
+    // every locale URL to the same canonical and breaks the signal.
   },
   openGraph: {
     type: "website",
@@ -72,7 +66,7 @@ export const metadata: Metadata = {
       "Drop in a PDF or EPUB. Read it in 14 languages with the layout preserved. Chat with citations. Quiz yourself. 30-day money-back.",
     url: SITE,
     locale: "en_US",
-    alternateLocale: ["fr_FR", "es_ES", "de_DE", "ja_JP", "ar_SA"],
+    alternateLocale: ["fr_FR", "es_ES", "de_DE", "ja_JP", "ar_SA", "id_ID", "ms_MY"],
     images: [
       {
         url: "/og-image.png",
@@ -129,6 +123,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${fraunces.variable} ${hanken.variable}`}
     >
       <head>
+        <link rel="alternate" hrefLang="x-default" href={`${SITE}/`} />
+        <link rel="alternate" hrefLang="en" href={`${SITE}/?lang=en`} />
+        <link rel="alternate" hrefLang="fr" href={`${SITE}/?lang=fr`} />
+        <link rel="alternate" hrefLang="es" href={`${SITE}/?lang=es`} />
+        <link rel="alternate" hrefLang="de" href={`${SITE}/?lang=de`} />
+        <link rel="alternate" hrefLang="ja" href={`${SITE}/?lang=ja`} />
+        <link rel="alternate" hrefLang="ar" href={`${SITE}/?lang=ar`} />
+        <link rel="alternate" hrefLang="id" href={`${SITE}/?lang=id`} />
+        <link rel="alternate" hrefLang="ms" href={`${SITE}/?lang=ms`} />
         <StructuredData />
       </head>
       <body>

@@ -137,16 +137,17 @@ function Hero() {
 /* ───────────────────────── TRUST STRIP ───────────────────────── */
 
 function TrustStrip() {
+  const { t } = useI18n();
   return (
     <section className="relative z-10 border-y border-dashed border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40 py-7">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-around gap-y-5 px-8 lg:px-14">
-        <Stat number="42,000+" label="books translated" />
+        <Stat number={t("trust.stat1.n")} label={t("trust.stat1.l")} />
         <Divider />
-        <Stat number="14" label="languages, every script" />
+        <Stat number={t("trust.stat2.n")} label={t("trust.stat2.l")} />
         <Divider />
-        <Stat number="9.4 / 10" label="reader satisfaction" />
+        <Stat number={t("trust.stat3.n")} label={t("trust.stat3.l")} />
         <Divider />
-        <Stat number="30 days" label="money-back, always" />
+        <Stat number={t("trust.stat4.n")} label={t("trust.stat4.l")} />
       </div>
     </section>
   );
@@ -172,46 +173,28 @@ function Divider() {
 /* ───────────────────────── HOW IT WORKS ───────────────────────── */
 
 function HowItWorks() {
+  const { t } = useI18n();
   return (
     <section id="how" className="relative z-10 mx-auto max-w-6xl px-8 pb-24 pt-20 lg:px-14">
       <div className="grid items-end gap-6 md:grid-cols-2 md:gap-10">
         <div>
           <span className="badge-pill bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]">
             <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-saffron)]" />
-            Three steps, ten minutes
+            {t("how.badge")}
           </span>
           <h2 className="mt-4 font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight tracking-tight">
-            From PDF to <em className="text-[color:var(--color-saffron-deep)]">a book you understand</em>.
+            {t("how.title.1")} <em className="text-[color:var(--color-saffron-deep)]">{t("how.title.2")}</em>.
           </h2>
         </div>
         <p className="max-w-md text-[1.02rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-          No setup. No fiddling with translation tools. No copy-pasting paragraphs into another tab.
-          Drop, wait a coffee&apos;s worth of time, read.
+          {t("how.subtitle")}
         </p>
       </div>
 
       <div className="mt-12 grid gap-5 md:grid-cols-3">
-        <Step
-          n="01"
-          tone="saffron"
-          title="Drop your book"
-          body="PDF or EPUB, up to 200 MB. We accept textbooks, novels, papers, kids' books — anything readable."
-          mock={<MockUpload />}
-        />
-        <Step
-          n="02"
-          tone="sage"
-          title="Pick a language"
-          body="Choose from 14 languages. We rebuild every page in your target language, keeping the original layout intact."
-          mock={<MockTranslate />}
-        />
-        <Step
-          n="03"
-          tone="coral"
-          title="Read, chat, quiz"
-          body="Open the book, ask questions in plain language, and let surprise quizzes seal what you learned."
-          mock={<MockChat />}
-        />
+        <Step n="01" tone="saffron" title={t("how.step1.title")} body={t("how.step1.body")} mock={<MockUpload />} />
+        <Step n="02" tone="sage"    title={t("how.step2.title")} body={t("how.step2.body")} mock={<MockTranslate />} />
+        <Step n="03" tone="coral"   title={t("how.step3.title")} body={t("how.step3.body")} mock={<MockChat />} />
       </div>
     </section>
   );
@@ -315,54 +298,43 @@ function MockChat() {
 /* ─────────────────────── FEATURE SHOWCASE ─────────────────────── */
 
 function FeatureShowcase() {
+  const { t } = useI18n();
   return (
     <section id="features" className="relative z-10 mx-auto max-w-6xl px-8 pb-12 lg:px-14">
       <div className="text-center">
         <span className="badge-pill bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-coral)]" />
-          What you actually get
+          {t("feat.badge")}
         </span>
         <h2 className="mx-auto mt-4 max-w-3xl font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight tracking-tight">
-          Every tool you need to <em className="text-[color:var(--color-saffron-deep)]">finish</em> the book.
+          {t("feat.title.1")} <em className="text-[color:var(--color-saffron-deep)]">{t("feat.title.2")}</em> {t("feat.title.3")}
         </h2>
       </div>
 
       <div className="mt-14 space-y-12">
         <FeatureRow
-          eyebrow="Translation"
-          title="Same book. Same shape. Your language."
-          body="Tables stay tables. Headings stay headings. We rebuild every page so it looks like the original publisher did it — including right-to-left scripts, CJK, Devanagari, and all 14 supported languages."
-          highlights={[
-            "Side-by-side reading mode",
-            "Inline source-text peek on hover",
-            "Export translated PDF with notes",
-          ]}
+          eyebrow={t("feat.translate.eyebrow")}
+          title={t("feat.translate.title")}
+          body={t("feat.translate.body")}
+          highlights={[t("feat.translate.h1"), t("feat.translate.h2"), t("feat.translate.h3")]}
           mock={<TranslateMockBig />}
           align="left"
           tone="saffron"
         />
         <FeatureRow
-          eyebrow="Chat"
-          title="Ask the book. Get cited answers."
-          body="Every reply links to the exact passage it came from — page number, highlighted excerpt, and a jump button. No hallucinations dressed up as answers."
-          highlights={[
-            "Plain-language Q&A in any of 14 languages",
-            "Auto-summaries by chapter",
-            "Highlight to ask: select a passage, ask a question",
-          ]}
+          eyebrow={t("feat.chat.eyebrow")}
+          title={t("feat.chat.title")}
+          body={t("feat.chat.body")}
+          highlights={[t("feat.chat.h1"), t("feat.chat.h2"), t("feat.chat.h3")]}
           mock={<ChatMockBig />}
           align="right"
           tone="sage"
         />
         <FeatureRow
-          eyebrow="Quizzes"
-          title="Wrong? Here&apos;s where to look."
-          body="Surprise quizzes generated from what you actually read. Miss one and we'll send you to the page that explains it — not a vague hand-wave."
-          highlights={[
-            "5, 8 or 12 questions per round",
-            "Multiple choice, with citation per answer",
-            "Tracks streaks, weak spots, and improvements",
-          ]}
+          eyebrow={t("feat.quiz.eyebrow")}
+          title={t("feat.quiz.title")}
+          body={t("feat.quiz.body")}
+          highlights={[t("feat.quiz.h1"), t("feat.quiz.h2"), t("feat.quiz.h3")]}
           mock={<QuizMockBig />}
           align="left"
           tone="coral"
@@ -551,15 +523,16 @@ function QuizMockBig() {
 /* ───────────────────────── FOR EVERYONE ───────────────────────── */
 
 function ForEveryone() {
+  const { t } = useI18n();
   return (
     <section className="relative z-10 mx-auto max-w-6xl px-8 pb-24 pt-12 lg:px-14">
       <div className="text-center">
         <span className="badge-pill bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-plum)]" />
-          One library, every reader
+          {t("audience.badge")}
         </span>
         <h2 className="mt-4 font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight tracking-tight">
-          Built for the way <em className="text-[color:var(--color-saffron-deep)]">your house</em> reads.
+          {t("audience.title.1")} <em className="text-[color:var(--color-saffron-deep)]">{t("audience.title.2")}</em> {t("audience.title.3")}
         </h2>
       </div>
 
@@ -567,23 +540,23 @@ function ForEveryone() {
         <AudienceCard
           rotate="-rotate-[1.5deg]"
           tone="saffron"
-          who="Students"
-          line="Read the syllabus in your strongest language. Quiz before exams. Cite pages without lifting the cover."
-          tags={["University", "High school", "Self-study"]}
+          who={t("audience.students.who")}
+          line={t("audience.students.line")}
+          tags={[t("audience.students.tag1"), t("audience.students.tag2"), t("audience.students.tag3")]}
         />
         <AudienceCard
           rotate="rotate-[1deg]"
           tone="sage"
-          who="Lifelong readers"
-          line="Finally finish that French novel. Skim a German paper. Read a Japanese manga in your own pace, your own tongue."
-          tags={["Hobbyists", "Polyglots", "Travel"]}
+          who={t("audience.readers.who")}
+          line={t("audience.readers.line")}
+          tags={[t("audience.readers.tag1"), t("audience.readers.tag2"), t("audience.readers.tag3")]}
         />
         <AudienceCard
           rotate="-rotate-[0.5deg]"
           tone="coral"
-          who="Children"
-          line="A friendlier mascot, a lower reading age, kid-safe chat, and parents who can see exactly what's being read."
-          tags={["Ages 7+", "Family library", "Parent dashboard"]}
+          who={t("audience.children.who")}
+          line={t("audience.children.line")}
+          tags={[t("audience.children.tag1"), t("audience.children.tag2"), t("audience.children.tag3")]}
         />
       </div>
     </section>
@@ -633,6 +606,7 @@ const LANGUAGES = [
 ];
 
 function LanguagesStrip() {
+  const { t } = useI18n();
   return (
     <section className="relative z-10 mx-auto max-w-6xl px-8 pb-24 lg:px-14">
       <div className="card-paper-lifted overflow-hidden p-8 lg:p-10">
@@ -640,14 +614,13 @@ function LanguagesStrip() {
           <div>
             <span className="badge-pill bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]">
               <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-coral)]" />
-              14 languages, every script
+              {t("langs.badge")}
             </span>
             <h2 className="mt-4 font-[family-name:var(--font-display)] text-[clamp(1.7rem,3vw,2.2rem)] font-semibold leading-tight tracking-tight">
-              Latin, Cyrillic, Arabic, CJK, Devanagari — we handle the typography so the page still feels like a book.
+              {t("langs.title")}
             </h2>
             <p className="mt-3 max-w-md text-[0.95rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-              That includes proper right-to-left flow for Arabic and Hebrew, vertical script support
-              for CJK where the source uses it, and embedded fonts so nothing renders as a row of question marks.
+              {t("langs.body")}
             </p>
           </div>
           <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-4">
@@ -671,41 +644,36 @@ function LanguagesStrip() {
 /* ───────────────────────── TESTIMONIALS ───────────────────────── */
 
 function Testimonials() {
+  const { t, testimonials, locale } = useI18n();
+
+  // Tones rotate visually; native testimonials drive content.
+  const tones: ("paper" | "saffron")[] = ["paper", "saffron", "paper"];
+  const rotates = ["-rotate-[1.2deg]", "rotate-[1.4deg]", "-rotate-[0.6deg]"];
+
   return (
     <section className="relative z-10 mx-auto max-w-6xl px-8 pb-24 lg:px-14">
       <div className="text-center">
         <span className="badge-pill bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-coral)]" />
-          Loved by readers
+          {t("testimonials.badge")}
         </span>
         <h2 className="mt-4 font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight tracking-tight">
-          What readers are saying.
+          {t("testimonials.title")}
         </h2>
       </div>
 
-      <div className="mt-12 grid gap-6 md:grid-cols-3">
-        <Quote
-          rotate="-rotate-[1.2deg]"
-          tone="paper"
-          quote="I read Tolstoy in his own pace, in my own language. The chat told me what I missed and pointed me back to the page. I finished the book."
-          name="Léa M."
-          role="Literature student, Paris"
-        />
-        <Quote
-          rotate="rotate-[1.4deg]"
-          tone="saffron"
-          quote="My ten-year-old reads bedtime stories in Spanish now and quizzes me on them in the morning. He is winning."
-          name="Daniel K."
-          role="Father of two"
-          highlight
-        />
-        <Quote
-          rotate="-rotate-[0.6deg]"
-          tone="paper"
-          quote="I had a 600-page Mandarin textbook I'd been avoiding for a year. Translify made it readable in an afternoon — and the citations are spot-on."
-          name="Mira T."
-          role="PhD candidate, EPFL"
-        />
+      <div className="mt-12 grid gap-6 md:grid-cols-3" key={locale}>
+        {testimonials.map((q, i) => (
+          <Quote
+            key={`${locale}-${i}`}
+            rotate={rotates[i] ?? ""}
+            tone={tones[i] ?? "paper"}
+            quote={q.quote}
+            name={q.name}
+            role={q.role}
+            highlight={q.highlight}
+          />
+        ))}
       </div>
     </section>
   );
@@ -746,6 +714,7 @@ function Quote({
 /* ───────────────────────── FINAL CTA ───────────────────────── */
 
 function FinalCTA() {
+  const { t } = useI18n();
   return (
     <section className="relative z-10 mx-auto max-w-6xl px-8 pb-24 lg:px-14">
       <div className="relative overflow-hidden rounded-[1.6rem] border border-[color:var(--color-border-strong)] bg-gradient-to-br from-[#FFFBF0] via-[#FBE9C2] to-[#F2D292] p-10 shadow-[var(--shadow-paper-lg)] lg:p-14">
@@ -754,24 +723,23 @@ function FinalCTA() {
         <div className="relative max-w-2xl">
           <span className="badge-pill bg-[color:var(--color-paper)] text-[color:var(--color-ink)]">
             <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-coral)]" />
-            Ready when you are
+            {t("cta.badge")}
           </span>
           <h2 className="mt-4 font-[family-name:var(--font-display)] text-[clamp(2.2rem,4.5vw,3.4rem)] font-semibold leading-[1.05] tracking-tight">
-            Stop wishing you&apos;d read it.
+            {t("cta.title.1")}
             <br />
-            <em className="text-[color:var(--color-saffron-deep)]">Read it.</em>
+            <em className="text-[color:var(--color-saffron-deep)]">{t("cta.title.2")}</em>
           </h2>
           <p className="mt-5 max-w-xl text-[1.05rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-            Pick a plan, drop your first book, and read the way you mean to. If 30 days in
-            you don&apos;t love it, we refund you in full — no forms, no friction.
+            {t("cta.body")}
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href="/onboarding"
               className="group inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-ink)] px-7 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.5)] transition-transform hover:-translate-y-[2px]"
             >
-              Start your 30-day trial
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1">
+              {t("cta.primary")}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1 rtl:rotate-180">
                 <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
               </svg>
             </Link>
@@ -779,11 +747,11 @@ function FinalCTA() {
               href="#pricing"
               className="inline-flex h-12 items-center rounded-full border-[1.5px] border-[color:var(--color-ink)] bg-[color:var(--color-paper)] px-6 font-semibold text-[color:var(--color-ink)] hover:bg-[color:var(--color-paper-2)]"
             >
-              Compare plans
+              {t("cta.secondary")}
             </a>
           </div>
           <p className="mt-5 text-xs text-[color:var(--color-ink-soft)]">
-            No free plan. No surprise charges. Cancel any time, refund within 30 days.
+            {t("cta.note")}
           </p>
         </div>
       </div>
@@ -794,50 +762,50 @@ function FinalCTA() {
 /* ───────────────────────── FOOTER ───────────────────────── */
 
 function SiteFooter() {
+  const { t } = useI18n();
   return (
     <footer className="relative z-10 border-t border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/60 px-8 py-12 lg:px-14">
       <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-[0.88rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-            A reading companion that translates whole books, answers your questions with citations,
-            and quizzes you so it sticks.
+            {t("footer.tagline")}
           </p>
         </div>
         <FooterCol
-          heading="Product"
+          heading={t("footer.col.product")}
           links={[
-            { label: "How it works", href: "#how" },
-            { label: "Features", href: "#features" },
-            { label: "Pricing", href: "#pricing" },
-            { label: "Languages", href: "#features" },
+            { label: t("footer.link.how"), href: "#how" },
+            { label: t("footer.link.features"), href: "#features" },
+            { label: t("footer.link.pricing"), href: "#pricing" },
+            { label: t("footer.link.languages"), href: "#features" },
           ]}
         />
         <FooterCol
-          heading="Company"
+          heading={t("footer.col.company")}
           links={[
-            { label: "Manifesto", href: "/" },
-            { label: "Blog", href: "/" },
-            { label: "Careers", href: "/" },
-            { label: "Press kit", href: "/" },
+            { label: t("footer.link.manifesto"), href: "/" },
+            { label: t("footer.link.blog"), href: "/" },
+            { label: t("footer.link.careers"), href: "/" },
+            { label: t("footer.link.press"), href: "/" },
           ]}
         />
         <FooterCol
-          heading="Help"
+          heading={t("footer.col.help")}
           links={[
-            { label: "FAQ", href: "#faq" },
-            { label: "Refund policy", href: "#faq" },
-            { label: "Contact", href: "mailto:hello@translify.app" },
-            { label: "Status", href: "/" },
+            { label: t("footer.link.faq"), href: "#faq" },
+            { label: t("footer.link.refund"), href: "#faq" },
+            { label: t("footer.link.contact"), href: "mailto:hello@translify.app" },
+            { label: t("footer.link.status"), href: "/" },
           ]}
         />
       </div>
       <div className="mx-auto mt-10 flex max-w-6xl flex-col items-center justify-between gap-3 border-t border-dashed border-[color:var(--color-border)] pt-6 text-[0.78rem] text-[color:var(--color-ink-soft)] md:flex-row">
-        <p>Made with patience for readers everywhere · © {new Date().getFullYear()} Translify</p>
+        <p>{t("footer.bottom")} · © {new Date().getFullYear()} Translify</p>
         <div className="flex gap-5">
-          <Link href="/" className="hover:text-[color:var(--color-ink)]">Privacy</Link>
-          <Link href="/" className="hover:text-[color:var(--color-ink)]">Terms</Link>
-          <Link href="/" className="hover:text-[color:var(--color-ink)]">Cookies</Link>
+          <Link href="/" className="hover:text-[color:var(--color-ink)]">{t("footer.privacy")}</Link>
+          <Link href="/" className="hover:text-[color:var(--color-ink)]">{t("footer.terms")}</Link>
+          <Link href="/" className="hover:text-[color:var(--color-ink)]">{t("footer.cookies")}</Link>
         </div>
       </div>
     </footer>

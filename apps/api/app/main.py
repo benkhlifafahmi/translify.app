@@ -12,6 +12,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.auth.schemas import UserCreate, UserRead, UserUpdate
 from app.auth.users import auth_backend, fastapi_users
 from app.config import settings
+from app.routes.billing import router as billing_router
 from app.routes.books import router as books_router
 from app.routes.chats import router as chats_router
 from app.routes.quizzes import router as quizzes_router
@@ -91,3 +92,4 @@ app.include_router(books_router)
 app.include_router(translations_router)
 app.include_router(chats_router)
 app.include_router(quizzes_router)
+app.include_router(billing_router)

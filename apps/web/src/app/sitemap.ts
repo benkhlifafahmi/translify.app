@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
 
-const LOCALES = ["en", "fr", "es", "de", "ja", "ar"] as const;
+const LOCALES = ["en", "fr", "es", "de", "ja", "ar", "id", "ms"] as const;
 
 const PUBLIC_PATHS = [
   { path: "/",           priority: 1.0,  changeFrequency: "weekly" as const },

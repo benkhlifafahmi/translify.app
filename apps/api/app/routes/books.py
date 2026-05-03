@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import upload_session
 from app.auth.models import User
 from app.auth.users import current_active_user
+from app.billing.quota import reserve_book_upload
 from app.config import settings
 from app.db import get_async_session
 from app.models.book import Book, BookFormat, BookStatus
@@ -146,6 +147,9 @@ async def finalize_upload(
     pending = upload_session.get(payload.upload_id)
     if pending is None or pending["user_id"] != str(user.id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found")
+
+    # Plan + quota gate — raises 402 with structured detail when over limit.
+    await reserve_book_upload(user, session)
 
     s3 = get_s3_client()
     try:
