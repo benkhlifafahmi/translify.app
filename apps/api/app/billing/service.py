@@ -25,6 +25,19 @@ from app.models.subscription import (
 
 log = logging.getLogger(__name__)
 
+
+def _g(obj, key, default=None):
+    """Safe `.get()` for Stripe SDK objects (whose attr-style ``get`` is
+    shadowed by ``__getattr__``). Falls back to ``default`` if missing."""
+    try:
+        if obj is None or key not in obj:
+            return default
+        val = obj[key]
+        return default if val is None else val
+    except (KeyError, TypeError):
+        return default
+
+
 stripe.api_key = settings.stripe_secret_key
 # Pin a recent Stripe API version so unrelated updates don't break payloads.
 stripe.api_version = "2024-11-20.acacia"
@@ -180,7 +193,7 @@ async def _apply_subscription_object(
     sub_obj: dict, session: AsyncSession
 ) -> Subscription | None:
     """Reconcile a Stripe subscription object into our DB row."""
-    customer_id: str | None = sub_obj.get("customer")
+    customer_id: str | None = _g(sub_obj, "customer")
     if not customer_id:
         return None
 
@@ -192,34 +205,34 @@ async def _apply_subscription_object(
         log.warning("Received subscription event for unknown customer %s", customer_id)
         return None
 
-    items = (sub_obj.get("items") or {}).get("data") or []
+    items = _g(_g(sub_obj, "items", {}), "data", []) or []
     plan: Plan | None = None
     cycle: Cycle | None = None
     if items:
-        price_id = items[0].get("price", {}).get("id")
+        price_id = _g(_g(items[0], "price", {}), "id")
         if price_id:
             mapped = plan_for_price_id(price_id)
             if mapped:
                 plan, cycle = mapped
 
-    status_raw = sub_obj.get("status") or "inactive"
+    status_raw = _g(sub_obj, "status") or "inactive"
     try:
         status = SubscriptionStatus(status_raw)
     except ValueError:
         log.warning("Unknown Stripe subscription status %r — falling back", status_raw)
         status = SubscriptionStatus.inactive
 
-    sub.stripe_subscription_id = sub_obj.get("id")
+    sub.stripe_subscription_id = _g(sub_obj, "id")
     if plan is not None:
         sub.plan = plan.value
     if cycle is not None:
         sub.cycle = cycle.value
     sub.status = status
-    sub.current_period_start = _ts_to_dt(sub_obj.get("current_period_start"))
-    sub.current_period_end = _ts_to_dt(sub_obj.get("current_period_end"))
-    sub.trial_end = _ts_to_dt(sub_obj.get("trial_end"))
-    sub.cancel_at_period_end = bool(sub_obj.get("cancel_at_period_end") or False)
-    sub.canceled_at = _ts_to_dt(sub_obj.get("canceled_at"))
+    sub.current_period_start = _ts_to_dt(_g(sub_obj, "current_period_start"))
+    sub.current_period_end = _ts_to_dt(_g(sub_obj, "current_period_end"))
+    sub.trial_end = _ts_to_dt(_g(sub_obj, "trial_end"))
+    sub.cancel_at_period_end = bool(_g(sub_obj, "cancel_at_period_end") or False)
+    sub.canceled_at = _ts_to_dt(_g(sub_obj, "canceled_at"))
 
     # Roll usage counters when the period rolls.
     usage_result = await session.execute(
@@ -260,11 +273,11 @@ async def handle_event(event: stripe.Event, session: AsyncSession) -> None:
     elif event_type == "checkout.session.completed":
         # The subscription will be created via customer.subscription.created;
         # nothing to do here unless we want to react to one-time mode (we don't).
-        log.info("Checkout completed for customer %s", obj.get("customer"))
+        log.info("Checkout completed for customer %s", _g(obj, "customer"))
 
     elif event_type == "invoice.payment_failed":
         # Status will already be flipped to past_due via subscription.updated.
-        log.warning("Invoice payment failed for customer %s", obj.get("customer"))
+        log.warning("Invoice payment failed for customer %s", _g(obj, "customer"))
 
     else:
         log.debug("Unhandled Stripe event type: %s", event_type)

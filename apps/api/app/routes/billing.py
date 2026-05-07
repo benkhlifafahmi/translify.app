@@ -147,7 +147,7 @@ async def stripe_webhook(
     try:
         await service.handle_event(event, session)
     except Exception as exc:
-        log.exception("Stripe webhook handler error for event %s", event.get("id"))
+        log.exception("Stripe webhook handler error for event %s", event["id"] if "id" in event else "?")
         # Return 500 so Stripe retries; we keep the event row so the next try
         # is a no-op when handler ran cleanly the second time.
         raise HTTPException(status_code=500, detail="Webhook handler error") from exc
