@@ -13,7 +13,7 @@ export const ar: Dict = {
   "hero.title.2": "بلغتك",
   "hero.subtitle":
     "ضع ملف PDF أو EPUB وسيُبقي Translify التنسيق كما هو تمامًا — مع ترجمة محتواه فقط. ثم تحدّث مع كتابك وأجرِ اختبارات قصيرة لتتذكّر فعلًا ما قرأت.",
-  "hero.cta.primary": "ابدأ تجربة 30 يومًا",
+  "hero.cta.primary": "ابدأ تجربة 14 يومًا",
   "hero.cta.secondary": "شاهد الخطط",
   "hero.bullet.1": "التنسيق محفوظ، صفحةً صفحة",
   "hero.bullet.2": "14 لغة، بكل أبجدية",
@@ -110,7 +110,7 @@ export const ar: Dict = {
   "cta.title.2": "اقرأه.",
   "cta.body":
     "اختر خطة، ضع كتابك الأول، واقرأ كما كنت تنوي. إن مرّت 30 يومًا ولم يعجبك، نُعيد لك كل قرش — بلا استمارات، بلا احتكاك.",
-  "cta.primary": "ابدأ تجربة 30 يومًا",
+  "cta.primary": "ابدأ تجربة 14 يومًا",
   "cta.secondary": "قارن الخطط",
   "cta.note": "لا خطة مجانية. لا رسوم مفاجئة. ألغِ متى شئت، استرداد خلال 30 يومًا.",
 
@@ -139,7 +139,7 @@ export const ar: Dict = {
   "plan.reader.tagline":
     "للفضوليين — أنهِ بضعة كتب شهريًا بلغة جديدة.",
   "plan.reader.cta": "ابدأ بـ Reader",
-  "plan.reader.f1": "حتى 10 كتب / شهر",
+  "plan.reader.f1": "2000 صفحة / شهر (≈ 10 كتب)",
   "plan.reader.f2": "كل اللغات الـ14",
   "plan.reader.f3": "قراءة جنبًا إلى جنب",
   "plan.reader.f4": "محادثة مع استشهاد",
@@ -149,7 +149,7 @@ export const ar: Dict = {
   "plan.scholar.tagline":
     "للطلاب والقرّاء الجادّين — منهجك كاملًا، مُترجَمًا.",
   "plan.scholar.cta": "كن Scholar",
-  "plan.scholar.f1": "كتب غير محدودة",
+  "plan.scholar.f1": "صفحات غير محدودة",
   "plan.scholar.f2": "كل الـ14 لغة — طابور أولوية",
   "plan.scholar.f3": "اختبارات وحقائب دراسية بلا حدود",
   "plan.scholar.f4": "تصدير ترجمات معلَّقة (PDF)",
@@ -317,7 +317,7 @@ export const ar: Dict = {
   "ob.s5.email": "البريد",
   "ob.s5.password": "كلمة المرور",
   "ob.s5.passwordHint": "8 أحرف على الأقل",
-  "ob.s5.start": "ابدأ تجربتي لـ 30 يومًا",
+  "ob.s5.start": "ابدأ تجربتي لـ 14 يومًا",
   "ob.s5.submitting": "نُجهّز رفّك…",
   "ob.s5.terms":
     "ببدء تجربتك فأنت توافق على شروطنا · ",
@@ -326,9 +326,9 @@ export const ar: Dict = {
   "ob.s5.row.monthly": "%plan% · شهريًا",
   "ob.s5.row.firstDiscount": "خصم الشهر الأول",
   "ob.s5.row.trial": "تجربة مجانية",
-  "ob.s5.row.trialDays": "30 يومًا",
+  "ob.s5.row.trialDays": "14 يومًا",
   "ob.s5.row.today": "اليوم",
-  "ob.s5.charge.pre": "لن تُحاسَب اليوم. بعد تجربتك التي مدّتها 30 يومًا، ستدفع ",
+  "ob.s5.charge.pre": "لن تُحاسَب اليوم. بعد تجربتك التي مدّتها 14 يومًا، ستدفع ",
   "ob.s5.charge.post":
     " للشهر الأول، ثم €%price%/شهر. ألغِ متى شئت، استرداد كامل خلال 30 يومًا.",
   "ob.s5.trust.cancel": "ألغِ متى شئت",

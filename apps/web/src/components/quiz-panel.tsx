@@ -1,15 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   createQuiz,
+  listQuizzes,
   submitAttempt,
   type Quiz,
   type QuizAttempt,
+  type QuizSummary,
 } from "@/lib/quizzes";
 import { ApiError } from "@/lib/api";
+import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
+import { parseQuotaError } from "@/lib/quota";
+import { UpgradeNudge } from "@/components/upgrade-nudge";
 
 interface Props {
   bookId: string;
@@ -17,10 +22,26 @@ interface Props {
 }
 
 export function QuizPanel({ bookId, selectedTranslationId }: Props) {
+  const qc = useQueryClient();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [attempt, setAttempt] = useState<QuizAttempt | null>(null);
   const [count, setCount] = useState<number>(8);
+
+  const { data: existing = [] } = useQuery<QuizSummary[]>({
+    queryKey: ["quizzes", bookId],
+    queryFn: () => listQuizzes(bookId),
+  });
+  const { data: sub } = useQuery<Subscription>({
+    queryKey: ["subscription"],
+    queryFn: getSubscription,
+    staleTime: 60_000,
+  });
+
+  const limit = sub?.quota.quizzes_per_book ?? 0;
+  const used = existing.length;
+  const unlimited = isUnlimited(limit);
+  const atLimit = !unlimited && used >= limit;
 
   const generate = useMutation<Quiz, Error, number>({
     mutationFn: (n) => createQuiz(bookId, n, selectedTranslationId),
@@ -28,6 +49,7 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
       setQuiz(q);
       setAnswers({});
       setAttempt(null);
+      qc.invalidateQueries({ queryKey: ["quizzes", bookId] });
     },
   });
 
@@ -64,6 +86,7 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
   }
 
   if (!quiz) {
+    const generateError = generate.isError ? parseQuotaError(generate.error) : null;
     return (
       <div className="flex h-full flex-col items-center justify-center gap-5 px-6 py-8 text-center">
         <div className="grid h-16 w-16 place-items-center rounded-3xl bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)]">
@@ -80,6 +103,17 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
             unless you want to.
           </p>
         </div>
+
+        {sub && (
+          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
+            <span className="tabular-nums">
+              {used}
+              <span className="opacity-50"> / </span>
+              {unlimited ? "∞" : limit}
+            </span>{" "}
+            quizzes for this book
+          </p>
+        )}
 
         <div className="flex flex-col items-center gap-2">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
@@ -107,18 +141,29 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
           size="lg"
           variant="accent"
           onClick={() => generate.mutate(count)}
-          disabled={generate.isPending}
+          disabled={generate.isPending || atLimit}
         >
-          {generate.isPending ? "Writing your quiz…" : "Make my quiz"}
+          {generate.isPending
+            ? "Writing your quiz…"
+            : atLimit
+              ? "Quiz cap reached"
+              : "Make my quiz"}
         </Button>
 
-        {generate.isError && (
+        {generateError ? (
+          <div className="w-full max-w-sm">
+            <UpgradeNudge
+              error={generateError}
+              kind={generateError.error === "no_active_plan" ? "no_plan" : "quizzes"}
+            />
+          </div>
+        ) : generate.isError ? (
           <p className="max-w-xs rounded-lg bg-[color:var(--color-destructive)]/10 px-3 py-2 text-xs text-[color:var(--color-destructive)]">
             {generate.error instanceof ApiError
               ? generate.error.message
               : (generate.error as Error).message || "Failed"}
           </p>
-        )}
+        ) : null}
       </div>
     );
   }

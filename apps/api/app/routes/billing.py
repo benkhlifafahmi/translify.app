@@ -55,17 +55,19 @@ async def get_my_subscription(
         canceled_at=sub.canceled_at,
         has_stripe_customer=bool(sub.stripe_customer_id),
         quota=QuotaRead(
-            books_per_month=q.books_per_month,
+            pages_per_month=q.pages_per_month,
+            max_pages_per_book=q.max_pages_per_book,
             quizzes_per_book=q.quizzes_per_book,
             profiles=q.profiles,
             chat_with_citations=q.chat_with_citations,
             annotated_export=q.annotated_export,
             priority_queue=q.priority_queue,
             family_safe_mode=q.family_safe_mode,
+            literary_translation=q.literary_translation,
         ),
         usage=UsageRead(
             period_start=usage.period_start if usage else None,
-            books_uploaded=usage.books_uploaded if usage else 0,
+            pages_uploaded=usage.pages_uploaded if usage else 0,
             quizzes_generated=usage.quizzes_generated if usage else 0,
         ),
     )

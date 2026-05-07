@@ -16,6 +16,8 @@ import {
   type Citation,
 } from "@/lib/chats";
 import { ApiError } from "@/lib/api";
+import { parseQuotaError } from "@/lib/quota";
+import { UpgradeNudge } from "@/components/upgrade-nudge";
 
 interface Props {
   bookId: string;
@@ -66,7 +68,7 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick }: Pr
     if (activeChatId || !chats) return;
     if (chats.length > 0) {
       setActiveChatId(chats[0].id);
-    } else if (!newChat.isPending) {
+    } else if (!newChat.isPending && !newChat.isError) {
       newChat.mutate();
     }
   }, [chats, activeChatId, newChat]);
@@ -167,7 +169,15 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick }: Pr
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {messages.length === 0 && !send.isPending ? (
+        {newChat.isError && (() => {
+          const quota = parseQuotaError(newChat.error);
+          return quota ? (
+            <div className="mx-auto max-w-sm">
+              <UpgradeNudge error={quota} kind="chat" />
+            </div>
+          ) : null;
+        })()}
+        {messages.length === 0 && !send.isPending && !newChat.isError ? (
           <EmptyChatState onPick={(text) => onSend(text)} />
         ) : (
           <div className="flex flex-col gap-3">
@@ -179,13 +189,20 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick }: Pr
               />
             ))}
             {send.isPending && <ThinkingBubble />}
-            {send.isError && (
-              <p className="rounded-lg bg-[color:var(--color-destructive)]/10 px-3 py-2 text-xs text-[color:var(--color-destructive)]">
-                {send.error instanceof ApiError
-                  ? send.error.message
-                  : (send.error as Error).message || "Send failed"}
-              </p>
-            )}
+            {send.isError &&
+              (() => {
+                const quota = parseQuotaError(send.error);
+                if (quota) {
+                  return <UpgradeNudge error={quota} kind="chat" />;
+                }
+                return (
+                  <p className="rounded-lg bg-[color:var(--color-destructive)]/10 px-3 py-2 text-xs text-[color:var(--color-destructive)]">
+                    {send.error instanceof ApiError
+                      ? send.error.message
+                      : (send.error as Error).message || "Send failed"}
+                  </p>
+                );
+              })()}
             <div ref={messagesEndRef} />
           </div>
         )}

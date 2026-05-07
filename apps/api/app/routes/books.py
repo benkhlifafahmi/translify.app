@@ -1,6 +1,7 @@
 """Books API — upload, list, retrieve, delete."""
 from __future__ import annotations
 
+import io
 import logging
 import os
 import uuid
@@ -68,6 +69,34 @@ def _default_title(filename: str) -> str:
     base = os.path.basename(filename)
     name, _ = os.path.splitext(base)
     return (name.strip() or "Untitled")[:500]
+
+
+# 1 KB is roughly 0.5 pages of EPUB body (HTML+CSS overhead included). This is
+# a rough estimate used only for the upload-time quota gate; the real page
+# count for EPUBs is set during ingestion based on chunk page boundaries.
+_EPUB_BYTES_PER_PAGE_ESTIMATE = 2_000
+
+
+def _peek_page_count(fmt: BookFormat, file_key: str, expected_size: int) -> int:
+    """Return a best-effort page count without parsing the full document.
+
+    For PDFs we read the metadata via pypdf, which is fast (no text extraction).
+    For EPUBs we fall back to a size-based estimate — the ingestion pipeline
+    will overwrite ``Book.page_count`` with the chunk-derived value later.
+    """
+    if fmt is BookFormat.epub:
+        return max(1, expected_size // _EPUB_BYTES_PER_PAGE_ESTIMATE)
+
+    try:
+        from pypdf import PdfReader  # local import: heavy dep
+        s3 = get_s3_client()
+        obj = s3.get_object(Bucket=settings.minio_bucket, Key=file_key)
+        data = obj["Body"].read()
+        reader = PdfReader(io.BytesIO(data))
+        return max(1, len(reader.pages))
+    except Exception:
+        log.exception("page-count peek failed for key=%s — falling back", file_key)
+        return max(1, expected_size // _EPUB_BYTES_PER_PAGE_ESTIMATE)
 
 
 async def _get_owned_book(
@@ -148,9 +177,6 @@ async def finalize_upload(
     if pending is None or pending["user_id"] != str(user.id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found")
 
-    # Plan + quota gate — raises 402 with structured detail when over limit.
-    await reserve_book_upload(user, session)
-
     s3 = get_s3_client()
     try:
         head = s3.head_object(Bucket=settings.minio_bucket, Key=pending["file_key"])
@@ -175,14 +201,23 @@ async def finalize_upload(
             detail=f"Uploaded size {actual_size} does not match reserved size {expected_size}.",
         )
 
+    fmt = BookFormat(pending["format"])
+    # Pre-quota: peek the page count without fully parsing. Quota gate uses it
+    # to enforce both pages_per_month and max_pages_per_book.
+    page_count = _peek_page_count(fmt, pending["file_key"], actual_size)
+
+    # Plan + quota gate — raises 402 with structured detail when over limit.
+    await reserve_book_upload(user, page_count, session)
+
     book = Book(
         user_id=user.id,
         title=(payload.title or _default_title(pending["filename"])).strip() or "Untitled",
         author=(payload.author or None),
         source_language=payload.source_language,
-        format=BookFormat(pending["format"]),
+        format=fmt,
         file_key=pending["file_key"],
         file_size_bytes=actual_size,
+        page_count=page_count,
         status=BookStatus.uploaded,
     )
     session.add(book)

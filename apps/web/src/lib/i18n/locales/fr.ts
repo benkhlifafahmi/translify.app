@@ -13,7 +13,7 @@ export const fr: Dict = {
   "hero.title.2": "dans votre langue",
   "hero.subtitle":
     "Déposez un PDF ou EPUB et Translify garde la mise en page identique — simplement traduite. Discutez ensuite avec votre livre et faites des quiz pour vraiment vous souvenir de ce que vous lisez.",
-  "hero.cta.primary": "Essai de 30 jours",
+  "hero.cta.primary": "Essai de 14 jours",
   "hero.cta.secondary": "Voir les forfaits",
   "hero.bullet.1": "Mise en page préservée, page par page",
   "hero.bullet.2": "14 langues, toutes les écritures",
@@ -110,7 +110,7 @@ export const fr: Dict = {
   "cta.title.2": "Lisez-le.",
   "cta.body":
     "Choisissez un forfait, déposez votre premier livre, et lisez comme vous le pensiez. Si après 30 jours vous n'aimez pas, on rembourse intégralement — pas de formulaire, pas de friction.",
-  "cta.primary": "Essai de 30 jours",
+  "cta.primary": "Essai de 14 jours",
   "cta.secondary": "Comparer les forfaits",
   "cta.note":
     "Pas de plan gratuit. Pas de frais surprise. Annulation libre, remboursement sous 30 jours.",
@@ -140,7 +140,7 @@ export const fr: Dict = {
   "plan.reader.tagline":
     "Pour les curieux — finissez quelques livres par mois dans une nouvelle langue.",
   "plan.reader.cta": "Commencer en Reader",
-  "plan.reader.f1": "Jusqu'à 10 livres / mois",
+  "plan.reader.f1": "2 000 pages / mois (~10 livres)",
   "plan.reader.f2": "Les 14 langues",
   "plan.reader.f3": "Lecture côte à côte",
   "plan.reader.f4": "Chat avec citations",
@@ -150,7 +150,7 @@ export const fr: Dict = {
   "plan.scholar.tagline":
     "Pour étudiants et lecteurs sérieux — tout votre programme, traduit.",
   "plan.scholar.cta": "Devenir Scholar",
-  "plan.scholar.f1": "Livres illimités",
+  "plan.scholar.f1": "Pages illimitées",
   "plan.scholar.f2": "Les 14 langues — file prioritaire",
   "plan.scholar.f3": "Quiz et fiches d'étude illimités",
   "plan.scholar.f4": "Export annoté du PDF traduit",
@@ -318,7 +318,7 @@ export const fr: Dict = {
   "ob.s5.email": "E-mail",
   "ob.s5.password": "Mot de passe",
   "ob.s5.passwordHint": "Au moins 8 caractères",
-  "ob.s5.start": "Commencer mon essai de 30 jours",
+  "ob.s5.start": "Commencer mon essai de 14 jours",
   "ob.s5.submitting": "On prépare votre étagère…",
   "ob.s5.terms":
     "En commençant votre essai, vous acceptez nos conditions · ",
@@ -327,9 +327,9 @@ export const fr: Dict = {
   "ob.s5.row.monthly": "%plan% · mensuel",
   "ob.s5.row.firstDiscount": "Remise du premier mois",
   "ob.s5.row.trial": "Essai gratuit",
-  "ob.s5.row.trialDays": "30 jours",
+  "ob.s5.row.trialDays": "14 jours",
   "ob.s5.row.today": "Aujourd'hui",
-  "ob.s5.charge.pre": "Aucun prélèvement aujourd'hui. Après vos 30 jours d'essai, vous paierez ",
+  "ob.s5.charge.pre": "Aucun prélèvement aujourd'hui. Après vos 14 jours d'essai, vous paierez ",
   "ob.s5.charge.post":
     " pour le premier mois, puis €%price%/mois. Annulation libre, remboursement intégral sous 30 jours.",
   "ob.s5.trust.cancel": "Annulation libre",

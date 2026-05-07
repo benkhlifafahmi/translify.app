@@ -13,7 +13,7 @@ export const ja: Dict = {
   "hero.title.2": "あなたの言葉で",
   "hero.subtitle":
     "PDFやEPUBをアップロードすれば、Translifyはレイアウトをそのまま保ち、翻訳だけを行います。本とチャットして、クイズで定着させ、本当に「読んだ」を実感できます。",
-  "hero.cta.primary": "30日間無料で試す",
+  "hero.cta.primary": "14日間無料で試す",
   "hero.cta.secondary": "プランを見る",
   "hero.bullet.1": "レイアウトをページごとに保持",
   "hero.bullet.2": "14言語、すべての文字体系",
@@ -110,7 +110,7 @@ export const ja: Dict = {
   "cta.title.2": "読みましょう。",
   "cta.body":
     "プランを選び、最初の本を入れて、思い描いた通りに読んでください。30日試して気に入らなければ全額返金——書類なし、面倒なし。",
-  "cta.primary": "30日間無料で試す",
+  "cta.primary": "14日間無料で試す",
   "cta.secondary": "プランを比較",
   "cta.note":
     "無料プランなし。隠れた請求なし。いつでも解約、30日以内なら返金。",
@@ -139,7 +139,7 @@ export const ja: Dict = {
   "plan.reader.name": "Reader",
   "plan.reader.tagline": "好奇心旺盛なあなたへ——新しい言語で月に数冊。",
   "plan.reader.cta": "Readerで始める",
-  "plan.reader.f1": "月10冊まで",
+  "plan.reader.f1": "月2,000ページ(およそ10冊)",
   "plan.reader.f2": "全14言語",
   "plan.reader.f3": "並列読み",
   "plan.reader.f4": "出典つきチャット",
@@ -149,7 +149,7 @@ export const ja: Dict = {
   "plan.scholar.tagline":
     "学生・本気の読者へ——シラバス全体を翻訳。",
   "plan.scholar.cta": "Scholarになる",
-  "plan.scholar.f1": "本数無制限",
+  "plan.scholar.f1": "ページ数無制限",
   "plan.scholar.f2": "全14言語——優先キュー",
   "plan.scholar.f3": "クイズと学習パック無制限",
   "plan.scholar.f4": "注釈つき翻訳PDFをエクスポート",
@@ -317,7 +317,7 @@ export const ja: Dict = {
   "ob.s5.email": "メール",
   "ob.s5.password": "パスワード",
   "ob.s5.passwordHint": "8文字以上",
-  "ob.s5.start": "30日間の無料トライアルを始める",
+  "ob.s5.start": "14日間の無料トライアルを始める",
   "ob.s5.submitting": "本棚を準備中…",
   "ob.s5.terms":
     "トライアルを始めると利用規約に同意したことになります · ",
@@ -326,9 +326,9 @@ export const ja: Dict = {
   "ob.s5.row.monthly": "%plan% · 月額",
   "ob.s5.row.firstDiscount": "初月割引",
   "ob.s5.row.trial": "無料トライアル",
-  "ob.s5.row.trialDays": "30日",
+  "ob.s5.row.trialDays": "14日",
   "ob.s5.row.today": "本日のお支払い",
-  "ob.s5.charge.pre": "本日の請求はありません。30日のトライアル後、初月は ",
+  "ob.s5.charge.pre": "本日の請求はありません。14日のトライアル後、初月は ",
   "ob.s5.charge.post":
     " 、その後は €%price%/月。いつでも解約でき、30日以内なら全額返金します。",
   "ob.s5.trust.cancel": "いつでも解約",

@@ -10,6 +10,8 @@ import {
   type Translation,
 } from "@/lib/translations";
 import { ApiError } from "@/lib/api";
+import { parseQuotaError } from "@/lib/quota";
+import { UpgradeNudge } from "@/components/upgrade-nudge";
 
 const LANGUAGES: { code: string; label: string; flag: string }[] = [
   { code: "en", label: "English", flag: "🇬🇧" },
@@ -124,13 +126,19 @@ export function TranslatePanel({
           {isPending ? "Translating…" : "Translate this book"}
         </Button>
 
-        {create.isError && (
-          <p className="rounded-lg bg-[color:var(--color-destructive)]/10 px-3 py-2 text-xs text-[color:var(--color-destructive)]">
-            {create.error instanceof ApiError
-              ? create.error.message
-              : create.error.message || "Translation failed"}
-          </p>
-        )}
+        {create.isError && (() => {
+          const quota = parseQuotaError(create.error);
+          if (quota) {
+            return <UpgradeNudge error={quota} kind="translate" tone="compact" />;
+          }
+          return (
+            <p className="rounded-lg bg-[color:var(--color-destructive)]/10 px-3 py-2 text-xs text-[color:var(--color-destructive)]">
+              {create.error instanceof ApiError
+                ? create.error.message
+                : create.error.message || "Translation failed"}
+            </p>
+          );
+        })()}
       </div>
 
       <div>

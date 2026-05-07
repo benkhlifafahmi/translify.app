@@ -13,7 +13,7 @@ export const ms: Dict = {
   "hero.title.2": "dalam bahasa anda",
   "hero.subtitle":
     "Lepaskan PDF atau EPUB dan Translify mengekalkan susun atur sama persis — cuma diterjemahkan. Kemudian berbual dengan buku anda dan uji diri sendiri, supaya anda benar-benar ingat apa yang anda baca.",
-  "hero.cta.primary": "Cuba 30 hari",
+  "hero.cta.primary": "Cuba 14 hari",
   "hero.cta.secondary": "Lihat pelan",
   "hero.bullet.1": "Susun atur dikekalkan, halaman demi halaman",
   "hero.bullet.2": "14 bahasa, semua tulisan",
@@ -110,7 +110,7 @@ export const ms: Dict = {
   "cta.title.2": "Bacalah.",
   "cta.body":
     "Pilih pelan, lepaskan buku pertama anda, dan baca seperti niat anda. Jika selepas 30 hari anda tidak suka, kami pulangkan sepenuhnya — tiada borang, tiada gangguan.",
-  "cta.primary": "Cuba 30 hari",
+  "cta.primary": "Cuba 14 hari",
   "cta.secondary": "Bandingkan pelan",
   "cta.note":
     "Tiada pelan percuma. Tiada caj mengejut. Berhenti bila-bila, wang dikembalikan dalam 30 hari.",
@@ -140,7 +140,7 @@ export const ms: Dict = {
   "plan.reader.tagline":
     "Untuk yang ingin tahu — habiskan beberapa buku sebulan dalam bahasa baru.",
   "plan.reader.cta": "Mula sebagai Reader",
-  "plan.reader.f1": "Sehingga 10 buku / bulan",
+  "plan.reader.f1": "2,000 halaman / bulan (≈10 buku)",
   "plan.reader.f2": "Semua 14 bahasa",
   "plan.reader.f3": "Baca bersebelahan",
   "plan.reader.f4": "Sembang dengan rujukan",
@@ -150,7 +150,7 @@ export const ms: Dict = {
   "plan.scholar.tagline":
     "Untuk pelajar dan pembaca serius — seluruh silibus anda, diterjemah.",
   "plan.scholar.cta": "Jadi Scholar",
-  "plan.scholar.f1": "Buku tanpa had",
+  "plan.scholar.f1": "Halaman tanpa had",
   "plan.scholar.f2": "Semua 14 bahasa — barisan keutamaan",
   "plan.scholar.f3": "Kuiz & pek pembelajaran tanpa had",
   "plan.scholar.f4": "Eksport terjemahan beranotasi (PDF)",
@@ -318,7 +318,7 @@ export const ms: Dict = {
   "ob.s5.email": "E-mel",
   "ob.s5.password": "Kata laluan",
   "ob.s5.passwordHint": "Minimum 8 aksara",
-  "ob.s5.start": "Mulakan percubaan 30 hari saya",
+  "ob.s5.start": "Mulakan percubaan 14 hari saya",
   "ob.s5.submitting": "Menyiapkan rak anda…",
   "ob.s5.terms":
     "Dengan memulakan percubaan, anda bersetuju dengan terma kami · ",
@@ -327,9 +327,9 @@ export const ms: Dict = {
   "ob.s5.row.monthly": "%plan% · bulanan",
   "ob.s5.row.firstDiscount": "Diskaun bulan pertama",
   "ob.s5.row.trial": "Percubaan percuma",
-  "ob.s5.row.trialDays": "30 hari",
+  "ob.s5.row.trialDays": "14 hari",
   "ob.s5.row.today": "Hari ini",
-  "ob.s5.charge.pre": "Anda tidak akan dicaj hari ini. Selepas percubaan 30 hari anda, anda akan bayar ",
+  "ob.s5.charge.pre": "Anda tidak akan dicaj hari ini. Selepas percubaan 14 hari anda, anda akan bayar ",
   "ob.s5.charge.post":
     " untuk bulan pertama, kemudian €%price%/bulan. Berhenti bila-bila, pulangan penuh dalam 30 hari.",
   "ob.s5.trust.cancel": "Berhenti bila-bila",

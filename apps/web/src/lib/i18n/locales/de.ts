@@ -13,7 +13,7 @@ export const de: Dict = {
   "hero.title.2": "in deiner Sprache",
   "hero.subtitle":
     "Lade ein PDF oder EPUB hoch und Translify behält das Layout exakt bei — nur übersetzt. Chatte dann mit deinem Buch und teste dich selbst, damit du wirklich behältst, was du liest.",
-  "hero.cta.primary": "30-Tage-Test starten",
+  "hero.cta.primary": "14 Tage testen",
   "hero.cta.secondary": "Pläne ansehen",
   "hero.bullet.1": "Layout erhalten, Seite für Seite",
   "hero.bullet.2": "14 Sprachen, jede Schrift",
@@ -110,7 +110,7 @@ export const de: Dict = {
   "cta.title.2": "Lies es.",
   "cta.body":
     "Wähle einen Plan, lade dein erstes Buch hoch, und lies wie du wolltest. Wenn du nach 30 Tagen nicht begeistert bist, geben wir alles zurück — ohne Formulare, ohne Reibung.",
-  "cta.primary": "30-Tage-Test starten",
+  "cta.primary": "14 Tage testen",
   "cta.secondary": "Pläne vergleichen",
   "cta.note":
     "Kein Gratisplan. Keine Überraschungsgebühren. Jederzeit kündbar, 30 Tage Rückgabe.",
@@ -140,7 +140,7 @@ export const de: Dict = {
   "plan.reader.tagline":
     "Für die Neugierigen — beende ein paar Bücher pro Monat in einer neuen Sprache.",
   "plan.reader.cta": "Als Reader starten",
-  "plan.reader.f1": "Bis zu 10 Bücher / Monat",
+  "plan.reader.f1": "2.000 Seiten / Monat (~10 Bücher)",
   "plan.reader.f2": "Alle 14 Sprachen",
   "plan.reader.f3": "Lesen Seite an Seite",
   "plan.reader.f4": "Chat mit Zitaten",
@@ -150,7 +150,7 @@ export const de: Dict = {
   "plan.scholar.tagline":
     "Für Studierende und ernsthafte Leser — dein ganzer Lehrplan, übersetzt.",
   "plan.scholar.cta": "Scholar werden",
-  "plan.scholar.f1": "Unbegrenzte Bücher",
+  "plan.scholar.f1": "Unbegrenzte Seiten",
   "plan.scholar.f2": "Alle 14 Sprachen — bevorzugte Warteschlange",
   "plan.scholar.f3": "Unbegrenzte Quizze & Lernpakete",
   "plan.scholar.f4": "Annotierte Übersetzungen exportieren (PDF)",
@@ -318,7 +318,7 @@ export const de: Dict = {
   "ob.s5.email": "E-Mail",
   "ob.s5.password": "Passwort",
   "ob.s5.passwordHint": "Mindestens 8 Zeichen",
-  "ob.s5.start": "Meinen 30-Tage-Test starten",
+  "ob.s5.start": "Meine 14-Tage-Probezeit starten",
   "ob.s5.submitting": "Dein Regal wird vorbereitet…",
   "ob.s5.terms":
     "Mit dem Start deines Tests stimmst du unseren AGB zu · ",
@@ -327,7 +327,7 @@ export const de: Dict = {
   "ob.s5.row.monthly": "%plan% · monatlich",
   "ob.s5.row.firstDiscount": "Rabatt im ersten Monat",
   "ob.s5.row.trial": "Kostenloser Test",
-  "ob.s5.row.trialDays": "30 Tage",
+  "ob.s5.row.trialDays": "14 Tage",
   "ob.s5.row.today": "Heute",
   "ob.s5.charge.pre": "Heute wird dir nichts berechnet. Nach deinem 30-Tage-Test zahlst du ",
   "ob.s5.charge.post":

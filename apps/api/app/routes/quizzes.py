@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
 from app.auth.users import current_active_user
+from app.billing.quota import reserve_quiz_for_book
 from app.db import get_async_session
 from app.models.book import Book, BookStatus
 from app.models.quiz import Quiz, QuizAttempt
@@ -114,6 +115,9 @@ async def create_quiz(
             status_code=status.HTTP_409_CONFLICT,
             detail="Book is not ready yet.",
         )
+
+    # Plan + per-book quiz quota gate — raises 402 with structured detail.
+    await reserve_quiz_for_book(user, book.id, session)
 
     output_language: str | None = None
     if payload.translation_id is not None:

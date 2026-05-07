@@ -21,9 +21,9 @@ import { LOCALES, useI18n } from "@/lib/i18n";
 type Tab = "profile" | "subscription" | "security" | "danger";
 
 const PLAN_PRICES: Record<Exclude<Plan, "free">, { monthly: number; yearly: number }> = {
-  reader:  { monthly: 9,  yearly: 7 },
-  scholar: { monthly: 19, yearly: 15 },
-  family:  { monthly: 29, yearly: 23 },
+  reader:  { monthly: 14, yearly: 11 },
+  scholar: { monthly: 24, yearly: 19 },
+  family:  { monthly: 34, yearly: 27 },
 };
 
 export default function AccountPage() {
@@ -104,11 +104,8 @@ function AccountInner() {
       setFlash({ tone: "info", text: "Checkout cancelled. No charges made." });
       setTab("subscription");
     }
-    if (upgrade === "quota") {
-      setFlash({
-        tone: "info",
-        text: "You've hit your plan's monthly book limit. Upgrade below to keep uploading.",
-      });
+    if (upgrade) {
+      setFlash({ tone: "info", text: upgradeFlash(upgrade) });
       setTab("subscription");
     }
   }, [params]);
@@ -488,9 +485,9 @@ function SubscriptionSection({
 
   const isSubscriber = sub.plan !== "free" && sub.status !== "inactive";
 
-  const booksUsed = sub.usage.books_uploaded;
-  const booksLimit = sub.quota.books_per_month;
-  const pct = isUnlimited(booksLimit) ? 0 : Math.min(100, Math.round((booksUsed / Math.max(1, booksLimit)) * 100));
+  const pagesUsed = sub.usage.pages_uploaded;
+  const pagesLimit = sub.quota.pages_per_month;
+  const pct = isUnlimited(pagesLimit) ? 0 : Math.min(100, Math.round((pagesUsed / Math.max(1, pagesLimit)) * 100));
 
   return (
     <SectionShell
@@ -539,16 +536,16 @@ function SubscriptionSection({
             <div className="mt-6">
               <div className="flex items-baseline justify-between">
                 <span className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
-                  Books this period
+                  Pages this period
                 </span>
                 <span className="font-[family-name:var(--font-display)] text-[1.1rem] font-semibold tabular-nums text-[color:var(--color-ink)]">
-                  {booksUsed}{" "}
+                  {pagesUsed.toLocaleString()}{" "}
                   <span className="text-[color:var(--color-ink-soft)]">/</span>{" "}
-                  {isUnlimited(booksLimit) ? "∞" : booksLimit}
+                  {isUnlimited(pagesLimit) ? "∞" : pagesLimit.toLocaleString()}
                 </span>
               </div>
               <div className="mt-2 h-3 overflow-hidden rounded-full bg-white/60 ring-1 ring-[color:var(--color-border)] ring-inset">
-                {isUnlimited(booksLimit) ? (
+                {isUnlimited(pagesLimit) ? (
                   <div className="h-full w-full bg-gradient-to-r from-[color:var(--color-saffron)] via-[color:var(--color-coral)] to-[color:var(--color-plum)] opacity-60" />
                 ) : (
                   <div
@@ -557,9 +554,9 @@ function SubscriptionSection({
                   />
                 )}
               </div>
-              {!isUnlimited(booksLimit) && booksUsed >= booksLimit * 0.8 && (
+              {!isUnlimited(pagesLimit) && pagesUsed >= pagesLimit * 0.8 && (
                 <p className="mt-2 text-[0.78rem] text-[color:var(--color-coral-deep)]">
-                  ⚠ You&apos;ve used {pct}% of your monthly books. Time to{" "}
+                  ⚠ You&apos;ve used {pct}% of your monthly pages. Time to{" "}
                   <button
                     type="button"
                     onClick={() => document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" })}
@@ -599,6 +596,7 @@ function SubscriptionSection({
         {/* Quota chips */}
         <div className="relative mt-7 flex flex-wrap gap-2">
           <Chip on={sub.quota.chat_with_citations}>Chat with citations</Chip>
+          <Chip on={sub.quota.literary_translation}>Literary translation</Chip>
           <Chip on={sub.quota.annotated_export}>Annotated PDF export</Chip>
           <Chip on={sub.quota.priority_queue}>Priority queue</Chip>
           <Chip on={sub.quota.family_safe_mode}>Kid-safe mode</Chip>
@@ -759,8 +757,8 @@ function PlanStamp({
   const price = PLAN_PRICES[plan][cycle];
 
   const features: Record<typeof plan, string[]> = {
-    reader: ["10 books / month", "All 14 languages", "Side-by-side reading", "Quiz mode (10 q / book)"],
-    scholar: ["Unlimited books", "Priority queue", "Annotated PDF export", "Smart vocabulary lists"],
+    reader: ["2,000 pages / month", "All 14 languages", "Side-by-side reading", "Chat with citations", "Quiz mode (10 q / book)"],
+    scholar: ["Unlimited pages", "Literary translation (Anthropic)", "Priority queue", "Annotated PDF export", "Smart vocabulary lists"],
     family: ["Everything in Scholar", "5 reader profiles", "Kid-safe mode", "Parent dashboard"],
   };
   const tones: Record<typeof plan, { ring: string; bg: string; chip: string; chipText: string }> = {
@@ -1096,6 +1094,25 @@ function ParchmentBackdrop() {
       <div aria-hidden className="pointer-events-none absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-[color:var(--color-coral)]/10 blur-3xl" />
     </>
   );
+}
+
+function upgradeFlash(reason: string): string {
+  switch (reason) {
+    case "pages":
+    case "books":   // legacy alias from older links
+    case "quota":   // legacy alias from older links
+      return "This upload would put you over your plan's monthly page budget. Upgrade below to keep going.";
+    case "quizzes":
+      return "You've used every quiz this book allows on your plan. Upgrade for unlimited.";
+    case "chat":
+      return "Chat with citations is a Reader feature. Pick a plan below to unlock.";
+    case "translate":
+      return "Translations need an active plan. Pick one below — first month is on us.";
+    case "no_plan":
+      return "An active plan is required for that. Pick one below to keep going.";
+    default:
+      return "Upgrade your plan below to unlock more.";
+  }
 }
 
 function formatDate(iso: string): string {

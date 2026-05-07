@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
 from app.auth.users import current_active_user
+from app.billing.quota import require_active_plan
 from app.db import get_async_session
 from app.models.book import Book, BookStatus
 from app.models.translation import Translation, TranslationProvider, TranslationStatus
@@ -91,6 +92,9 @@ async def create_translation(
             detail="Book is not ready yet. Wait for processing to finish.",
         )
 
+    # Translations are a paid feature — gate on active plan.
+    await require_active_plan(user, session)
+
     target_lang = payload.target_language.strip().lower()
     if not target_lang:
         raise HTTPException(
@@ -156,6 +160,7 @@ async def retry_translation(
     session: AsyncSession = Depends(get_async_session),
 ) -> Translation:
     """Re-run a translation in place. Useful in dev when tweaking the engine."""
+    await require_active_plan(user, session)
     translation = await _get_owned_translation(translation_id, user, session)
     if translation.status == TranslationStatus.in_progress:
         raise HTTPException(

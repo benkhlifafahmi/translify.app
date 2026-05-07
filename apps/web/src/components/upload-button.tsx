@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { uploadBook, type Book } from "@/lib/books";
 import { ApiError } from "@/lib/api";
+import { parseQuotaError, upgradeUrl } from "@/lib/quota";
 
 const ACCEPTED = ".pdf,.epub,application/pdf,application/epub+zip";
 
@@ -37,9 +38,11 @@ export function UploadButton() {
       void queryClient.invalidateQueries({ queryKey: ["books"] });
     },
     onError: (err) => {
-      // 402 → quota exceeded → nudge to /account?upgrade=1
-      if (err instanceof ApiError && err.status === 402) {
-        window.location.href = "/account?upgrade=quota";
+      const quota = parseQuotaError(err);
+      if (quota) {
+        window.location.href = upgradeUrl(
+          quota.error === "no_active_plan" ? "no_plan" : "pages",
+        );
         return;
       }
       setError(err instanceof ApiError ? err.message : err.message || "Upload failed");

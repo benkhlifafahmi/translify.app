@@ -13,7 +13,7 @@ export const id: Dict = {
   "hero.title.2": "dalam bahasamu",
   "hero.subtitle":
     "Lemparkan PDF atau EPUB, dan Translify menjaga tata letaknya sama persis — hanya diterjemahkan. Lalu ngobrol dengan bukumu dan kuis dirimu, supaya kamu benar-benar ingat apa yang kamu baca.",
-  "hero.cta.primary": "Coba 30 hari",
+  "hero.cta.primary": "Coba 14 hari",
   "hero.cta.secondary": "Lihat paket",
   "hero.bullet.1": "Tata letak terjaga, halaman demi halaman",
   "hero.bullet.2": "14 bahasa, semua aksara",
@@ -110,7 +110,7 @@ export const id: Dict = {
   "cta.title.2": "Baca saja.",
   "cta.body":
     "Pilih paket, lemparkan buku pertamamu, dan baca seperti niatmu semula. Kalau dalam 30 hari kamu tidak suka, kami kembalikan penuh — tanpa formulir, tanpa ribet.",
-  "cta.primary": "Coba 30 hari",
+  "cta.primary": "Coba 14 hari",
   "cta.secondary": "Bandingkan paket",
   "cta.note":
     "Tidak ada paket gratis. Tidak ada biaya kejutan. Berhenti kapan saja, uang kembali dalam 30 hari.",
@@ -140,7 +140,7 @@ export const id: Dict = {
   "plan.reader.tagline":
     "Untuk yang penasaran — selesaikan beberapa buku tiap bulan dalam bahasa baru.",
   "plan.reader.cta": "Mulai sebagai Reader",
-  "plan.reader.f1": "Hingga 10 buku / bulan",
+  "plan.reader.f1": "2.000 halaman / bulan (≈10 buku)",
   "plan.reader.f2": "Semua 14 bahasa",
   "plan.reader.f3": "Baca berdampingan",
   "plan.reader.f4": "Obrolan dengan sumber",
@@ -150,7 +150,7 @@ export const id: Dict = {
   "plan.scholar.tagline":
     "Untuk pelajar dan pembaca serius — seluruh silabusmu, diterjemahkan.",
   "plan.scholar.cta": "Jadi Scholar",
-  "plan.scholar.f1": "Buku tak terbatas",
+  "plan.scholar.f1": "Halaman tak terbatas",
   "plan.scholar.f2": "Semua 14 bahasa — antrean prioritas",
   "plan.scholar.f3": "Kuis & paket belajar tak terbatas",
   "plan.scholar.f4": "Ekspor terjemahan beranotasi (PDF)",
@@ -318,7 +318,7 @@ export const id: Dict = {
   "ob.s5.email": "Email",
   "ob.s5.password": "Kata sandi",
   "ob.s5.passwordHint": "Minimal 8 karakter",
-  "ob.s5.start": "Mulai uji coba 30 hariku",
+  "ob.s5.start": "Mulai uji coba 14 hariku",
   "ob.s5.submitting": "Menyiapkan rakmu…",
   "ob.s5.terms":
     "Dengan memulai uji coba kamu setuju dengan ketentuan kami · ",
@@ -327,9 +327,9 @@ export const id: Dict = {
   "ob.s5.row.monthly": "%plan% · bulanan",
   "ob.s5.row.firstDiscount": "Diskon bulan pertama",
   "ob.s5.row.trial": "Uji coba gratis",
-  "ob.s5.row.trialDays": "30 hari",
+  "ob.s5.row.trialDays": "14 hari",
   "ob.s5.row.today": "Hari ini",
-  "ob.s5.charge.pre": "Hari ini kamu belum ditagih. Setelah uji coba 30 harimu, kamu bayar ",
+  "ob.s5.charge.pre": "Hari ini kamu belum ditagih. Setelah uji coba 14 harimu, kamu bayar ",
   "ob.s5.charge.post":
     " untuk bulan pertama, lalu €%price%/bln. Berhenti kapan saja, refund penuh dalam 30 hari.",
   "ob.s5.trust.cancel": "Berhenti kapan saja",

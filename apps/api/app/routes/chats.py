@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
 from app.auth.users import current_active_user
+from app.billing.quota import require_active_plan
 from app.db import get_async_session
 from app.models.book import Book, BookStatus
 from app.models.chat import Chat, ChatScope, Message, MessageRole
@@ -82,6 +83,8 @@ async def create_book_chat(
             status_code=status.HTTP_409_CONFLICT,
             detail="Book is not ready yet.",
         )
+    # Reader-and-up only — raises 402 if the user has no active plan.
+    await require_active_plan(user, session)
     chat = Chat(
         user_id=user.id,
         book_id=book.id,
@@ -127,6 +130,8 @@ async def send_message(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> SendMessageResponse:
+    # Gate the live-cost path (LLM call) on having an active plan.
+    await require_active_plan(user, session)
     chat = await _get_owned_chat(chat_id, user, session)
     if chat.book_id is None:
         raise HTTPException(

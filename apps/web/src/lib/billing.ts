@@ -11,18 +11,20 @@ export type SubscriptionStatus =
   | "unpaid";
 
 export interface Quota {
-  books_per_month: number;
+  pages_per_month: number;
+  max_pages_per_book: number;
   quizzes_per_book: number;
   profiles: number;
   chat_with_citations: boolean;
   annotated_export: boolean;
   priority_queue: boolean;
   family_safe_mode: boolean;
+  literary_translation: boolean;
 }
 
 export interface Usage {
   period_start: string | null;
-  books_uploaded: number;
+  pages_uploaded: number;
   quizzes_generated: number;
 }
 

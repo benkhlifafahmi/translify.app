@@ -22,18 +22,20 @@ class PortalResponse(BaseModel):
 
 
 class QuotaRead(BaseModel):
-    books_per_month: int
+    pages_per_month: int
+    max_pages_per_book: int
     quizzes_per_book: int
     profiles: int
     chat_with_citations: bool
     annotated_export: bool
     priority_queue: bool
     family_safe_mode: bool
+    literary_translation: bool
 
 
 class UsageRead(BaseModel):
     period_start: datetime | None
-    books_uploaded: int
+    pages_uploaded: int
     quizzes_generated: int
 
 

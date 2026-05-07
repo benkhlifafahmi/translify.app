@@ -128,7 +128,7 @@ async def create_checkout_session(
                 "plan": plan.value,
                 "cycle": cycle.value,
             },
-            "trial_period_days": 30,
+            "trial_period_days": 14,
         },
         "metadata": {
             "user_id": str(user.id),
@@ -246,7 +246,7 @@ async def _apply_subscription_object(
         usage.period_start is None or usage.period_start < sub.current_period_start
     ):
         usage.period_start = sub.current_period_start
-        usage.books_uploaded = 0
+        usage.pages_uploaded = 0
         usage.quizzes_generated = 0
 
     return sub

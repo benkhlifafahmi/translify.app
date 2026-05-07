@@ -109,7 +109,7 @@ class UsageCounter(Base):
     period_start: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    books_uploaded: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    pages_uploaded: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     quizzes_generated: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     updated_at: Mapped[datetime] = mapped_column(

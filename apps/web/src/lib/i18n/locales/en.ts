@@ -15,7 +15,7 @@ export const en: Dict = {
   "hero.title.2": "in your language",
   "hero.subtitle":
     "Drop in a PDF or EPUB and Translify keeps the layout exactly the same — just translated. Then chat with your book and quiz yourself, so you actually remember what you read.",
-  "hero.cta.primary": "Start your 30-day trial",
+  "hero.cta.primary": "Start your 14-day trial",
   "hero.cta.secondary": "See plans",
   "hero.bullet.1": "Layout preserved, page by page",
   "hero.bullet.2": "14 languages, every script",
@@ -120,7 +120,7 @@ export const en: Dict = {
   "cta.title.2": "Read it.",
   "cta.body":
     "Pick a plan, drop your first book, and read the way you mean to. If 30 days in you don't love it, we refund you in full — no forms, no friction.",
-  "cta.primary": "Start your 30-day trial",
+  "cta.primary": "Start your 14-day trial",
   "cta.secondary": "Compare plans",
   "cta.note": "No free plan. No surprise charges. Cancel any time, refund within 30 days.",
 
@@ -150,7 +150,7 @@ export const en: Dict = {
   "plan.reader.name": "Reader",
   "plan.reader.tagline": "For the curious — finish a few books a month in a new language.",
   "plan.reader.cta": "Start as a Reader",
-  "plan.reader.f1": "Up to 10 books / month",
+  "plan.reader.f1": "2,000 pages / month (~10 books)",
   "plan.reader.f2": "All 14 languages",
   "plan.reader.f3": "Side-by-side reading",
   "plan.reader.f4": "Chat with citations",
@@ -159,7 +159,7 @@ export const en: Dict = {
   "plan.scholar.name": "Scholar",
   "plan.scholar.tagline": "For students and serious readers — your whole syllabus, translated.",
   "plan.scholar.cta": "Become a Scholar",
-  "plan.scholar.f1": "Unlimited books",
+  "plan.scholar.f1": "Unlimited pages",
   "plan.scholar.f2": "All 14 languages — priority queue",
   "plan.scholar.f3": "Unlimited quizzes & study packs",
   "plan.scholar.f4": "Export annotated translations (PDF)",
@@ -370,7 +370,7 @@ export const en: Dict = {
   "ob.s5.email": "Email",
   "ob.s5.password": "Password",
   "ob.s5.passwordHint": "At least 8 characters",
-  "ob.s5.start": "Start my 30-day trial",
+  "ob.s5.start": "Start my 14-day trial",
   "ob.s5.submitting": "Setting up your shelf…",
   "ob.s5.terms":
     "By starting your trial you agree to our terms · ",
@@ -379,9 +379,9 @@ export const en: Dict = {
   "ob.s5.row.monthly": "%plan% · monthly",
   "ob.s5.row.firstDiscount": "First-month discount",
   "ob.s5.row.trial": "Free trial",
-  "ob.s5.row.trialDays": "30 days",
+  "ob.s5.row.trialDays": "14 days",
   "ob.s5.row.today": "Today",
-  "ob.s5.charge.pre": "You won't be charged today. After your 30-day trial, you'll pay ",
+  "ob.s5.charge.pre": "You won't be charged today. After your 14-day trial, you'll pay ",
   "ob.s5.charge.post":
     " for month one, then €%price%/mo. Cancel any time, full refund within 30 days.",
   "ob.s5.trust.cancel": "Cancel anytime",

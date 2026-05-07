@@ -15,9 +15,9 @@ interface PlanShape {
 }
 
 const PLAN_SHAPES: PlanShape[] = [
-  { id: "reader",  monthly: 9,  yearly: 7,  tone: "paper" },
-  { id: "scholar", monthly: 19, yearly: 15, tone: "saffron", best: true },
-  { id: "family",  monthly: 29, yearly: 23, tone: "sage" },
+  { id: "reader",  monthly: 14, yearly: 11, tone: "paper" },
+  { id: "scholar", monthly: 24, yearly: 19, tone: "saffron", best: true },
+  { id: "family",  monthly: 34, yearly: 27, tone: "sage" },
 ];
 
 export function Pricing() {
