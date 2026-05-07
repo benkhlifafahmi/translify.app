@@ -103,14 +103,13 @@ async def create_checkout_session(
     if apply_first_month_discount and settings.stripe_first_month_coupon:
         discounts.append({"coupon": settings.stripe_first_month_coupon})
 
-    checkout = stripe.checkout.Session.create(
-        mode="subscription",
-        customer=customer_id,
-        line_items=[{"price": price_id, "quantity": 1}],
-        success_url=_success_url(),
-        cancel_url=_cancel_url(),
-        allow_promotion_codes=True,
-        subscription_data={
+    params: dict = {
+        "mode": "subscription",
+        "customer": customer_id,
+        "line_items": [{"price": price_id, "quantity": 1}],
+        "success_url": _success_url(),
+        "cancel_url": _cancel_url(),
+        "subscription_data": {
             "metadata": {
                 "user_id": str(user.id),
                 "plan": plan.value,
@@ -118,13 +117,18 @@ async def create_checkout_session(
             },
             "trial_period_days": 30,
         },
-        discounts=discounts or None,
-        metadata={
+        "metadata": {
             "user_id": str(user.id),
             "plan": plan.value,
             "cycle": cycle.value,
         },
-    )
+    }
+    if discounts:
+        params["discounts"] = discounts
+    else:
+        params["allow_promotion_codes"] = True
+
+    checkout = stripe.checkout.Session.create(**params)
     if not checkout.url:
         raise RuntimeError("Stripe did not return a checkout URL")
     return checkout.url
