@@ -226,6 +226,117 @@ export const de: Dict = {
   "auth.shell.body":
     "Übersetze jedes PDF, chatte damit, dann teste dich. Gemacht für Klassenzimmer, Hausaufgaben und verregnete Sonntage.",
   "auth.shell.foot": "Lesen · Übersetzen · Chatten · Testen",
+
+  // Onboarding — top nav + step controls
+  "ob.skip": "Anmelden",
+  "ob.back": "Zurück",
+  "ob.next": "Weiter",
+  "ob.finish": "Mein Regal bauen",
+
+  // Onboarding · Step 1 — persona
+  "ob.s1.eyebrow": "Erstmal das Warum",
+  "ob.s1.title": "Warum bist du hier?",
+  "ob.s1.subtitle":
+    "Wähl das, was am ehesten zu dir passt. Wir richten den Rest der Einrichtung danach aus.",
+  "ob.s1.opt.student": "Ich studiere",
+  "ob.s1.opt.student.body": "Lehrbücher, Papers, Klausurvorbereitung — lies in deiner stärksten Sprache.",
+  "ob.s1.opt.curious": "Ich lese zum Vergnügen",
+  "ob.s1.opt.curious.body": "Romane, Essays, ab und zu ein Manga. Beende mehr, in jeder Sprache.",
+  "ob.s1.opt.pro": "Ich lese für die Arbeit",
+  "ob.s1.opt.pro.body": "Berichte, Handbücher, dichte PDFs. Auf den Punkt — und mit Zitat.",
+  "ob.s1.opt.family": "Ich lese mit Kindern",
+  "ob.s1.opt.family.body": "Gutenachtgeschichten und Hausaufgaben, in jeder Sprache, kindersicher.",
+
+  // Onboarding · Step 2 — language
+  "ob.s2.eyebrow": "Jetzt die Sprache",
+  "ob.s2.title": "In welcher Sprache liest du?",
+  "ob.s2.subtitle":
+    "Wir übersetzen jedes Buch, das du hochlädst, in diese Sprache — und behalten das Originallayout.",
+  "ob.s2.rtl": "Rechts-nach-links",
+  "ob.s2.more": "+ 8 weitere Sprachen — Italiano, Português, Nederlands, 中文, 한국어, Русский, हिन्दी, Türkçe",
+
+  // Onboarding · Step 3 — volume slider
+  "ob.s3.eyebrow": "Wie viel liest du?",
+  "ob.s3.title": "Bücher pro Monat, ungefähr?",
+  "ob.s3.subtitle":
+    "Muss nicht genau sein. Wir finden den passenden Plan zu deinem Tempo.",
+  "ob.s3.unit.books": "Bücher / Monat",
+
+  // Onboarding · Step 4 — personality reveal
+  "ob.s4.eyebrow": "Deine Lesepersönlichkeit",
+  "ob.s4.title.pre": "Du liest wie ein",
+  "ob.s4.title.post": ".",
+  "ob.s4.recommended": "Für dich empfohlen",
+  "ob.s4.timer": "Angebot läuft ab in",
+  "ob.s4.planRec": "Plan-Empfehlung",
+  "ob.s4.firstMonth": "erster Monat",
+  "ob.s4.then": "danach €%price%/Mon · jederzeit kündbar · 30-Tage-Rückgabe",
+  "ob.s4.match.books": "Passt zu deinen %books% Büchern / Monat",
+  "ob.s4.match.lang": "Lesen auf %lang% — volle Schriftunterstützung",
+  "ob.s4.match.reader": "Bis zu 10 Bücher / Monat, alle 14 Sprachen",
+  "ob.s4.match.scholar": "Unbegrenzte Bücher, bevorzugte Warteschlange, smarte Vokabeln",
+  "ob.s4.match.family": "5 Leserprofile, kindersicherer Chat, Eltern-Dashboard",
+  "ob.s4.match.basics": "Quizze & Chat mit Zitaten — ab dem ersten Tag dabei",
+  "ob.s4.lock.pre": "Sichere dir",
+  "ob.s4.lock.discount": "40% Rabatt",
+  "ob.s4.lock.post": "im ersten Monat — wird beim Checkout angewendet.",
+  "ob.s4.tone.saffron": "Gelehrter",
+  "ob.s4.tone.sage": "polyglotter Entdecker",
+  "ob.s4.tone.coral": "Familienleser",
+  "ob.s4.tone.plum": "scharfer Kopf",
+  "ob.s4.alsoA": "auch ein",
+  "ob.s4.quote.saffron":
+    "Ich habe Tolstoi in seinem Tempo gelesen — in meinem. Der Scholar-Plan hat sich in einem Semester bezahlt gemacht.",
+  "ob.s4.quote.sage":
+    "Zwölf Romane, drei Sprachen, sechs Monate. So viel habe ich seit meiner Kindheit nicht mehr gelesen.",
+  "ob.s4.quote.coral":
+    "Gutenachtgeschichten auf Spanisch. Quizze auf Englisch beim Frühstück. Er gewinnt, und ich auch.",
+  "ob.s4.quote.plum":
+    "600-Seiten-Papers auf Mandarin, zusammengefasst und zitierfähig. Der Scholar-Plan ist mein unfairer Vorteil.",
+
+  // Onboarding · Personality body copy
+  "personality.scholar.name": "Gelehrter",
+  "personality.scholar.body":
+    "Du liest mit dem Stift in der Hand. Du willst den Lehrplan in deiner stärksten Sprache, Zitate, denen du vertrauen kannst, und Quizze, die wirklich hängenbleiben.",
+  "personality.curious.name": "Neugieriger Leser",
+  "personality.curious.body":
+    "Du beendest mehr Bücher, wenn sie dir auf halbem Weg entgegenkommen. Ein paar Übersetzungen pro Monat, jede Schrift unterstützt, ohne Aufwand.",
+  "personality.pro.name": "Scharfer Kopf",
+  "personality.pro.body":
+    "Du liest für die Arbeit — Berichte, Handbücher, Papers. Du willst schnell überfliegen und noch schneller zitieren, ohne erfundene Antworten.",
+  "personality.family.name": "Familienleser",
+  "personality.family.body":
+    "Du liest mit Kindern. Du willst Gutenachtgeschichten in jeder Sprache, einen kindersicheren Chat und Eltern-Einblick — alles in einem Regal.",
+
+  // Onboarding · Step 5 — account creation + summary
+  "ob.s5.eyebrow": "Fast da",
+  "ob.s5.title": "Bau dein Regal.",
+  "ob.s5.subtitle":
+    "Eine private Ecke für die Bücher, die du liest, deine Fragen und das, was du lernst.",
+  "ob.s5.name": "Wie sollen wir dich nennen?",
+  "ob.s5.optional": "Optional",
+  "ob.s5.email": "E-Mail",
+  "ob.s5.password": "Passwort",
+  "ob.s5.passwordHint": "Mindestens 8 Zeichen",
+  "ob.s5.start": "Meinen 30-Tage-Test starten",
+  "ob.s5.submitting": "Dein Regal wird vorbereitet…",
+  "ob.s5.terms":
+    "Mit dem Start deines Tests stimmst du unseren AGB zu · ",
+  "ob.s5.terms.haveAccount": "Schon ein Konto? Anmelden",
+  "ob.s5.order": "Deine Bestellung",
+  "ob.s5.row.monthly": "%plan% · monatlich",
+  "ob.s5.row.firstDiscount": "Rabatt im ersten Monat",
+  "ob.s5.row.trial": "Kostenloser Test",
+  "ob.s5.row.trialDays": "30 Tage",
+  "ob.s5.row.today": "Heute",
+  "ob.s5.charge.pre": "Heute wird dir nichts berechnet. Nach deinem 30-Tage-Test zahlst du ",
+  "ob.s5.charge.post":
+    " für den ersten Monat, danach €%price%/Mon. Jederzeit kündbar, volle Rückgabe innerhalb von 30 Tagen.",
+  "ob.s5.trust.cancel": "Jederzeit kündbar",
+  "ob.s5.trust.refund": "Rückgabe ≤30T",
+  "ob.s5.trust.secure": "Sicherer Checkout",
+  "ob.s5.join": "Schließ dich 42.000+ Lesern an, die das Buch beendet haben.",
+  "ob.error.register": "Registrierung fehlgeschlagen. Bitte versuche es erneut.",
 };
 
 export const deTestimonials: Testimonial[] = [

@@ -226,6 +226,117 @@ export const ms: Dict = {
   "auth.shell.body":
     "Terjemahkan mana-mana PDF, berbual dengannya, kemudian uji diri. Direka untuk bilik darjah, kerja rumah, dan petang Ahad yang hujan.",
   "auth.shell.foot": "Baca · Terjemah · Berbual · Uji",
+
+  // Onboarding — top nav + step controls
+  "ob.skip": "Log masuk",
+  "ob.back": "Kembali",
+  "ob.next": "Teruskan",
+  "ob.finish": "Jadikan ia milik saya",
+
+  // Onboarding · Step 1 — persona
+  "ob.s1.eyebrow": "Mula-mula, kenapanya",
+  "ob.s1.title": "Kenapa anda di sini?",
+  "ob.s1.subtitle":
+    "Pilih yang paling mirip dengan anda. Kami akan susun selebihnya mengikutnya.",
+  "ob.s1.opt.student": "Saya sedang belajar",
+  "ob.s1.opt.student.body": "Buku teks, kertas kerja, persediaan peperiksaan — baca dalam bahasa terkuat anda.",
+  "ob.s1.opt.curious": "Saya membaca untuk hiburan",
+  "ob.s1.opt.curious.body": "Novel, esei, sesekali manga. Tamatkan lebih banyak, dalam mana-mana bahasa.",
+  "ob.s1.opt.pro": "Saya membaca untuk kerja",
+  "ob.s1.opt.pro.body": "Laporan, manual, PDF padat. Terus ke isinya — dan petik sumbernya.",
+  "ob.s1.opt.family": "Saya membaca bersama anak-anak",
+  "ob.s1.opt.family.body": "Cerita sebelum tidur dan kerja sekolah, dalam mana-mana bahasa, selamat untuk kanak-kanak.",
+
+  // Onboarding · Step 2 — language
+  "ob.s2.eyebrow": "Sekarang, bahasanya",
+  "ob.s2.title": "Bahasa apa yang anda baca?",
+  "ob.s2.subtitle":
+    "Kami akan terjemahkan setiap buku yang anda muat naik ke bahasa ini — dan kekalkan susun atur asalnya.",
+  "ob.s2.rtl": "Kanan-ke-kiri",
+  "ob.s2.more": "+ 8 bahasa lagi — Italiano, Português, Nederlands, 中文, 한국어, Русский, हिन्दी, Türkçe",
+
+  // Onboarding · Step 3 — volume slider
+  "ob.s3.eyebrow": "Berapa banyak anda membaca?",
+  "ob.s3.title": "Buku sebulan, lebih kurang?",
+  "ob.s3.subtitle":
+    "Tak perlu tepat. Kami akan padankan pelan dengan rentak anda.",
+  "ob.s3.unit.books": "Buku / bulan",
+
+  // Onboarding · Step 4 — personality reveal
+  "ob.s4.eyebrow": "Personaliti membaca anda",
+  "ob.s4.title.pre": "Anda membaca seperti seorang",
+  "ob.s4.title.post": ".",
+  "ob.s4.recommended": "Disyorkan untuk anda",
+  "ob.s4.timer": "Tawaran tamat dalam",
+  "ob.s4.planRec": "Pelan disyorkan",
+  "ob.s4.firstMonth": "bulan pertama",
+  "ob.s4.then": "kemudian €%price%/bulan · berhenti bila-bila · pulangan wang 30 hari",
+  "ob.s4.match.books": "Sepadan dengan %books% buku / bulan anda",
+  "ob.s4.match.lang": "Membaca dalam %lang% — sokongan tulisan penuh",
+  "ob.s4.match.reader": "Sehingga 10 buku / bulan, kesemua 14 bahasa",
+  "ob.s4.match.scholar": "Buku tanpa had, barisan keutamaan, kosa kata pintar",
+  "ob.s4.match.family": "5 profil pembaca, sembang selamat kanak-kanak, dasbor ibu bapa",
+  "ob.s4.match.basics": "Kuiz & sembang dengan rujukan — milik anda dari hari pertama",
+  "ob.s4.lock.pre": "Kunci",
+  "ob.s4.lock.discount": "diskaun 40%",
+  "ob.s4.lock.post": "untuk bulan pertama anda — dikenakan semasa pembayaran.",
+  "ob.s4.tone.saffron": "sarjana",
+  "ob.s4.tone.sage": "peneroka poliglot",
+  "ob.s4.tone.coral": "pembaca keluarga",
+  "ob.s4.tone.plum": "minda tajam",
+  "ob.s4.alsoA": "juga seorang",
+  "ob.s4.quote.saffron":
+    "Saya baca Tolstoy ikut rentaknya — dalam rentak saya. Pelan Scholar berbaloi dalam satu semester.",
+  "ob.s4.quote.sage":
+    "Dua belas novel, tiga bahasa, enam bulan. Saya tak pernah baca sebanyak ini sejak zaman kanak-kanak.",
+  "ob.s4.quote.coral":
+    "Cerita sebelum tidur dalam bahasa Sepanyol. Kuiz dalam bahasa Inggeris waktu sarapan. Dia menang, saya pun menang.",
+  "ob.s4.quote.plum":
+    "Kertas kerja 600 muka surat dalam Mandarin, diringkaskan dan boleh dipetik. Pelan Scholar adalah kelebihan saya yang tidak adil.",
+
+  // Onboarding · Personality body copy
+  "personality.scholar.name": "Sarjana",
+  "personality.scholar.body":
+    "Anda membaca dengan pen di tangan. Anda mahu silibus disiapkan dalam bahasa terkuat anda, rujukan yang boleh dipercayai, dan kuiz yang benar-benar melekat.",
+  "personality.curious.name": "Pembaca Ingin Tahu",
+  "personality.curious.body":
+    "Anda tamatkan lebih banyak buku apabila ia menjemput anda separuh jalan. Beberapa terjemahan sebulan, semua tulisan disokong, tanpa kekecohan.",
+  "personality.pro.name": "Minda Tajam",
+  "personality.pro.body":
+    "Anda membaca untuk kerja — laporan, manual, kertas kerja. Anda mahu sapu pantas dan petik lebih pantas, tanpa jawapan yang dihalusinasi.",
+  "personality.family.name": "Pembaca Keluarga",
+  "personality.family.body":
+    "Anda membaca bersama anak-anak. Anda mahu cerita sebelum tidur dalam mana-mana bahasa, sembang selamat kanak-kanak, dan pandangan ibu bapa — semuanya pada satu rak.",
+
+  // Onboarding · Step 5 — account creation + summary
+  "ob.s5.eyebrow": "Hampir sampai",
+  "ob.s5.title": "Bina rak anda.",
+  "ob.s5.subtitle":
+    "Sudut peribadi untuk buku yang anda baca, soalan yang anda ada, dan apa yang anda pelajari.",
+  "ob.s5.name": "Apa nama panggilan anda?",
+  "ob.s5.optional": "Pilihan",
+  "ob.s5.email": "E-mel",
+  "ob.s5.password": "Kata laluan",
+  "ob.s5.passwordHint": "Minimum 8 aksara",
+  "ob.s5.start": "Mulakan percubaan 30 hari saya",
+  "ob.s5.submitting": "Menyiapkan rak anda…",
+  "ob.s5.terms":
+    "Dengan memulakan percubaan, anda bersetuju dengan terma kami · ",
+  "ob.s5.terms.haveAccount": "Sudah ada akaun? Log masuk",
+  "ob.s5.order": "Pesanan anda",
+  "ob.s5.row.monthly": "%plan% · bulanan",
+  "ob.s5.row.firstDiscount": "Diskaun bulan pertama",
+  "ob.s5.row.trial": "Percubaan percuma",
+  "ob.s5.row.trialDays": "30 hari",
+  "ob.s5.row.today": "Hari ini",
+  "ob.s5.charge.pre": "Anda tidak akan dicaj hari ini. Selepas percubaan 30 hari anda, anda akan bayar ",
+  "ob.s5.charge.post":
+    " untuk bulan pertama, kemudian €%price%/bulan. Berhenti bila-bila, pulangan penuh dalam 30 hari.",
+  "ob.s5.trust.cancel": "Berhenti bila-bila",
+  "ob.s5.trust.refund": "Pulangan ≤30h",
+  "ob.s5.trust.secure": "Pembayaran selamat",
+  "ob.s5.join": "Sertai 42,000+ pembaca yang habiskan buku itu.",
+  "ob.error.register": "Pendaftaran gagal. Sila cuba lagi.",
 };
 
 export const msTestimonials: Testimonial[] = [

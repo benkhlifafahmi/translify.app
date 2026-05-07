@@ -225,6 +225,117 @@ export const ar: Dict = {
   "auth.shell.body":
     "ترجم أي PDF، تحدّث معه، ثم اختبر نفسك. صُنع للصفوف الدراسية والواجبات وأمسيات الأحد المُمطرة.",
   "auth.shell.foot": "اقرأ · ترجم · حادِث · اختبر",
+
+  // Onboarding — top nav + step controls
+  "ob.skip": "تسجيل الدخول",
+  "ob.back": "رجوع",
+  "ob.next": "متابعة",
+  "ob.finish": "اجعله رفّي",
+
+  // Onboarding · Step 1 — persona
+  "ob.s1.eyebrow": "أوّلًا، السبب",
+  "ob.s1.title": "ما الذي جاء بك إلى هنا؟",
+  "ob.s1.subtitle":
+    "اختر ما يُشبهك أكثر، ولسوف نُفصّل بقية الإعداد على مقاسك.",
+  "ob.s1.opt.student": "أدرسُ",
+  "ob.s1.opt.student.body": "كتب دراسية، أبحاث، تحضير للامتحان — اقرأ بأقوى لغاتك.",
+  "ob.s1.opt.curious": "أقرأ للمتعة",
+  "ob.s1.opt.curious.body": "روايات، مقالات، ومانغا بين الحين والآخر. أنهِ المزيد، بأي لغة.",
+  "ob.s1.opt.pro": "أقرأ للعمل",
+  "ob.s1.opt.pro.body": "تقارير، أدلّة، ملفات PDF كثيفة. ادخل في صلب الموضوع — واستشهد.",
+  "ob.s1.opt.family": "أقرأ مع الأطفال",
+  "ob.s1.opt.family.body": "قصص ما قبل النوم والواجبات، بأي لغة، آمن للأطفال.",
+
+  // Onboarding · Step 2 — language
+  "ob.s2.eyebrow": "الآن، اللغة",
+  "ob.s2.title": "بأي لغة تقرأ؟",
+  "ob.s2.subtitle":
+    "سنُترجم كل كتاب ترفعه إلى هذه اللغة — مع الحفاظ على التنسيق الأصلي.",
+  "ob.s2.rtl": "من اليمين إلى اليسار",
+  "ob.s2.more": "+ 8 لغات أخرى — Italiano, Português, Nederlands, 中文, 한국어, Русский, हिन्दी, Türkçe",
+
+  // Onboarding · Step 3 — volume slider
+  "ob.s3.eyebrow": "كم تقرأ؟",
+  "ob.s3.title": "كم كتابًا في الشهر، تقريبًا؟",
+  "ob.s3.subtitle":
+    "لا حاجة للدقّة. سنُلائم الخطة مع إيقاعك.",
+  "ob.s3.unit.books": "كتاب / شهر",
+
+  // Onboarding · Step 4 — personality reveal
+  "ob.s4.eyebrow": "شخصيتك القرائية",
+  "ob.s4.title.pre": "أنت تقرأ كـ",
+  "ob.s4.title.post": ".",
+  "ob.s4.recommended": "موصى به لك",
+  "ob.s4.timer": "ينتهي العرض خلال",
+  "ob.s4.planRec": "الخطة الموصى بها",
+  "ob.s4.firstMonth": "الشهر الأول",
+  "ob.s4.then": "ثم €%price%/شهر · ألغِ متى شئت · استرداد خلال 30 يومًا",
+  "ob.s4.match.books": "مُطابَقة لـ %books% كتاب / شهر",
+  "ob.s4.match.lang": "قراءة بـ %lang% — دعم كامل للأبجدية",
+  "ob.s4.match.reader": "حتى 10 كتب / شهر، وكل اللغات الـ14",
+  "ob.s4.match.scholar": "كتب غير محدودة، طابور أولوية، مفردات ذكية",
+  "ob.s4.match.family": "5 ملفات قارئ، محادثة آمنة للأطفال، لوحة للأهل",
+  "ob.s4.match.basics": "اختبارات ومحادثة باستشهاد — معك من اليوم الأول",
+  "ob.s4.lock.pre": "ثبّت",
+  "ob.s4.lock.discount": "خصم 40%",
+  "ob.s4.lock.post": "على شهرك الأول — يُطبَّق عند الدفع.",
+  "ob.s4.tone.saffron": "باحث",
+  "ob.s4.tone.sage": "مستكشف متعدّد اللغات",
+  "ob.s4.tone.coral": "قارئ عائلي",
+  "ob.s4.tone.plum": "عقل ثاقب",
+  "ob.s4.alsoA": "وأيضًا",
+  "ob.s4.quote.saffron":
+    "«قرأتُ تولستوي بإيقاعه — وإيقاعي. خطة Scholar ردّت ثمنها في فصل دراسي واحد.»",
+  "ob.s4.quote.sage":
+    "«اثنتا عشرة رواية، ثلاث لغات، ستة أشهر. لم أقرأ بهذا القدر منذ كنت طفلًا.»",
+  "ob.s4.quote.coral":
+    "«قصص ما قبل النوم بالإسبانية. اختبارات بالإنجليزية على الفطور. هو يربح، وأنا كذلك.»",
+  "ob.s4.quote.plum":
+    "«أبحاث من 600 صفحة بالماندارين، مُلخَّصة وقابلة للاستشهاد. خطة Scholar هي ميزتي غير العادلة.»",
+
+  // Onboarding · Personality body copy
+  "personality.scholar.name": "الباحث",
+  "personality.scholar.body":
+    "تقرأ والقلم في يدك. تريد إنجاز المنهج بأقوى لغاتك، استشهادات تثق بها، واختبارات تعلق فعلًا في الذاكرة.",
+  "personality.curious.name": "القارئ الفضولي",
+  "personality.curious.body":
+    "تُنهي المزيد من الكتب حين تلتقيك في منتصف الطريق. ترجمات قليلة في الشهر، دعم لكل أبجدية، بلا تعقيد.",
+  "personality.pro.name": "العقل الثاقب",
+  "personality.pro.body":
+    "تقرأ من أجل العمل — تقارير، أدلّة، أبحاث. تريد تصفّحًا سريعًا واستشهادًا أسرع، بلا إجابات مهلوسة.",
+  "personality.family.name": "القارئ العائلي",
+  "personality.family.body":
+    "تقرأ مع الأطفال. تريد قصصًا قبل النوم بأي لغة، محادثة آمنة لهم، ولوحة للأهل تُريك كل شيء — كله على رفّ واحد.",
+
+  // Onboarding · Step 5 — account creation + summary
+  "ob.s5.eyebrow": "كدنا نصل",
+  "ob.s5.title": "اصنع رفّك.",
+  "ob.s5.subtitle":
+    "ركن خاصّ للكتب التي تقرؤها، والأسئلة التي عندك، وما تتعلّمه.",
+  "ob.s5.name": "بماذا نناديك؟",
+  "ob.s5.optional": "اختياري",
+  "ob.s5.email": "البريد",
+  "ob.s5.password": "كلمة المرور",
+  "ob.s5.passwordHint": "8 أحرف على الأقل",
+  "ob.s5.start": "ابدأ تجربتي لـ 30 يومًا",
+  "ob.s5.submitting": "نُجهّز رفّك…",
+  "ob.s5.terms":
+    "ببدء تجربتك فأنت توافق على شروطنا · ",
+  "ob.s5.terms.haveAccount": "لديك حساب؟ سجّل الدخول",
+  "ob.s5.order": "طلبك",
+  "ob.s5.row.monthly": "%plan% · شهريًا",
+  "ob.s5.row.firstDiscount": "خصم الشهر الأول",
+  "ob.s5.row.trial": "تجربة مجانية",
+  "ob.s5.row.trialDays": "30 يومًا",
+  "ob.s5.row.today": "اليوم",
+  "ob.s5.charge.pre": "لن تُحاسَب اليوم. بعد تجربتك التي مدّتها 30 يومًا، ستدفع ",
+  "ob.s5.charge.post":
+    " للشهر الأول، ثم €%price%/شهر. ألغِ متى شئت، استرداد كامل خلال 30 يومًا.",
+  "ob.s5.trust.cancel": "ألغِ متى شئت",
+  "ob.s5.trust.refund": "استرداد ≤30 يومًا",
+  "ob.s5.trust.secure": "دفع آمن",
+  "ob.s5.join": "انضم إلى أكثر من 42,000 قارئ أنهوا الكتاب.",
+  "ob.error.register": "فشل التسجيل. يُرجى المحاولة مرة أخرى.",
 };
 
 // Locale-native testimonials with regional Arabic dialects:

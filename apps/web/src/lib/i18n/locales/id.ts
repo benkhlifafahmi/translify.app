@@ -226,6 +226,117 @@ export const id: Dict = {
   "auth.shell.body":
     "Terjemahkan PDF apa pun, ngobrol dengannya, lalu kuis dirimu. Untuk kelas, PR, dan sore Minggu yang hujan.",
   "auth.shell.foot": "Baca · Terjemahkan · Ngobrol · Kuis",
+
+  // Onboarding — top nav + step controls
+  "ob.skip": "Masuk",
+  "ob.back": "Kembali",
+  "ob.next": "Lanjut",
+  "ob.finish": "Jadikan milikku",
+
+  // Onboarding · Step 1 — persona
+  "ob.s1.eyebrow": "Pertama, alasannya",
+  "ob.s1.title": "Kenapa kamu di sini?",
+  "ob.s1.subtitle":
+    "Pilih yang paling mirip dirimu. Setup selanjutnya akan kami sesuaikan dengan itu.",
+  "ob.s1.opt.student": "Aku lagi belajar",
+  "ob.s1.opt.student.body": "Buku pelajaran, paper, persiapan ujian — baca dalam bahasa terkuatmu.",
+  "ob.s1.opt.curious": "Aku baca buat senang-senang",
+  "ob.s1.opt.curious.body": "Novel, esai, sesekali manga. Selesaikan lebih banyak, dalam bahasa apa pun.",
+  "ob.s1.opt.pro": "Aku baca buat kerja",
+  "ob.s1.opt.pro.body": "Laporan, manual, PDF padat. Langsung ke intinya — dan kutip sumbernya.",
+  "ob.s1.opt.family": "Aku baca bareng anak",
+  "ob.s1.opt.family.body": "Cerita sebelum tidur dan PR, dalam bahasa apa pun, aman buat anak.",
+
+  // Onboarding · Step 2 — language
+  "ob.s2.eyebrow": "Sekarang, bahasanya",
+  "ob.s2.title": "Kamu baca dalam bahasa apa?",
+  "ob.s2.subtitle":
+    "Setiap buku yang kamu unggah akan kami terjemahkan ke bahasa ini — tata letak aslinya tetap utuh.",
+  "ob.s2.rtl": "Kanan ke kiri",
+  "ob.s2.more": "+ 8 bahasa lainnya — Italiano, Português, Nederlands, 中文, 한국어, Русский, हिन्दी, Türkçe",
+
+  // Onboarding · Step 3 — volume slider
+  "ob.s3.eyebrow": "Seberapa banyak kamu baca?",
+  "ob.s3.title": "Kira-kira berapa buku per bulan?",
+  "ob.s3.subtitle":
+    "Tidak harus presisi. Kami cocokkan paket dengan iramamu.",
+  "ob.s3.unit.books": "Buku / bulan",
+
+  // Onboarding · Step 4 — personality reveal
+  "ob.s4.eyebrow": "Karakter membacamu",
+  "ob.s4.title.pre": "Kamu membaca seperti seorang",
+  "ob.s4.title.post": ".",
+  "ob.s4.recommended": "Direkomendasikan untukmu",
+  "ob.s4.timer": "Penawaran berakhir dalam",
+  "ob.s4.planRec": "Rekomendasi paket",
+  "ob.s4.firstMonth": "bulan pertama",
+  "ob.s4.then": "lalu €%price%/bln · berhenti kapan saja · uang kembali 30 hari",
+  "ob.s4.match.books": "Cocok dengan %books% buku / bulanmu",
+  "ob.s4.match.lang": "Membaca dalam %lang% — dukungan aksara penuh",
+  "ob.s4.match.reader": "Hingga 10 buku / bulan, semua 14 bahasa",
+  "ob.s4.match.scholar": "Buku tak terbatas, antrean prioritas, kosakata cerdas",
+  "ob.s4.match.family": "5 profil pembaca, obrolan aman anak, dasbor orang tua",
+  "ob.s4.match.basics": "Kuis & obrolan dengan sumber — milikmu sejak hari pertama",
+  "ob.s4.lock.pre": "Kunci",
+  "ob.s4.lock.discount": "diskon 40%",
+  "ob.s4.lock.post": "untuk bulan pertamamu — diterapkan saat checkout.",
+  "ob.s4.tone.saffron": "scholar",
+  "ob.s4.tone.sage": "penjelajah poliglot",
+  "ob.s4.tone.coral": "pembaca keluarga",
+  "ob.s4.tone.plum": "pikiran tajam",
+  "ob.s4.alsoA": "juga seorang",
+  "ob.s4.quote.saffron":
+    "Aku baca Tolstoy dengan iramanya — dengan iramaku. Paket Scholar balik modal dalam satu semester.",
+  "ob.s4.quote.sage":
+    "Dua belas novel, tiga bahasa, enam bulan. Sudah lama aku tidak baca sebanyak ini sejak kecil.",
+  "ob.s4.quote.coral":
+    "Cerita sebelum tidur dalam bahasa Spanyol. Kuis dalam bahasa Inggris pas sarapan. Dia menang, aku juga.",
+  "ob.s4.quote.plum":
+    "Paper Mandarin 600 halaman, diringkas dan bisa dikutip. Paket Scholar adalah keuntungan tak adilku.",
+
+  // Onboarding · Personality body copy
+  "personality.scholar.name": "Scholar",
+  "personality.scholar.body":
+    "Kamu membaca dengan pulpen di tangan. Kamu mau silabus selesai dalam bahasa terkuatmu, kutipan yang bisa dipercaya, dan kuis yang benar-benar nempel.",
+  "personality.curious.name": "Pembaca Penasaran",
+  "personality.curious.body":
+    "Kamu menyelesaikan lebih banyak buku saat mereka menyambutmu di tengah jalan. Beberapa terjemahan tiap bulan, semua aksara didukung, tanpa ribet.",
+  "personality.pro.name": "Pikiran Tajam",
+  "personality.pro.body":
+    "Kamu baca buat kerja — laporan, manual, paper. Kamu mau menyapu sekilas dengan cepat dan mengutip lebih cepat lagi, tanpa jawaban halusinasi.",
+  "personality.family.name": "Pembaca Keluarga",
+  "personality.family.body":
+    "Kamu baca bareng anak. Kamu mau cerita sebelum tidur dalam bahasa apa pun, obrolan aman anak, dan visibilitas orang tua — semuanya di satu rak.",
+
+  // Onboarding · Step 5 — account creation + summary
+  "ob.s5.eyebrow": "Hampir sampai",
+  "ob.s5.title": "Buat rakmu.",
+  "ob.s5.subtitle":
+    "Sudut pribadi untuk buku yang kamu baca, pertanyaanmu, dan hal-hal yang kamu pelajari.",
+  "ob.s5.name": "Mau dipanggil apa?",
+  "ob.s5.optional": "Opsional",
+  "ob.s5.email": "Email",
+  "ob.s5.password": "Kata sandi",
+  "ob.s5.passwordHint": "Minimal 8 karakter",
+  "ob.s5.start": "Mulai uji coba 30 hariku",
+  "ob.s5.submitting": "Menyiapkan rakmu…",
+  "ob.s5.terms":
+    "Dengan memulai uji coba kamu setuju dengan ketentuan kami · ",
+  "ob.s5.terms.haveAccount": "Sudah punya akun? Masuk",
+  "ob.s5.order": "Pesananmu",
+  "ob.s5.row.monthly": "%plan% · bulanan",
+  "ob.s5.row.firstDiscount": "Diskon bulan pertama",
+  "ob.s5.row.trial": "Uji coba gratis",
+  "ob.s5.row.trialDays": "30 hari",
+  "ob.s5.row.today": "Hari ini",
+  "ob.s5.charge.pre": "Hari ini kamu belum ditagih. Setelah uji coba 30 harimu, kamu bayar ",
+  "ob.s5.charge.post":
+    " untuk bulan pertama, lalu €%price%/bln. Berhenti kapan saja, refund penuh dalam 30 hari.",
+  "ob.s5.trust.cancel": "Berhenti kapan saja",
+  "ob.s5.trust.refund": "Refund ≤30h",
+  "ob.s5.trust.secure": "Checkout aman",
+  "ob.s5.join": "Gabung 42.000+ pembaca yang menyelesaikan bukunya.",
+  "ob.error.register": "Pendaftaran gagal. Silakan coba lagi.",
 };
 
 export const idTestimonials: Testimonial[] = [

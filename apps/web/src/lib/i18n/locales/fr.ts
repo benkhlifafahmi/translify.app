@@ -226,6 +226,117 @@ export const fr: Dict = {
   "auth.shell.body":
     "Traduisez n'importe quel PDF, discutez avec, puis testez-vous. Conçu pour la salle de classe, les devoirs et les dimanches pluvieux.",
   "auth.shell.foot": "Lire · Traduire · Discuter · Tester",
+
+  // Onboarding — top nav + step controls
+  "ob.skip": "Se connecter",
+  "ob.back": "Retour",
+  "ob.next": "Continuer",
+  "ob.finish": "C'est parti",
+
+  // Onboarding · Step 1 — persona
+  "ob.s1.eyebrow": "D'abord, le pourquoi",
+  "ob.s1.title": "Pourquoi êtes-vous ici ?",
+  "ob.s1.subtitle":
+    "Choisissez ce qui vous ressemble le plus. On adapte la suite autour de ça.",
+  "ob.s1.opt.student": "J'étudie",
+  "ob.s1.opt.student.body": "Manuels, articles, prépa d'exams — lus dans votre langue la plus solide.",
+  "ob.s1.opt.curious": "Je lis pour le plaisir",
+  "ob.s1.opt.curious.body": "Romans, essais, un manga de temps en temps. Finissez plus, dans toutes les langues.",
+  "ob.s1.opt.pro": "Je lis pour le travail",
+  "ob.s1.opt.pro.body": "Rapports, manuels, PDF denses. Allez à l'essentiel — et citez la source.",
+  "ob.s1.opt.family": "Je lis avec mes enfants",
+  "ob.s1.opt.family.body": "Histoires du soir et devoirs, dans toutes les langues, sans souci.",
+
+  // Onboarding · Step 2 — language
+  "ob.s2.eyebrow": "Maintenant, la langue",
+  "ob.s2.title": "Dans quelle langue lisez-vous ?",
+  "ob.s2.subtitle":
+    "On traduit chaque livre que vous déposez dans cette langue — en gardant la mise en page d'origine.",
+  "ob.s2.rtl": "Droite à gauche",
+  "ob.s2.more": "+ 8 autres langues — Italiano, Português, Nederlands, 中文, 한국어, Русский, हिन्दी, Türkçe",
+
+  // Onboarding · Step 3 — volume slider
+  "ob.s3.eyebrow": "Combien lisez-vous ?",
+  "ob.s3.title": "Combien de livres par mois, à peu près ?",
+  "ob.s3.subtitle":
+    "Pas besoin d'être précis. On trouve le forfait qui suit votre rythme.",
+  "ob.s3.unit.books": "Livres / mois",
+
+  // Onboarding · Step 4 — personality reveal
+  "ob.s4.eyebrow": "Votre personnalité de lecteur",
+  "ob.s4.title.pre": "Vous lisez comme un",
+  "ob.s4.title.post": ".",
+  "ob.s4.recommended": "Recommandé pour vous",
+  "ob.s4.timer": "L'offre expire dans",
+  "ob.s4.planRec": "Forfait recommandé",
+  "ob.s4.firstMonth": "premier mois",
+  "ob.s4.then": "puis €%price%/mois · annulation libre · remboursé sous 30 jours",
+  "ob.s4.match.books": "Adapté à vos %books% livres / mois",
+  "ob.s4.match.lang": "Lecture en %lang% — toutes les écritures prises en charge",
+  "ob.s4.match.reader": "Jusqu'à 10 livres / mois, les 14 langues",
+  "ob.s4.match.scholar": "Livres illimités, file prioritaire, vocabulaire intelligent",
+  "ob.s4.match.family": "5 profils lecteurs, chat sécurisé, tableau de bord parental",
+  "ob.s4.match.basics": "Quiz et chat avec citations — à vous dès le premier jour",
+  "ob.s4.lock.pre": "Verrouillez",
+  "ob.s4.lock.discount": "40 % de remise",
+  "ob.s4.lock.post": "sur votre premier mois — appliquée au paiement.",
+  "ob.s4.tone.saffron": "studieux",
+  "ob.s4.tone.sage": "polyglotte curieux",
+  "ob.s4.tone.coral": "lecteur en famille",
+  "ob.s4.tone.plum": "esprit affûté",
+  "ob.s4.alsoA": "et aussi un",
+  "ob.s4.quote.saffron":
+    "« J'ai lu Tolstoï à son rythme — au mien. Le forfait Scholar s'est rentabilisé en un semestre. »",
+  "ob.s4.quote.sage":
+    "« Douze romans, trois langues, six mois. Je n'avais pas autant lu depuis l'enfance. »",
+  "ob.s4.quote.coral":
+    "« Histoires du soir en espagnol. Quiz en anglais au petit-déjeuner. Il gagne, et moi aussi. »",
+  "ob.s4.quote.plum":
+    "« Des articles de 600 pages en mandarin, résumés et citables. Le forfait Scholar, c'est mon avantage déloyal. »",
+
+  // Onboarding · Personality body copy
+  "personality.scholar.name": "Studieux",
+  "personality.scholar.body":
+    "Vous lisez le stylo à la main. Vous voulez le programme bouclé dans votre langue la plus solide, des citations fiables, et des quiz qui s'ancrent vraiment.",
+  "personality.curious.name": "Lecteur curieux",
+  "personality.curious.body":
+    "Vous finissez plus de livres quand ils font la moitié du chemin. Quelques traductions par mois, toutes les écritures prises en charge, sans chichis.",
+  "personality.pro.name": "Esprit affûté",
+  "personality.pro.body":
+    "Vous lisez pour travailler — rapports, manuels, articles. Vous voulez survoler vite et citer plus vite encore, sans réponses inventées.",
+  "personality.family.name": "Lecteur en famille",
+  "personality.family.body":
+    "Vous lisez avec vos enfants. Vous voulez des histoires du soir dans toutes les langues, un chat sécurisé, et une visibilité parentale — le tout sur une seule étagère.",
+
+  // Onboarding · Step 5 — account creation + summary
+  "ob.s5.eyebrow": "Presque fini",
+  "ob.s5.title": "Faites votre étagère.",
+  "ob.s5.subtitle":
+    "Un coin privé pour les livres que vous lisez, vos questions, et ce que vous apprenez.",
+  "ob.s5.name": "Comment doit-on vous appeler ?",
+  "ob.s5.optional": "Optionnel",
+  "ob.s5.email": "E-mail",
+  "ob.s5.password": "Mot de passe",
+  "ob.s5.passwordHint": "Au moins 8 caractères",
+  "ob.s5.start": "Commencer mon essai de 30 jours",
+  "ob.s5.submitting": "On prépare votre étagère…",
+  "ob.s5.terms":
+    "En commençant votre essai, vous acceptez nos conditions · ",
+  "ob.s5.terms.haveAccount": "Déjà un compte ? Se connecter",
+  "ob.s5.order": "Votre commande",
+  "ob.s5.row.monthly": "%plan% · mensuel",
+  "ob.s5.row.firstDiscount": "Remise du premier mois",
+  "ob.s5.row.trial": "Essai gratuit",
+  "ob.s5.row.trialDays": "30 jours",
+  "ob.s5.row.today": "Aujourd'hui",
+  "ob.s5.charge.pre": "Aucun prélèvement aujourd'hui. Après vos 30 jours d'essai, vous paierez ",
+  "ob.s5.charge.post":
+    " pour le premier mois, puis €%price%/mois. Annulation libre, remboursement intégral sous 30 jours.",
+  "ob.s5.trust.cancel": "Annulation libre",
+  "ob.s5.trust.refund": "Remboursé ≤30j",
+  "ob.s5.trust.secure": "Paiement sécurisé",
+  "ob.s5.join": "Rejoignez 42 000+ lecteurs qui ont fini le livre.",
+  "ob.error.register": "L'inscription a échoué. Veuillez réessayer.",
 };
 
 export const frTestimonials: Testimonial[] = [

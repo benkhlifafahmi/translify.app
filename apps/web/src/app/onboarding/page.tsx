@@ -106,7 +106,7 @@ export default function OnboardingPage() {
       }
       router.push("/library");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Registration failed");
+      setError(err instanceof ApiError ? err.message : t("ob.error.register"));
     } finally {
       setSubmitting(false);
     }
@@ -345,7 +345,7 @@ function Step2({
                   </span>
                   {l.dir === "rtl" && (
                     <span className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
-                      Right-to-left
+                      {t("ob.s2.rtl")}
                     </span>
                   )}
                 </span>
@@ -363,7 +363,7 @@ function Step2({
       </div>
 
       <div className="mt-8 rounded-2xl border border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper-2)]/40 px-5 py-3 text-center text-[0.85rem] text-[color:var(--color-ink-soft)]">
-        + 8 more languages — Italiano, Português, Nederlands, 中文, 한국어, Русский, हिन्दी, Türkçe
+        {t("ob.s2.more")}
       </div>
     </div>
   );
@@ -437,7 +437,7 @@ function Step3({
               value={books}
               onChange={(e) => setBooks(Number(e.target.value))}
               className="ob-slider relative h-6 w-full cursor-pointer appearance-none bg-transparent"
-              aria-label="Books per month"
+              aria-label={t("ob.s3.unit.books")}
             />
           </div>
 
@@ -579,12 +579,10 @@ function Step4({
           <div>
             {/* Plan name */}
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-ink-soft)]">
-              Plan recommendation
+              {t("ob.s4.planRec")}
             </p>
             <h3 className="mt-1 font-[family-name:var(--font-display)] text-[2rem] font-semibold leading-tight tracking-tight text-[color:var(--color-ink)]">
-              {personality.recommendedPlan === "reader" && "Reader"}
-              {personality.recommendedPlan === "scholar" && "Scholar"}
-              {personality.recommendedPlan === "family" && "Family"}
+              {t(`plan.${personality.recommendedPlan}.name`)}
             </h3>
 
             {/* Price */}
@@ -594,33 +592,33 @@ function Step4({
               </span>
               <div className="pb-2">
                 <span className="block text-sm text-[color:var(--color-ink-soft)] line-through">€{baseMonthly}</span>
-                <span className="block text-xs text-[color:var(--color-ink-soft)]">first month</span>
+                <span className="block text-xs text-[color:var(--color-ink-soft)]">{t("ob.s4.firstMonth")}</span>
               </div>
               <span className={`mb-1 ms-auto inline-flex h-9 items-center gap-1 rounded-full ${toneStyles.chip} px-3 text-sm font-bold shadow-[0_4px_10px_-2px_rgba(20,16,8,0.3)]`}>
                 –40%
               </span>
             </div>
             <p className="mt-1 text-[0.85rem] text-[color:var(--color-ink-soft)]">
-              then €{baseMonthly}/mo · cancel anytime · 30-day money-back
+              {t("ob.s4.then", { price: baseMonthly })}
             </p>
 
             {/* Match reasons */}
             <ul className="mt-6 space-y-2 text-[0.92rem] text-[color:var(--color-ink)]">
               <MatchRow icon="🎯">
-                Matched to your <strong>{books === 20 ? "20+" : books}</strong> books / month
+                {t("ob.s4.match.books", { books: books === 20 ? "20+" : books })}
               </MatchRow>
               <MatchRow icon={langInfo?.flag ?? "🌐"}>
-                Reading in <strong>{langInfo?.label ?? "your language"}</strong> — full script support
+                {t("ob.s4.match.lang", { lang: langInfo?.label ?? "" })}
               </MatchRow>
               <MatchRow icon="∞">
                 {personality.recommendedPlan === "reader"
-                  ? "Up to 10 books / month, all 14 languages"
+                  ? t("ob.s4.match.reader")
                   : personality.recommendedPlan === "family"
-                    ? "5 reader profiles, kid-safe chat, parent dashboard"
-                    : "Unlimited books, priority queue, smart vocabulary"}
+                    ? t("ob.s4.match.family")
+                    : t("ob.s4.match.scholar")}
               </MatchRow>
               <MatchRow icon="✓">
-                Quizzes &amp; chat with citations — yours from day one
+                {t("ob.s4.match.basics")}
               </MatchRow>
             </ul>
           </div>
@@ -644,7 +642,7 @@ function Step4({
             </div>
           </div>
           <p className="text-end text-[0.78rem] leading-snug text-[color:var(--color-ink-soft)] sm:max-w-xs">
-            Lock in <strong className="text-[color:var(--color-ink)]">40% off</strong> your first month — applied at checkout.
+            {t("ob.s4.lock.pre")} <strong className="text-[color:var(--color-ink)]">{t("ob.s4.lock.discount")}</strong> {t("ob.s4.lock.post")}
           </p>
         </div>
       </div>
@@ -665,12 +663,16 @@ function MatchRow({ icon, children }: { icon: string; children: React.ReactNode 
 }
 
 function SocialProof({ tone }: { tone: Personality["tone"] }) {
-  const quotes = {
-    saffron: { name: "Léa M.", quote: "I read Tolstoy in his pace — in mine. The Scholar plan paid itself back in one semester." },
-    sage: { name: "Adèle R.", quote: "Twelve novels, three languages, six months. I haven't read this much since I was a kid." },
-    coral: { name: "Daniel K.", quote: "Bedtime stories in Spanish. Quizzes in English at breakfast. He's winning, and so am I." },
-    plum: { name: "Mira T.", quote: "600-page papers in Mandarin, summarised and citable. The Scholar plan is my unfair advantage." },
-  }[tone];
+  const { t } = useI18n();
+  const names: Record<Personality["tone"], string> = {
+    saffron: "Léa M.",
+    sage: "Adèle R.",
+    coral: "Daniel K.",
+    plum: "Mira T.",
+  };
+  const name = names[tone];
+  const quote = t(`ob.s4.quote.${tone}`);
+  const toneLabel = t(`ob.s4.tone.${tone}`);
 
   return (
     <div className="mx-auto mt-10 max-w-2xl rounded-[1.4rem] border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-6 shadow-[var(--shadow-paper)]">
@@ -680,14 +682,14 @@ function SocialProof({ tone }: { tone: Personality["tone"] }) {
         </span>
         <div className="flex-1">
           <p className="font-[family-name:var(--font-display)] text-[1rem] italic leading-snug text-[color:var(--color-ink)]">
-            {quotes.quote}
+            {quote}
           </p>
           <div className="mt-3 flex items-center gap-3">
             <span className="grid h-8 w-8 place-items-center rounded-full bg-[color:var(--color-paper-3)] font-[family-name:var(--font-display)] text-[0.8rem] font-semibold text-[color:var(--color-ink)]">
-              {quotes.name.charAt(0)}
+              {name.charAt(0)}
             </span>
             <span className="text-[0.78rem] font-semibold text-[color:var(--color-ink-soft)]">
-              {quotes.name} · also a {tone === "coral" ? "family reader" : tone === "sage" ? "polyglot explorer" : tone === "plum" ? "sharp mind" : "scholar"}
+              {name} · {t("ob.s4.alsoA")} {toneLabel}
             </span>
             <span className="ml-auto text-sm tracking-wider text-[color:var(--color-saffron-deep)]">
               ★★★★★
@@ -726,12 +728,7 @@ function Step5({
 }) {
   const { t } = useI18n();
 
-  const planName =
-    personality.recommendedPlan === "reader"
-      ? "Reader"
-      : personality.recommendedPlan === "scholar"
-        ? "Scholar"
-        : "Family";
+  const planName = t(`plan.${personality.recommendedPlan}.name`);
   const discounted = Math.round(personality.monthly * 0.6);
 
   return (
@@ -768,7 +765,7 @@ function Step5({
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
+              placeholder={t("ob.s5.passwordHint")}
               autoComplete="new-password"
               className="ob-input"
             />
@@ -785,11 +782,11 @@ function Step5({
             disabled={submitting}
             className="group mt-2 inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[color:var(--color-ink)] px-7 font-[family-name:var(--font-display)] text-[1.05rem] font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_14px_28px_-10px_rgba(20,16,8,0.45)] transition-all hover:-translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
           >
-            {submitting ? "Setting up your shelf…" : t("ob.s5.start")}
+            {submitting ? t("ob.s5.submitting") : t("ob.s5.start")}
           </button>
 
           <p className="text-center text-[0.78rem] text-[color:var(--color-ink-soft)]">
-            By starting your trial you agree to our terms · <Link href="/login" className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4">Have an account? Log in</Link>
+            {t("ob.s5.terms")}<Link href="/login" className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4">{t("ob.s5.terms.haveAccount")}</Link>
           </p>
         </form>
 
@@ -817,19 +814,19 @@ function Step5({
       <aside className="lg:sticky lg:top-8">
         <div className="card-paper-lifted overflow-hidden p-7">
           <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-ink-soft)]">
-            Your order
+            {t("ob.s5.order")}
           </p>
           <h3 className="mt-2 font-[family-name:var(--font-display)] text-[1.6rem] font-semibold leading-tight tracking-tight">
             Translify {planName}
           </h3>
 
           <div className="mt-5 space-y-3 border-t border-dashed border-[color:var(--color-border)] pt-5 text-[0.92rem]">
-            <Row label={`${planName} · monthly`} value={`€${personality.monthly}`} />
-            <Row label="First-month discount" value="−40%" highlight />
-            <Row label="Free trial" value="30 days" />
+            <Row label={t("ob.s5.row.monthly", { plan: planName })} value={`€${personality.monthly}`} />
+            <Row label={t("ob.s5.row.firstDiscount")} value="−40%" highlight />
+            <Row label={t("ob.s5.row.trial")} value={t("ob.s5.row.trialDays")} />
             <div className="border-t border-[color:var(--color-border)] pt-3" />
             <Row
-              label={<span className="font-[family-name:var(--font-display)] text-[1rem] font-semibold">Today</span>}
+              label={<span className="font-[family-name:var(--font-display)] text-[1rem] font-semibold">{t("ob.s5.row.today")}</span>}
               value={
                 <span className="font-[family-name:var(--font-display)] text-[1.4rem] font-semibold">
                   €0
@@ -837,22 +834,22 @@ function Step5({
               }
             />
             <p className="text-[0.78rem] leading-snug text-[color:var(--color-ink-soft)]">
-              You won&apos;t be charged today. After your 30-day trial, you&apos;ll pay
-              {" "}<strong className="text-[color:var(--color-ink)]">€{discounted}</strong> for month one,
-              then €{personality.monthly}/mo. Cancel any time, full refund within 30 days.
+              {t("ob.s5.charge.pre")}
+              <strong className="text-[color:var(--color-ink)]">€{discounted}</strong>
+              {t("ob.s5.charge.post", { price: personality.monthly })}
             </p>
           </div>
 
           {/* Trust badges */}
           <div className="mt-6 grid grid-cols-3 gap-3 border-t border-[color:var(--color-border)] pt-5">
-            <Trust icon="↺" label="Cancel anytime" />
-            <Trust icon="€" label="Refund ≤30d" />
-            <Trust icon="🔒" label="Secure checkout" />
+            <Trust icon="↺" label={t("ob.s5.trust.cancel")} />
+            <Trust icon="€" label={t("ob.s5.trust.refund")} />
+            <Trust icon="🔒" label={t("ob.s5.trust.secure")} />
           </div>
         </div>
 
         <p className="mt-4 text-center text-[0.78rem] text-[color:var(--color-ink-soft)]">
-          Join 42,000+ readers who finished the book.
+          {t("ob.s5.join")}
         </p>
       </aside>
     </div>

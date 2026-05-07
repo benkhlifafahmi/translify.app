@@ -278,6 +278,117 @@ export const en: Dict = {
     "The link may have expired (they only last an hour) or already been used. You can ask for a fresh one below.",
   "auth.verify.cta.library": "Open my shelf →",
   "auth.verify.cta.resend": "Send a new verification email",
+
+  // Onboarding — top nav + step controls
+  "ob.skip": "Log in",
+  "ob.back": "Back",
+  "ob.next": "Continue",
+  "ob.finish": "Make it mine",
+
+  // Onboarding · Step 1 — persona
+  "ob.s1.eyebrow": "First, the why",
+  "ob.s1.title": "Why are you here?",
+  "ob.s1.subtitle":
+    "Pick the one that sounds most like you. We'll tailor the rest of the setup around it.",
+  "ob.s1.opt.student": "I'm studying",
+  "ob.s1.opt.student.body": "Textbooks, papers, exam prep — read in your strongest language.",
+  "ob.s1.opt.curious": "I read for pleasure",
+  "ob.s1.opt.curious.body": "Novels, essays, the occasional manga. Finish more, in any language.",
+  "ob.s1.opt.pro": "I read for work",
+  "ob.s1.opt.pro.body": "Reports, manuals, dense PDFs. Get to the point — and cite it.",
+  "ob.s1.opt.family": "I'm reading with kids",
+  "ob.s1.opt.family.body": "Bedtime stories and homework, in any language, kid-safe.",
+
+  // Onboarding · Step 2 — language
+  "ob.s2.eyebrow": "Now, the language",
+  "ob.s2.title": "Which language do you read in?",
+  "ob.s2.subtitle":
+    "We'll translate every book you upload into this language — and keep the original layout.",
+  "ob.s2.rtl": "Right-to-left",
+  "ob.s2.more": "+ 8 more languages — Italiano, Português, Nederlands, 中文, 한국어, Русский, हिन्दी, Türkçe",
+
+  // Onboarding · Step 3 — volume slider
+  "ob.s3.eyebrow": "How much do you read?",
+  "ob.s3.title": "Books per month, roughly?",
+  "ob.s3.subtitle":
+    "Doesn't have to be exact. We'll match a plan to your pace.",
+  "ob.s3.unit.books": "Books / month",
+
+  // Onboarding · Step 4 — personality reveal
+  "ob.s4.eyebrow": "Your reading personality",
+  "ob.s4.title.pre": "You read like a",
+  "ob.s4.title.post": ".",
+  "ob.s4.recommended": "Recommended for you",
+  "ob.s4.timer": "Offer expires in",
+  "ob.s4.planRec": "Plan recommendation",
+  "ob.s4.firstMonth": "first month",
+  "ob.s4.then": "then €%price%/mo · cancel anytime · 30-day money-back",
+  "ob.s4.match.books": "Matched to your %books% books / month",
+  "ob.s4.match.lang": "Reading in %lang% — full script support",
+  "ob.s4.match.reader": "Up to 10 books / month, all 14 languages",
+  "ob.s4.match.scholar": "Unlimited books, priority queue, smart vocabulary",
+  "ob.s4.match.family": "5 reader profiles, kid-safe chat, parent dashboard",
+  "ob.s4.match.basics": "Quizzes & chat with citations — yours from day one",
+  "ob.s4.lock.pre": "Lock in",
+  "ob.s4.lock.discount": "40% off",
+  "ob.s4.lock.post": "your first month — applied at checkout.",
+  "ob.s4.tone.saffron": "scholar",
+  "ob.s4.tone.sage": "polyglot explorer",
+  "ob.s4.tone.coral": "family reader",
+  "ob.s4.tone.plum": "sharp mind",
+  "ob.s4.alsoA": "also a",
+  "ob.s4.quote.saffron":
+    "I read Tolstoy in his pace — in mine. The Scholar plan paid itself back in one semester.",
+  "ob.s4.quote.sage":
+    "Twelve novels, three languages, six months. I haven't read this much since I was a kid.",
+  "ob.s4.quote.coral":
+    "Bedtime stories in Spanish. Quizzes in English at breakfast. He's winning, and so am I.",
+  "ob.s4.quote.plum":
+    "600-page papers in Mandarin, summarised and citable. The Scholar plan is my unfair advantage.",
+
+  // Onboarding · Personality body copy
+  "personality.scholar.name": "Scholar",
+  "personality.scholar.body":
+    "You read with a pen in hand. You want the syllabus done in your strongest language, citations you can trust, and quizzes that actually stick.",
+  "personality.curious.name": "Curious Reader",
+  "personality.curious.body":
+    "You finish more books when they meet you halfway. A few translations a month, every script supported, no fuss.",
+  "personality.pro.name": "Sharp Mind",
+  "personality.pro.body":
+    "You read to work — reports, manuals, papers. You want to skim fast and cite faster, with no hallucinated answers.",
+  "personality.family.name": "Family Reader",
+  "personality.family.body":
+    "You're reading with kids. You want bedtime stories in any language, a kid-safe chat, and parent visibility — all in one shelf.",
+
+  // Onboarding · Step 5 — account creation + summary
+  "ob.s5.eyebrow": "Almost there",
+  "ob.s5.title": "Make your shelf.",
+  "ob.s5.subtitle":
+    "A private space for the books you read, the questions you have, and the things you learn.",
+  "ob.s5.name": "What should we call you?",
+  "ob.s5.optional": "Optional",
+  "ob.s5.email": "Email",
+  "ob.s5.password": "Password",
+  "ob.s5.passwordHint": "At least 8 characters",
+  "ob.s5.start": "Start my 30-day trial",
+  "ob.s5.submitting": "Setting up your shelf…",
+  "ob.s5.terms":
+    "By starting your trial you agree to our terms · ",
+  "ob.s5.terms.haveAccount": "Have an account? Log in",
+  "ob.s5.order": "Your order",
+  "ob.s5.row.monthly": "%plan% · monthly",
+  "ob.s5.row.firstDiscount": "First-month discount",
+  "ob.s5.row.trial": "Free trial",
+  "ob.s5.row.trialDays": "30 days",
+  "ob.s5.row.today": "Today",
+  "ob.s5.charge.pre": "You won't be charged today. After your 30-day trial, you'll pay ",
+  "ob.s5.charge.post":
+    " for month one, then €%price%/mo. Cancel any time, full refund within 30 days.",
+  "ob.s5.trust.cancel": "Cancel anytime",
+  "ob.s5.trust.refund": "Refund ≤30d",
+  "ob.s5.trust.secure": "Secure checkout",
+  "ob.s5.join": "Join 42,000+ readers who finished the book.",
+  "ob.error.register": "Registration failed. Please try again.",
 };
 
 export const enTestimonials: Testimonial[] = [

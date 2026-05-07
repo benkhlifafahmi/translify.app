@@ -226,6 +226,117 @@ export const es: Dict = {
   "auth.shell.body":
     "Traduce cualquier PDF, chatea con él, luego examínate. Hecho para clases, deberes y domingos lluviosos.",
   "auth.shell.foot": "Leer · Traducir · Chatear · Examinar",
+
+  // Onboarding — top nav + step controls
+  "ob.skip": "Iniciar sesión",
+  "ob.back": "Atrás",
+  "ob.next": "Continuar",
+  "ob.finish": "Hacerla mía",
+
+  // Onboarding · Step 1 — persona
+  "ob.s1.eyebrow": "Primero, el porqué",
+  "ob.s1.title": "¿Qué te trae por aquí?",
+  "ob.s1.subtitle":
+    "Elige la opción que más se parezca a ti. Adaptaremos el resto a tu medida.",
+  "ob.s1.opt.student": "Estoy estudiando",
+  "ob.s1.opt.student.body": "Manuales, papers, preparar exámenes — léelo en tu idioma más fuerte.",
+  "ob.s1.opt.curious": "Leo por placer",
+  "ob.s1.opt.curious.body": "Novelas, ensayos, algún manga. Termina más libros, en cualquier idioma.",
+  "ob.s1.opt.pro": "Leo por trabajo",
+  "ob.s1.opt.pro.body": "Informes, manuales, PDFs densos. Ve al grano — y cita la fuente.",
+  "ob.s1.opt.family": "Leo con mis hijos",
+  "ob.s1.opt.family.body": "Cuentos antes de dormir y deberes, en cualquier idioma, seguro para niños.",
+
+  // Onboarding · Step 2 — language
+  "ob.s2.eyebrow": "Ahora, el idioma",
+  "ob.s2.title": "¿En qué idioma lees?",
+  "ob.s2.subtitle":
+    "Traduciremos cada libro que subas a este idioma — sin tocar el diseño original.",
+  "ob.s2.rtl": "De derecha a izquierda",
+  "ob.s2.more": "+ 8 idiomas más — Italiano, Português, Nederlands, 中文, 한국어, Русский, हिन्दी, Türkçe",
+
+  // Onboarding · Step 3 — volume slider
+  "ob.s3.eyebrow": "¿Cuánto lees?",
+  "ob.s3.title": "Libros al mes, más o menos.",
+  "ob.s3.subtitle":
+    "No tiene que ser exacto. Te emparejamos con un plan a tu ritmo.",
+  "ob.s3.unit.books": "Libros / mes",
+
+  // Onboarding · Step 4 — personality reveal
+  "ob.s4.eyebrow": "Tu personalidad lectora",
+  "ob.s4.title.pre": "Lees como un",
+  "ob.s4.title.post": ".",
+  "ob.s4.recommended": "Recomendado para ti",
+  "ob.s4.timer": "La oferta caduca en",
+  "ob.s4.planRec": "Plan recomendado",
+  "ob.s4.firstMonth": "primer mes",
+  "ob.s4.then": "luego €%price%/mes · cancela cuando quieras · reembolso a 30 días",
+  "ob.s4.match.books": "A la medida de tus %books% libros / mes",
+  "ob.s4.match.lang": "Lectura en %lang% — soporte completo de la escritura",
+  "ob.s4.match.reader": "Hasta 10 libros / mes, los 14 idiomas",
+  "ob.s4.match.scholar": "Libros ilimitados, cola prioritaria, vocabulario inteligente",
+  "ob.s4.match.family": "5 perfiles de lector, chat seguro para niños, panel parental",
+  "ob.s4.match.basics": "Quizzes y chat con citas — tuyos desde el primer día",
+  "ob.s4.lock.pre": "Asegura un",
+  "ob.s4.lock.discount": "40% de descuento",
+  "ob.s4.lock.post": "en tu primer mes — se aplica al pagar.",
+  "ob.s4.tone.saffron": "erudito",
+  "ob.s4.tone.sage": "explorador políglota",
+  "ob.s4.tone.coral": "lector en familia",
+  "ob.s4.tone.plum": "mente afilada",
+  "ob.s4.alsoA": "también un",
+  "ob.s4.quote.saffron":
+    "«Leí a Tolstói a su ritmo — y al mío. El plan Scholar se pagó solo en un semestre.»",
+  "ob.s4.quote.sage":
+    "«Doce novelas, tres idiomas, seis meses. No leía tanto desde niño.»",
+  "ob.s4.quote.coral":
+    "«Cuentos en español antes de dormir. Quizzes en inglés al desayuno. Él gana, y yo también.»",
+  "ob.s4.quote.plum":
+    "«Papers de 600 páginas en mandarín, resumidos y citables. El plan Scholar es mi ventaja injusta.»",
+
+  // Onboarding · Personality body copy
+  "personality.scholar.name": "Erudito",
+  "personality.scholar.body":
+    "Lees con boli en mano. Quieres el temario hecho en tu idioma más fuerte, citas en las que confiar y quizzes que de verdad se queden.",
+  "personality.curious.name": "Lector Curioso",
+  "personality.curious.body":
+    "Terminas más libros cuando salen a tu encuentro. Algunas traducciones al mes, todas las escrituras soportadas, sin lío.",
+  "personality.pro.name": "Mente Afilada",
+  "personality.pro.body":
+    "Lees para trabajar — informes, manuales, papers. Quieres hojear rápido y citar más rápido aún, sin respuestas inventadas.",
+  "personality.family.name": "Lector en Familia",
+  "personality.family.body":
+    "Lees con tus hijos. Quieres cuentos en cualquier idioma, un chat seguro para niños y visibilidad parental — todo en una misma estantería.",
+
+  // Onboarding · Step 5 — account creation + summary
+  "ob.s5.eyebrow": "Casi listo",
+  "ob.s5.title": "Haz tu estantería.",
+  "ob.s5.subtitle":
+    "Un rincón privado para los libros que lees, las preguntas que tienes y lo que aprendes.",
+  "ob.s5.name": "¿Cómo te llamamos?",
+  "ob.s5.optional": "Opcional",
+  "ob.s5.email": "Correo",
+  "ob.s5.password": "Contraseña",
+  "ob.s5.passwordHint": "Mínimo 8 caracteres",
+  "ob.s5.start": "Empezar mi prueba de 30 días",
+  "ob.s5.submitting": "Preparando tu estantería…",
+  "ob.s5.terms":
+    "Al empezar tu prueba aceptas nuestros términos · ",
+  "ob.s5.terms.haveAccount": "¿Ya tienes cuenta? Iniciar sesión",
+  "ob.s5.order": "Tu pedido",
+  "ob.s5.row.monthly": "%plan% · mensual",
+  "ob.s5.row.firstDiscount": "Descuento del primer mes",
+  "ob.s5.row.trial": "Prueba gratis",
+  "ob.s5.row.trialDays": "30 días",
+  "ob.s5.row.today": "Hoy",
+  "ob.s5.charge.pre": "Hoy no se te cobra nada. Tras tus 30 días de prueba, pagarás ",
+  "ob.s5.charge.post":
+    " el primer mes, luego €%price%/mes. Cancela cuando quieras, reembolso íntegro en 30 días.",
+  "ob.s5.trust.cancel": "Cancela cuando quieras",
+  "ob.s5.trust.refund": "Reembolso ≤30d",
+  "ob.s5.trust.secure": "Pago seguro",
+  "ob.s5.join": "Únete a más de 42.000 lectores que terminaron el libro.",
+  "ob.error.register": "Error en el registro. Inténtalo de nuevo.",
 };
 
 export const esTestimonials: Testimonial[] = [

@@ -225,6 +225,117 @@ export const ja: Dict = {
   "auth.shell.body":
     "PDFを翻訳して、対話して、自分でテスト。教室にも、宿題にも、雨の日曜の午後にも。",
   "auth.shell.foot": "読む · 翻訳 · 対話 · 試す",
+
+  // Onboarding — top nav + step controls
+  "ob.skip": "ログイン",
+  "ob.back": "戻る",
+  "ob.next": "次へ",
+  "ob.finish": "本棚を作る",
+
+  // Onboarding · Step 1 — persona
+  "ob.s1.eyebrow": "まずは「なぜ」から",
+  "ob.s1.title": "どうしてここに?",
+  "ob.s1.subtitle":
+    "いちばん近いものをひとつ選んでください。残りのセットアップを、それに合わせて整えます。",
+  "ob.s1.opt.student": "勉強しています",
+  "ob.s1.opt.student.body": "教科書、論文、試験対策——いちばん得意な言語で読みましょう。",
+  "ob.s1.opt.curious": "楽しみで読みます",
+  "ob.s1.opt.curious.body": "小説、エッセイ、ときどきマンガ。どんな言語でも、もっと読み終える。",
+  "ob.s1.opt.pro": "仕事で読みます",
+  "ob.s1.opt.pro.body": "レポート、マニュアル、密度の高いPDF。要点へまっすぐ——出典つきで。",
+  "ob.s1.opt.family": "子どもと読みます",
+  "ob.s1.opt.family.body": "寝る前のお話も宿題も、どんな言語でも、子どもに安全に。",
+
+  // Onboarding · Step 2 — language
+  "ob.s2.eyebrow": "次は、言語を",
+  "ob.s2.title": "どの言語で読みますか?",
+  "ob.s2.subtitle":
+    "アップロードした本はすべてこの言語に翻訳します——元のレイアウトはそのまま。",
+  "ob.s2.rtl": "右から左",
+  "ob.s2.more": "+ あと8言語 — Italiano, Português, Nederlands, 中文, 한국어, Русский, हिन्दी, Türkçe",
+
+  // Onboarding · Step 3 — volume slider
+  "ob.s3.eyebrow": "どれくらい読みますか?",
+  "ob.s3.title": "ひと月に、ざっくり何冊?",
+  "ob.s3.subtitle":
+    "正確じゃなくて大丈夫。あなたのペースに合うプランを選びます。",
+  "ob.s3.unit.books": "冊 / 月",
+
+  // Onboarding · Step 4 — personality reveal
+  "ob.s4.eyebrow": "あなたの読書タイプ",
+  "ob.s4.title.pre": "あなたは",
+  "ob.s4.title.post": "の読み方。",
+  "ob.s4.recommended": "あなたへのおすすめ",
+  "ob.s4.timer": "オファー終了まで",
+  "ob.s4.planRec": "おすすめプラン",
+  "ob.s4.firstMonth": "初月",
+  "ob.s4.then": "以降 €%price%/月 · いつでも解約 · 30日返金保証",
+  "ob.s4.match.books": "あなたのペース %books% 冊/月にぴったり",
+  "ob.s4.match.lang": "%lang%で読む——文字体系もフル対応",
+  "ob.s4.match.reader": "月10冊まで、全14言語",
+  "ob.s4.match.scholar": "本数無制限、優先キュー、賢い単語帳",
+  "ob.s4.match.family": "5人ぶんの読者プロフィール、キッズ安全チャット、保護者ダッシュボード",
+  "ob.s4.match.basics": "クイズ&出典つきチャット——初日からあなたのものに",
+  "ob.s4.lock.pre": "初月",
+  "ob.s4.lock.discount": "40%オフ",
+  "ob.s4.lock.post": "を確保——お会計時に自動適用されます。",
+  "ob.s4.tone.saffron": "学究の人",
+  "ob.s4.tone.sage": "多言語の探求者",
+  "ob.s4.tone.coral": "家族の読み手",
+  "ob.s4.tone.plum": "鋭い頭脳",
+  "ob.s4.alsoA": "そしてまた",
+  "ob.s4.quote.saffron":
+    "トルストイを彼のペースで——自分の言葉で読めました。Scholarプランは1学期で元が取れましたよ。",
+  "ob.s4.quote.sage":
+    "半年で12冊、3言語。子どものとき以来、こんなに読んだのは初めてです。",
+  "ob.s4.quote.coral":
+    "寝る前のお話はスペイン語、朝食のクイズは英語。息子も勝ってるし、私も勝ってる。",
+  "ob.s4.quote.plum":
+    "600ページのマンダリン論文を、要約して引用までできる。Scholarプランは私のずるい味方です。",
+
+  // Onboarding · Personality body copy
+  "personality.scholar.name": "学究の人",
+  "personality.scholar.body":
+    "あなたはペンを片手に読むタイプ。シラバスをいちばん得意な言語で片づけて、信頼できる出典と、ちゃんと身につくクイズが欲しい。",
+  "personality.curious.name": "好奇心旺盛な読者",
+  "personality.curious.body":
+    "本が歩み寄ってくれると、もっと読み終えられる。月に数冊の翻訳、全文字体系に対応、面倒なし。",
+  "personality.pro.name": "鋭い頭脳",
+  "personality.pro.body":
+    "あなたは仕事で読む——レポート、マニュアル、論文。さっと目を通して、もっと早く引用したい。幻覚の答えはいらない。",
+  "personality.family.name": "家族の読み手",
+  "personality.family.body":
+    "あなたは子どもと読む。どんな言語でも寝る前のお話、子どもに安全なチャット、保護者の見える化——ぜんぶひとつの本棚で。",
+
+  // Onboarding · Step 5 — account creation + summary
+  "ob.s5.eyebrow": "もうすぐです",
+  "ob.s5.title": "あなたの本棚を。",
+  "ob.s5.subtitle":
+    "読む本、抱える疑問、学んだこと——その私的な場所を。",
+  "ob.s5.name": "なんとお呼びしましょう?",
+  "ob.s5.optional": "任意",
+  "ob.s5.email": "メール",
+  "ob.s5.password": "パスワード",
+  "ob.s5.passwordHint": "8文字以上",
+  "ob.s5.start": "30日間の無料トライアルを始める",
+  "ob.s5.submitting": "本棚を準備中…",
+  "ob.s5.terms":
+    "トライアルを始めると利用規約に同意したことになります · ",
+  "ob.s5.terms.haveAccount": "アカウントをお持ちですか?ログイン",
+  "ob.s5.order": "ご注文内容",
+  "ob.s5.row.monthly": "%plan% · 月額",
+  "ob.s5.row.firstDiscount": "初月割引",
+  "ob.s5.row.trial": "無料トライアル",
+  "ob.s5.row.trialDays": "30日",
+  "ob.s5.row.today": "本日のお支払い",
+  "ob.s5.charge.pre": "本日の請求はありません。30日のトライアル後、初月は ",
+  "ob.s5.charge.post":
+    " 、その後は €%price%/月。いつでも解約でき、30日以内なら全額返金します。",
+  "ob.s5.trust.cancel": "いつでも解約",
+  "ob.s5.trust.refund": "30日以内返金",
+  "ob.s5.trust.secure": "安全なお会計",
+  "ob.s5.join": "本を読み終えた42,000人以上の読者の仲間入り。",
+  "ob.error.register": "登録に失敗しました。もう一度お試しください。",
 };
 
 export const jaTestimonials: Testimonial[] = [
