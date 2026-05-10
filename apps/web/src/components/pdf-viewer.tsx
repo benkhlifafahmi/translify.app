@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -13,24 +13,65 @@ export interface Highlight {
   nonce: number;
 }
 
+export type SavedHighlightColor = "yellow" | "green" | "blue" | "pink";
+
+export interface SavedHighlight {
+  id: string;
+  page: number;
+  text: string;
+  color: SavedHighlightColor;
+  hasNote?: boolean;
+}
+
+export type HighlightAction = "save" | "note" | "ask-ai";
+
 interface Props {
   fileUrl: string | null;
   emptyMessage?: string;
+  /** A one-shot highlight to jump to (e.g. a chat citation). */
   highlight?: Highlight | null;
+  /** All saved highlights for the book — rendered on their respective pages. */
+  savedHighlights?: SavedHighlight[];
+  /** Called when the user picks an action from the selection toolbar. */
+  onSelectionAction?: (action: HighlightAction, page: number, text: string) => void;
+  /** Optional handler for clicking an existing saved highlight (jump to / open). */
+  onClickSavedHighlight?: (id: string) => void;
+  /** Controlled current page (e.g. driven by "jump to highlight" from sidebar). */
+  goToPage?: { page: number; nonce: number } | null;
 }
 
-export function PdfViewer({ fileUrl, emptyMessage, highlight }: Props) {
+const COLOR_TO_CLASS: Record<SavedHighlightColor, string> = {
+  yellow: "translify-hl-yellow",
+  green: "translify-hl-green",
+  blue: "translify-hl-blue",
+  pink: "translify-hl-pink",
+};
+
+export function PdfViewer({
+  fileUrl,
+  emptyMessage,
+  highlight,
+  savedHighlights,
+  onSelectionAction,
+  onClickSavedHighlight,
+  goToPage,
+}: Props) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [width, setWidth] = useState(720);
   const [error, setError] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [selection, setSelection] = useState<
+    { text: string; top: number; left: number } | null
+  >(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const pageWrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setNumPages(null);
     setPage(1);
     setError(null);
+    setSelection(null);
   }, [fileUrl]);
 
   useEffect(() => {
@@ -52,26 +93,118 @@ export function PdfViewer({ fileUrl, emptyMessage, highlight }: Props) {
     }
   }, [highlight, numPages]);
 
-  const normalizedSnippet = useMemo(() => {
-    if (!highlight) return null;
-    return _normalize(highlight.snippet);
-  }, [highlight]);
+  useEffect(() => {
+    if (!goToPage) return;
+    if (numPages != null) {
+      setPage(Math.max(1, Math.min(numPages, goToPage.page)));
+    } else {
+      setPage(goToPage.page);
+    }
+  }, [goToPage, numPages]);
+
+  // Saved highlights on the current page, normalized for substring matching.
+  const pageHighlights = useMemo(() => {
+    if (!savedHighlights) return [];
+    return savedHighlights
+      .filter((h) => h.page === page)
+      .map((h) => ({
+        ...h,
+        normalized: _normalize(h.text),
+      }))
+      .filter((h) => h.normalized.length >= 3);
+  }, [savedHighlights, page]);
+
+  const citationNormalized = useMemo(() => {
+    if (!highlight || highlight.page !== page) return null;
+    const n = _normalize(highlight.snippet);
+    return n.length >= 3 ? n : null;
+  }, [highlight, page]);
 
   const customTextRenderer = useMemo(() => {
-    if (!normalizedSnippet || !highlight || highlight.page !== page) {
-      return undefined;
-    }
+    const hasAny = pageHighlights.length > 0 || citationNormalized != null;
+    if (!hasAny) return undefined;
     return ({ str }: { str: string }) => {
       const trimmed = str.trim();
       if (trimmed.length < 3) return _escape(str);
       const candidate = _normalize(trimmed);
       if (candidate.length < 3) return _escape(str);
-      if (normalizedSnippet.includes(candidate)) {
+
+      // Saved-highlight match: pick the first matching highlight.
+      const match = pageHighlights.find((h) => h.normalized.includes(candidate));
+      if (match) {
+        const cls = COLOR_TO_CLASS[match.color];
+        const noteDot = match.hasNote ? " has-note" : "";
+        return `<mark class="translify-saved-mark ${cls}${noteDot}" data-hl-id="${_escape(match.id)}">${_escape(str)}</mark>`;
+      }
+
+      if (citationNormalized && citationNormalized.includes(candidate)) {
         return `<mark class="translify-cite-mark">${_escape(str)}</mark>`;
       }
       return _escape(str);
     };
-  }, [normalizedSnippet, highlight, page]);
+  }, [pageHighlights, citationNormalized]);
+
+  // Click handler delegated on the page wrapper to catch clicks on saved marks.
+  const onPageClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!onClickSavedHighlight) return;
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const mark = target.closest("mark.translify-saved-mark");
+      if (!mark) return;
+      const id = mark.getAttribute("data-hl-id");
+      if (id) onClickSavedHighlight(id);
+    },
+    [onClickSavedHighlight],
+  );
+
+  // Detect text selection inside the page; show floating toolbar.
+  const onPageMouseUp = useCallback(() => {
+    const wrap = pageWrapRef.current;
+    if (!wrap) return;
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) {
+      setSelection(null);
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    if (!wrap.contains(range.commonAncestorContainer)) {
+      setSelection(null);
+      return;
+    }
+    const text = sel.toString().trim();
+    if (text.length < 2) {
+      setSelection(null);
+      return;
+    }
+    const rect = range.getBoundingClientRect();
+    const wrapRect = wrap.getBoundingClientRect();
+    setSelection({
+      text,
+      top: rect.top - wrapRect.top + wrap.scrollTop,
+      left: rect.left - wrapRect.left + rect.width / 2 + wrap.scrollLeft,
+    });
+  }, []);
+
+  // Dismiss the toolbar if the user clicks anywhere else (after a tick so the
+  // toolbar's own click can land first).
+  useEffect(() => {
+    if (!selection) return;
+    const onDocMouseDown = (e: MouseEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t?.closest("[data-translify-selection-toolbar]")) return;
+      setSelection(null);
+    };
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  }, [selection]);
+
+  const triggerAction = (action: HighlightAction) => {
+    if (!selection) return;
+    onSelectionAction?.(action, page, selection.text);
+    setSelection(null);
+    window.getSelection()?.removeAllRanges();
+  };
 
   if (!fileUrl) {
     return (
@@ -140,7 +273,12 @@ export function PdfViewer({ fileUrl, emptyMessage, highlight }: Props) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto bg-gradient-to-b from-[color:var(--color-paper-2)]/50 to-[color:var(--color-paper-3)]/40 p-6">
+      <div
+        ref={pageWrapRef}
+        className="relative flex-1 overflow-auto bg-gradient-to-b from-[color:var(--color-paper-2)]/50 to-[color:var(--color-paper-3)]/40 p-6"
+        onMouseUp={onPageMouseUp}
+        onClick={onPageClick}
+      >
         {error ? (
           <p className="text-sm text-[color:var(--color-destructive)]">{error}</p>
         ) : (
@@ -166,13 +304,92 @@ export function PdfViewer({ fileUrl, emptyMessage, highlight }: Props) {
                 pageNumber={page}
                 width={width * zoom}
                 renderAnnotationLayer={false}
-                renderTextLayer={!!customTextRenderer}
+                renderTextLayer={!!customTextRenderer || !!onSelectionAction}
                 customTextRenderer={customTextRenderer}
               />
             </div>
           </Document>
         )}
+
+        {selection && (
+          <div
+            data-translify-selection-toolbar
+            className="absolute z-20 -translate-x-1/2 -translate-y-full"
+            style={{
+              top: Math.max(0, selection.top - 8),
+              left: selection.left,
+            }}
+          >
+            <div className="flex items-center gap-1 rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)] px-1.5 py-1 shadow-[var(--shadow-paper-lg)]">
+              <ToolbarButton
+                onClick={() => triggerAction("save")}
+                label="Highlight"
+                tone="saffron"
+                icon={
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m9 11-6 6v3h3l6-6" />
+                    <path d="m13 8 6-6 3 3-6 6" />
+                    <path d="m18 5-9 9" />
+                  </svg>
+                }
+              />
+              <ToolbarButton
+                onClick={() => triggerAction("note")}
+                label="Add note"
+                tone="sage"
+                icon={
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <path d="M14 2v6h6" />
+                  </svg>
+                }
+              />
+              <ToolbarButton
+                onClick={() => triggerAction("ask-ai")}
+                label="Ask AI"
+                tone="coral"
+                icon={
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2v3" />
+                    <path d="M19 12h3" />
+                    <path d="M12 22v-3" />
+                    <path d="M2 12h3" />
+                    <path d="m17 7 2-2" />
+                    <path d="m5 19 2-2" />
+                    <path d="m17 17 2 2" />
+                    <path d="m5 5 2 2" />
+                    <circle cx="12" cy="12" r="4" />
+                  </svg>
+                }
+              />
+            </div>
+          </div>
+        )}
       </div>
+
+      <style jsx global>{`
+        .translify-cite-mark {
+          background-color: rgba(224, 164, 88, 0.45);
+          border-radius: 2px;
+          padding: 0 1px;
+        }
+        .translify-saved-mark {
+          border-radius: 2px;
+          padding: 0 1px;
+          cursor: pointer;
+          transition: filter 120ms ease;
+        }
+        .translify-saved-mark:hover {
+          filter: brightness(0.94);
+        }
+        .translify-saved-mark.has-note {
+          box-shadow: inset 0 -2px 0 rgba(60, 40, 15, 0.45);
+        }
+        .translify-hl-yellow { background-color: rgba(253, 230, 138, 0.7); }
+        .translify-hl-green  { background-color: rgba(187, 247, 208, 0.7); }
+        .translify-hl-blue   { background-color: rgba(191, 219, 254, 0.7); }
+        .translify-hl-pink   { background-color: rgba(251, 207, 232, 0.7); }
+      `}</style>
     </div>
   );
 }
@@ -198,6 +415,36 @@ function PageButton({
       className="grid h-8 w-8 place-items-center rounded-full border-[1.5px] border-[color:var(--color-border)] bg-white/70 text-[color:var(--color-ink-soft)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-ink-soft)]/40 hover:bg-white hover:text-[color:var(--color-ink)] disabled:pointer-events-none disabled:opacity-40"
     >
       {children}
+    </button>
+  );
+}
+
+function ToolbarButton({
+  onClick,
+  label,
+  icon,
+  tone,
+}: {
+  onClick: () => void;
+  label: string;
+  icon: React.ReactNode;
+  tone: "saffron" | "sage" | "coral";
+}) {
+  const toneClass = {
+    saffron: "text-[color:var(--color-saffron-deep)] hover:bg-[color:var(--color-saffron)]/15",
+    sage: "text-[color:var(--color-sage-deep)] hover:bg-[color:var(--color-sage)]/15",
+    coral: "text-[color:var(--color-coral-deep)] hover:bg-[color:var(--color-coral)]/15",
+  }[tone];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${toneClass}`}
+    >
+      {icon}
+      <span>{label}</span>
     </button>
   );
 }

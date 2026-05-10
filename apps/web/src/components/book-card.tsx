@@ -25,7 +25,15 @@ const SPINE_TONES = [
   { from: "#D6CFE5", to: "#9B8FBE", spine: "#6B5B95" },
 ];
 
-export function BookCard({ book, index = 0 }: { book: Book; index?: number }) {
+export function BookCard({
+  book,
+  index = 0,
+  noteCount = 0,
+}: {
+  book: Book;
+  index?: number;
+  noteCount?: number;
+}) {
   const queryClient = useQueryClient();
   const del = useMutation({
     mutationFn: () => deleteBook(book.id),
@@ -93,6 +101,18 @@ export function BookCard({ book, index = 0 }: { book: Book; index?: number }) {
               <span className="text-[0.7rem]">{book.page_count}p</span>
             )}
             <span className="text-[0.7rem]">{formatBytes(book.file_size_bytes)}</span>
+            {noteCount > 0 && (
+              <span
+                className="badge-pill bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)]"
+                title={`${noteCount} highlight${noteCount === 1 ? "" : "s"}`}
+              >
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m9 11-6 6v3h3l6-6" />
+                  <path d="m13 8 6-6 3 3-6 6" />
+                </svg>
+                {noteCount}
+              </span>
+            )}
           </div>
         </div>
       </div>

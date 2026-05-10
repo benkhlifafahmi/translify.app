@@ -112,6 +112,26 @@ export default function OnboardingPage() {
     }
   };
 
+  // The "I'll try it first" path: register with no checkout, drop them into
+  // the library with their 2-page Free trial. The TrialBanner takes over the
+  // upsell from there.
+  const handleTryFree = async () => {
+    if (!email || !password) {
+      setError(t("ob.error.register"));
+      return;
+    }
+    setError(null);
+    setSubmitting(true);
+    try {
+      await register(email, password, name || undefined);
+      router.push("/library?trial=started");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : t("ob.error.register"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <main className="relative min-h-screen overflow-hidden">
       <PaperBackdrop />
@@ -187,6 +207,7 @@ export default function OnboardingPage() {
               error={error}
               submitting={submitting}
               onSubmit={handleSubmit}
+              onTryFree={handleTryFree}
             />
           )}
         </div>
@@ -714,6 +735,7 @@ function Step5({
   error,
   submitting,
   onSubmit,
+  onTryFree,
 }: {
   personality: Personality;
   name: string;
@@ -725,6 +747,7 @@ function Step5({
   error: string | null;
   submitting: boolean;
   onSubmit: (e: React.FormEvent) => void;
+  onTryFree: () => void;
 }) {
   const { t } = useI18n();
 
@@ -783,6 +806,17 @@ function Step5({
             className="group mt-2 inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[color:var(--color-ink)] px-7 font-[family-name:var(--font-display)] text-[1.05rem] font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_14px_28px_-10px_rgba(20,16,8,0.45)] transition-all hover:-translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
           >
             {submitting ? t("ob.s5.submitting") : t("ob.s5.start")}
+          </button>
+
+          {/* Quiet secondary path — same form, no checkout. The library is a
+              giant upsell once they land. */}
+          <button
+            type="button"
+            disabled={submitting || !email || !password}
+            onClick={onTryFree}
+            className="-mt-1 self-center text-[0.85rem] font-medium text-[color:var(--color-ink-soft)] underline decoration-dotted decoration-[color:var(--color-ink-soft)]/40 underline-offset-4 transition-colors hover:text-[color:var(--color-ink)] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {t("ob.s5.tryFree")}
           </button>
 
           <p className="text-center text-[0.78rem] text-[color:var(--color-ink-soft)]">

@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { uploadBook, type Book } from "@/lib/books";
-import { ApiError } from "@/lib/api";
+import { ApiError, getToken } from "@/lib/api";
 import { parseQuotaError, upgradeUrl } from "@/lib/quota";
+import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
 
 const ACCEPTED = ".pdf,.epub,application/pdf,application/epub+zip";
 
@@ -20,6 +22,19 @@ export function UploadButton() {
   const [active, setActive] = useState<ActiveUpload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+
+  const enabled = typeof window !== "undefined" && !!getToken();
+  const { data: sub } = useQuery<Subscription>({
+    queryKey: ["subscription"],
+    queryFn: getSubscription,
+    enabled,
+    staleTime: 30_000,
+  });
+  const isFree = sub?.plan === "free";
+  const pagesUsed = sub?.usage.pages_uploaded ?? 0;
+  const pagesLimit = sub?.quota.pages_per_month ?? 0;
+  const exhausted =
+    isFree && !isUnlimited(pagesLimit) && pagesUsed >= pagesLimit;
 
   const mutation = useMutation<Book, Error, File>({
     mutationFn: async (file) => {
@@ -64,6 +79,34 @@ export function UploadButton() {
     if (file) mutation.mutate(file);
   };
 
+  // When a Free user has used their 2 demo pages, the box becomes the
+  // upgrade CTA instead of an upload target. No way to even pick a file.
+  if (exhausted) {
+    return (
+      <div className="flex w-full flex-col items-stretch gap-2 sm:max-w-xs">
+        <Link
+          href="/account?upgrade=trial"
+          className="group relative flex h-auto items-center gap-3 rounded-2xl border-[1.5px] border-[color:var(--color-coral-deep)]/40 bg-gradient-to-br from-[#FFF1EE] to-[#F4BBB1] px-5 py-4 text-left shadow-[var(--shadow-paper)] transition-transform hover:-translate-y-[1px]"
+        >
+          <span className="grid h-11 w-11 place-items-center rounded-xl bg-[color:var(--color-coral)]/25 text-[color:var(--color-coral-deep)]">
+            ★
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="font-[family-name:var(--font-display)] text-base font-semibold leading-tight text-[color:var(--color-ink)]">
+              Upgrade to add another book
+            </p>
+            <p className="text-xs text-[color:var(--color-ink-soft)]">
+              Your 2 free pages are used — pick a plan to keep going
+            </p>
+          </div>
+          <span className="text-[color:var(--color-coral-deep)] transition-transform group-hover:translate-x-0.5">
+            →
+          </span>
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="flex w-full flex-col items-stretch gap-2 sm:max-w-xs">
       <input
@@ -101,7 +144,9 @@ export function UploadButton() {
             {mutation.isPending ? "Uploading…" : "Add a book"}
           </p>
           <p className="text-xs text-[color:var(--color-ink-soft)]">
-            Drop a PDF or EPUB here
+            {isFree
+              ? `Drop a PDF or EPUB · ${pagesLimit - pagesUsed} free pages left`
+              : "Drop a PDF or EPUB here"}
           </p>
         </div>
       </button>

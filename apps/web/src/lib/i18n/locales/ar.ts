@@ -318,6 +318,7 @@ export const ar: Dict = {
   "ob.s5.password": "كلمة المرور",
   "ob.s5.passwordHint": "8 أحرف على الأقل",
   "ob.s5.start": "ابدأ تجربتي لـ 14 يومًا",
+  "ob.s5.tryFree": "أو جرّب أولاً — صفحتان مجاناً",
   "ob.s5.submitting": "نُجهّز رفّك…",
   "ob.s5.terms":
     "ببدء تجربتك فأنت توافق على شروطنا · ",

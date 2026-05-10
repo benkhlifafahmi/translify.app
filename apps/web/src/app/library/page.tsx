@@ -7,8 +7,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { BookCard } from "@/components/book-card";
 import { UploadButton } from "@/components/upload-button";
+import { TrialBanner } from "@/components/trial-banner";
+import { ConversionModal } from "@/components/conversion-modal";
 import { me, logout, type User } from "@/lib/auth";
 import { listBooks, type Book } from "@/lib/books";
+import {
+  listAllHighlights,
+  HIGHLIGHT_COLOR_CLASS,
+  type Highlight,
+} from "@/lib/highlights";
 import { getToken } from "@/lib/api";
 
 export default function LibraryPage() {
@@ -42,6 +49,24 @@ export default function LibraryPage() {
     },
   });
 
+  const { data: highlights } = useQuery<Highlight[]>({
+    queryKey: ["highlights", "all"],
+    queryFn: listAllHighlights,
+    enabled,
+  });
+
+  const countsByBook = (highlights ?? []).reduce<Record<string, number>>(
+    (acc, h) => {
+      acc[h.book_id] = (acc[h.book_id] ?? 0) + 1;
+      return acc;
+    },
+    {},
+  );
+  const recentHighlights = (highlights ?? []).slice(0, 6);
+  const bookTitleById = Object.fromEntries(
+    (books ?? []).map((b) => [b.id, b.title] as const),
+  );
+
   useEffect(() => {
     if (userError) router.replace("/login");
   }, [userError, router]);
@@ -72,6 +97,9 @@ export default function LibraryPage() {
         aria-hidden
         className="pointer-events-none absolute -right-20 top-40 h-[24rem] w-[24rem] rounded-full bg-[color:var(--color-sage)]/10 blur-3xl"
       />
+
+      <TrialBanner />
+      <ConversionModal />
 
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6 lg:px-10">
         <Link
@@ -123,6 +151,13 @@ export default function LibraryPage() {
           <UploadButton />
         </div>
 
+        {recentHighlights.length > 0 && (
+          <RecentNotesStrip
+            highlights={recentHighlights}
+            bookTitleById={bookTitleById}
+          />
+        )}
+
         <div className="mt-10">
           {booksLoading ? (
             <BooksSkeleton />
@@ -131,7 +166,12 @@ export default function LibraryPage() {
           ) : (
             <div className="grid grid-cols-1 gap-5 stagger sm:grid-cols-2 lg:grid-cols-3">
               {books.map((book, i) => (
-                <BookCard key={book.id} book={book} index={i} />
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  index={i}
+                  noteCount={countsByBook[book.id] ?? 0}
+                />
               ))}
             </div>
           )}
@@ -160,6 +200,60 @@ function BooksSkeleton() {
         />
       ))}
     </div>
+  );
+}
+
+function RecentNotesStrip({
+  highlights,
+  bookTitleById,
+}: {
+  highlights: Highlight[];
+  bookTitleById: Record<string, string>;
+}) {
+  return (
+    <section className="mt-10">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
+          Recent notes
+        </h2>
+        <span className="text-xs text-[color:var(--color-ink-soft)]">
+          {highlights.length} latest
+        </span>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:thin]">
+        {highlights.map((h) => (
+          <Link
+            key={h.id}
+            href={`/library/${h.book_id}?highlight=${h.id}`}
+            className="group relative flex w-72 shrink-0 flex-col gap-2 rounded-2xl border-[1.5px] border-[color:var(--color-border)] bg-white/80 p-3 transition-all hover:-translate-y-[2px] hover:border-[color:var(--color-saffron)] hover:shadow-[var(--shadow-paper-lg)]"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="line-clamp-1 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-ink-soft)]">
+                {bookTitleById[h.book_id] ?? "Book"}
+              </span>
+              <span className="shrink-0 rounded-full bg-[color:var(--color-paper-3)]/70 px-2 py-0.5 text-[0.65rem] font-semibold text-[color:var(--color-ink-soft)]">
+                p. {h.page}
+              </span>
+            </div>
+            <blockquote
+              className={`line-clamp-3 rounded-md border-l-2 border-[color:var(--color-saffron)] py-1 pl-2 text-xs italic leading-relaxed text-[color:var(--color-ink)] ${HIGHLIGHT_COLOR_CLASS[h.color]}`}
+            >
+              “{h.text}”
+            </blockquote>
+            {h.note && (
+              <p className="line-clamp-2 text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
+                {h.note}
+              </p>
+            )}
+            {h.ai_answer && (
+              <p className="line-clamp-1 text-[0.7rem] font-semibold text-[color:var(--color-coral-deep)]">
+                ✦ AI explained this
+              </p>
+            )}
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 

@@ -2,8 +2,8 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBook, type Book } from "@/lib/books";
 import {
   getBookFileUrl,
@@ -14,10 +14,24 @@ import { PdfViewer } from "@/components/pdf-viewer-lazy";
 import { TranslatePanel } from "@/components/translate-panel";
 import { ChatPanel } from "@/components/chat-panel";
 import { QuizPanel } from "@/components/quiz-panel";
+import {
+  HighlightsPanel,
+  type OpenHighlightState,
+} from "@/components/highlights-panel";
+import { TrialBanner } from "@/components/trial-banner";
 import type { Citation } from "@/lib/chats";
-import type { Highlight } from "@/components/pdf-viewer";
+import {
+  createHighlight,
+  listBookHighlights,
+  type Highlight as SavedHighlightT,
+} from "@/lib/highlights";
+import type {
+  Highlight,
+  HighlightAction,
+  SavedHighlight,
+} from "@/components/pdf-viewer";
 
-type RightTab = "chat" | "quiz";
+type RightTab = "chat" | "quiz" | "notes";
 
 export default function BookDetailPage({
   params,
@@ -26,10 +40,14 @@ export default function BookDetailPage({
 }) {
   const { bookId } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const qc = useQueryClient();
   const [mounted, setMounted] = useState(false);
   const [selectedTranslationId, setSelectedTranslationId] = useState<string | null>(null);
   const [rightTab, setRightTab] = useState<RightTab>("chat");
   const [highlight, setHighlight] = useState<Highlight | null>(null);
+  const [openHighlight, setOpenHighlight] = useState<OpenHighlightState | null>(null);
+  const [goToPage, setGoToPage] = useState<{ page: number; nonce: number } | null>(null);
 
   const onCitationClick = (citation: Citation) => {
     if (citation.page_start == null) return;
@@ -69,6 +87,53 @@ export default function BookDetailPage({
     staleTime: 50 * 60 * 1000,
   });
 
+  const { data: highlights = [] } = useQuery<SavedHighlightT[]>({
+    queryKey: ["highlights", bookId],
+    queryFn: () => listBookHighlights(bookId),
+    enabled: ready,
+  });
+
+  // Open a highlight passed via ?highlight=<id> (from the /library page).
+  useEffect(() => {
+    const target = searchParams.get("highlight");
+    if (!target || !ready || !highlights.length) return;
+    const h = highlights.find((x) => x.id === target);
+    if (!h) return;
+    setRightTab("notes");
+    setOpenHighlight({ id: h.id, nonce: Date.now() });
+    setGoToPage({ page: h.page, nonce: Date.now() });
+  }, [searchParams, ready, highlights]);
+
+  const createHl = useMutation({
+    mutationFn: async (input: { action: HighlightAction; page: number; text: string }) =>
+      createHighlight(bookId, { page: input.page, text: input.text }),
+    onSuccess: (saved, vars) => {
+      qc.setQueryData<SavedHighlightT[]>(["highlights", bookId], (old) =>
+        old ? [...old, saved] : [saved],
+      );
+      qc.invalidateQueries({ queryKey: ["highlights", "all"] });
+      setRightTab("notes");
+      setOpenHighlight({
+        id: saved.id,
+        autoEditNote: vars.action === "note",
+        autoAskAi: vars.action === "ask-ai",
+        nonce: Date.now(),
+      });
+    },
+  });
+
+  const onSelectionAction = (action: HighlightAction, page: number, text: string) => {
+    createHl.mutate({ action, page, text });
+  };
+
+  const savedHighlightsForViewer: SavedHighlight[] = highlights.map((h) => ({
+    id: h.id,
+    page: h.page,
+    text: h.text,
+    color: h.color,
+    hasNote: !!h.note,
+  }));
+
   if (!mounted || isLoading) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-10">
@@ -93,6 +158,7 @@ export default function BookDetailPage({
 
   return (
     <main className="flex h-screen flex-col bg-[color:var(--color-paper)]">
+      <TrialBanner />
       <header className="flex shrink-0 items-center justify-between gap-4 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/80 px-5 py-3 backdrop-blur lg:px-7">
         <div className="flex min-w-0 items-center gap-4">
           <Link
@@ -140,6 +206,13 @@ export default function BookDetailPage({
                   fileUrlQuery.isLoading ? "Preparing your book…" : "No file URL"
                 }
                 highlight={highlight}
+                savedHighlights={savedHighlightsForViewer}
+                onSelectionAction={onSelectionAction}
+                onClickSavedHighlight={(id) => {
+                  setRightTab("notes");
+                  setOpenHighlight({ id, nonce: Date.now() });
+                }}
+                goToPage={goToPage}
               />
             ) : (
               <EpubFallback url={fileUrlQuery.data} />
@@ -156,6 +229,13 @@ export default function BookDetailPage({
                 label="Chat"
               />
               <TabPill
+                active={rightTab === "notes"}
+                onClick={() => setRightTab("notes")}
+                tone="saffron"
+                icon="✎"
+                label={highlights.length > 0 ? `Notes (${highlights.length})` : "Notes"}
+              />
+              <TabPill
                 active={rightTab === "quiz"}
                 onClick={() => setRightTab("quiz")}
                 tone="coral"
@@ -169,6 +249,19 @@ export default function BookDetailPage({
                   bookId={bookId}
                   selectedTranslationId={selectedTranslationId}
                   onCitationClick={onCitationClick}
+                />
+              ) : rightTab === "notes" ? (
+                <HighlightsPanel
+                  bookId={bookId}
+                  open={openHighlight}
+                  onConsumed={() =>
+                    setOpenHighlight((prev) =>
+                      prev ? { ...prev, autoAskAi: false, autoEditNote: false } : prev,
+                    )
+                  }
+                  onJumpToPage={(page) =>
+                    setGoToPage({ page, nonce: Date.now() })
+                  }
                 />
               ) : (
                 <QuizPanel
@@ -193,14 +286,16 @@ function TabPill({
 }: {
   active: boolean;
   onClick: () => void;
-  tone: "sage" | "coral";
+  tone: "sage" | "coral" | "saffron";
   icon: string;
   label: string;
 }) {
   const activeClass =
     tone === "sage"
       ? "bg-[color:var(--color-sage)]/15 text-[color:var(--color-sage-deep)] ring-1 ring-[color:var(--color-sage)]/30"
-      : "bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)] ring-1 ring-[color:var(--color-coral)]/30";
+      : tone === "saffron"
+        ? "bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)] ring-1 ring-[color:var(--color-saffron)]/30"
+        : "bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)] ring-1 ring-[color:var(--color-coral)]/30";
   return (
     <button
       type="button"

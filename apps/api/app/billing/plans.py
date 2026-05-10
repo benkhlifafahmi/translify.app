@@ -51,11 +51,14 @@ class PlanQuota:
 # Free is unsubscribable — new users go through a 14-day Reader trial.
 PLAN_QUOTAS: dict[Plan, PlanQuota] = {
     Plan.free: PlanQuota(
-        pages_per_month=0,
-        max_pages_per_book=0,
-        quizzes_per_book=0,
+        # Free is a "try the translation" demo: 2 pages lifetime, then paywall.
+        # Free users have no Stripe subscription period, so the counter never
+        # resets — pages_per_month behaves as a lifetime cap.
+        pages_per_month=2,
+        max_pages_per_book=2,
+        quizzes_per_book=0,         # quizzes locked behind a real plan
         profiles=1,
-        chat_with_citations=False,
+        chat_with_citations=False,  # chat locked
         annotated_export=False,
         priority_queue=False,
         family_safe_mode=False,

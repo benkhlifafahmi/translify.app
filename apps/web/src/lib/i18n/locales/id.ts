@@ -319,6 +319,7 @@ export const id: Dict = {
   "ob.s5.password": "Kata sandi",
   "ob.s5.passwordHint": "Minimal 8 karakter",
   "ob.s5.start": "Mulai uji coba 14 hariku",
+  "ob.s5.tryFree": "Atau coba dulu — 2 halaman gratis",
   "ob.s5.submitting": "Menyiapkan rakmu…",
   "ob.s5.terms":
     "Dengan memulai uji coba kamu setuju dengan ketentuan kami · ",

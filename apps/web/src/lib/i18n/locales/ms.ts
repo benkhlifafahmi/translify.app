@@ -319,6 +319,7 @@ export const ms: Dict = {
   "ob.s5.password": "Kata laluan",
   "ob.s5.passwordHint": "Minimum 8 aksara",
   "ob.s5.start": "Mulakan percubaan 14 hari saya",
+  "ob.s5.tryFree": "Atau cuba dulu — 2 halaman percuma",
   "ob.s5.submitting": "Menyiapkan rak anda…",
   "ob.s5.terms":
     "Dengan memulakan percubaan, anda bersetuju dengan terma kami · ",

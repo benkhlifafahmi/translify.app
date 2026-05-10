@@ -319,6 +319,7 @@ export const es: Dict = {
   "ob.s5.password": "Contraseña",
   "ob.s5.passwordHint": "Mínimo 8 caracteres",
   "ob.s5.start": "Empezar mi prueba de 14 días",
+  "ob.s5.tryFree": "O pruébalo primero — 2 páginas gratis",
   "ob.s5.submitting": "Preparando tu estantería…",
   "ob.s5.terms":
     "Al empezar tu prueba aceptas nuestros términos · ",

@@ -2,6 +2,7 @@
 from app.models.book import Book, BookStatus
 from app.models.chat import Chat, ChatScope, Message, MessageRole
 from app.models.chunk import Chunk
+from app.models.highlight import Highlight, HighlightColor
 from app.models.quiz import Quiz, QuizAttempt
 from app.models.subscription import (
     StripeEvent,
@@ -17,6 +18,8 @@ __all__ = [
     "Chat",
     "ChatScope",
     "Chunk",
+    "Highlight",
+    "HighlightColor",
     "Message",
     "MessageRole",
     "Quiz",

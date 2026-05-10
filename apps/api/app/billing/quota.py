@@ -69,10 +69,15 @@ async def reserve_book_upload(
     """Refuse the upload if it'd push the user over their monthly page quota
     or if the single book exceeds ``max_pages_per_book``.
 
+    Free users get a tiny lifetime allowance (the demo page budget) — we do
+    NOT require an active plan here. Other gated routes (chat, quiz,
+    translation) still call ``require_active_plan`` so the only thing Free
+    users can do is upload + view their demo translation.
+
     Increments ``pages_uploaded`` by ``page_count`` on success. Rollback on
     failure happens via the surrounding transaction (caller controls commit).
     """
-    sub = await require_active_plan(user, session)
+    sub = await get_or_create_subscription(user, session)
     plan = Plan(sub.plan)
     quota = quota_for(plan)
     usage = await _load_usage(sub, session)

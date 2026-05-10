@@ -371,6 +371,7 @@ export const en: Dict = {
   "ob.s5.password": "Password",
   "ob.s5.passwordHint": "At least 8 characters",
   "ob.s5.start": "Start my 14-day trial",
+  "ob.s5.tryFree": "Or try it first — 2 free pages",
   "ob.s5.submitting": "Setting up your shelf…",
   "ob.s5.terms":
     "By starting your trial you agree to our terms · ",

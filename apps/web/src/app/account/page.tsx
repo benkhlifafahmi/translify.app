@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { TrialBanner } from "@/components/trial-banner";
 import { ApiError } from "@/lib/api";
 import { logout, me, updateProfile, type User } from "@/lib/auth";
 import {
@@ -128,6 +129,7 @@ function AccountInner() {
     <main className="relative min-h-screen overflow-hidden">
       <ParchmentBackdrop />
 
+      <TrialBanner />
       <TopBar onLogout={() => logout().then(() => router.push("/"))} />
 
       <div className="relative z-10 mx-auto grid max-w-6xl gap-10 px-6 pb-24 pt-10 lg:grid-cols-[260px_1fr] lg:gap-14 lg:px-10">
@@ -1110,6 +1112,8 @@ function upgradeFlash(reason: string): string {
       return "Translations need an active plan. Pick one below — first month is on us.";
     case "no_plan":
       return "An active plan is required for that. Pick one below to keep going.";
+    case "trial":
+      return "Welcome — your 2 free pages are ready. Pick a plan below whenever you're set on more.";
     default:
       return "Upgrade your plan below to unlock more.";
   }
