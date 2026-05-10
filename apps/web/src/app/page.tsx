@@ -777,35 +777,33 @@ function SiteFooter() {
           links={[
             { label: t("footer.link.how"), href: "#how" },
             { label: t("footer.link.features"), href: "#features" },
-            { label: t("footer.link.pricing"), href: "#pricing" },
-            { label: t("footer.link.languages"), href: "#features" },
+            { label: t("footer.link.pricing"), href: "/pricing" },
+            { label: t("footer.link.languages"), href: "/languages" },
           ]}
         />
         <FooterCol
           heading={t("footer.col.company")}
           links={[
-            { label: t("footer.link.manifesto"), href: "/" },
-            { label: t("footer.link.blog"), href: "/" },
-            { label: t("footer.link.careers"), href: "/" },
-            { label: t("footer.link.press"), href: "/" },
+            { label: t("footer.link.manifesto"), href: "/manifesto" },
+            { label: t("footer.link.blog"), href: "/blog" },
+            { label: t("footer.link.contact"), href: "/contact" },
           ]}
         />
         <FooterCol
           heading={t("footer.col.help")}
           links={[
             { label: t("footer.link.faq"), href: "#faq" },
-            { label: t("footer.link.refund"), href: "#faq" },
-            { label: t("footer.link.contact"), href: "mailto:hello@translify.app" },
-            { label: t("footer.link.status"), href: "/" },
+            { label: t("footer.link.refund"), href: "/refund-policy" },
+            { label: t("footer.link.contact"), href: "/contact" },
           ]}
         />
       </div>
       <div className="mx-auto mt-10 flex max-w-6xl flex-col items-center justify-between gap-3 border-t border-dashed border-[color:var(--color-border)] pt-6 text-[0.78rem] text-[color:var(--color-ink-soft)] md:flex-row">
         <p>{t("footer.bottom")} · © {new Date().getFullYear()} Translify</p>
         <div className="flex gap-5">
-          <Link href="/" className="hover:text-[color:var(--color-ink)]">{t("footer.privacy")}</Link>
-          <Link href="/" className="hover:text-[color:var(--color-ink)]">{t("footer.terms")}</Link>
-          <Link href="/" className="hover:text-[color:var(--color-ink)]">{t("footer.cookies")}</Link>
+          <Link href="/privacy" className="hover:text-[color:var(--color-ink)]">{t("footer.privacy")}</Link>
+          <Link href="/terms" className="hover:text-[color:var(--color-ink)]">{t("footer.terms")}</Link>
+          <Link href="/cookies" className="hover:text-[color:var(--color-ink)]">{t("footer.cookies")}</Link>
         </div>
       </div>
     </footer>

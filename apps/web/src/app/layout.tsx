@@ -112,6 +112,10 @@ export const metadata: Metadata = {
   },
 };
 
+// Set NEXT_PUBLIC_PLAUSIBLE_DOMAIN in production (e.g. "translify.app") to
+// enable cookieless analytics. Leave unset locally — the script is skipped.
+const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -130,6 +134,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="alternate" hrefLang="id" href={`${SITE}/?lang=id`} />
         <link rel="alternate" hrefLang="ms" href={`${SITE}/?lang=ms`} />
         <StructuredData />
+        {/* Plausible — cookieless, privacy-friendly analytics. Loads only
+            when NEXT_PUBLIC_PLAUSIBLE_DOMAIN is set (production), so
+            local development doesn't pollute production stats. */}
+        {PLAUSIBLE_DOMAIN && (
+          <script
+            defer
+            data-domain={PLAUSIBLE_DOMAIN}
+            src="https://plausible.io/js/script.outbound-links.js"
+          />
+        )}
       </head>
       <body>
         <Providers>{children}</Providers>

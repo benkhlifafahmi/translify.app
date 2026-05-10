@@ -19,13 +19,19 @@ const LANG_SLUGS = [
 const COMPETITORS = ["readlang", "immersive-translate", "kindle-translate", "deepl"] as const;
 
 const STATIC_PATHS = [
-  { path: "/",           priority: 1.0,  changeFrequency: "weekly"  as const },
-  { path: "/onboarding", priority: 0.9,  changeFrequency: "monthly" as const },
-  { path: "/manifesto",  priority: 0.7,  changeFrequency: "monthly" as const },
-  { path: "/languages",  priority: 0.8,  changeFrequency: "monthly" as const },
-  { path: "/blog",       priority: 0.8,  changeFrequency: "weekly"  as const },
-  { path: "/login",      priority: 0.3,  changeFrequency: "yearly"  as const },
-  { path: "/register",   priority: 0.3,  changeFrequency: "yearly"  as const },
+  { path: "/",               priority: 1.0,  changeFrequency: "weekly"  as const },
+  { path: "/pricing",        priority: 0.95, changeFrequency: "monthly" as const },
+  { path: "/onboarding",     priority: 0.9,  changeFrequency: "monthly" as const },
+  { path: "/languages",      priority: 0.8,  changeFrequency: "monthly" as const },
+  { path: "/blog",           priority: 0.8,  changeFrequency: "weekly"  as const },
+  { path: "/manifesto",      priority: 0.7,  changeFrequency: "monthly" as const },
+  { path: "/contact",        priority: 0.6,  changeFrequency: "yearly"  as const },
+  { path: "/privacy",        priority: 0.4,  changeFrequency: "yearly"  as const },
+  { path: "/terms",          priority: 0.4,  changeFrequency: "yearly"  as const },
+  { path: "/cookies",        priority: 0.3,  changeFrequency: "yearly"  as const },
+  { path: "/refund-policy",  priority: 0.4,  changeFrequency: "yearly"  as const },
+  { path: "/login",          priority: 0.3,  changeFrequency: "yearly"  as const },
+  { path: "/register",       priority: 0.3,  changeFrequency: "yearly"  as const },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
