@@ -10,11 +10,11 @@ export const en: Dict = {
   "nav.cta": "Get started",
 
   // Hero
-  "hero.badge": "For curious readers, big & small",
-  "hero.title.1": "Read any book,",
+  "hero.badge": "For serious readers in any language",
+  "hero.title.1": "Understand any book,",
   "hero.title.2": "in your language",
   "hero.subtitle":
-    "Drop in a PDF or EPUB and Translify keeps the layout exactly the same — just translated. Then chat with your book and quiz yourself, so you actually remember what you read.",
+    "Drop in a PDF or EPUB. Translify rebuilds the whole book in your language with the layout intact, then lets you chat with it, highlight passages for AI explanations, and quiz yourself — so you actually remember what you read.",
   "hero.cta.primary": "Start your 14-day trial",
   "hero.cta.secondary": "See plans",
   "hero.bullet.1": "Layout preserved, page by page",

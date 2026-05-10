@@ -8,11 +8,11 @@ export const ja: Dict = {
   "nav.login": "ログイン",
   "nav.cta": "はじめる",
 
-  "hero.badge": "好奇心旺盛な読者へ、大人も子どもも",
-  "hero.title.1": "どんな本でも、",
+  "hero.badge": "あらゆる言語の真剣な読者へ",
+  "hero.title.1": "どんな本でも理解できる、",
   "hero.title.2": "あなたの言葉で",
   "hero.subtitle":
-    "PDFやEPUBをアップロードすれば、Translifyはレイアウトをそのまま保ち、翻訳だけを行います。本とチャットして、クイズで定着させ、本当に「読んだ」を実感できます。",
+    "PDFやEPUBをアップロード。Translifyはレイアウトをそのままに、本全体をあなたの言語で再構築します。そして本との対話、ハイライト箇所のAI解説、自己テストまで — 読んだ内容を本当に覚えていられます。",
   "hero.cta.primary": "14日間無料で試す",
   "hero.cta.secondary": "プランを見る",
   "hero.bullet.1": "レイアウトをページごとに保持",

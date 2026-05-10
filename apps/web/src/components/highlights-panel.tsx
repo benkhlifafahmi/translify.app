@@ -21,7 +21,7 @@ export interface OpenHighlightState {
   id: string;
   /** Open the note editor immediately. */
   autoEditNote?: boolean;
-  /** Trigger Ask-AI on mount. */
+  /** Open the Ask-AI input and focus the question textarea (does NOT submit). */
   autoAskAi?: boolean;
   /** Bumped each time to force re-trigger even when id is unchanged. */
   nonce: number;
@@ -82,12 +82,16 @@ export function HighlightsPanel({ bookId, open, onConsumed, onJumpToPage }: Prop
               qc.setQueryData<Highlight[]>(["highlights", bookId], (old) =>
                 old ? old.map((x) => (x.id === updated.id ? updated : x)) : old,
               );
+              // Defensive refetch so the saved note shows up even if optimistic
+              // cache update is dropped by a concurrent refetch.
+              qc.invalidateQueries({ queryKey: ["highlights", bookId] });
               qc.invalidateQueries({ queryKey: ["highlights", "all"] });
             }}
             onDeleted={() => {
               qc.setQueryData<Highlight[]>(["highlights", bookId], (old) =>
                 old ? old.filter((x) => x.id !== h.id) : old,
               );
+              qc.invalidateQueries({ queryKey: ["highlights", bookId] });
               qc.invalidateQueries({ queryKey: ["highlights", "all"] });
             }}
           />
@@ -125,11 +129,12 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
   const [noteDraft, setNoteDraft] = useState(highlight.note ?? "");
   const [askQuestion, setAskQuestion] = useState("");
   const [askExpanded, setAskExpanded] = useState(false);
+  const askInputRef = useRef<HTMLTextAreaElement | null>(null);
   const triggeredAskAi = useRef<number | null>(null);
 
   const saveNote = useMutation({
-    mutationFn: async () =>
-      updateHighlight(highlight.id, { note: noteDraft.trim() || null }),
+    mutationFn: async (note: string | null) =>
+      updateHighlight(highlight.id, { note }),
     onSuccess: (h) => {
       onUpdated(h);
       setEditingNote(false);
@@ -160,13 +165,16 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
     if (autoEditNote) setEditingNote(true);
   }, [autoEditNote]);
 
+  // "Ask AI" from the PDF toolbar: open the question input + focus it.
+  // The user types their question and submits — we never auto-fire the call.
   useEffect(() => {
     if (!autoAskAi?.autoAskAi) return;
     if (triggeredAskAi.current === autoAskAi.nonce) return;
     triggeredAskAi.current = autoAskAi.nonce;
     setAskExpanded(true);
-    askAi.mutate(null);
     onConsumed();
+    // Defer focus until after the textarea is in the DOM.
+    requestAnimationFrame(() => askInputRef.current?.focus());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoAskAi?.nonce, autoAskAi?.autoAskAi]);
 
@@ -261,13 +269,20 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
             </button>
             <button
               type="button"
-              onClick={() => saveNote.mutate()}
+              onClick={() => saveNote.mutate(noteDraft.trim() || null)}
               disabled={saveNote.isPending}
               className="rounded-full bg-[color:var(--color-ink)] px-3 py-1 text-[0.7rem] font-semibold text-[color:var(--color-paper)] hover:opacity-90 disabled:opacity-50"
             >
               {saveNote.isPending ? "Saving…" : "Save note"}
             </button>
           </div>
+          {saveNote.isError && (
+            <p className="rounded-md bg-[color:var(--color-destructive)]/10 px-2 py-1 text-[0.7rem] text-[color:var(--color-destructive)]">
+              {saveNote.error instanceof ApiError
+                ? saveNote.error.message
+                : (saveNote.error as Error).message || "Couldn't save note"}
+            </p>
+          )}
         </div>
       ) : (
         <button
@@ -306,9 +321,16 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
         {askExpanded && !highlight.ai_answer && (
           <div className="flex flex-col gap-1.5">
             <textarea
+              ref={askInputRef}
               value={askQuestion}
               onChange={(e) => setAskQuestion(e.target.value)}
-              placeholder="What do you want to know? (leave blank to just explain)"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  if (!askAi.isPending) askAi.mutate(askQuestion.trim() || null);
+                }
+              }}
+              placeholder="What do you want to know about this passage? (leave blank to just explain it)"
               rows={2}
               className="w-full resize-none rounded-lg border-[1.5px] border-[color:var(--color-border)] bg-white px-2.5 py-1.5 text-xs leading-relaxed focus:border-[color:var(--color-coral)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-coral)]/25"
             />

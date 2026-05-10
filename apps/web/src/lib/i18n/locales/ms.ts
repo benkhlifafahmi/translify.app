@@ -8,11 +8,11 @@ export const ms: Dict = {
   "nav.login": "Log masuk",
   "nav.cta": "Mulakan",
 
-  "hero.badge": "Untuk pembaca yang ingin tahu, besar dan kecil",
-  "hero.title.1": "Baca mana-mana buku,",
+  "hero.badge": "Untuk pembaca serius dalam mana-mana bahasa",
+  "hero.title.1": "Fahami mana-mana buku,",
   "hero.title.2": "dalam bahasa anda",
   "hero.subtitle":
-    "Lepaskan PDF atau EPUB dan Translify mengekalkan susun atur sama persis — cuma diterjemahkan. Kemudian berbual dengan buku anda dan uji diri sendiri, supaya anda benar-benar ingat apa yang anda baca.",
+    "Lepaskan PDF atau EPUB. Translify membina semula seluruh buku dalam bahasa anda dengan susun atur yang sama, kemudian membenarkan anda berbual dengannya, menyorot petikan untuk penjelasan AI, dan menguji diri — supaya anda benar-benar mengingati apa yang anda baca.",
   "hero.cta.primary": "Cuba 14 hari",
   "hero.cta.secondary": "Lihat pelan",
   "hero.bullet.1": "Susun atur dikekalkan, halaman demi halaman",

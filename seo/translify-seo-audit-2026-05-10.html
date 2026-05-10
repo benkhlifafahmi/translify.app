@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>translify.app — SEO/GEO/AEO Audit</title>
+<style>
+  @page { size: A4; margin: 22mm 18mm 22mm 18mm; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #1E293B; font-size: 10.5pt; line-height: 1.5; max-width: 100%; }
+  h1 { color: #1B2A4A; font-size: 24pt; font-weight: 700; margin-top: 20pt; margin-bottom: 10pt; border-bottom: 2px solid #1B2A4A; padding-bottom: 6pt; }
+  h1:first-child { margin-top: 0; font-size: 28pt; }
+  h2 { color: #1B2A4A; font-size: 16pt; font-weight: 700; margin-top: 18pt; margin-bottom: 8pt; }
+  h3 { color: #2563EB; font-size: 13pt; font-weight: 700; margin-top: 14pt; margin-bottom: 6pt; }
+  h4 { color: #1E293B; font-size: 11.5pt; font-weight: 700; margin-top: 10pt; margin-bottom: 4pt; }
+  p, li { font-size: 10.5pt; }
+  strong { color: #1B2A4A; }
+  code { background: #F8F9FA; padding: 1.5pt 4pt; border-radius: 3px; font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; color: #DC2626; }
+  pre { background: #F8F9FA; border-left: 3px solid #2563EB; padding: 10pt 14pt; font-family: Consolas, "Courier New", monospace; font-size: 9pt; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+  pre code { background: transparent; color: #1E293B; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 10pt 0; font-size: 9.5pt; }
+  th { background: #1B2A4A; color: white; text-align: left; padding: 7pt 9pt; font-weight: 700; font-size: 9.5pt; border: 1px solid #1B2A4A; }
+  td { padding: 6pt 9pt; border: 1px solid #E2E8F0; vertical-align: top; }
+  tbody tr:nth-child(even) { background: #F8F9FA; }
+  ul, ol { margin: 6pt 0 10pt 22pt; }
+  li { margin-bottom: 4pt; }
+  hr { border: none; border-top: 1px solid #E2E8F0; margin: 18pt 0; }
+  blockquote { border-left: 3px solid #2563EB; padding: 6pt 14pt; background: #EFF6FF; color: #1E293B; margin: 10pt 0; }
+  a { color: #2563EB; text-decoration: none; }
+
+  /* Cover-ish hero */
+  .hero { background: #1B2A4A; color: white; padding: 36pt 28pt; margin: -22mm -18mm 22pt -18mm; }
+  .hero h1 { color: white; border-bottom: none; font-size: 30pt; margin: 0; padding: 0; }
+  .hero .subtitle { color: #93C5FD; font-size: 13pt; margin-top: 6pt; font-weight: 500; }
+  .hero .badge { display: inline-block; background: rgba(255,255,255,0.12); color: white; padding: 4pt 10pt; border-radius: 12pt; font-size: 9pt; margin-top: 16pt; }
+
+  /* Score table styling — first table after Executive summary */
+  .score-strong { background: #16A34A !important; color: white !important; font-weight: 700; }
+  .score-mid    { background: #D97706 !important; color: white !important; font-weight: 700; }
+  .score-weak   { background: #DC2626 !important; color: white !important; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>translify.app</h1>
+  <div class="subtitle">SEO / GEO / AEO Audit Report — Full Audit</div>
+  <span class="badge">Audit date: 2026-05-10</span>
+</div>
+<h1>translify.app — SEO / GEO / AEO Audit</h1>
+<p><strong>Audit date:</strong> 2026-05-10
+<strong>Audit scope:</strong> Full audit
+<strong>Pages crawled:</strong> translify.app/, /onboarding, /login, /register, /manifesto (404), /blog (404), /og-image.png (404), /favicon.ico (404)
+<strong>Stack:</strong> Next.js 15 App Router · React 19 · Tailwind 4 · FastAPI backend</p>
+<hr>
+<h2>Executive summary</h2>
+<p>Translify has an <strong>unusually thorough metadata + structured-data foundation for a pre-launch product</strong> — Organization, WebSite, SoftwareApplication, FAQPage, BreadcrumbList JSON-LD are all already in place, properly served from <code>apps/web/src/components/structured-data.tsx</code>. That&#39;s better than ~80% of small SaaS sites at the same stage.</p>
+<p>But the <em>content inside</em> that infrastructure has three concrete failures:</p>
+<ol>
+<li>The schema declares prices that don&#39;t match the actual pricing component (€7/€15/€23 in JSON-LD vs. €11/€19/€27 on the page). This is a Google rich-results violation that will eventually trigger a manual action.</li>
+<li>The schema declares <code>aggregateRating: 4.7 / 1240 ratings</code> with no third-party review source (Trustpilot, G2, App Store) backing it. Fake or unverifiable AggregateRating is the most common reason Google demotes structured-data rich results, and it can cascade into broader trust penalties.</li>
+<li>Four URLs referenced in production HTML (<code>/og-image.png</code>, <code>/favicon.ico</code>, <code>/manifesto</code>, <code>/blog</code>) all return 404. Every social share is currently broken (no preview image), the browser tab icon is missing, and two footer links go to dead pages — losing both trust signals and crawl equity.</li>
+</ol>
+<p>Beyond the existing infrastructure issues, the <strong>biggest opportunity</strong> is the empty sitemap: only 4 URLs are currently indexable. The product already has 8 UI languages, which is 56 free programmatic landing-page surfaces (every source→target pair) — none of which exist yet. This is the only realistic path to non-brand organic traffic.</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Score</th>
+<th>Status</th>
+<th>Key takeaway</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SEO</td>
+<td>5/10</td>
+<td>Needs Work</td>
+<td>Solid metadata foundation, broken assets and missing programmatic surface</td>
+</tr>
+<tr>
+<td>GEO</td>
+<td>5/10</td>
+<td>Needs Work</td>
+<td>Organization schema is good, but the missing <code>/manifesto</code> page and the fake AggregateRating undercut E-E-A-T</td>
+</tr>
+<tr>
+<td>AEO</td>
+<td>6/10</td>
+<td>On Track</td>
+<td>FAQPage schema is the site&#39;s strongest SEO asset — already 8 well-formed Q&amp;As</td>
+</tr>
+<tr>
+<td><strong>Combined</strong></td>
+<td><strong>16/30</strong></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Pages audited</h2>
+<table>
+<thead>
+<tr>
+<th>URL</th>
+<th>Page Type</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>https://translify.app/</code></td>
+<td>Homepage</td>
+<td>200</td>
+<td>H1 present (&quot;Read any book, in your language&quot;), all expected sections render, comprehensive JSON-LD</td>
+</tr>
+<tr>
+<td><code>https://translify.app/onboarding</code></td>
+<td>Conversion</td>
+<td>200</td>
+<td>H1 &quot;Why are you here?&quot; — good intent-based copy; no per-page metadata override</td>
+</tr>
+<tr>
+<td><code>https://translify.app/login</code></td>
+<td>Auth</td>
+<td>200</td>
+<td>Same root metadata; H1 from landing showing through (investigate)</td>
+</tr>
+<tr>
+<td><code>https://translify.app/register</code></td>
+<td>Auth</td>
+<td>200</td>
+<td>H1 &quot;Make your shelf.&quot; — good. No per-page metadata.</td>
+</tr>
+<tr>
+<td><code>https://translify.app/manifesto</code></td>
+<td>About</td>
+<td><strong>404</strong></td>
+<td>Linked in footer; needed for E-E-A-T</td>
+</tr>
+<tr>
+<td><code>https://translify.app/blog</code></td>
+<td>Content</td>
+<td><strong>404</strong></td>
+<td>Linked in footer; major missed SEO surface</td>
+</tr>
+<tr>
+<td><code>https://translify.app/og-image.png</code></td>
+<td>Asset</td>
+<td><strong>404</strong></td>
+<td>Referenced in OG metadata and Twitter Card — social shares broken</td>
+</tr>
+<tr>
+<td><code>https://translify.app/favicon.ico</code></td>
+<td>Asset</td>
+<td><strong>404</strong></td>
+<td>Referenced in <code>&lt;head&gt;</code>; browser tab icon missing</td>
+</tr>
+<tr>
+<td><code>https://translify.app/apple-touch-icon.png</code></td>
+<td>Asset</td>
+<td>(likely 404)</td>
+<td>Referenced in <code>&lt;head&gt;</code>; iOS home-screen icon missing</td>
+</tr>
+<tr>
+<td><code>https://translify.app/robots.txt</code></td>
+<td>Config</td>
+<td>200</td>
+<td>Correct — disallows <code>/library</code> and <code>/api/</code>, points to sitemap</td>
+</tr>
+<tr>
+<td><code>https://translify.app/sitemap.xml</code></td>
+<td>Config</td>
+<td>200</td>
+<td>Only 4 URLs — major missed indexation opportunity</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>SEO analysis — 5/10</h2>
+<h3>Technical on-page</h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Title tag (homepage)</td>
+<td><code>Translify — Read any book in your language</code> (47 chars). Length is good. Keyword &quot;translation&quot; missing, &quot;understand&quot; missing. Aligned to <em>old</em> positioning.</td>
+<td>⚠️ Needs Attention</td>
+</tr>
+<tr>
+<td>Title template</td>
+<td><code>&quot;%s · Translify&quot;</code> template configured in <code>layout.tsx</code>. Inner routes likely fall through to defaults.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Meta description (homepage)</td>
+<td>187 chars — slightly long but acceptable. Leads with &quot;translate whole PDFs&quot; — repositioning needed.</td>
+<td>⚠️ Needs Attention</td>
+</tr>
+<tr>
+<td>H1</td>
+<td>Present, singular, in display font. Copy is locale-aware via <code>useI18n()</code>.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Heading hierarchy</td>
+<td>H1 → H2 (10 unique) → H3 logical. No keyword stuffing observed.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Canonical</td>
+<td>Self-referencing root canonical via <code>alternates.canonical: &quot;/&quot;</code>.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Robots meta</td>
+<td>Indexable, follow. GoogleBot directives explicit (max-snippet, max-image-preview).</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Viewport / mobile</td>
+<td>Configured in <code>viewport</code> export.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>hreflang</td>
+<td>Manually emitted in <code>&lt;head&gt;</code> for 8 locales. Uses <code>?lang=X</code> query strings — works but path-based (<code>/en/</code>, <code>/fr/</code>) ranks marginally better.</td>
+<td>⚠️ Acceptable</td>
+</tr>
+<tr>
+<td>Image alt text</td>
+<td>Cannot verify without rendered HTML; recommend audit after launch.</td>
+<td>⚠️ Unknown</td>
+</tr>
+<tr>
+<td>Internal links</td>
+<td>Footer links to <code>/manifesto</code>, <code>/blog</code>, <code>/careers</code>, <code>/press</code>, <code>/status</code>, <code>/refund-policy</code>, <code>/privacy</code>, <code>/terms</code>, <code>/cookies</code> — most return 404.</td>
+<td>❌ Critical</td>
+</tr>
+<tr>
+<td>Open Graph</td>
+<td><code>og:title</code>, <code>og:description</code>, <code>og:image</code>, <code>og:locale</code>, <code>og:alternateLocale</code> all present. <strong><code>og-image.png</code> returns 404 → no preview image renders on share.</strong></td>
+<td>❌ Critical</td>
+</tr>
+<tr>
+<td>Twitter Card</td>
+<td><code>summary_large_image</code> configured. Same 404 image issue.</td>
+<td>❌ Critical</td>
+</tr>
+<tr>
+<td>Favicon</td>
+<td><code>/favicon.ico</code> referenced but returns 404. Only <code>icon.svg</code> exists in <code>public/</code>.</td>
+<td>❌ Critical</td>
+</tr>
+</tbody></table>
+<h3>Content quality</h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Word count (homepage)</td>
+<td>Estimated 1,500-2,000 words across sections (Hero, How it works, Features, Audience, Languages, Testimonials, Pricing, FAQ, CTA). Substantial.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Keyword signals</td>
+<td>Current copy reinforces &quot;translation&quot; + &quot;language&quot; + &quot;reading&quot; — aligned to <em>old</em> positioning. Need to layer in &quot;understand&quot;, &quot;comprehend&quot;, &quot;study&quot;, &quot;chat with book&quot;.</td>
+<td>⚠️ Needs Attention</td>
+</tr>
+<tr>
+<td>Freshness signals</td>
+<td>No visible &quot;last updated&quot; or dated content. For a SaaS landing page this is fine, but a blog would generate freshness signals.</td>
+<td>⚠️ Acceptable</td>
+</tr>
+<tr>
+<td>Readability</td>
+<td>Display font + good vertical rhythm + scannable sections. Strong.</td>
+<td>✅ Good</td>
+</tr>
+</tbody></table>
+<h3>Structured data</h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Organization</td>
+<td>Present with name, url, logo, email, sameAs (Twitter + LinkedIn), description.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>WebSite</td>
+<td>Present with <code>inLanguage</code> array — but the array lists 6 languages (<code>en, fr, es, de, ja, ar</code>); the actual UI supports 8 (missing <code>id</code>, <code>ms</code>).</td>
+<td>⚠️ Needs Attention</td>
+</tr>
+<tr>
+<td>SoftwareApplication</td>
+<td>Present with offers. <strong>Prices declared as €7/€15/€23 — actual page shows €11/€19/€27. This is a Google structured-data violation.</strong></td>
+<td>❌ Critical</td>
+</tr>
+<tr>
+<td>SoftwareApplication.aggregateRating</td>
+<td>Declared as 4.7 from 1,240 ratings — no verifiable third-party review source on the site.</td>
+<td>❌ Critical</td>
+</tr>
+<tr>
+<td>FAQPage</td>
+<td>Present with 8 well-formed Q&amp;As. Strongest SEO asset on the site.</td>
+<td>✅ Strong</td>
+</tr>
+<tr>
+<td>BreadcrumbList</td>
+<td>Present (Home → Pricing → Get started). Useful.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>HowTo</td>
+<td><strong>Missing.</strong> The homepage has a &quot;Three steps&quot; section that maps directly to HowTo — leaving this off the table.</td>
+<td>❌ Missing</td>
+</tr>
+<tr>
+<td>SoftwareApplication.inLanguage</td>
+<td>Not present — adding it strengthens the entity for non-English search.</td>
+<td>❌ Missing</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>GEO analysis — 5/10</h2>
+<h3>E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness)</h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>About / Manifesto page</td>
+<td>Linked in footer at <code>/manifesto</code> but <strong>returns 404</strong>. AI search engines (Perplexity, ChatGPT, Claude) cannot cite a page that doesn&#39;t exist.</td>
+<td>❌ Critical</td>
+</tr>
+<tr>
+<td>Author / team info</td>
+<td>No team page, no named authors anywhere on the site. For AI-search citation, &quot;who built this&quot; is a strong signal.</td>
+<td>❌ Critical</td>
+</tr>
+<tr>
+<td>Contact info</td>
+<td>Email <code>hello@translify.app</code> declared in Organization schema. No phone, no address. For B2C SaaS, email-only is acceptable.</td>
+<td>✅ Acceptable</td>
+</tr>
+<tr>
+<td>Trust signals on page</td>
+<td>Testimonials section exists (&quot;Loved by readers&quot;). Individual reviewers are unnamed personas without credentials. AI engines weight named-author testimonials higher.</td>
+<td>⚠️ Needs Attention</td>
+</tr>
+<tr>
+<td>Organization schema</td>
+<td>Brand entity declared clearly (name, logo, URL, email, social sameAs). Good.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>sameAs links</td>
+<td>Twitter + LinkedIn only. Adding Crunchbase, AngelList, Wikipedia (when eligible), GitHub strengthens the entity.</td>
+<td>⚠️ Acceptable</td>
+</tr>
+</tbody></table>
+<h3>Content for AI synthesis</h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Factual density</td>
+<td>The homepage makes specific claims (&quot;42,000+ books translated&quot;, &quot;9.4/10 satisfaction&quot;, &quot;14 languages&quot;, &quot;200 MB limit&quot;) — good for AI extraction.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Clear claims</td>
+<td>Tagline / H1 leads with a clear value claim.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Source citation</td>
+<td>The site cites no external authoritative sources (no whitepapers, no academic references, no press mentions linked). This caps how high AI engines will rate authoritativeness.</td>
+<td>❌ Missing</td>
+</tr>
+<tr>
+<td>Comprehensiveness</td>
+<td>The homepage covers product, audience, pricing, FAQ thoroughly.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Entity clarity</td>
+<td>Brand name &quot;Translify&quot; consistent across schema, OG, page copy.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Originality signals</td>
+<td>The brand voice is distinctive (literary, warm, specific). Helps AI engines pick this page over generic translation tool pages.</td>
+<td>✅ Good</td>
+</tr>
+</tbody></table>
+<h3>Technical GEO</h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HTTPS</td>
+<td>Yes.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Crawlability</td>
+<td>robots.txt allows all crawlers except <code>/library</code> and <code>/api/</code>. AI crawlers (GPTBot, ClaudeBot, PerplexityBot) not explicitly denied.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>JS-only rendering</td>
+<td>Homepage is a <code>&quot;use client&quot;</code> component. Next.js 15 still SSRs this, so the initial HTML payload contains the rendered content. But verify with <code>curl -sL</code> that key copy lands in the static HTML, not just in <code>&lt;script&gt;</code> blocks.</td>
+<td>⚠️ Verify</td>
+</tr>
+<tr>
+<td>sameAs / brand entity links</td>
+<td>Present (Twitter, LinkedIn).</td>
+<td>✅ Acceptable</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>AEO analysis — 6/10</h2>
+<h3>Featured snippet eligibility</h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Direct answer paragraphs</td>
+<td>Homepage has question-format H2s (&quot;Three steps, ten minutes&quot;, &quot;What you actually get&quot;, &quot;Questions, answered&quot;). FAQ section provides 40-80 word answers — excellent for featured-snippet capture.</td>
+<td>✅ Strong</td>
+</tr>
+<tr>
+<td>Definition patterns</td>
+<td>The site does not contain a &quot;Translify is...&quot; sentence at the top of any page — a key signal for AI engines defining the brand. Recommend adding to manifesto + FAQPage.</td>
+<td>❌ Missing</td>
+</tr>
+<tr>
+<td>Numbered lists</td>
+<td>&quot;Three steps&quot; section presents three numbered steps but not as <code>&lt;ol&gt;</code> semantically (rendered as cards). Convert to <code>&lt;ol&gt;</code> for snippet eligibility, or layer HowTo schema (recommended below).</td>
+<td>⚠️ Needs Attention</td>
+</tr>
+<tr>
+<td>Comparison tables</td>
+<td>No comparison tables on the homepage. Competitor-alternative pages (see scaffold) will introduce these.</td>
+<td>❌ Missing</td>
+</tr>
+</tbody></table>
+<h3>Structured answer formats</h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FAQ schema</td>
+<td>Present, 8 well-formed questions. The site&#39;s strongest AEO asset.</td>
+<td>✅ Strong</td>
+</tr>
+<tr>
+<td>HowTo schema</td>
+<td>Missing despite obvious fit. <strong>Adding it is the single highest-ROI AEO fix</strong> (see scaffold).</td>
+<td>❌ Missing</td>
+</tr>
+<tr>
+<td>Question-phrased H2s</td>
+<td>&quot;Questions, answered&quot; is good but generic. &quot;How does Translify work?&quot;, &quot;What does Translify cost?&quot;, &quot;Which file types does Translify support?&quot; would each capture a featured-snippet box.</td>
+<td>⚠️ Needs Attention</td>
+</tr>
+<tr>
+<td>Speakable schema</td>
+<td>Not present. Useful for voice-search devices (Google Assistant, Alexa). Low priority for a desktop-first product.</td>
+<td>⚠️ Acceptable</td>
+</tr>
+</tbody></table>
+<h3>Voice search readiness</h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Conversational language</td>
+<td>Tone is natural and conversational throughout.</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td>Long-tail question coverage</td>
+<td>FAQ covers who/what/how questions well. Missing &quot;where&quot; (geography), &quot;when&quot; (timing/launch).</td>
+<td>✅ Acceptable</td>
+</tr>
+<tr>
+<td>Local signals</td>
+<td>Not applicable — Translify is global SaaS, no local pages needed.</td>
+<td>✅ N/A</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Priority recommendations matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Issue</th>
+<th>Dimension</th>
+<th>Effort</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>🔴 Critical</td>
+<td><code>og-image.png</code>, <code>favicon.ico</code>, <code>apple-touch-icon.png</code> all 404</td>
+<td>SEO</td>
+<td>XS (1 hour)</td>
+<td>High — every social share, browser tab, iOS home-screen is currently broken</td>
+</tr>
+<tr>
+<td>🔴 Critical</td>
+<td>Schema <code>offers</code> prices (€7/€15/€23) don&#39;t match the actual page (€11/€19/€27)</td>
+<td>SEO</td>
+<td>XS (15 min)</td>
+<td>High — Google rich-results violation</td>
+</tr>
+<tr>
+<td>🔴 Critical</td>
+<td>Fake/unverifiable <code>aggregateRating: 4.7/1240</code> in SoftwareApplication schema</td>
+<td>GEO</td>
+<td>XS (5 min — delete the block)</td>
+<td>High — major manual-action risk</td>
+</tr>
+<tr>
+<td>🔴 Critical</td>
+<td>Footer links <code>/manifesto</code>, <code>/blog</code>, <code>/careers</code>, <code>/press</code>, <code>/refund-policy</code> all 404</td>
+<td>SEO + GEO</td>
+<td>M (4-8 hrs to build manifesto + blog scaffold)</td>
+<td>High — broken trust signals + lost crawl equity</td>
+</tr>
+<tr>
+<td>🟠 High</td>
+<td>Sitemap only contains 4 URLs (the 56 programmatic pages don&#39;t exist)</td>
+<td>SEO</td>
+<td>L (~3 days: scaffold + content + QA)</td>
+<td>Critical — without programmatic surface, no realistic non-brand traffic</td>
+</tr>
+<tr>
+<td>🟠 High</td>
+<td>No competitor-alternative pages</td>
+<td>SEO</td>
+<td>L (~2 days for 4 pages)</td>
+<td>High — comparison search intent has the highest commercial value</td>
+</tr>
+<tr>
+<td>🟠 High</td>
+<td>Homepage copy aligned to old &quot;translate&quot; positioning, not new &quot;understand&quot;</td>
+<td>SEO + GEO</td>
+<td>S (2 hrs to update locales)</td>
+<td>High — keyword targeting wrong-footed</td>
+</tr>
+<tr>
+<td>🟠 High</td>
+<td>HowTo schema missing despite obvious 3-step section</td>
+<td>AEO</td>
+<td>XS (10 min — already scaffolded)</td>
+<td>Medium — featured-snippet capture</td>
+</tr>
+<tr>
+<td>🟡 Medium</td>
+<td><code>WebSite.inLanguage</code> missing <code>id</code>, <code>ms</code></td>
+<td>GEO</td>
+<td>XS</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>🟡 Medium</td>
+<td>hreflang via <code>?lang=X</code> query string — path-based ranks marginally better</td>
+<td>SEO</td>
+<td>M (i18n refactor)</td>
+<td>Low-Medium — phase 2 work</td>
+</tr>
+<tr>
+<td>🟡 Medium</td>
+<td>No named authors / team page</td>
+<td>GEO</td>
+<td>M (write team copy + headshots)</td>
+<td>Medium — AI-search citation depth</td>
+</tr>
+<tr>
+<td>🟢 Quick Win</td>
+<td><code>WebSite.SearchAction</code> schema not declared</td>
+<td>AEO</td>
+<td>XS (5 min — in scaffold)</td>
+<td>Low — enables sitelinks search box</td>
+</tr>
+<tr>
+<td>🟢 Quick Win</td>
+<td>Inner routes have no per-page metadata overrides</td>
+<td>SEO</td>
+<td>S (30 min — see <code>inner-route-metadata.md</code>)</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>🟢 Quick Win</td>
+<td>No &quot;Translify is...&quot; definition sentence on landing</td>
+<td>GEO + AEO</td>
+<td>XS</td>
+<td>Low-Medium</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>30 / 60 / 90 plan (ordered by ROI)</h2>
+<h3>Days 1–7: Stop the bleeding</h3>
+<ol>
+<li>Generate <code>og-image.png</code> (1200×630), <code>favicon.ico</code> (32×32 multi-res), <code>icon-32.png</code>, <code>icon-192.png</code>, <code>icon-512.png</code>, <code>apple-touch-icon.png</code> (180×180). Place in <code>apps/web/public/</code>. ~1 hour with any logo or screenshot.</li>
+<li>Replace <code>apps/web/src/components/structured-data.tsx</code> with the corrected version at <code>seo/scaffolds/structured-data.tsx</code>. Fixes the price mismatch, removes the fake AggregateRating, adds HowTo + SearchAction, extends <code>inLanguage</code>.</li>
+<li>Replace <code>apps/web/src/app/layout.tsx</code>&#39;s metadata + viewport export with the version at <code>seo/scaffolds/layout-metadata.ts</code>. New tagline aligned to the locked positioning.</li>
+<li>Update <code>en.ts</code> (and the 7 other locale files) — change <code>hero.title.1</code> / <code>hero.title.2</code> to map to <em>&quot;Understand any book, in your language&quot;</em> (or your preferred phrasing of the locked positioning). Cascade through <code>feat.*</code> keys to lead with comprehension, not translation.</li>
+<li>Add per-page metadata exports to <code>/onboarding</code>, <code>/login</code>, <code>/register</code> per <code>seo/copy/inner-route-metadata.md</code>.</li>
+<li>Build <code>/manifesto</code> as a real page (300-600 words) with the metadata in <code>inner-route-metadata.md</code>. Without this, the GEO score stays capped at 6.</li>
+</ol>
+<h3>Days 8–30: Build the programmatic surface</h3>
+<ol start="7">
+<li>Drop in <code>seo/scaffolds/read-source-in-target-page.tsx</code> at <code>apps/web/src/app/read-[source]-books-in-[target]/page.tsx</code>. This generates all 56 pages at build time. Verify with <code>pnpm build</code> that 56 static pages are rendered.</li>
+<li>Build <code>/languages</code> index page that lists every supported pair and links to the 56 programmatic pages — this is the hub that gives the spokes internal-link equity. ~3 hours.</li>
+<li>Replace <code>apps/web/src/app/sitemap.ts</code> with <code>seo/scaffolds/sitemap.ts</code>. Submit the new sitemap to Google Search Console + Bing Webmaster Tools.</li>
+<li>Drop in <code>seo/scaffolds/competitor-alternative-page.tsx</code> at <code>apps/web/src/app/alternative/[slug]/page.tsx</code>. Ships 4 high-converting pages (Readlang, Immersive Translate, Kindle Translate, DeepL alternative).</li>
+<li>Generate 60 OG images (56 language-pair + 4 alternative) — automate with a Next.js <code>opengraph-image.tsx</code> template using <code>next/og</code>. ~2 hours.</li>
+<li>Set up <strong>Google Search Console</strong> + verify domain ownership. Submit sitemap. Set up daily email reports.</li>
+<li>Set up <strong>Bing Webmaster Tools</strong> (often forgotten — 8% of US search market, more in EU).</li>
+<li>Set up <strong>Plausible</strong> or <strong>PostHog</strong> (free tier) for organic-traffic tracking. Don&#39;t use GA4 if you can avoid it — its sampling is brutal at low traffic.</li>
+</ol>
+<h3>Days 31–60: Build content authority</h3>
+<ol start="15">
+<li>Write the first 6 blog posts at <code>/blog/*</code>. Topics ranked by ROI:<ul>
+<li>&quot;How to read a German philosophy book in English (without losing the nuance)&quot; — long-tail intent</li>
+<li>&quot;The best AI tools for studying foreign-language books in 2026&quot; — listicle that includes Translify</li>
+<li>&quot;DeepL Pro vs Translify: when each is the right choice&quot; — comparison</li>
+<li>&quot;How to translate a textbook into your native language (PDF + EPUB guide)&quot; — how-to with HowTo schema</li>
+<li>&quot;Reading Murakami in Japanese: an AI-assisted approach&quot; — author-specific long-tail</li>
+<li>&quot;Why Kindle Translate isn&#39;t enough for serious foreign-language reading&quot; — comparison post
+Word count target: 1,500-2,500 each. Each gets FAQPage schema with 4-6 questions. ~4 days of writing work or ~$2k from a freelance writer.</li>
+</ul>
+</li>
+<li>Add a <strong>named-author profile</strong> to each blog post via <code>Article.author</code> and a <code>/about/[author]</code> page. Strong E-E-A-T lift.</li>
+<li>Set up <strong>Trustpilot</strong> account, prompt 50 early users for reviews via the welcome email. Once you have 25+ verified reviews, you can legitimately add AggregateRating back to schema with a citation to Trustpilot via <code>reviewedBy</code> or by linking the Trustpilot page.</li>
+<li>Build <strong>comparison landing pages</strong> for the next 4 competitors (Parallel Books, Duoreader, Linga, Smart Book) — 8 total.</li>
+</ol>
+<h3>Days 61–90: Scale + monitor</h3>
+<ol start="19">
+<li>Launch the <strong>affiliate / referral program</strong> — even simple 30% commission on first month drives backlinks at scale.</li>
+<li>Pitch a guest post to 10 reading/study/language-learning blogs (Polyglot Notes, Fluent in 3 Months, r/languagelearning sidebar list, Reading Rockets, EdSurge). Each backlink from these compounds for years.</li>
+<li>Generate <strong>author/genre programmatic pages</strong>: <code>/read-{author}-in-{language}</code> for 50 well-known authors (Murakami in English, García Márquez in English, Camus in English, Goethe in English, etc.). ~3 days work for ~200 new pages with low keyword competition.</li>
+<li>Add <strong>video schema</strong> to the homepage live-demo (<code>VideoObject</code>) — major SEO signal for product pages.</li>
+<li>Run <strong>Google PageSpeed Insights</strong> + <strong>Core Web Vitals</strong> checks. Tune any LCP, INP, CLS issues. Next.js 15 + Server Components handles most of this for free.</li>
+<li><strong>Reach out to Funstory.ai</strong> about acquiring <code>translify.ai</code>. Long shot but cheap.</li>
+<li>By day 90, expect: 60+ indexed pages, ~500-2,000 monthly organic visitors from non-brand keywords, first-page rankings for <code>Readlang alternative</code> and <code>Translify</code> brand searches, top 3 for several <code>read {source} books in {target}</code> long-tails.</li>
+</ol>
+<hr>
+<h2>KPIs and tools</h2>
+<h3>Free-tier tracking stack</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Tool</th>
+<th>Cost</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Indexed pages, top queries, click-through rate</td>
+<td><strong>Google Search Console</strong></td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Bing/Yahoo coverage</td>
+<td><strong>Bing Webmaster Tools</strong></td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Organic traffic, referrers, top pages</td>
+<td><strong>Plausible</strong> (open-source) or <strong>PostHog</strong> free tier</td>
+<td>Free / $9/mo</td>
+</tr>
+<tr>
+<td>Keyword rank tracking</td>
+<td><strong>Google Search Console</strong> (free, 1,000 queries) + <strong>Ubersuggest</strong> (3 free searches/day)</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Backlinks discovered</td>
+<td><strong>Google Search Console</strong> (links report)</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Schema validation</td>
+<td><strong>Google Rich Results Test</strong> (<code>search.google.com/test/rich-results</code>)</td>
+<td>Free</td>
+</tr>
+<tr>
+<td>Core Web Vitals</td>
+<td><strong>PageSpeed Insights</strong></td>
+<td>Free</td>
+</tr>
+<tr>
+<td>AI-search citation tracking</td>
+<td>Manual — query Perplexity / ChatGPT Search / Claude weekly for <code>&quot;AI book reader&quot;</code>, <code>&quot;Readlang alternative&quot;</code>, etc. and log which competitors get cited</td>
+<td>Free</td>
+</tr>
+</tbody></table>
+<h3>Targets at 30 / 60 / 90 days</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Day 30</th>
+<th>Day 60</th>
+<th>Day 90</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Indexed pages</td>
+<td>60+ (from 4)</td>
+<td>90+</td>
+<td>200+ (with author pages)</td>
+</tr>
+<tr>
+<td>Brand search ranking (&quot;translify&quot;)</td>
+<td>#1</td>
+<td>#1</td>
+<td>#1</td>
+</tr>
+<tr>
+<td>Non-brand keyword first-page ranks</td>
+<td>2-5</td>
+<td>8-15</td>
+<td>20-40</td>
+</tr>
+<tr>
+<td>Organic visitors / mo (non-brand)</td>
+<td>100-300</td>
+<td>500-1,500</td>
+<td>1,500-5,000</td>
+</tr>
+<tr>
+<td>Featured snippets captured</td>
+<td>1-2</td>
+<td>3-5</td>
+<td>5-10</td>
+</tr>
+<tr>
+<td>AI-search citations (Perplexity/ChatGPT)</td>
+<td>0-1</td>
+<td>2-5</td>
+<td>5-15</td>
+</tr>
+<tr>
+<td>Trustpilot reviews</td>
+<td>5-10</td>
+<td>25-40</td>
+<td>50-100</td>
+</tr>
+<tr>
+<td>Sign-up conversion from <code>/alternative/*</code> pages</td>
+<td>n/a</td>
+<td>2-4%</td>
+<td>3-6%</td>
+</tr>
+</tbody></table>
+<p>If you&#39;re not hitting these by Day 90, the issue is not SEO mechanics — it&#39;s either product-market-fit or the underlying positioning. Re-run the niche analysis before doubling down on SEO.</p>
+<hr>
+<h2>What&#39;s working well</h2>
+<ol>
+<li><strong>Comprehensive Pydantic-style metadata in <code>layout.tsx</code></strong> — <code>metadataBase</code>, <code>title.template</code>, <code>openGraph</code>, <code>twitter</code>, <code>robots.googleBot</code>, <code>icons</code>, <code>manifest</code>, <code>formatDetection</code> are all configured. This is meaningfully better than most pre-launch SaaS sites.</li>
+<li><strong>Five distinct JSON-LD blocks already emitted</strong> (Organization, WebSite, SoftwareApplication, FAQPage, BreadcrumbList). Once the data inside them is fixed, you go from average to strong overnight.</li>
+<li><strong>FAQPage with 8 well-formed Q&amp;As</strong> — long enough to provide context, short enough to be featured-snippet-eligible. This is your single strongest SEO asset.</li>
+<li><strong>8-locale i18n architecture</strong> with manual hreflang emission — already built, just needs the programmatic pages on top of it.</li>
+<li><strong>Distinct brand voice</strong> — the homepage copy reads like a publishing brand, not a generic AI SaaS. AI search engines (Perplexity, Claude) preferentially cite pages with editorial voice over generic feature copy.</li>
+<li><strong><code>robots.ts</code> and <code>sitemap.ts</code> already use Next.js 15&#39;s <code>MetadataRoute</code> pattern</strong> — you&#39;re following best practices, just need to expand the URL set.</li>
+</ol>
+<hr>
+<h2>Glossary</h2>
+<p><strong>SEO (Search Engine Optimization)</strong> — getting your pages to rank in traditional search engines like Google and Bing. Driven by on-page signals (titles, headings, content) + off-page signals (backlinks, brand mentions) + technical signals (Core Web Vitals, crawlability).</p>
+<p><strong>GEO (Generative Engine Optimization)</strong> — getting your pages cited by AI search engines like Perplexity, ChatGPT Search, Claude search, and Gemini. These engines synthesize answers from multiple sources and cite a handful of them. Higher rewards for factual density, clear claims, structured data, and brand-entity signals than for backlinks.</p>
+<p><strong>AEO (Answer Engine Optimization)</strong> — getting your content extracted into featured snippets, People Also Ask boxes, and voice-assistant answers. Driven by FAQ/HowTo schema, question-phrased headings, and 40-60 word direct-answer paragraphs.</p>
+<hr>
+<h2>Sources &amp; references</h2>
+<ul>
+<li>Translify homepage and crawl data (this audit, 2026-05-10)</li>
+<li><code>apps/web/src/app/layout.tsx</code>, <code>sitemap.ts</code>, <code>robots.ts</code>, <code>page.tsx</code></li>
+<li><code>apps/web/src/components/structured-data.tsx</code></li>
+<li><a href="https://developers.google.com/search/docs/appearance/structured-data">Google Rich Results validation requirements</a></li>
+<li><a href="https://schema.org/SoftwareApplication">Schema.org SoftwareApplication</a></li>
+<li><a href="https://developers.google.com/search/docs/appearance/structured-data/review-snippet">Google guidelines on AggregateRating misuse</a></li>
+<li><a href="https://nextjs.org/docs/app/api-reference/file-conventions/metadata">Next.js 15 App Router metadata reference</a></li>
+<li>Competitive landscape from prior /ceo strategy research (Translify session 2026-05-10)</li>
+</ul>
+
+</body></html>

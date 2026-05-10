@@ -8,11 +8,11 @@ export const fr: Dict = {
   "nav.login": "Se connecter",
   "nav.cta": "Commencer",
 
-  "hero.badge": "Pour les lecteurs curieux, petits et grands",
-  "hero.title.1": "Lisez n'importe quel livre,",
+  "hero.badge": "Pour les lecteurs sérieux, en toute langue",
+  "hero.title.1": "Comprenez n'importe quel livre,",
   "hero.title.2": "dans votre langue",
   "hero.subtitle":
-    "Déposez un PDF ou EPUB et Translify garde la mise en page identique — simplement traduite. Discutez ensuite avec votre livre et faites des quiz pour vraiment vous souvenir de ce que vous lisez.",
+    "Déposez un PDF ou un EPUB. Translify reconstruit le livre entier dans votre langue en préservant la mise en page, puis vous laisse discuter avec lui, surligner des passages pour des explications par IA, et vous tester — pour vraiment retenir ce que vous lisez.",
   "hero.cta.primary": "Essai de 14 jours",
   "hero.cta.secondary": "Voir les forfaits",
   "hero.bullet.1": "Mise en page préservée, page par page",

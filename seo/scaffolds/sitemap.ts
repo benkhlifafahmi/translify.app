@@ -5,7 +5,6 @@
 // hreflang alternates for all 8 UI locales.
 
 import type { MetadataRoute } from "next";
-import { BLOG_POSTS } from "./blog/_posts";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
 
@@ -23,7 +22,6 @@ const STATIC_PATHS = [
   { path: "/onboarding", priority: 0.9,  changeFrequency: "monthly" as const },
   { path: "/manifesto",  priority: 0.7,  changeFrequency: "monthly" as const },
   { path: "/languages",  priority: 0.8,  changeFrequency: "monthly" as const },
-  { path: "/blog",       priority: 0.8,  changeFrequency: "weekly"  as const },
   { path: "/login",      priority: 0.3,  changeFrequency: "yearly"  as const },
   { path: "/register",   priority: 0.3,  changeFrequency: "yearly"  as const },
 ];
@@ -48,7 +46,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   for (const source of LANG_SLUGS) {
     for (const target of LANG_SLUGS) {
       if (source === target) continue;
-      const path = `/read/${source}/in/${target}`;
+      const path = `/read-${source}-books-in-${target}`;
       langPairEntries.push({
         url: `${SITE}${path}`,
         lastModified: now,
@@ -71,17 +69,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     };
   });
 
-  // Blog posts
-  const blogEntries: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => {
-    const path = `/blog/${post.slug}`;
-    return {
-      url: `${SITE}${path}`,
-      lastModified: new Date(post.modifiedAt ?? post.publishedAt),
-      changeFrequency: "monthly" as const,
-      priority: 0.75,
-      alternates: { languages: langAlternates(path) },
-    };
-  });
-
-  return [...staticEntries, ...blogEntries, ...langPairEntries, ...competitorEntries];
+  return [...staticEntries, ...langPairEntries, ...competitorEntries];
 }
