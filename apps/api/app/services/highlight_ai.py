@@ -31,6 +31,9 @@ async def explain_highlight(
         "Answer using the book's content. If the passage is self-contained, "
         "you may answer directly; otherwise pull from the surrounding sources."
     )
+    # task="highlight_explain" routes through services/llm.py to Gemini
+    # Flash Lite by default — ~9x cheaper than Sonnet, and the explanation
+    # length / reasoning depth here doesn't need Sonnet's headroom.
     text, _citations, usage = await answer_question(
         session=session,
         book=book,
@@ -38,5 +41,6 @@ async def explain_highlight(
         question=framed,
         history=[],
         answer_language=answer_language,
+        task="highlight_explain",
     )
     return text, usage

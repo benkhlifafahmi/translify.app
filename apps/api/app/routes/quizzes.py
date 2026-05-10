@@ -5,6 +5,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
+from anthropic import RateLimitError as AnthropicRateLimitError
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -141,6 +142,19 @@ async def create_quiz(
             question_count=payload.question_count,
             output_language=output_language,
         )
+    except AnthropicRateLimitError as exc:
+        # Anthropic per-minute token quota — distinct from our own quota.
+        # 429 lets the frontend show a "try again in a minute" message
+        # instead of a generic 502.
+        log.warning("Anthropic rate limit hit for quiz on book=%s", book.id)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "error": "ai_rate_limited",
+                "message": "Translify's AI provider is at capacity right now. Wait about a minute and try again.",
+                "retry_after_seconds": 60,
+            },
+        ) from exc
     except Exception as exc:
         log.exception("quiz generation failed for book=%s", book.id)
         raise HTTPException(

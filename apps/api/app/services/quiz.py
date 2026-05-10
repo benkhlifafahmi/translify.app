@@ -1,4 +1,9 @@
-"""Quiz generation: ask Claude to generate MCQs from book chunks."""
+"""Quiz generation — multiple-choice questions from book chunks.
+
+Model selection is centralized in services/llm.py. By default this routes
+to Gemini 2.5 Flash Lite with Claude Haiku 4.5 as fallback — ~30× cheaper
+than Sonnet for what is essentially structured JSON output.
+"""
 from __future__ import annotations
 
 import json
@@ -8,31 +13,18 @@ import re
 import uuid
 from collections.abc import Sequence
 
-from anthropic import AsyncAnthropic
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import settings
 from app.models.chunk import Chunk
+from app.services.llm import complete
 
 log = logging.getLogger(__name__)
 
-MODEL = "claude-sonnet-4-6"
-MAX_TOKENS = 4_000
+MAX_TOKENS = 3_000
 DEFAULT_QUESTION_COUNT = 8
-# Cap context size so the prompt stays small and fast.
-MAX_CONTEXT_CHARS = 18_000
-
-_client: AsyncAnthropic | None = None
-
-
-def _get_client() -> AsyncAnthropic:
-    global _client
-    if _client is None:
-        if not settings.anthropic_api_key:
-            raise RuntimeError("ANTHROPIC_API_KEY is not configured")
-        _client = AsyncAnthropic(api_key=settings.anthropic_api_key)
-    return _client
+# Cap context size: smaller prompt = smaller cost + faster generation.
+MAX_CONTEXT_CHARS = 12_000
 
 
 async def generate_quiz(
@@ -44,17 +36,42 @@ async def generate_quiz(
     output_language: str | None = None,
 ) -> list[dict]:
     """Return a list of question dicts:
-        {id, type: 'mcq', prompt, choices: [..], answer: <choice index>, explanation}
-
-    If `output_language` is set, the quiz prompts/choices/explanations are
-    written in that language (regardless of the source passages' language).
+        {id, type: 'mcq', prompt, choices: [..], answer_index, explanation}
     """
     chunks = await _sample_chunks(session, book_id)
     if not chunks:
         raise RuntimeError("Book has no chunks; cannot generate a quiz.")
 
     context = _build_context(chunks)
+    system, user = _build_prompts(
+        book_title=book_title,
+        context=context,
+        question_count=question_count,
+        output_language=output_language,
+    )
 
+    resp = await complete(
+        task="quiz",
+        system=system,
+        user=user,
+        max_tokens=MAX_TOKENS,
+        temperature=0.7,
+        response_format="json",
+    )
+
+    return _parse_quiz(resp.text, want_count=question_count)
+
+
+# ───────────────────────── Prompt assembly ─────────────────────────
+
+
+def _build_prompts(
+    *,
+    book_title: str,
+    context: str,
+    question_count: int,
+    output_language: str | None,
+) -> tuple[str, str]:
     language_instruction = ""
     if output_language:
         language_instruction = (
@@ -72,7 +89,7 @@ async def generate_quiz(
         + language_instruction
     )
 
-    user_prompt = (
+    user = (
         f"Book title: {book_title}\n\n"
         f"=== SOURCE PASSAGES ===\n{context}\n=== END PASSAGES ===\n\n"
         "Return STRICT JSON of the form:\n"
@@ -90,16 +107,10 @@ async def generate_quiz(
         "Vary the position of the correct answer. Do not include any text "
         "outside the JSON object."
     )
+    return system, user
 
-    client = _get_client()
-    resp = await client.messages.create(
-        model=MODEL,
-        max_tokens=MAX_TOKENS,
-        system=system,
-        messages=[{"role": "user", "content": user_prompt}],
-    )
-    text = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
-    return _parse_quiz(text, want_count=question_count)
+
+# ───────────────────────── Chunk sampling ─────────────────────────
 
 
 async def _sample_chunks(session: AsyncSession, book_id: uuid.UUID) -> list[Chunk]:
@@ -109,11 +120,10 @@ async def _sample_chunks(session: AsyncSession, book_id: uuid.UUID) -> list[Chun
     chunks = list(result.scalars().all())
     if not chunks:
         return []
-    # Pick an even spread across the book so the quiz isn't biased to one region.
-    if len(chunks) <= 12:
+    if len(chunks) <= 8:
         return chunks
-    step = max(1, len(chunks) // 12)
-    sampled = chunks[::step][:12]
+    step = max(1, len(chunks) // 8)
+    sampled = chunks[::step][:8]
     random.shuffle(sampled)
     return sampled
 
@@ -131,6 +141,9 @@ def _build_context(chunks: Sequence[Chunk]) -> str:
         parts.append(chunk_text)
         total += len(chunk_text)
     return "\n\n".join(parts)
+
+
+# ───────────────────────── JSON parsing ─────────────────────────
 
 
 _JSON_OBJECT_RE = re.compile(r"\{.*\}", re.DOTALL)

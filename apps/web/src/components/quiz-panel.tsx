@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   createQuiz,
+  getQuiz,
   listQuizzes,
   submitAttempt,
   type Quiz,
@@ -53,6 +54,17 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
     },
   });
 
+  // Load an existing quiz and start it fresh — no Anthropic call, no quota
+  // hit, no rate-limit risk. Used by the "Retake" button on saved quizzes.
+  const loadExisting = useMutation<Quiz, Error, string>({
+    mutationFn: (quizId) => getQuiz(quizId),
+    onSuccess: (q) => {
+      setQuiz(q);
+      setAnswers({});
+      setAttempt(null);
+    },
+  });
+
   const submit = useMutation<QuizAttempt, Error, void>({
     mutationFn: async () => {
       if (!quiz) throw new Error("No quiz");
@@ -87,83 +99,175 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
 
   if (!quiz) {
     const generateError = generate.isError ? parseQuotaError(generate.error) : null;
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-5 px-6 py-8 text-center">
-        <div className="grid h-16 w-16 place-items-center rounded-3xl bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)]">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-          </svg>
-        </div>
-        <div>
-          <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">
-            Ready for a quiz?
-          </h3>
-          <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
-            We'll write fresh questions from this book. No looking back —
-            unless you want to.
-          </p>
-        </div>
+    // Friendlier message when Anthropic itself rate-limits us, vs. when our
+    // own per-book quota is hit (the existing UpgradeNudge handles that).
+    const rateLimited =
+      generate.error instanceof ApiError &&
+      (generate.error.status === 429 ||
+        /rate_limit|429/i.test(generate.error.message ?? ""));
+    const hasSaved = existing.length > 0;
 
-        {sub && (
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-            <span className="tabular-nums">
-              {used}
-              <span className="opacity-50"> / </span>
-              {unlimited ? "∞" : limit}
-            </span>{" "}
-            quizzes for this book
-          </p>
+    return (
+      <div className="flex h-full flex-col">
+        {/* Saved quizzes — surfaced as primary content when they exist, so
+            users don't burn AI tokens regenerating something they already
+            have. */}
+        {hasSaved && (
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-5">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
+                Your quizzes
+              </h3>
+              {sub && (
+                <span className="rounded-full bg-[color:var(--color-paper-3)] px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[color:var(--color-ink-soft)]">
+                  <span className="tabular-nums">
+                    {used}
+                    <span className="opacity-50"> / </span>
+                    {unlimited ? "∞" : limit}
+                  </span>
+                </span>
+              )}
+            </div>
+
+            <ul className="flex flex-col gap-2">
+              {existing.map((q) => (
+                <li key={q.id}>
+                  <button
+                    type="button"
+                    onClick={() => loadExisting.mutate(q.id)}
+                    disabled={loadExisting.isPending}
+                    className="group flex w-full items-center gap-3 rounded-2xl border-[1.5px] border-[color:var(--color-border)] bg-white/60 p-3 text-left transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-coral)] hover:bg-[color:var(--color-coral)]/5 disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color:var(--color-coral)]/12 text-[color:var(--color-coral-deep)]">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">
+                        {q.title}
+                      </span>
+                      <span className="mt-0.5 block text-[0.7rem] text-[color:var(--color-ink-soft)]">
+                        {q.question_count} questions · {formatRelative(q.created_at)}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-ink-soft)] transition-colors group-hover:text-[color:var(--color-coral-deep)]">
+                      Retake →
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {/* New-quiz CTA — compact when there are existing quizzes, since
+                the primary action is usually retake. */}
+            <div className="mt-6 rounded-2xl border-[1.5px] border-dashed border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40 p-4">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[color:var(--color-ink-soft)]">
+                  Generate a new one
+                </p>
+                <div className="flex gap-1">
+                  {[5, 8, 12].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setCount(n)}
+                      className={`h-7 w-9 rounded-full text-xs font-semibold transition-all ${
+                        count === n
+                          ? "bg-[color:var(--color-coral)] text-white"
+                          : "bg-white/60 text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-coral-deep)]"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="accent"
+                className="mt-3 w-full"
+                onClick={() => generate.mutate(count)}
+                disabled={generate.isPending || atLimit}
+              >
+                {generate.isPending
+                  ? "Writing your quiz…"
+                  : atLimit
+                    ? "Quiz cap reached"
+                    : `Make a ${count}-question quiz`}
+              </Button>
+              {renderGenerateError({ generateError, rateLimited, error: generate.error })}
+            </div>
+          </div>
         )}
 
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-            How many questions?
-          </p>
-          <div className="flex gap-1.5">
-            {[5, 8, 12].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setCount(n)}
-                className={`h-9 w-12 rounded-full text-sm font-semibold transition-all ${
-                  count === n
-                    ? "bg-[color:var(--color-coral)] text-white shadow-[0_2px_0_rgba(140,50,40,0.4)]"
-                    : "border-[1.5px] border-[color:var(--color-border)] bg-white/60 text-[color:var(--color-ink-soft)] hover:border-[color:var(--color-coral)] hover:text-[color:var(--color-coral-deep)]"
-                }`}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Empty state — no saved quizzes, full-screen CTA */}
+        {!hasSaved && (
+          <div className="flex h-full flex-col items-center justify-center gap-5 px-6 py-8 text-center">
+            <div className="grid h-16 w-16 place-items-center rounded-3xl bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)]">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">
+                Ready for a quiz?
+              </h3>
+              <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
+                We'll write fresh questions from this book. No looking back —
+                unless you want to.
+              </p>
+            </div>
 
-        <Button
-          size="lg"
-          variant="accent"
-          onClick={() => generate.mutate(count)}
-          disabled={generate.isPending || atLimit}
-        >
-          {generate.isPending
-            ? "Writing your quiz…"
-            : atLimit
-              ? "Quiz cap reached"
-              : "Make my quiz"}
-        </Button>
+            {sub && (
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
+                <span className="tabular-nums">
+                  {used}
+                  <span className="opacity-50"> / </span>
+                  {unlimited ? "∞" : limit}
+                </span>{" "}
+                quizzes for this book
+              </p>
+            )}
 
-        {generateError ? (
-          <div className="w-full max-w-sm">
-            <UpgradeNudge
-              error={generateError}
-              kind={generateError.error === "no_active_plan" ? "no_plan" : "quizzes"}
-            />
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
+                How many questions?
+              </p>
+              <div className="flex gap-1.5">
+                {[5, 8, 12].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setCount(n)}
+                    className={`h-9 w-12 rounded-full text-sm font-semibold transition-all ${
+                      count === n
+                        ? "bg-[color:var(--color-coral)] text-white shadow-[0_2px_0_rgba(140,50,40,0.4)]"
+                        : "border-[1.5px] border-[color:var(--color-border)] bg-white/60 text-[color:var(--color-ink-soft)] hover:border-[color:var(--color-coral)] hover:text-[color:var(--color-coral-deep)]"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              size="lg"
+              variant="accent"
+              onClick={() => generate.mutate(count)}
+              disabled={generate.isPending || atLimit}
+            >
+              {generate.isPending
+                ? "Writing your quiz…"
+                : atLimit
+                  ? "Quiz cap reached"
+                  : "Make my quiz"}
+            </Button>
+
+            {renderGenerateError({ generateError, rateLimited, error: generate.error })}
           </div>
-        ) : generate.isError ? (
-          <p className="max-w-xs rounded-lg bg-[color:var(--color-destructive)]/10 px-3 py-2 text-xs text-[color:var(--color-destructive)]">
-            {generate.error instanceof ApiError
-              ? generate.error.message
-              : (generate.error as Error).message || "Failed"}
-          </p>
-        ) : null}
+        )}
       </div>
     );
   }
@@ -302,6 +406,61 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
       )}
     </div>
   );
+}
+
+// ───────────────────────── helpers ─────────────────────────
+
+function renderGenerateError({
+  generateError,
+  rateLimited,
+  error,
+}: {
+  generateError: ReturnType<typeof parseQuotaError>;
+  rateLimited: boolean;
+  error: Error | null;
+}) {
+  if (generateError) {
+    return (
+      <div className="mt-3 w-full max-w-sm">
+        <UpgradeNudge
+          error={generateError}
+          kind={generateError.error === "no_active_plan" ? "no_plan" : "quizzes"}
+        />
+      </div>
+    );
+  }
+  if (rateLimited) {
+    return (
+      <p className="mt-3 max-w-xs rounded-lg bg-[color:var(--color-saffron)]/12 px-3 py-2 text-xs text-[color:var(--color-saffron-deep)]">
+        The AI provider is at capacity right now. Wait about a minute and
+        try again — your existing quizzes are still here to retake.
+      </p>
+    );
+  }
+  if (error) {
+    return (
+      <p className="mt-3 max-w-xs rounded-lg bg-[color:var(--color-destructive)]/10 px-3 py-2 text-xs text-[color:var(--color-destructive)]">
+        {error instanceof ApiError
+          ? error.message
+          : (error as Error).message || "Quiz generation failed"}
+      </p>
+    );
+  }
+  return null;
+}
+
+function formatRelative(iso: string): string {
+  const then = new Date(iso).getTime();
+  const now = Date.now();
+  const diff = Math.max(0, now - then);
+  const m = Math.round(diff / 60_000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.round(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString();
 }
 
 function ResultsView({

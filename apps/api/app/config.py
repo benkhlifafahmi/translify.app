@@ -37,6 +37,10 @@ class Settings(BaseSettings):
 
     anthropic_api_key: str = ""
     deepl_api_key: str = ""
+    # Gemini — used for quiz generation by default (Flash Lite is ~30x cheaper
+    # than Claude Sonnet for structured-output tasks). Leave empty to fall back
+    # to Anthropic.
+    gemini_api_key: str = ""
 
     # Stripe billing
     stripe_secret_key: str = ""
