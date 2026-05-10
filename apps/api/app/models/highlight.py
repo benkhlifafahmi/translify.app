@@ -49,6 +49,11 @@ class Highlight(Base):
     ai_question: Mapped[str | None] = mapped_column(Text, nullable=True)
     ai_answer: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # EPUB-only: CFI locator for inline highlight rendering. PDFs use
+    # (page, text) substring matching; EPUBs need CFI for precise rendering
+    # across the spine.
+    position_cfi: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
     )

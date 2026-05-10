@@ -21,6 +21,8 @@ export interface SavedHighlight {
   text: string;
   color: SavedHighlightColor;
   hasNote?: boolean;
+  /** EPUB-only: CFI locator. PDF viewer ignores this. */
+  cfi?: string;
 }
 
 export type HighlightAction = "save" | "note" | "ask-ai";

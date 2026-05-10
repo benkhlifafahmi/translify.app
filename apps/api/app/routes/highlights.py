@@ -101,6 +101,7 @@ async def create_highlight(
         text=payload.text.strip(),
         color=payload.color,
         note=(payload.note or None),
+        position_cfi=(payload.position_cfi or None),
     )
     session.add(hl)
     await session.commit()

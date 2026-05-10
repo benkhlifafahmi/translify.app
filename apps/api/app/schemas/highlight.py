@@ -20,6 +20,7 @@ class HighlightRead(BaseModel):
     note: str | None
     ai_question: str | None
     ai_answer: str | None
+    position_cfi: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -29,6 +30,8 @@ class HighlightCreate(BaseModel):
     text: str = Field(min_length=1, max_length=10_000)
     color: HighlightColor = HighlightColor.yellow
     note: str | None = Field(default=None, max_length=10_000)
+    # EPUB-only: optional CFI locator for inline rendering.
+    position_cfi: str | None = Field(default=None, max_length=2_000)
 
 
 class HighlightUpdate(BaseModel):

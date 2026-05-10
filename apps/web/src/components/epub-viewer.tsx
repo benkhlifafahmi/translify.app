@@ -236,19 +236,14 @@ export function EpubViewer({
     const cfis: string[] = [];
 
     (savedHighlights ?? []).forEach((h) => {
-      // SavedHighlight.text is the substring; for the EPUB we encode the CFI
-      // in the id-as-suffix (the wiring layer in [bookId]/page.tsx will pass
-      // through a cfi field when present). If no CFI is stored, we skip the
-      // inline render (fallback to text-search would be flaky).
-      // Highlights created via the EPUB viewer flow always carry their CFI
-      // through onSelectionAction → the wiring stores it in the highlight's
-      // `text` field with a leading "epub://" prefix. See [bookId]/page.tsx.
-      const cfi = (h as SavedHighlight & { cfi?: string }).cfi;
-      if (!cfi) return;
-      cfis.push(cfi);
+      // CFI is required to render inline. PDF highlights have no CFI; older
+      // EPUB highlights created before migration 0005 also won't have one
+      // (they'll still show in the Notes panel — just not inline).
+      if (!h.cfi) return;
+      cfis.push(h.cfi);
       annotations.add(
         "highlight",
-        cfi,
+        h.cfi,
         { id: h.id },
         () => onClickSavedHighlight?.(h.id),
         "translify-epub-mark",

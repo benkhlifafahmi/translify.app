@@ -113,8 +113,17 @@ export default function BookDetailPage({
   }, [searchParams, ready, highlights]);
 
   const createHl = useMutation({
-    mutationFn: async (input: { action: HighlightAction; page: number; text: string }) =>
-      createHighlight(bookId, { page: input.page, text: input.text }),
+    mutationFn: async (input: {
+      action: HighlightAction;
+      page: number;
+      text: string;
+      cfi?: string;
+    }) =>
+      createHighlight(bookId, {
+        page: input.page,
+        text: input.text,
+        position_cfi: input.cfi ?? null,
+      }),
     onSuccess: (saved, vars) => {
       qc.setQueryData<SavedHighlightT[]>(["highlights", bookId], (old) =>
         old ? [...old, saved] : [saved],
@@ -133,8 +142,13 @@ export default function BookDetailPage({
     },
   });
 
-  const onSelectionAction = (action: HighlightAction, page: number, text: string) => {
-    createHl.mutate({ action, page, text });
+  const onSelectionAction = (
+    action: HighlightAction,
+    page: number,
+    text: string,
+    cfi?: string,
+  ) => {
+    createHl.mutate({ action, page, text, cfi });
   };
 
   const savedHighlightsForViewer: SavedHighlight[] = highlights.map((h) => ({
@@ -143,6 +157,7 @@ export default function BookDetailPage({
     text: h.text,
     color: h.color,
     hasNote: !!h.note,
+    cfi: h.position_cfi ?? undefined,
   }));
 
   if (!mounted || isLoading) {

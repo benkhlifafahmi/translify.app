@@ -11,6 +11,8 @@ export interface Highlight {
   note: string | null;
   ai_question: string | null;
   ai_answer: string | null;
+  /** EPUB-only: CFI locator for inline highlight rendering. Null for PDFs. */
+  position_cfi: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -30,6 +32,8 @@ export async function createHighlight(
     text: string;
     color?: HighlightColor;
     note?: string | null;
+    /** EPUB CFI — required for inline EPUB rendering, ignored for PDFs. */
+    position_cfi?: string | null;
   },
 ): Promise<Highlight> {
   return api<Highlight>(`/books/${bookId}/highlights`, {
@@ -39,6 +43,7 @@ export async function createHighlight(
       text: payload.text,
       color: payload.color ?? "yellow",
       note: payload.note ?? null,
+      position_cfi: payload.position_cfi ?? null,
     },
   });
 }
