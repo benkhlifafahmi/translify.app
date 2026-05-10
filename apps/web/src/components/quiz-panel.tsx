@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -174,6 +174,34 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
   ).length;
   const progress = (answeredCount / quiz.questions.length) * 100;
 
+  // Refs to each question card so we can auto-scroll to the next unanswered
+  // one after the user picks an answer. Essential on mobile, where the drawer
+  // only shows one question at a time and the user otherwise has to manually
+  // hunt for what's next.
+  const questionRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const setQuestionRef = (id: string) => (el: HTMLLIElement | null) => {
+    questionRefs.current[id] = el;
+  };
+
+  const pickAnswer = (questionId: string, choiceIdx: number) => {
+    const updated = { ...answers, [questionId]: choiceIdx };
+    setAnswers(updated);
+    // Find the next still-unanswered question after this one and scroll it
+    // into view. If they're answering out of order, this jumps to whatever
+    // comes next that they haven't done — which is usually what you want.
+    const currentIdx = quiz!.questions.findIndex((qq) => qq.id === questionId);
+    const next = quiz!.questions
+      .slice(currentIdx + 1)
+      .find((qq) => updated[qq.id] == null);
+    if (!next) return;
+    requestAnimationFrame(() => {
+      questionRefs.current[next.id]?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  };
+
   return (
     <div className="flex h-full flex-col">
       <div className="shrink-0 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/60 px-4 py-3">
@@ -196,7 +224,11 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <ol className="flex flex-col gap-5">
           {quiz.questions.map((q, i) => (
-            <li key={q.id} className="card-paper p-4">
+            <li
+              key={q.id}
+              ref={setQuestionRef(q.id)}
+              className="card-paper scroll-mt-2 p-4"
+            >
               <p className="text-sm font-medium leading-relaxed">
                 <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--color-coral)]/15 text-[0.7rem] font-bold text-[color:var(--color-coral-deep)]">
                   {i + 1}
@@ -209,10 +241,10 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
                   return (
                     <label
                       key={idx}
-                      className={`flex cursor-pointer items-start gap-2.5 rounded-xl border-[1.5px] px-3 py-2.5 text-sm transition-all ${
+                      className={`flex min-h-[44px] cursor-pointer touch-manipulation items-start gap-2.5 rounded-xl border-[1.5px] px-3 py-2.5 text-sm transition-all ${
                         checked
                           ? "border-[color:var(--color-coral)] bg-[color:var(--color-coral)]/8 text-[color:var(--color-ink)]"
-                          : "border-[color:var(--color-border)] bg-white/40 hover:border-[color:var(--color-border-strong)]"
+                          : "border-[color:var(--color-border)] bg-white/40 hover:border-[color:var(--color-border-strong)] active:bg-[color:var(--color-paper-2)]"
                       }`}
                     >
                       <span
@@ -231,9 +263,7 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
                         name={q.id}
                         className="sr-only"
                         checked={checked}
-                        onChange={() =>
-                          setAnswers((a) => ({ ...a, [q.id]: idx }))
-                        }
+                        onChange={() => pickAnswer(q.id, idx)}
                       />
                       <span className="flex-1">{choice}</span>
                     </label>
