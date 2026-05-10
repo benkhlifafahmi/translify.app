@@ -80,13 +80,13 @@ export default function ManifestoPage() {
         </p>
 
         <p>
-          We built it because the existing tools fall into two camps, neither
-          of which solves the real problem. On one side: translation utilities
-          (Google Translate, DeepL) that give you a translated file and call
-          it done. On the other: AI study tools (NotebookLM, Mindgrasp) that
-          only work on documents already in your language. Neither tool is
-          built for the actual experience of reading a foreign-language book
-          deeply.
+          We built it because the existing tools weren't quite right. The
+          translation utilities — Google Translate, DeepL — hand you a
+          translated file and call the job done. The AI study tools —
+          NotebookLM, Mindgrasp — only work on documents already in your
+          language. Neither group of tools is really thinking about the
+          person sitting down with a foreign-language book and trying to
+          understand it.
         </p>
 
         <h2 className="!mt-12 font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">
@@ -123,23 +123,22 @@ export default function ManifestoPage() {
         </h2>
 
         <p>
-          Three things became true in 2025 that weren't true in 2022. First:
-          long-context language models (Claude, GPT-4o) can now hold an
-          entire book in working memory and reason across it — chat,
-          citation, summary, the whole package. Second: layout-preserving
-          translation has crossed the quality threshold for serious reading,
-          especially in European languages. Third: vector databases became
-          cheap and fast enough to do real-time semantic retrieval over a
-          book without thinking about it.
+          A few things came together in the last couple of years. Long-context
+          language models — Claude, GPT-4o — can now hold an entire book in
+          working memory and reason across it. Layout-preserving translation
+          has crossed the quality bar for serious reading, at least in
+          European languages. And vector databases got cheap and fast enough
+          that doing real-time semantic retrieval over a book is no longer
+          something you have to think about as an engineering problem.
         </p>
 
         <p>
-          The combination unlocks a reading experience that wasn't possible
-          before. Upload the book. Read it in your language with the layout
-          intact. Ask the book questions. Highlight a passage and get the AI
-          to explain it. Quiz yourself on the chapter you just read. None of
-          this is novel in isolation — the novelty is putting all of it in
-          one place, around the actual act of reading.
+          You couldn't really build Translify in 2022. You can now. Upload
+          the book. Read it in your language with the layout intact. Ask the
+          book questions. Highlight a passage and get the AI to explain it.
+          Quiz yourself on the chapter you just finished. None of this is
+          novel in isolation. The novelty is putting all of it in one place,
+          around the actual act of reading.
         </p>
 
         <h2 className="!mt-12 font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">

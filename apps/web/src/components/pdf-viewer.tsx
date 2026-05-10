@@ -160,45 +160,70 @@ export function PdfViewer({
     [onClickSavedHighlight],
   );
 
-  // Detect text selection inside the page; show floating toolbar.
-  const onPageMouseUp = useCallback(() => {
-    const wrap = pageWrapRef.current;
-    if (!wrap) return;
-    const sel = window.getSelection();
-    if (!sel || sel.isCollapsed) {
-      setSelection(null);
-      return;
-    }
-    const range = sel.getRangeAt(0);
-    if (!wrap.contains(range.commonAncestorContainer)) {
-      setSelection(null);
-      return;
-    }
-    const text = sel.toString().trim();
-    if (text.length < 2) {
-      setSelection(null);
-      return;
-    }
-    const rect = range.getBoundingClientRect();
-    const wrapRect = wrap.getBoundingClientRect();
-    setSelection({
-      text,
-      top: rect.top - wrapRect.top + wrap.scrollTop,
-      left: rect.left - wrapRect.left + rect.width / 2 + wrap.scrollLeft,
-    });
+  // Detect text selection — uses selectionchange so it fires consistently
+  // for both desktop mouse-drag and mobile long-press-and-drag flows.
+  // (onMouseUp alone misses the mobile path entirely.)
+  // Debounced so we only show the toolbar after the user stops dragging.
+  useEffect(() => {
+    let timer: number | null = null;
+    const finalize = () => {
+      const wrap = pageWrapRef.current;
+      if (!wrap) return;
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed) {
+        setSelection(null);
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      if (!wrap.contains(range.commonAncestorContainer)) {
+        // Selection happened outside the page area — ignore, don't clobber.
+        return;
+      }
+      const text = sel.toString().trim();
+      if (text.length < 2) {
+        setSelection(null);
+        return;
+      }
+      const rect = range.getBoundingClientRect();
+      const wrapRect = wrap.getBoundingClientRect();
+      setSelection({
+        text,
+        top: rect.top - wrapRect.top + wrap.scrollTop,
+        left: rect.left - wrapRect.left + rect.width / 2 + wrap.scrollLeft,
+      });
+    };
+    const onSelChange = () => {
+      if (timer) window.clearTimeout(timer);
+      // Wait ~180ms so we land after the user finishes dragging the handles
+      // on mobile; on desktop mouse-up this still feels instant.
+      timer = window.setTimeout(finalize, 180);
+    };
+    document.addEventListener("selectionchange", onSelChange);
+    return () => {
+      if (timer) window.clearTimeout(timer);
+      document.removeEventListener("selectionchange", onSelChange);
+    };
   }, []);
 
-  // Dismiss the toolbar if the user clicks anywhere else (after a tick so the
-  // toolbar's own click can land first).
+  // Dismiss the toolbar when the user taps/clicks anywhere outside it.
+  // Listening to both pointerdown variants so this covers desktop + mobile.
   useEffect(() => {
     if (!selection) return;
-    const onDocMouseDown = (e: MouseEvent) => {
+    const onOutsidePointer = (e: Event) => {
       const t = e.target as HTMLElement | null;
       if (t?.closest("[data-translify-selection-toolbar]")) return;
+      // If the user is starting a fresh selection inside the page, leave it
+      // alone — selectionchange will reset us shortly anyway.
+      const wrap = pageWrapRef.current;
+      if (wrap && t && wrap.contains(t)) return;
       setSelection(null);
     };
-    document.addEventListener("mousedown", onDocMouseDown);
-    return () => document.removeEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("mousedown", onOutsidePointer);
+    document.addEventListener("touchstart", onOutsidePointer, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onOutsidePointer);
+      document.removeEventListener("touchstart", onOutsidePointer);
+    };
   }, [selection]);
 
   const triggerAction = (action: HighlightAction) => {
@@ -278,7 +303,6 @@ export function PdfViewer({
       <div
         ref={pageWrapRef}
         className="relative flex-1 overflow-auto bg-gradient-to-b from-[color:var(--color-paper-2)]/50 to-[color:var(--color-paper-3)]/40 p-6"
-        onMouseUp={onPageMouseUp}
         onClick={onPageClick}
       >
         {error ? (
@@ -441,17 +465,24 @@ function ToolbarButton({
   tone: "saffron" | "sage" | "coral";
 }) {
   const toneClass = {
-    saffron: "text-[color:var(--color-saffron-deep)] hover:bg-[color:var(--color-saffron)]/15",
-    sage: "text-[color:var(--color-sage-deep)] hover:bg-[color:var(--color-sage)]/15",
-    coral: "text-[color:var(--color-coral-deep)] hover:bg-[color:var(--color-coral)]/15",
+    saffron: "text-[color:var(--color-saffron-deep)] hover:bg-[color:var(--color-saffron)]/15 active:bg-[color:var(--color-saffron)]/25",
+    sage: "text-[color:var(--color-sage-deep)] hover:bg-[color:var(--color-sage)]/15 active:bg-[color:var(--color-sage)]/25",
+    coral: "text-[color:var(--color-coral-deep)] hover:bg-[color:var(--color-coral)]/15 active:bg-[color:var(--color-coral)]/25",
   }[tone];
   return (
     <button
       type="button"
       onClick={onClick}
+      // Prevent the browser from clearing our text selection (which would
+      // collapse the range and zero out our toolbar's payload) before the
+      // click handler fires. Touch on iOS Safari is the worst offender.
+      onMouseDown={(e) => e.preventDefault()}
+      onTouchStart={(e) => e.preventDefault()}
       aria-label={label}
       title={label}
-      className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${toneClass}`}
+      // Larger touch targets on mobile: 36px+ tall, generous horizontal
+      // padding. Desktop stays tighter via the sm: breakpoint.
+      className={`flex min-h-[40px] touch-manipulation items-center gap-1.5 rounded-full px-3.5 py-2 text-[12px] font-semibold transition-colors sm:min-h-0 sm:px-2.5 sm:py-1 sm:text-[11px] ${toneClass}`}
     >
       {icon}
       <span>{label}</span>

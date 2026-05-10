@@ -104,157 +104,109 @@ export default function Page() {
       </p>
 
       <p>
-        Philosophical texts are different in two specific ways:
+        Philosophy is harder to translate than fiction for two reasons that
+        compound each other. First, terminology is load-bearing. Kant's
+        three Critiques build a vocabulary — synthesis, apperception,
+        noumenon, categorical imperative — and the rest of the work uses
+        those terms with exactly the meaning he set. When a translator
+        renders one German word as two different English words (or two
+        German words as one English word), you the reader have no way of
+        knowing. You're left guessing whether two passages are arguing about
+        the same concept or different ones. Often they're the same. Often
+        they're not. You can't tell.
       </p>
 
-      <ol className="list-decimal space-y-3 pl-6">
-        <li>
-          <strong>Terminology is load-bearing.</strong> Kant's three Critiques
-          define a vocabulary the rest of the work then uses precisely.
-          &ldquo;Synthesis,&rdquo; &ldquo;apperception,&rdquo;{" "}
-          &ldquo;noumenon,&rdquo; &ldquo;categorical imperative&rdquo; — each
-          is a coined term meaning exactly what Kant says it means, no more,
-          no less. Translation makes you guess whether two English words for
-          one German word mean two distinct concepts or one. Often it's one.
-        </li>
-        <li>
-          <strong>Argument structure depends on German grammar.</strong>{" "}
-          German verbs land at the end. Subordinate clauses stack. The shape
-          of the German sentence is part of the argument — the conclusion
-          arrives only after all premises have been laid down. Translation
-          either preserves this (and the English becomes unreadable) or
-          flattens it (and the argument's tension dissolves into a series of
-          unrelated statements).
-        </li>
-      </ol>
-
       <p>
-        Both problems can be partially solved by having the original German
-        within reach during the English read. Not parallel reading — that's
-        too slow for sustained reading. Selective, on-demand consultation:
-        you read in English, and when something feels thin or strange, you
-        consult the German.
+        Second, the argument lives partly in the grammar. German verbs land
+        at the end. Subordinate clauses stack. The conclusion of a Hegel
+        sentence sometimes arrives only after every premise has been laid
+        down — the rhythm <em>is</em> the argument. English translators
+        have a choice: preserve the German sentence shape (the English
+        becomes unreadable) or break it apart into shorter clauses (the
+        argument's tension dissolves). Neither is good. Both lose
+        something.
       </p>
 
-      <H2>The workflow: English foreground, German background</H2>
-
       <p>
-        The setup is:
+        You can mostly fix both problems by keeping the German within
+        reach while you read the English. Not parallel reading — that's
+        too slow for any sustained reading and you stop noticing things
+        because you're checking constantly. The trick is selective, on-demand
+        consultation. Read the English at pace. When something feels off,
+        check the German for that one passage.
       </p>
 
-      <ul className="list-disc space-y-2 pl-6">
-        <li>The English translation as the primary reading text.</li>
-        <li>The German original loaded and indexed in the background.</li>
-        <li>A chat interface that lets you ask &ldquo;what does this passage say in German?&rdquo; or &ldquo;is this word the same German word as that word three pages ago?&rdquo;</li>
-        <li>A highlight-and-explain feature so you can mark a passage and get a plain-language explanation that draws on the whole book.</li>
-      </ul>
+      <H2>The workflow, end to end</H2>
 
       <p>
-        That's what{" "}
-        <Link href="/" className="underline decoration-[color:var(--color-saffron)]">
-          Translify
-        </Link>{" "}
-        does — though the workflow predates the tool. The point is the
-        method, not the brand: you can do most of this manually with a
-        bookmarked PDF of the German, DeepL, and a notebook. Translify just
-        compresses the workflow into one window.
-      </p>
-
-      <H3>Step 1 — Upload both books</H3>
-
-      <p>
-        Drop the German EPUB or PDF in first, then the English translation.
-        Translify treats them as the same book and aligns them by chapter.
-        You read the English; the German is one keystroke away.
+        Get both books loaded. Drop the German EPUB or PDF in, then the
+        English translation. Translify aligns them by chapter so they
+        behave as one book; if you're doing this manually, keep them in
+        side-by-side browser tabs with the page numbers cross-referenced
+        once. Either works.
       </p>
 
       <Quote>
-        For Kant's <em>Critique of Pure Reason</em>, I use the Akademieausgabe
+        For Kant's <em>Critique of Pure Reason</em> I use the Akademieausgabe
         German text and the Guyer/Wood Cambridge translation. For Hegel's{" "}
-        <em>Phenomenology of Spirit</em>, the Felix Meiner German edition and
-        A.V. Miller. For Nietzsche, the Colli/Montinari German and
-        Kaufmann's English.
+        <em>Phenomenology of Spirit</em>, the Felix Meiner German edition
+        and A.V. Miller. For Nietzsche, the Colli/Montinari German and
+        Kaufmann's English. Other combinations work — these are just the
+        ones I've found least painful.
       </Quote>
 
-      <H3>Step 2 — Read the English, marking the places that feel wrong</H3>
-
       <p>
-        Don't try to consult the German on every sentence. Read the English
-        at pace. Mark — with a digital highlight — the places where the
-        argument feels suddenly disconnected, where a translated term seems
-        oddly chosen, or where you simply don't understand what's being
-        claimed. These are your German-consultation candidates.
+        Then read the English. Not the German alongside it — the English,
+        at pace, like a normal book. The German is in the room for
+        reference, not for parallel reading. Mark the passages that feel
+        off: where the argument suddenly disconnects, where a translated
+        term seems oddly chosen, where you simply don't understand what's
+        being claimed. In dense German philosophy you'll mark something
+        like 5–15% of paragraphs. Less for Nietzsche, more for Kant's
+        first Critique. Heidegger you'll mark approximately every paragraph;
+        accept it.
       </p>
 
       <p>
-        Typically about 5–15% of paragraphs in dense German philosophy will
-        be worth consulting. Less for narrative-heavy texts (Nietzsche),
-        more for technical texts (Kant's first Critique).
-      </p>
-
-      <H3>Step 3 — At each highlight, ask the AI three questions</H3>
-
-      <p>
-        The three questions are:
-      </p>
-
-      <ol className="list-decimal space-y-3 pl-6">
-        <li>
-          <strong>What does the German say literally?</strong> A word-by-word
-          gloss, not a translation. This is what reveals when the English
-          translator made a choice — sometimes a controversial one — that
-          collapsed multiple German words into one English word.
-        </li>
-        <li>
-          <strong>Where else in the book does this exact German term
-          appear?</strong> If <em>Geist</em> appears 400 times in the
-          Phenomenology, you need to know whether the English &ldquo;spirit&rdquo;
-          you're reading now is the same concept as the &ldquo;spirit&rdquo;
-          you read on page 12. (Usually yes. Sometimes no.)
-        </li>
-        <li>
-          <strong>What is the author actually arguing in this passage, in
-          plain English?</strong> This is where AI explanation earns its
-          place. A good chat answer will reference the surrounding paragraphs
-          and previous chapters, giving you a contextualized reading instead
-          of an isolated paraphrase.
-        </li>
-      </ol>
-
-      <p>
-        With Translify's highlight-to-ask feature, all three questions take
-        about 30 seconds. Without a tool, the same three questions take 5–10
-        minutes per passage. For a 400-page book with 50 difficult passages,
-        that's the difference between an extra two hours and an extra eight.
-      </p>
-
-      <H3>Step 4 — Build a personal terminology index</H3>
-
-      <p>
-        Pull out a notebook (or use Translify's notes feature, which attaches
-        to highlights) and start tracking the load-bearing terms as you
-        encounter them. For each German term, record:
-      </p>
-
-      <ul className="list-disc space-y-2 pl-6">
-        <li>The German word.</li>
-        <li>How this translator renders it.</li>
-        <li>Two or three example passages.</li>
-        <li>The author's working definition (if they ever give one).</li>
-      </ul>
-
-      <p>
-        For Kant, you'll end up with about 40 terms. For Hegel, more —
-        Hegel's vocabulary is a system, not a list. For Nietzsche, fewer but
-        more poetically loaded (Übermensch, Wille zur Macht, ewige
-        Wiederkunft). For Heidegger, you'll end up writing a small
-        glossary book.
+        At each mark, ask the AI three things. The first: what does the
+        German literally say? A word-by-word gloss, not a translation.
+        This is what reveals when the English translator made a choice
+        that collapsed multiple German words into one. The second: where
+        else in the book does this exact German word appear? If{" "}
+        <em>Geist</em> shows up 400 times in the Phenomenology, you need
+        to know whether the &ldquo;spirit&rdquo; you're reading now is
+        the same concept as the &ldquo;spirit&rdquo; from page 12. (Usually
+        yes. Sometimes no — and the difference matters.) The third: what
+        is the author actually arguing here, in plain language? A decent
+        AI chat answer will pull from the surrounding paragraphs and
+        previous chapters, giving you a reading rather than a paraphrase.
       </p>
 
       <p>
-        This index is the deliverable. Six months later, when you're trying
-        to remember whether Hegel's "spirit" in Chapter 4 is the same as
-        "spirit" in Chapter 7, your own notes will save you a re-read.
+        With a highlight-and-ask tool, all three questions take about
+        thirty seconds. Done by hand with bookmarks and DeepL, the same
+        three questions take five to ten minutes. For a 400-page book
+        with 50 difficult passages, that's the difference between an
+        extra two hours and an extra eight. Most people who try the manual
+        version give up at about hour four.
+      </p>
+
+      <p>
+        And keep notes — actual notes — on the terms as you find them.
+        German word, how this translator renders it, two or three
+        passages, the author's working definition if they ever offer
+        one. For Kant you'll end up with around forty terms. For Hegel
+        more (Hegel's vocabulary is a system, not a list). For Nietzsche
+        fewer but more poetically loaded — Übermensch, Wille zur Macht,
+        ewige Wiederkunft. For Heidegger you'll basically be writing a
+        small glossary book. That's fine.
+      </p>
+
+      <p>
+        Six months later, when you're trying to remember whether Hegel's
+        &ldquo;spirit&rdquo; in Chapter 4 is the same as &ldquo;spirit&rdquo;
+        in Chapter 7, your own notes will save you a re-read. The notes
+        are the real deliverable. The book is just the occasion.
       </p>
 
       <H2>Specific guidance by author</H2>

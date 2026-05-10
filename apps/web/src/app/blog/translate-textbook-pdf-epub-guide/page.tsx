@@ -60,279 +60,240 @@ export default function Page() {
   return (
     <BlogShell post={post} faqs={faqs}>
       <Lead>
-        Translating a textbook is not translating a paragraph eight thousand
+        Translating a textbook is not translating one paragraph eight thousand
         times. Layout matters. Footnotes matter. Equations, figures, glossary
-        cross-references, index entries — all of it carries meaning. Doing
-        this with the wrong tool produces a translation that's technically
-        complete and practically useless.
+        cross-references, the way the author refers back to a definition
+        from chapter two — all of it carries meaning. Get the wrong tool
+        and you end up with a translation that's technically complete and
+        practically useless. I've watched friends abandon their study
+        plans because of this. Here's how to avoid it.
       </Lead>
 
-      <p>
-        Here's the step-by-step guide for translating a textbook into your
-        native language so you can actually study from it. Works for PDFs and
-        EPUBs. Works across most languages.
-      </p>
-
-      <H2>Step 1 — Get a clean source file</H2>
+      <H2>Start with a clean source file</H2>
 
       <p>
-        Translation quality depends entirely on source quality. Garbage in,
-        garbage out. Specifically:
-      </p>
-
-      <ul className="list-disc space-y-2 pl-6">
-        <li>
-          <strong>EPUB is better than PDF</strong> when you have the choice.
-          EPUB stores text as text, with structural metadata (chapter,
-          section, footnote). Translation tools can work with this directly.
-        </li>
-        <li>
-          <strong>PDF with embedded text is fine</strong> — most modern
-          textbook PDFs (anything published in the last 10 years) embed the
-          text. Translation tools extract it cleanly.
-        </li>
-        <li>
-          <strong>Scanned PDFs need OCR first.</strong> If your PDF is
-          essentially a photograph of pages, you need an OCR pass before
-          translation. Tools like Translify do this automatically; standalone
-          OCR via Adobe Acrobat, ABBYY FineReader, or Tesseract work too.
-          Aim for 300 DPI minimum source resolution.
-        </li>
-      </ul>
-
-      <p>
-        Check whether your PDF has embedded text: open it in any PDF viewer,
-        try to select a sentence with your cursor. If you can highlight it
-        as text, embedded text is there. If your cursor draws a box but no
-        text is highlighted, it's a scan — OCR it before translating.
-      </p>
-
-      <H2>Step 2 — Pick a tool that preserves layout</H2>
-
-      <p>
-        For textbooks specifically, layout-preserving tools are the only
-        viable option. The tools worth considering:
-      </p>
-
-      <H3>Translify (recommended for study)</H3>
-
-      <p>
-        Translation + a full reading experience: chat with the textbook,
-        highlight-to-ask, quiz mode. Best for actually <em>studying</em> from
-        the translated book, not just reading it through. Free 14-day trial.
-        See the{" "}
-        <Link href="/languages" className="underline decoration-[color:var(--color-saffron)]">
-          full language pair list
-        </Link>
-        .
-      </p>
-
-      <H3>DeepL Pro (recommended for pure translation)</H3>
-
-      <p>
-        Highest raw translation quality for European languages. Document
-        translation preserves formatting. Gives you a translated file — you
-        do the studying elsewhere. $8.74/mo for unlimited.
-      </p>
-
-      <H3>BookTranslate.ai (recommended for very long books)</H3>
-
-      <p>
-        Multi-pass translation: a first pass for accuracy, a second pass for
-        consistency across chapters. Worth the slower speed for books over
-        500 pages where terminology drift is a real problem. $0.005–0.01 per
-        page.
-      </p>
-
-      <H3>Immersive Translate (recommended for everyday + books)</H3>
-
-      <p>
-        Bilingual side-by-side display. Browser-based. $9.99/mo. If you also
-        translate web pages and videos, this is the convenient single-tool
-        option.
+        Translation quality starts at the source. Garbage in, garbage out
+        applies harder here than in most places because errors at the OCR
+        layer propagate into the translation, and then into your reading,
+        and you'll never know whether the weird phrasing was the author or
+        the pipeline.
       </p>
 
       <p>
-        Avoid for textbooks: Google Translate's free document tier (reflows
-        text and loses layout), older OCR-based translators (often mangle
-        equations), tools that don't explicitly preserve footnotes and
-        figures.
+        EPUB is better than PDF when you have the choice. EPUB stores text
+        as actual text, with structural metadata for chapters, sections,
+        and footnotes that translation tools can work with directly.
+        Modern textbook PDFs (anything published in the last ten years or
+        so) embed their text and extract cleanly too. The trouble starts
+        with scanned PDFs — books that are essentially photographs of pages
+        rather than searchable documents. Those need an OCR pass before
+        translation, and the OCR quality determines everything downstream.
       </p>
-
-      <H2>Step 3 — Configure the translation</H2>
 
       <p>
-        Before you click translate, take 60 seconds to set up correctly.
+        Quick test: open your PDF and try to select a sentence with your
+        cursor. If you can highlight it as text, you're fine. If your cursor
+        draws a selection box but no text gets highlighted, it's a scan —
+        OCR it first. Most modern tools (Translify included) do this
+        automatically; if you're doing it yourself, Adobe Acrobat, ABBYY
+        FineReader, and Tesseract all work, and 300 DPI is the minimum
+        scan resolution worth bothering with.
       </p>
 
-      <H3>Choose target language carefully</H3>
+      <H2>Pick a tool that actually preserves layout</H2>
 
       <p>
-        Pick the language you read most fluently — not necessarily your
-        native language. If you grew up in Brazil but studied in the US and
-        now read English faster than Portuguese, translate to English. The
-        goal is comprehension speed, not nostalgia.
+        For a textbook specifically — not a novel, not an essay collection,
+        a textbook with figures and equations and footnotes — layout
+        preservation isn't a nice-to-have. It's the only thing that
+        matters between &ldquo;I can study from this&rdquo; and &ldquo;I
+        give up after three chapters.&rdquo;
       </p>
-
-      <H3>Pick the right translation engine for the language pair</H3>
 
       <p>
-        Quality varies significantly by source-target combination:
+        The shortlist is small. <strong>Translify</strong> if you want the
+        translation plus the reading experience around it — chat with the
+        book, highlight-to-ask, quiz mode. <strong>DeepL Pro</strong> if
+        you want the highest raw translation quality for European
+        languages and you'll do your reading and studying elsewhere — its
+        Document Translator preserves formatting cleanly and the European
+        pairs are best-in-class. <strong>BookTranslate.ai</strong> is
+        worth a look for books over 500 pages where terminology drift
+        between chapters becomes a real problem; their multi-pass mode is
+        slower but more consistent. <strong>Immersive Translate</strong>
+        if you also translate web pages and videos and you want one tool
+        that does all of it.
       </p>
-
-      <ul className="list-disc space-y-2 pl-6">
-        <li><strong>European pairs (EN ↔ DE/FR/ES/IT/PT/NL):</strong> DeepL is best, Claude is close.</li>
-        <li><strong>CJK (Chinese/Japanese/Korean) ↔ EN:</strong> Claude or GPT-4o; DeepL handles JA but is weaker for ZH and KO.</li>
-        <li><strong>Arabic ↔ EN:</strong> Claude and GPT-4o; Google's NMT is decent. DeepL doesn't support Arabic.</li>
-        <li><strong>Less common pairs (Indonesian, Malay, Vietnamese, Turkish to EN):</strong> Claude and Google are reliable. DeepL coverage varies.</li>
-      </ul>
 
       <p>
-        Translify automatically picks the best engine per pair, but if you're
-        using a tool with engine choice, pick consciously.
+        What to avoid: Google Translate's free document tier (reflows
+        everything, loses your layout), older OCR-and-translate
+        combos (they routinely mangle equations into nonsense by trying
+        to OCR them as text), and anything that doesn't explicitly
+        promise to preserve footnotes and figures. You'll waste an evening
+        finding out the hard way.
       </p>
 
-      <H3>Set glossary terms if your tool supports it</H3>
+      <H2>Take a minute on the settings</H2>
 
       <p>
-        Textbooks are full of terms-of-art the translator must render
-        consistently. DeepL Pro lets you upload a glossary. Translify lets
-        you set author-specific term preferences. If you're translating a
-        linear algebra textbook, telling the tool that "Eigenwert" should
-        always be "eigenvalue" (not "characteristic value" or "proper
-        value") prevents 200 inconsistencies.
+        Before you click translate, two things to think about.
       </p>
-
-      <H2>Step 4 — Translate and verify</H2>
 
       <p>
-        Upload, wait 5–30 minutes depending on tool and book length, get the
-        translated file. Before you commit to studying from it, verify three
-        things:
+        First, your target language. Pick the one you read most fluently,
+        which isn't necessarily your native language. If you grew up in
+        Brazil but studied at MIT and now read English faster than
+        Portuguese, translate to English. The point is comprehension
+        speed, not nostalgia. I've seen people insist on translating to
+        their native language out of principle and then read slower than
+        if they'd stuck with the original — which defeats the purpose.
       </p>
-
-      <ol className="list-decimal space-y-3 pl-6">
-        <li>
-          <strong>Spot-check three random pages.</strong> Pick page 1, the
-          middle, and a page near the end. Read them side-by-side with the
-          source. If the translation reads naturally and the technical terms
-          are correct, you're fine.
-        </li>
-        <li>
-          <strong>Check one equation-dense page.</strong> Equations should be
-          identical to the source (they're typically not translated — they're
-          preserved as images or LaTeX). Surrounding explanation text should
-          read naturally.
-        </li>
-        <li>
-          <strong>Check one footnote page.</strong> Footnote markers should
-          line up with the same paragraphs as the original. The footnote text
-          itself should be translated.
-        </li>
-      </ol>
 
       <p>
-        If any of these fail, re-translate with a different tool or engine
-        rather than studying from a flawed version.
+        Second, the translation engine matters more than people assume,
+        and it varies a lot by language pair. For European pairs (EN to
+        or from DE, FR, ES, IT, PT, NL), DeepL is the best in class and
+        Claude is close. For Chinese, Japanese, Korean to English, Claude
+        or GPT-4o win; DeepL handles Japanese decently but is weaker on
+        Chinese and Korean. Arabic to or from English is Claude or
+        GPT-4o territory — DeepL doesn't support Arabic at all. For
+        less-common pairs like Indonesian, Malay, Vietnamese, or
+        Turkish, Claude and Google are both reliable. Translify picks
+        automatically based on the pair; if your tool gives you the
+        choice, choose deliberately.
       </p>
-
-      <H2>Step 5 — Study from the translated textbook</H2>
 
       <p>
-        This is where the right tool pays for itself. Translation alone gets
-        you a readable book. Studying from it requires more.
+        One more setting worth knowing about if your tool supports it:
+        glossaries. Textbooks are full of terms-of-art that the translator
+        must render consistently across hundreds of pages. DeepL Pro lets
+        you upload a glossary. Translify lets you pin term preferences.
+        For a linear algebra textbook, telling the tool that{" "}
+        <em>Eigenwert</em> should always be &ldquo;eigenvalue&rdquo; (and
+        not &ldquo;characteristic value&rdquo; or &ldquo;proper value,&rdquo;
+        both of which are technically correct and entirely confusing if
+        used inconsistently) saves you 200 small papercuts.
       </p>
 
-      <H3>Read with the original alongside</H3>
+      <H2>Translate, then verify before you commit</H2>
 
       <p>
-        For technical material, keep the source language version accessible.
-        Translify lets you toggle between source and translation on any page;
-        with other tools you'll need to keep two windows open. When you hit a
-        concept that feels off, check the original.
+        Upload. Wait. Five to thirty minutes depending on length and tool.
+        Get the translated file. Now — before you spend the next month
+        studying from it — do three spot checks.
       </p>
-
-      <H3>Highlight and explain dense passages</H3>
 
       <p>
-        Textbook authors write densely on purpose — they're trying to
-        compress decades of thought into one paragraph. With an AI tool that
-        supports highlight-to-ask (Translify, NotebookLM), select dense
-        passages and ask "explain this in plain language using the
-        surrounding context." This is the move that makes hard textbooks
-        readable.
+        Pick a random page near the beginning, one in the middle, and one
+        toward the end. Read them side-by-side with the source. If the
+        translations read naturally and the technical terms are correct,
+        you're done. Then pick an equation-dense page; equations
+        themselves should be identical to the source (they're images or
+        LaTeX, not translated), but the surrounding explanation text
+        should read like a real sentence. Then check a footnote page —
+        footnote markers should line up with the same paragraphs as the
+        original, and the footnote text itself should actually be in your
+        target language. (Sometimes tools translate the body and forget
+        the footnotes. Worth catching now.)
       </p>
-
-      <H3>Generate chapter quizzes</H3>
 
       <p>
-        After each chapter, generate a quiz. 5–10 multiple-choice questions
-        with citations to where each answer appears. This is more useful than
-        re-reading: re-reading feels like learning; quizzing reveals what you
-        actually retained.
+        If any of those checks fail, don't try to power through. Re-translate
+        with a different tool or engine. The two hours it costs to redo
+        the translation is much cheaper than the forty hours of confusion
+        you'd get reading a bad one.
       </p>
 
-      <H3>Build a personal glossary</H3>
+      <H2>Studying from it</H2>
 
       <p>
-        Track the terms-of-art that appeared with their definitions and
-        canonical translations. By the end of the textbook you'll have your
-        own bilingual glossary of the field's vocabulary, which is worth more
-        than any single chapter.
+        Translation gets you a readable book. Studying from it requires
+        more, and this is where the right tool actually earns its place.
       </p>
-
-      <H2>Common problems and fixes</H2>
-
-      <H3>"The translation reflowed all my pages"</H3>
 
       <p>
-        You used a tool that doesn't preserve layout. Re-translate with a
-        layout-preserving tool. For textbooks, this is non-negotiable.
+        Keep the source language version accessible. Translify lets you
+        toggle on any page; with other tools you'll need a second window
+        open. You won't reach for it often — but when you hit a concept
+        that feels wrong, you want the original right there, not three
+        clicks away.
       </p>
-
-      <H3>"Footnotes ended up in the wrong place"</H3>
 
       <p>
-        Almost always an OCR-quality issue with scanned PDFs. Re-OCR at
-        higher quality (300+ DPI), or find an EPUB version of the book.
+        Use a highlight-and-ask flow on dense passages. Textbook authors
+        compress on purpose — they're trying to fit decades of thought
+        into one paragraph. Selecting a paragraph and asking the AI to
+        explain it in plain language using the surrounding chapters is
+        the single move that makes hard textbooks readable. It feels
+        like cheating the first few times. It isn't.
       </p>
-
-      <H3>"Technical terms are translated inconsistently"</H3>
 
       <p>
-        Translation tools without context windows large enough to see
-        terminology consistency. Use a tool with multi-pass translation
-        (BookTranslate.ai), or a glossary-supporting tool (DeepL Pro,
-        Translify).
+        Quiz yourself after each chapter. Five to ten multiple-choice
+        questions with citations back to the page each answer came from.
+        This is more useful than re-reading. Re-reading feels like
+        learning; quizzing reveals what you actually retained. (If your
+        tool doesn't do this, Anki works — it's just slower to set up.)
       </p>
-
-      <H3>"Equations got translated as text and now they're broken"</H3>
 
       <p>
-        A bad tool tried to OCR an equation image. Either the source PDF had
-        equations as raster images (use a different source file) or the tool
-        is mis-detecting equations as text (use a better tool).
+        And keep a glossary of the field's vocabulary as you go. By
+        chapter ten you'll have a bilingual term sheet that's more
+        valuable than any single chapter of the textbook. Eventually
+        you'll stop needing the translation altogether for that field.
+        That's the win condition.
       </p>
 
-      <H3>"The translation is good but reads stiffly"</H3>
+      <H2>Things that will go wrong, and what they mean</H2>
 
       <p>
-        Machine translation is famous for grammatically correct but
-        unnatural prose. For dense technical content this is usually fine —
-        you're reading for information, not style. For narrative passages it
-        matters more. If you need natural prose, use Claude or GPT-4o as the
-        engine; if you need raw accuracy, use DeepL.
+        <strong>Your pages got reflowed.</strong> You used the wrong tool.
+        Re-translate with one that preserves layout. There's no fix
+        downstream — this is a source-quality problem.
       </p>
 
-      <H2>The minimum viable workflow, in 5 lines</H2>
+      <p>
+        <strong>Footnotes ended up in the wrong place.</strong> Almost
+        always an OCR-quality issue from a scanned PDF. Re-OCR at higher
+        resolution, or find an EPUB version of the book if one exists.
+      </p>
 
-      <ol className="list-decimal space-y-2 pl-6">
-        <li>Get a clean PDF or EPUB. OCR scanned books before translating.</li>
-        <li>Upload to a layout-preserving tool. (Translify, BookTranslate.ai, DeepL Pro Document.)</li>
-        <li>Spot-check three random pages before committing.</li>
-        <li>Read with the original within reach for the moments that matter.</li>
-        <li>Quiz yourself after each chapter. (Or use Anki / SRS if your tool doesn't generate quizzes.)</li>
-      </ol>
+      <p>
+        <strong>Technical terms come out inconsistently from chapter to
+        chapter.</strong> Your translation tool doesn't have a large
+        enough context window to keep terminology stable across the whole
+        book. Use a multi-pass tool (BookTranslate.ai) or one that
+        supports a glossary (DeepL Pro, Translify).
+      </p>
+
+      <p>
+        <strong>Equations got translated into broken text.</strong> Your
+        tool tried to OCR an equation image and butchered it. Either the
+        source PDF stored equations as raster images (find a better
+        source) or the tool is misdetecting equations as regular text
+        (find a better tool).
+      </p>
+
+      <p>
+        <strong>The translation is technically correct but reads
+        stiffly.</strong> Machine translation has a long-standing
+        reputation for grammatical but unnatural prose. For dense
+        technical content this barely matters — you're reading for
+        information, not style. For narrative passages it matters more.
+        Claude and GPT-4o give you the most natural reading; DeepL is
+        the most accurate but sometimes wooden. Trade-off.
+      </p>
+
+      <H2>The whole thing in five lines</H2>
+
+      <p>
+        Get a clean source file (or OCR it). Pick a layout-preserving
+        tool. Take a minute on settings — target language, engine,
+        glossary. Spot-check the result before committing. Then study
+        actively: source alongside, highlight-and-ask, quiz yourself,
+        glossary as you go. That's it.
+      </p>
 
       <Quote>
         Try this with{" "}

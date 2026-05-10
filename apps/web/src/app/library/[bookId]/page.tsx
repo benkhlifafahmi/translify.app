@@ -606,9 +606,11 @@ function MobileDrawer({
         className="absolute inset-0 bg-[color:var(--color-ink)]/40 backdrop-blur-[1.5px]"
       />
 
-      {/* Sheet */}
+      {/* Sheet — explicit height so inner scrollables get a defined viewport.
+          Using max-h alone leaves the height undefined when content overflows,
+          which breaks flex-1 + overflow-y-auto inside the panels. */}
       <div
-        className={`absolute inset-x-0 bottom-0 flex max-h-[88dvh] flex-col rounded-t-3xl bg-[color:var(--color-paper)] shadow-[0_-12px_40px_-12px_rgba(20,16,8,0.4)] transition-transform duration-300 ${
+        className={`absolute inset-x-0 bottom-0 flex h-[88dvh] flex-col rounded-t-3xl bg-[color:var(--color-paper)] shadow-[0_-12px_40px_-12px_rgba(20,16,8,0.4)] transition-transform duration-300 ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0px)" }}
@@ -618,10 +620,10 @@ function MobileDrawer({
       >
         {/* Tone bar — a saturated stripe along the top of the sheet,
             echoing the "paper tabs" so the user knows which one they opened */}
-        <span aria-hidden className={`h-1 w-full rounded-t-3xl ${toneBar} opacity-90`} />
+        <span aria-hidden className={`h-1 w-full shrink-0 rounded-t-3xl ${toneBar} opacity-90`} />
 
         {/* Drag handle */}
-        <div className="flex justify-center pb-1 pt-2">
+        <div className="flex shrink-0 justify-center pb-1 pt-2">
           <span aria-hidden className="h-1 w-10 rounded-full bg-[color:var(--color-border-strong)]/70" />
         </div>
 
@@ -642,8 +644,10 @@ function MobileDrawer({
           </button>
         </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-hidden">
+        {/* Body — min-h-0 is the magic that lets flex-1 + overflow-y-auto
+            inside the panel actually clip and scroll instead of growing to
+            fit content. */}
+        <div className="min-h-0 flex-1 overflow-hidden">
           {children}
         </div>
       </div>

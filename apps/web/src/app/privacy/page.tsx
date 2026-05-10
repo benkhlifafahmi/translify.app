@@ -24,15 +24,19 @@ export default function PrivacyPage() {
       lastUpdated={UPDATED}
     >
       <p>
-        Translify is operated by the Translify team. We take your privacy
-        seriously. This policy explains what data we collect, why, who we
-        share it with, and what you can do about it.
+        Privacy policies tend to be the part of a service where companies
+        say one thing and do another. We've tried to write ours so the
+        things we promise here are actually the things we do, and so a
+        normal person can read it without a law degree. If we ever break
+        one of these commitments, please write to us — we'd rather hear
+        about it from you than from a regulator.
       </p>
 
       <p>
-        If you only read one section: <strong>your uploaded books are
-        encrypted at rest, never used to train AI models, and permanently
-        deletable at any time.</strong>
+        If you only read one paragraph, make it this one:{" "}
+        <strong>the books you upload are encrypted at rest, never used
+        to train any AI model, and permanently deletable at any time.</strong>{" "}
+        The rest of this page is the longer version.
       </p>
 
       <H2>1. What we collect</H2>

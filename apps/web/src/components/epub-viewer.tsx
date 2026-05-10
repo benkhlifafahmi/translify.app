@@ -539,6 +539,7 @@ export function EpubViewer({
             className="absolute z-30 -translate-x-1/2 -translate-y-full"
             style={{ top: selection.top, left: selection.left }}
             onMouseDown={(e) => e.preventDefault()}
+            onTouchStart={(e) => e.preventDefault()}
           >
             <div className="translify-paper-slip">
               <ToolbarBtn onClick={() => fireAction("save")} label="Highlight" tone="saffron"
@@ -823,17 +824,19 @@ function ToolbarBtn({
   onClick, label, icon, tone,
 }: { onClick: () => void; label: string; icon: React.ReactNode; tone: "saffron" | "sage" | "coral" }) {
   const toneClass = {
-    saffron: "text-[color:var(--color-saffron-deep)] hover:bg-[color:var(--color-saffron)]/15",
-    sage: "text-[color:var(--color-sage-deep)] hover:bg-[color:var(--color-sage)]/15",
-    coral: "text-[color:var(--color-coral-deep)] hover:bg-[color:var(--color-coral)]/15",
+    saffron: "text-[color:var(--color-saffron-deep)] hover:bg-[color:var(--color-saffron)]/15 active:bg-[color:var(--color-saffron)]/25",
+    sage: "text-[color:var(--color-sage-deep)] hover:bg-[color:var(--color-sage)]/15 active:bg-[color:var(--color-sage)]/25",
+    coral: "text-[color:var(--color-coral-deep)] hover:bg-[color:var(--color-coral)]/15 active:bg-[color:var(--color-coral)]/25",
   }[tone];
   return (
     <button
       type="button"
       onClick={onClick}
+      onMouseDown={(e) => e.preventDefault()}
+      onTouchStart={(e) => e.preventDefault()}
       aria-label={label}
       title={label}
-      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors ${toneClass}`}
+      className={`flex min-h-[40px] touch-manipulation items-center gap-1.5 rounded-md px-3.5 py-2 text-[12px] font-semibold transition-colors sm:min-h-0 sm:px-2.5 sm:py-1 sm:text-[11px] ${toneClass}`}
     >
       {icon}
       <span>{label}</span>

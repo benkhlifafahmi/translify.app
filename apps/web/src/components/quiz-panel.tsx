@@ -193,7 +193,7 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <ol className="flex flex-col gap-5">
           {quiz.questions.map((q, i) => (
             <li key={q.id} className="card-paper p-4">
@@ -307,7 +307,7 @@ function ResultsView({
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <ol className="flex flex-col gap-3">
           {quiz.questions.map((q, i) => {
             const r = attempt.results.find((x) => x.question_id === q.id);
