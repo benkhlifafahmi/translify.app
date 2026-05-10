@@ -338,6 +338,62 @@ export const id: Dict = {
   "ob.s5.trust.secure": "Checkout aman",
   "ob.s5.join": "Gabung 42.000+ pembaca yang menyelesaikan bukunya.",
   "ob.error.register": "Pendaftaran gagal. Silakan coba lagi.",
+
+  // App — book detail
+  "book.opening": "Membuka buku…",
+  "book.notFound": "Buku tidak ditemukan.",
+  "book.backToLibrary": "Kembali ke perpustakaan",
+  "book.processing.title": "Membaca bukumu…",
+  "book.processing.body": "Kami mencatat setiap halaman supaya obrolan dan kuis bekerja dengan baik. Buku besar perlu beberapa menit.",
+  "book.failed.title": "Ada kendala.",
+
+  // App — tabs + drawer
+  "app.tab.chat": "Obrolan",
+  "app.tab.notes": "Catatan",
+  "app.tab.quiz": "Kuis",
+  "app.tab.translate": "Terjemah",
+
+  // App — notes / highlights panel
+  "notes.empty.title": "Sorot untuk diingat.",
+  "notes.empty.body": "Pilih teks mana pun di buku untuk menyimpannya, menambahkan catatan, atau meminta AI menjelaskan. Sorotanmu tersimpan di sini dan di raknya.",
+  "notes.loading": "Memuat catatan…",
+  "notes.addNote": "+ Tambah catatan",
+  "notes.notePlaceholder": "Tulis catatan tentang bagian ini…",
+  "notes.saveNote": "Simpan",
+  "notes.saving": "Menyimpan…",
+  "notes.saveError": "Tidak bisa menyimpan catatan",
+  "notes.cancel": "Batal",
+  "notes.askAiCta": "Tanya AI tentang bagian ini",
+  "notes.askPlaceholder": "Apa yang ingin kamu ketahui tentang bagian ini? (kosongkan untuk minta penjelasan singkat)",
+  "notes.askSubmit": "Tanya AI →",
+  "notes.thinking": "Memikirkan…",
+  "notes.askAgain": "tanya lagi",
+  "notes.askAgainPending": "bertanya…",
+  "notes.aiQuestion": "AI · pertanyaanmu",
+  "notes.aiExplanation": "AI · penjelasan",
+  "notes.flipping": "membalik-balik halaman untuk konteks…",
+  "notes.deleteConfirm": "Hapus sorotan ini?",
+
+  // App — quiz panel
+  "quiz.empty.title": "Siap kuis?",
+  "quiz.empty.body": "Kami akan menulis pertanyaan baru dari buku ini. Tanpa menengok lagi — kecuali kamu mau.",
+  "quiz.howMany": "Berapa pertanyaan?",
+  "quiz.make": "Buat kuisku",
+  "quiz.capReached": "Batas kuis tercapai",
+  "quiz.writing": "Menulis kuismu…",
+  "quiz.forThisBook": "kuis untuk buku ini",
+  "quiz.yours": "Kuismu",
+  "quiz.retake": "Ulangi →",
+  "quiz.makeNew": "Buat yang baru",
+  "quiz.rateLimited": "Penyedia AI sedang sibuk. Tunggu sekitar satu menit lalu coba lagi — kuismu yang sudah ada masih bisa diulang.",
+  "quiz.check": "Periksa jawabanku ✓",
+  "quiz.pickMore": "Pilih %n% lagi",
+  "quiz.checking": "Memeriksa…",
+
+  // App — viewer toolbar (PDF + EPUB)
+  "viewer.highlight": "Sorot",
+  "viewer.addNote": "Tambah catatan",
+  "viewer.askAi": "Tanya AI",
 };
 
 export const idTestimonials: Testimonial[] = [

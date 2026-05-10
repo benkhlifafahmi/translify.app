@@ -338,6 +338,62 @@ export const fr: Dict = {
   "ob.s5.trust.secure": "Paiement sécurisé",
   "ob.s5.join": "Rejoignez 42 000+ lecteurs qui ont fini le livre.",
   "ob.error.register": "L'inscription a échoué. Veuillez réessayer.",
+
+  // App — book detail
+  "book.opening": "Ouverture du livre…",
+  "book.notFound": "Livre introuvable.",
+  "book.backToLibrary": "Retour à la bibliothèque",
+  "book.processing.title": "Lecture de votre livre…",
+  "book.processing.body": "Nous prenons note de chaque page pour que le chat et les quiz fonctionnent au mieux. Les gros livres prennent quelques minutes.",
+  "book.failed.title": "Un petit accroc.",
+
+  // App — tabs + drawer
+  "app.tab.chat": "Chat",
+  "app.tab.notes": "Notes",
+  "app.tab.quiz": "Quiz",
+  "app.tab.translate": "Traduire",
+
+  // App — notes / highlights panel
+  "notes.empty.title": "Surligner pour retenir.",
+  "notes.empty.body": "Sélectionnez n'importe quel texte du livre pour l'enregistrer, prendre une note, ou demander à l'IA d'expliquer. Vos surlignages vivent ici et sur votre étagère.",
+  "notes.loading": "Chargement des notes…",
+  "notes.addNote": "+ Ajouter une note",
+  "notes.notePlaceholder": "Écrivez une note sur ce passage…",
+  "notes.saveNote": "Enregistrer",
+  "notes.saving": "Enregistrement…",
+  "notes.saveError": "Impossible d'enregistrer la note",
+  "notes.cancel": "Annuler",
+  "notes.askAiCta": "Demander à l'IA sur ce passage",
+  "notes.askPlaceholder": "Que souhaitez-vous savoir sur ce passage ? (laissez vide pour simplement l'expliquer)",
+  "notes.askSubmit": "Demander à l'IA →",
+  "notes.thinking": "Réflexion…",
+  "notes.askAgain": "redemander",
+  "notes.askAgainPending": "en cours…",
+  "notes.aiQuestion": "IA · votre question",
+  "notes.aiExplanation": "IA · explication",
+  "notes.flipping": "feuilletage des pages pour le contexte…",
+  "notes.deleteConfirm": "Supprimer ce surlignage ?",
+
+  // App — quiz panel
+  "quiz.empty.title": "Prêt pour un quiz ?",
+  "quiz.empty.body": "Nous écrirons de nouvelles questions à partir de ce livre. Pas de retour en arrière — sauf si vous le souhaitez.",
+  "quiz.howMany": "Combien de questions ?",
+  "quiz.make": "Créer mon quiz",
+  "quiz.capReached": "Limite de quiz atteinte",
+  "quiz.writing": "Rédaction de votre quiz…",
+  "quiz.forThisBook": "quiz pour ce livre",
+  "quiz.yours": "Vos quiz",
+  "quiz.retake": "Recommencer →",
+  "quiz.makeNew": "En générer un nouveau",
+  "quiz.rateLimited": "Le fournisseur IA est à pleine capacité. Patientez une minute et réessayez — vos quiz existants restent disponibles.",
+  "quiz.check": "Vérifier mes réponses ✓",
+  "quiz.pickMore": "Choisissez encore %n%",
+  "quiz.checking": "Vérification…",
+
+  // App — viewer toolbar (PDF + EPUB)
+  "viewer.highlight": "Surligner",
+  "viewer.addNote": "Ajouter une note",
+  "viewer.askAi": "Demander à l'IA",
 };
 
 export const frTestimonials: Testimonial[] = [

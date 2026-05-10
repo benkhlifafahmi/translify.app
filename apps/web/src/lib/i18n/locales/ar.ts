@@ -337,6 +337,62 @@ export const ar: Dict = {
   "ob.s5.trust.secure": "دفع آمن",
   "ob.s5.join": "انضم إلى أكثر من 42,000 قارئ أنهوا الكتاب.",
   "ob.error.register": "فشل التسجيل. يُرجى المحاولة مرة أخرى.",
+
+  // App — book detail
+  "book.opening": "جارٍ فتح الكتاب…",
+  "book.notFound": "الكتاب غير موجود.",
+  "book.backToLibrary": "العودة إلى المكتبة",
+  "book.processing.title": "نقرأ كتابك…",
+  "book.processing.body": "نأخذ ملاحظات على كل صفحة لتعمل المحادثة والاختبارات بأفضل شكل. الكتب الكبيرة تستغرق بضع دقائق.",
+  "book.failed.title": "واجهنا مشكلة.",
+
+  // App — tabs + drawer
+  "app.tab.chat": "محادثة",
+  "app.tab.notes": "ملاحظات",
+  "app.tab.quiz": "اختبار",
+  "app.tab.translate": "ترجمة",
+
+  // App — notes / highlights panel
+  "notes.empty.title": "ظلّل لتتذكّر.",
+  "notes.empty.body": "حدّد أي نص في الكتاب لحفظه أو إضافة ملاحظة أو طلب شرح من الذكاء الاصطناعي. تظهر تظليلاتك هنا وفي مكتبتك.",
+  "notes.loading": "جارٍ تحميل الملاحظات…",
+  "notes.addNote": "+ إضافة ملاحظة",
+  "notes.notePlaceholder": "اكتب ملاحظة عن هذا المقطع…",
+  "notes.saveNote": "حفظ",
+  "notes.saving": "جارٍ الحفظ…",
+  "notes.saveError": "تعذّر حفظ الملاحظة",
+  "notes.cancel": "إلغاء",
+  "notes.askAiCta": "اسأل الذكاء الاصطناعي عن هذا المقطع",
+  "notes.askPlaceholder": "ماذا تريد أن تعرف عن هذا المقطع؟ (اتركه فارغًا للحصول على شرح عام)",
+  "notes.askSubmit": "اسأل الذكاء الاصطناعي →",
+  "notes.thinking": "جارٍ التفكير…",
+  "notes.askAgain": "اسأل مرة أخرى",
+  "notes.askAgainPending": "جارٍ السؤال…",
+  "notes.aiQuestion": "الذكاء الاصطناعي · سؤالك",
+  "notes.aiExplanation": "الذكاء الاصطناعي · شرح",
+  "notes.flipping": "نقلّب الصفحات بحثًا عن السياق…",
+  "notes.deleteConfirm": "حذف هذا التظليل؟",
+
+  // App — quiz panel
+  "quiz.empty.title": "مستعدّ لاختبار؟",
+  "quiz.empty.body": "سنكتب أسئلة جديدة من هذا الكتاب. بلا مراجعة سابقة — إلا إذا أردت.",
+  "quiz.howMany": "كم سؤالًا؟",
+  "quiz.make": "أنشئ اختباري",
+  "quiz.capReached": "تم بلوغ حد الاختبارات",
+  "quiz.writing": "نكتب اختبارك…",
+  "quiz.forThisBook": "اختبارات لهذا الكتاب",
+  "quiz.yours": "اختباراتك",
+  "quiz.retake": "إعادة →",
+  "quiz.makeNew": "أنشئ اختبارًا جديدًا",
+  "quiz.rateLimited": "موفّر الذكاء الاصطناعي مشغول الآن. انتظر دقيقة وحاول مرة أخرى — اختباراتك السابقة لا تزال متاحة.",
+  "quiz.check": "تحقق من إجاباتي ✓",
+  "quiz.pickMore": "اختر %n% أخرى",
+  "quiz.checking": "جارٍ التحقق…",
+
+  // App — viewer toolbar (PDF + EPUB)
+  "viewer.highlight": "تظليل",
+  "viewer.addNote": "إضافة ملاحظة",
+  "viewer.askAi": "اسأل الذكاء الاصطناعي",
 };
 
 // Locale-native testimonials with regional Arabic dialects:

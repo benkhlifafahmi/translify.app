@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import { useI18n } from "@/lib/i18n";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -58,6 +59,7 @@ export function PdfViewer({
   onClickSavedHighlight,
   goToPage,
 }: Props) {
+  const { t } = useI18n();
   const [numPages, setNumPages] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [width, setWidth] = useState(720);
@@ -349,7 +351,7 @@ export function PdfViewer({
             <div className="flex items-center gap-1 rounded-full border border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)] px-1.5 py-1 shadow-[var(--shadow-paper-lg)]">
               <ToolbarButton
                 onClick={() => triggerAction("save")}
-                label="Highlight"
+                label={t("viewer.highlight")}
                 tone="saffron"
                 icon={
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -361,7 +363,7 @@ export function PdfViewer({
               />
               <ToolbarButton
                 onClick={() => triggerAction("note")}
-                label="Add note"
+                label={t("viewer.addNote")}
                 tone="sage"
                 icon={
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -372,7 +374,7 @@ export function PdfViewer({
               />
               <ToolbarButton
                 onClick={() => triggerAction("ask-ai")}
-                label="Ask AI"
+                label={t("viewer.askAi")}
                 tone="coral"
                 icon={
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

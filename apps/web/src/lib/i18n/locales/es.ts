@@ -338,6 +338,62 @@ export const es: Dict = {
   "ob.s5.trust.secure": "Pago seguro",
   "ob.s5.join": "Únete a más de 42.000 lectores que terminaron el libro.",
   "ob.error.register": "Error en el registro. Inténtalo de nuevo.",
+
+  // App — book detail
+  "book.opening": "Abriendo el libro…",
+  "book.notFound": "Libro no encontrado.",
+  "book.backToLibrary": "Volver a la biblioteca",
+  "book.processing.title": "Leyendo tu libro…",
+  "book.processing.body": "Estamos tomando nota de cada página para que el chat y los quizzes funcionen bien. Los libros grandes tardan unos minutos.",
+  "book.failed.title": "Hemos tropezado.",
+
+  // App — tabs + drawer
+  "app.tab.chat": "Chat",
+  "app.tab.notes": "Notas",
+  "app.tab.quiz": "Quiz",
+  "app.tab.translate": "Traducir",
+
+  // App — notes / highlights panel
+  "notes.empty.title": "Resalta para recordar.",
+  "notes.empty.body": "Selecciona cualquier texto del libro para guardarlo, añadir una nota, o pedirle a la IA que lo explique. Tus resaltes viven aquí y en tu estantería.",
+  "notes.loading": "Cargando notas…",
+  "notes.addNote": "+ Añadir una nota",
+  "notes.notePlaceholder": "Escribe una nota sobre este pasaje…",
+  "notes.saveNote": "Guardar",
+  "notes.saving": "Guardando…",
+  "notes.saveError": "No se pudo guardar la nota",
+  "notes.cancel": "Cancelar",
+  "notes.askAiCta": "Pregúntale a la IA sobre este pasaje",
+  "notes.askPlaceholder": "¿Qué quieres saber sobre este pasaje? (déjalo en blanco para que simplemente lo explique)",
+  "notes.askSubmit": "Preguntar a la IA →",
+  "notes.thinking": "Pensando…",
+  "notes.askAgain": "preguntar de nuevo",
+  "notes.askAgainPending": "preguntando…",
+  "notes.aiQuestion": "IA · tu pregunta",
+  "notes.aiExplanation": "IA · explicación",
+  "notes.flipping": "pasando páginas en busca de contexto…",
+  "notes.deleteConfirm": "¿Eliminar este resaltado?",
+
+  // App — quiz panel
+  "quiz.empty.title": "¿Listo para un quiz?",
+  "quiz.empty.body": "Escribiremos preguntas nuevas a partir de este libro. Sin mirar atrás — a menos que quieras.",
+  "quiz.howMany": "¿Cuántas preguntas?",
+  "quiz.make": "Crear mi quiz",
+  "quiz.capReached": "Límite de quizzes alcanzado",
+  "quiz.writing": "Escribiendo tu quiz…",
+  "quiz.forThisBook": "quizzes para este libro",
+  "quiz.yours": "Tus quizzes",
+  "quiz.retake": "Repetir →",
+  "quiz.makeNew": "Generar uno nuevo",
+  "quiz.rateLimited": "El proveedor de IA está a plena capacidad. Espera un minuto y vuelve a intentarlo — tus quizzes existentes siguen disponibles.",
+  "quiz.check": "Comprobar mis respuestas ✓",
+  "quiz.pickMore": "Elige %n% más",
+  "quiz.checking": "Comprobando…",
+
+  // App — viewer toolbar (PDF + EPUB)
+  "viewer.highlight": "Resaltar",
+  "viewer.addNote": "Añadir nota",
+  "viewer.askAi": "Preguntar a la IA",
 };
 
 export const esTestimonials: Testimonial[] = [

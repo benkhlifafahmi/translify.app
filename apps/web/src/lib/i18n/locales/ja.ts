@@ -337,6 +337,62 @@ export const ja: Dict = {
   "ob.s5.trust.secure": "安全なお会計",
   "ob.s5.join": "本を読み終えた42,000人以上の読者の仲間入り。",
   "ob.error.register": "登録に失敗しました。もう一度お試しください。",
+
+  // App — book detail
+  "book.opening": "本を開いています…",
+  "book.notFound": "本が見つかりません。",
+  "book.backToLibrary": "ライブラリへ戻る",
+  "book.processing.title": "本を読み込んでいます…",
+  "book.processing.body": "チャットやクイズが万全に機能するよう、すべてのページを取り込み中です。大きな本は数分かかります。",
+  "book.failed.title": "問題が発生しました。",
+
+  // App — tabs + drawer
+  "app.tab.chat": "チャット",
+  "app.tab.notes": "ノート",
+  "app.tab.quiz": "クイズ",
+  "app.tab.translate": "翻訳",
+
+  // App — notes / highlights panel
+  "notes.empty.title": "ハイライトして覚えよう。",
+  "notes.empty.body": "本のどんな文章でも選択して、保存・ノート追加・AIに説明を依頼できます。ハイライトはここと本棚に保存されます。",
+  "notes.loading": "ノートを読み込み中…",
+  "notes.addNote": "+ ノートを追加",
+  "notes.notePlaceholder": "この一節についてメモを書いてください…",
+  "notes.saveNote": "保存",
+  "notes.saving": "保存中…",
+  "notes.saveError": "ノートを保存できませんでした",
+  "notes.cancel": "キャンセル",
+  "notes.askAiCta": "この一節についてAIに尋ねる",
+  "notes.askPlaceholder": "この一節について何を知りたいですか？(空欄なら一般的な解説を表示)",
+  "notes.askSubmit": "AIに聞く →",
+  "notes.thinking": "考え中…",
+  "notes.askAgain": "もう一度聞く",
+  "notes.askAgainPending": "確認中…",
+  "notes.aiQuestion": "AI · あなたの質問",
+  "notes.aiExplanation": "AI · 解説",
+  "notes.flipping": "文脈を探してページをめくっています…",
+  "notes.deleteConfirm": "このハイライトを削除しますか？",
+
+  // App — quiz panel
+  "quiz.empty.title": "クイズに挑戦?",
+  "quiz.empty.body": "この本から新しい問題を作ります。振り返りなし — 必要なら見直してOK。",
+  "quiz.howMany": "問題数は？",
+  "quiz.make": "クイズを作る",
+  "quiz.capReached": "クイズの上限に達しました",
+  "quiz.writing": "クイズを作成中…",
+  "quiz.forThisBook": "この本のクイズ",
+  "quiz.yours": "あなたのクイズ",
+  "quiz.retake": "もう一度 →",
+  "quiz.makeNew": "新しく作成",
+  "quiz.rateLimited": "AIプロバイダーが混み合っています。1分ほど待ってからもう一度お試しください — 既存のクイズはそのまま利用できます。",
+  "quiz.check": "答え合わせ ✓",
+  "quiz.pickMore": "あと%n%問選ぶ",
+  "quiz.checking": "確認中…",
+
+  // App — viewer toolbar (PDF + EPUB)
+  "viewer.highlight": "ハイライト",
+  "viewer.addNote": "ノート追加",
+  "viewer.askAi": "AIに聞く",
 };
 
 export const jaTestimonials: Testimonial[] = [

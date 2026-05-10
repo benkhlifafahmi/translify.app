@@ -16,6 +16,7 @@ import { ApiError } from "@/lib/api";
 import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
 import { parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   bookId: string;
@@ -24,6 +25,7 @@ interface Props {
 
 export function QuizPanel({ bookId, selectedTranslationId }: Props) {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [attempt, setAttempt] = useState<QuizAttempt | null>(null);
@@ -121,7 +123,7 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
           <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-5">
             <div className="mb-3 flex items-center justify-between gap-2">
               <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-                Your quizzes
+                {t("quiz.yours")}
               </h3>
               {sub && (
                 <span className="rounded-full bg-[color:var(--color-paper-3)] px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[color:var(--color-ink-soft)]">
@@ -157,7 +159,7 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
                       </span>
                     </span>
                     <span className="shrink-0 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-ink-soft)] transition-colors group-hover:text-[color:var(--color-coral-deep)]">
-                      Retake →
+                      {t("quiz.retake")}
                     </span>
                   </button>
                 </li>
@@ -169,7 +171,7 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
             <div className="mt-6 rounded-2xl border-[1.5px] border-dashed border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40 p-4">
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[color:var(--color-ink-soft)]">
-                  Generate a new one
+                  {t("quiz.makeNew")}
                 </p>
                 <div className="flex gap-1">
                   {[5, 8, 12].map((n) => (
@@ -196,10 +198,10 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
                 disabled={generate.isPending || atLimit}
               >
                 {generate.isPending
-                  ? "Writing your quiz…"
+                  ? t("quiz.writing")
                   : atLimit
-                    ? "Quiz cap reached"
-                    : `Make a ${count}-question quiz`}
+                    ? t("quiz.capReached")
+                    : t("quiz.make")}
               </Button>
               {renderGenerateError({ generateError, rateLimited, error: generate.error })}
             </div>
@@ -216,11 +218,10 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
             </div>
             <div>
               <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">
-                Ready for a quiz?
+                {t("quiz.empty.title")}
               </h3>
               <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
-                We'll write fresh questions from this book. No looking back —
-                unless you want to.
+                {t("quiz.empty.body")}
               </p>
             </div>
 
@@ -231,13 +232,13 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
                   <span className="opacity-50"> / </span>
                   {unlimited ? "∞" : limit}
                 </span>{" "}
-                quizzes for this book
+                {t("quiz.forThisBook")}
               </p>
             )}
 
             <div className="flex flex-col items-center gap-2">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-                How many questions?
+                {t("quiz.howMany")}
               </p>
               <div className="flex gap-1.5">
                 {[5, 8, 12].map((n) => (
@@ -264,10 +265,10 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
               disabled={generate.isPending || atLimit}
             >
               {generate.isPending
-                ? "Writing your quiz…"
+                ? t("quiz.writing")
                 : atLimit
-                  ? "Quiz cap reached"
-                  : "Make my quiz"}
+                  ? t("quiz.capReached")
+                  : t("quiz.make")}
             </Button>
 
             {renderGenerateError({ generateError, rateLimited, error: generate.error })}
@@ -399,7 +400,7 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
           onClick={() => submit.mutate()}
           disabled={!allAnswered || submit.isPending}
         >
-          {submit.isPending ? "Checking…" : allAnswered ? "Check my answers ✓" : `Pick ${quiz.questions.length - answeredCount} more`}
+          {submit.isPending ? t("quiz.checking") : allAnswered ? t("quiz.check") : t("quiz.pickMore").replace("%n%", String(quiz.questions.length - answeredCount))}
         </Button>
       </div>
       {submit.isError && (
@@ -434,10 +435,7 @@ function renderGenerateError({
   }
   if (rateLimited) {
     return (
-      <p className="mt-3 max-w-xs rounded-lg bg-[color:var(--color-saffron)]/12 px-3 py-2 text-xs text-[color:var(--color-saffron-deep)]">
-        The AI provider is at capacity right now. Wait about a minute and
-        try again — your existing quizzes are still here to retake.
-      </p>
+      <RateLimitedNotice />
     );
   }
   if (error) {
@@ -450,6 +448,15 @@ function renderGenerateError({
     );
   }
   return null;
+}
+
+function RateLimitedNotice() {
+  const { t } = useI18n();
+  return (
+    <p className="mt-3 max-w-xs rounded-lg bg-[color:var(--color-saffron)]/12 px-3 py-2 text-xs text-[color:var(--color-saffron-deep)]">
+      {t("quiz.rateLimited")}
+    </p>
+  );
 }
 
 function formatRelative(iso: string): string {

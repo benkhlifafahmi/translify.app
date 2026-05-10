@@ -13,6 +13,7 @@ import { getToken } from "@/lib/api";
 import { PdfViewer } from "@/components/pdf-viewer-lazy";
 import { EpubViewer } from "@/components/epub-viewer-lazy";
 import { TranslifyIcon } from "@/components/translify-mark";
+import { useI18n } from "@/lib/i18n";
 import { TranslatePanel } from "@/components/translate-panel";
 import { ChatPanel } from "@/components/chat-panel";
 import { QuizPanel } from "@/components/quiz-panel";
@@ -45,6 +46,7 @@ export default function BookDetailPage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [selectedTranslationId, setSelectedTranslationId] = useState<string | null>(null);
   const [rightTab, setRightTab] = useState<RightTab>("chat");
@@ -164,7 +166,7 @@ export default function BookDetailPage({
   if (!mounted || isLoading) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-10">
-        <p className="text-[color:var(--color-ink-soft)]">Opening book…</p>
+        <p className="text-[color:var(--color-ink-soft)]">{t("book.opening")}</p>
       </main>
     );
   }
@@ -176,9 +178,9 @@ export default function BookDetailPage({
           href="/library"
           className="text-sm font-semibold text-[color:var(--color-ink-soft)] underline decoration-[color:var(--color-saffron)]"
         >
-          ← Back to library
+          ← {t("book.backToLibrary")}
         </Link>
-        <p className="mt-6 text-[color:var(--color-destructive)]">Book not found.</p>
+        <p className="mt-6 text-[color:var(--color-destructive)]">{t("book.notFound")}</p>
       </main>
     );
   }
@@ -291,21 +293,21 @@ export default function BookDetailPage({
                   onClick={() => setRightTab("chat")}
                   tone="sage"
                   icon="💬"
-                  label="Chat"
+                  label={t("app.tab.chat")}
                 />
                 <TabPill
                   active={rightTab === "notes"}
                   onClick={() => setRightTab("notes")}
                   tone="saffron"
                   icon="✎"
-                  label={highlights.length > 0 ? `Notes (${highlights.length})` : "Notes"}
+                  label={highlights.length > 0 ? `${t("app.tab.notes")} (${highlights.length})` : t("app.tab.notes")}
                 />
                 <TabPill
                   active={rightTab === "quiz"}
                   onClick={() => setRightTab("quiz")}
                   tone="coral"
                   icon="★"
-                  label="Quiz"
+                  label={t("app.tab.quiz")}
                 />
               </div>
               <div className="flex-1 overflow-hidden">
@@ -333,7 +335,7 @@ export default function BookDetailPage({
           <MobileDrawer
             open={mobilePanel !== null}
             onClose={() => setMobilePanel(null)}
-            title={mobilePanel ? PANEL_TITLES[mobilePanel] : ""}
+            title={mobilePanel ? t(`app.tab.${mobilePanel}`) : ""}
             tone={mobilePanel ? PANEL_TONES[mobilePanel] : "sage"}
           >
             {mobilePanel === "translate" && translatePanelNode}
@@ -347,13 +349,6 @@ export default function BookDetailPage({
   );
 }
 
-const PANEL_TITLES: Record<Exclude<MobilePanel, null>, string> = {
-  translate: "Translate",
-  chat: "Chat",
-  notes: "Notes",
-  quiz: "Quiz",
-};
-
 const PANEL_TONES: Record<Exclude<MobilePanel, null>, "sage" | "saffron" | "coral" | "plum"> = {
   translate: "plum",
   chat: "sage",
@@ -364,13 +359,14 @@ const PANEL_TONES: Record<Exclude<MobilePanel, null>, "sage" | "saffron" | "cora
 // ───────────────────────── Book header ─────────────────────────
 
 function BookHeader({ book }: { book: Book }) {
+  const { t } = useI18n();
   return (
     <header className="flex shrink-0 items-center gap-2 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/80 px-3 py-2.5 backdrop-blur sm:gap-3 sm:py-3 sm:px-4 lg:px-7">
       {/* Back button — always visible. Slightly smaller on mobile. */}
       <Link
         href="/library"
         className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)] text-[color:var(--color-ink-soft)] transition-colors hover:bg-[color:var(--color-paper-2)] hover:text-[color:var(--color-ink)] sm:h-9 sm:w-9"
-        aria-label="Back to library"
+        aria-label={t("book.backToLibrary")}
       >
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M19 12H5" />
@@ -461,6 +457,7 @@ function PaperTabBar({
   counts: { notes: number };
   onOpen: (panel: MobilePanel) => void;
 }) {
+  const { t } = useI18n();
   return (
     <nav
       aria-label="Reading tools"
@@ -486,7 +483,7 @@ function PaperTabBar({
               <path d="M5 16h10" />
             </svg>
           }
-          label="Translate"
+          label={t("app.tab.translate")}
           onClick={() => onOpen("translate")}
         />
         <PaperTabBtn
@@ -496,7 +493,7 @@ function PaperTabBar({
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
           }
-          label="Chat"
+          label={t("app.tab.chat")}
           onClick={() => onOpen("chat")}
         />
         <PaperTabBtn
@@ -507,7 +504,7 @@ function PaperTabBar({
               <path d="m13 8 6-6 3 3-6 6" />
             </svg>
           }
-          label="Notes"
+          label={t("app.tab.notes")}
           badge={counts.notes > 0 ? counts.notes : undefined}
           onClick={() => onOpen("notes")}
         />
@@ -518,7 +515,7 @@ function PaperTabBar({
               <path d="M12 2 14.7 8.5 22 9.3l-5.6 4.9 1.7 7.1L12 17.7 5.9 21.3l1.7-7.1L2 9.3l7.3-.8z" />
             </svg>
           }
-          label="Quiz"
+          label={t("app.tab.quiz")}
           onClick={() => onOpen("quiz")}
         />
       </div>
@@ -679,12 +676,13 @@ function MobileDrawer({
 // ───────────────────────── Loading / failed states ─────────────────────────
 
 function NotReadyState({ book }: { book: Book }) {
+  const { t } = useI18n();
   if (book.status === "failed") {
     return (
       <div className="mx-auto mt-16 max-w-xl px-6">
         <div className="card-paper rounded-2xl border-[color:var(--color-destructive)]/40 p-6 text-sm text-[color:var(--color-destructive)]">
           <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
-            We hit a snag.
+            {t("book.failed.title")}
           </p>
           {book.error_message && (
             <p className="mt-1 opacity-80">{book.error_message}</p>
@@ -701,11 +699,10 @@ function NotReadyState({ book }: { book: Book }) {
         </svg>
       </div>
       <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-        Reading your book…
+        {t("book.processing.title")}
       </h2>
       <p className="mt-2 text-sm text-[color:var(--color-ink-soft)]">
-        We're noting every page so chat and quizzes work great. Big books take a
-        few minutes.
+        {t("book.processing.body")}
       </p>
     </div>
   );

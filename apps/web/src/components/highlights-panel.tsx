@@ -16,6 +16,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
+import { useI18n } from "@/lib/i18n";
 
 export interface OpenHighlightState {
   id: string;
@@ -38,6 +39,7 @@ const COLORS: HighlightColor[] = ["yellow", "green", "blue", "pink"];
 
 export function HighlightsPanel({ bookId, open, onConsumed, onJumpToPage }: Props) {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const { data: highlights = [], isLoading } = useQuery<Highlight[]>({
@@ -54,7 +56,7 @@ export function HighlightsPanel({ bookId, open, onConsumed, onJumpToPage }: Prop
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-[color:var(--color-ink-soft)]">
-        Loading notes…
+        {t("notes.loading")}
       </div>
     );
   }
@@ -125,6 +127,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
   },
   ref,
 ) {
+  const { t } = useI18n();
   const [editingNote, setEditingNote] = useState(false);
   const [noteDraft, setNoteDraft] = useState(highlight.note ?? "");
   const [askQuestion, setAskQuestion] = useState("");
@@ -179,7 +182,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
   }, [autoAskAi?.nonce, autoAskAi?.autoAskAi]);
 
   const onConfirmDelete = () => {
-    if (!confirm("Delete this highlight?")) return;
+    if (!confirm(t("notes.deleteConfirm"))) return;
     remove.mutate();
   };
 
@@ -251,7 +254,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
           <textarea
             value={noteDraft}
             onChange={(e) => setNoteDraft(e.target.value)}
-            placeholder="Write a note about this passage…"
+            placeholder={t("notes.notePlaceholder")}
             rows={3}
             autoFocus
             className="w-full resize-none rounded-lg border-[1.5px] border-[color:var(--color-border)] bg-white px-2.5 py-1.5 text-xs leading-relaxed focus:border-[color:var(--color-saffron)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-saffron)]/25"
@@ -265,7 +268,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
               }}
               className="rounded-full px-3 py-1 text-[0.7rem] font-semibold text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)]"
             >
-              Cancel
+              {t("notes.cancel")}
             </button>
             <button
               type="button"
@@ -273,14 +276,14 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
               disabled={saveNote.isPending}
               className="rounded-full bg-[color:var(--color-ink)] px-3 py-1 text-[0.7rem] font-semibold text-[color:var(--color-paper)] hover:opacity-90 disabled:opacity-50"
             >
-              {saveNote.isPending ? "Saving…" : "Save note"}
+              {saveNote.isPending ? t("notes.saving") : t("notes.saveNote")}
             </button>
           </div>
           {saveNote.isError && (
             <p className="rounded-md bg-[color:var(--color-destructive)]/10 px-2 py-1 text-[0.7rem] text-[color:var(--color-destructive)]">
               {saveNote.error instanceof ApiError
                 ? saveNote.error.message
-                : (saveNote.error as Error).message || "Couldn't save note"}
+                : (saveNote.error as Error).message || t("notes.saveError")}
             </p>
           )}
         </div>
@@ -298,7 +301,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
               {highlight.note}
             </span>
           ) : (
-            <span className="italic">+ Add a note</span>
+            <span className="italic">{t("notes.addNote")}</span>
           )}
         </button>
       )}
@@ -314,7 +317,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
               <circle cx="12" cy="12" r="3.5" />
               <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
             </svg>
-            Ask AI about this passage
+            {t("notes.askAiCta")}
           </button>
         ) : null}
 
@@ -330,7 +333,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
                   if (!askAi.isPending) askAi.mutate(askQuestion.trim() || null);
                 }
               }}
-              placeholder="What do you want to know about this passage? (leave blank to just explain it)"
+              placeholder={t("notes.askPlaceholder")}
               rows={2}
               className="w-full resize-none rounded-lg border-[1.5px] border-[color:var(--color-border)] bg-white px-2.5 py-1.5 text-xs leading-relaxed focus:border-[color:var(--color-coral)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-coral)]/25"
             />
@@ -343,7 +346,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
                 }}
                 className="rounded-full px-3 py-1 text-[0.7rem] font-semibold text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)]"
               >
-                Cancel
+                {t("notes.cancel")}
               </button>
               <button
                 type="button"
@@ -351,7 +354,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
                 disabled={askAi.isPending}
                 className="rounded-full bg-[color:var(--color-coral-deep)] px-3 py-1 text-[0.7rem] font-semibold text-white hover:opacity-90 disabled:opacity-50"
               >
-                {askAi.isPending ? "Thinking…" : "Ask AI →"}
+                {askAi.isPending ? t("notes.thinking") : t("notes.askSubmit")}
               </button>
             </div>
           </div>
@@ -359,7 +362,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
 
         {askAi.isPending && !highlight.ai_answer && (
           <p className="mt-1.5 text-[0.7rem] italic text-[color:var(--color-ink-soft)]">
-            flipping pages for context…
+            {t("notes.flipping")}
           </p>
         )}
 
@@ -380,7 +383,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
           <div className="mt-1 rounded-xl bg-[color:var(--color-coral)]/10 p-2.5">
             <div className="mb-1 flex items-center justify-between">
               <p className="text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-coral-deep)]">
-                AI · {highlight.ai_question ? "your question" : "explanation"}
+                {highlight.ai_question ? t("notes.aiQuestion") : t("notes.aiExplanation")}
               </p>
               <button
                 type="button"
@@ -388,7 +391,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
                 disabled={askAi.isPending}
                 className="text-[0.65rem] font-semibold text-[color:var(--color-coral-deep)] hover:underline disabled:opacity-50"
               >
-                {askAi.isPending ? "asking…" : "ask again"}
+                {askAi.isPending ? t("notes.askAgainPending") : t("notes.askAgain")}
               </button>
             </div>
             {highlight.ai_question && (
@@ -409,6 +412,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
 });
 
 function EmptyNotesState() {
+  const { t } = useI18n();
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
       <div className="mb-3 grid h-14 w-14 place-items-center rounded-3xl bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)]">
@@ -419,11 +423,10 @@ function EmptyNotesState() {
         </svg>
       </div>
       <h4 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-        Highlight to remember.
+        {t("notes.empty.title")}
       </h4>
       <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
-        Select any text in the book to save it, add a note, or ask AI to
-        explain. Your highlights live here and on your shelf.
+        {t("notes.empty.body")}
       </p>
     </div>
   );

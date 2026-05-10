@@ -338,6 +338,62 @@ export const ms: Dict = {
   "ob.s5.trust.secure": "Pembayaran selamat",
   "ob.s5.join": "Sertai 42,000+ pembaca yang habiskan buku itu.",
   "ob.error.register": "Pendaftaran gagal. Sila cuba lagi.",
+
+  // App — book detail
+  "book.opening": "Membuka buku…",
+  "book.notFound": "Buku tidak ditemui.",
+  "book.backToLibrary": "Kembali ke perpustakaan",
+  "book.processing.title": "Membaca buku anda…",
+  "book.processing.body": "Kami mencatat setiap halaman supaya sembang dan kuiz berjalan lancar. Buku besar mengambil masa beberapa minit.",
+  "book.failed.title": "Ada masalah.",
+
+  // App — tabs + drawer
+  "app.tab.chat": "Sembang",
+  "app.tab.notes": "Nota",
+  "app.tab.quiz": "Kuiz",
+  "app.tab.translate": "Terjemah",
+
+  // App — notes / highlights panel
+  "notes.empty.title": "Sorot untuk diingati.",
+  "notes.empty.body": "Pilih sebarang teks di dalam buku untuk menyimpannya, menambah nota, atau meminta AI menjelaskan. Sorotan anda tersimpan di sini dan di rak.",
+  "notes.loading": "Memuatkan nota…",
+  "notes.addNote": "+ Tambah nota",
+  "notes.notePlaceholder": "Tulis nota mengenai petikan ini…",
+  "notes.saveNote": "Simpan",
+  "notes.saving": "Menyimpan…",
+  "notes.saveError": "Nota tidak dapat disimpan",
+  "notes.cancel": "Batal",
+  "notes.askAiCta": "Tanya AI tentang petikan ini",
+  "notes.askPlaceholder": "Apa yang anda ingin tahu tentang petikan ini? (kosongkan untuk minta penjelasan sahaja)",
+  "notes.askSubmit": "Tanya AI →",
+  "notes.thinking": "Sedang berfikir…",
+  "notes.askAgain": "tanya lagi",
+  "notes.askAgainPending": "bertanya…",
+  "notes.aiQuestion": "AI · soalan anda",
+  "notes.aiExplanation": "AI · penjelasan",
+  "notes.flipping": "membelek halaman mencari konteks…",
+  "notes.deleteConfirm": "Padam sorotan ini?",
+
+  // App — quiz panel
+  "quiz.empty.title": "Bersedia untuk kuiz?",
+  "quiz.empty.body": "Kami akan tulis soalan baharu daripada buku ini. Tiada menoleh ke belakang — melainkan anda mahu.",
+  "quiz.howMany": "Berapa soalan?",
+  "quiz.make": "Buat kuiz saya",
+  "quiz.capReached": "Had kuiz dicapai",
+  "quiz.writing": "Menulis kuiz anda…",
+  "quiz.forThisBook": "kuiz untuk buku ini",
+  "quiz.yours": "Kuiz anda",
+  "quiz.retake": "Ulang →",
+  "quiz.makeNew": "Jana yang baharu",
+  "quiz.rateLimited": "Penyedia AI sedang penuh. Tunggu sekitar seminit dan cuba semula — kuiz sedia ada masih boleh diulang.",
+  "quiz.check": "Semak jawapan saya ✓",
+  "quiz.pickMore": "Pilih %n% lagi",
+  "quiz.checking": "Menyemak…",
+
+  // App — viewer toolbar (PDF + EPUB)
+  "viewer.highlight": "Sorot",
+  "viewer.addNote": "Tambah nota",
+  "viewer.askAi": "Tanya AI",
 };
 
 export const msTestimonials: Testimonial[] = [

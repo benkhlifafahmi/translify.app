@@ -22,6 +22,7 @@ import {
 } from "react";
 import ePub, { Book, Rendition, Contents } from "epubjs";
 import type { Highlight as CitationHighlight, SavedHighlight, HighlightAction } from "./pdf-viewer";
+import { useI18n } from "@/lib/i18n";
 
 export interface EpubViewerProps {
   fileUrl: string | null;
@@ -79,6 +80,7 @@ export function EpubViewer({
   onClickSavedHighlight,
   goToPage,
 }: EpubViewerProps) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const bookRef = useRef<Book | null>(null);
   const renditionRef = useRef<Rendition | null>(null);
@@ -542,7 +544,7 @@ export function EpubViewer({
             onTouchStart={(e) => e.preventDefault()}
           >
             <div className="translify-paper-slip">
-              <ToolbarBtn onClick={() => fireAction("save")} label="Highlight" tone="saffron"
+              <ToolbarBtn onClick={() => fireAction("save")} label={t("viewer.highlight")} tone="saffron"
                 icon={
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="m9 11-6 6v3h3l6-6" />
@@ -550,7 +552,7 @@ export function EpubViewer({
                   </svg>
                 }
               />
-              <ToolbarBtn onClick={() => fireAction("note")} label="Add note" tone="sage"
+              <ToolbarBtn onClick={() => fireAction("note")} label={t("viewer.addNote")} tone="sage"
                 icon={
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -558,7 +560,7 @@ export function EpubViewer({
                   </svg>
                 }
               />
-              <ToolbarBtn onClick={() => fireAction("ask-ai")} label="Ask AI" tone="coral"
+              <ToolbarBtn onClick={() => fireAction("ask-ai")} label={t("viewer.askAi")} tone="coral"
                 icon={
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3.5" />

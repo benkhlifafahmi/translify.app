@@ -390,6 +390,62 @@ export const en: Dict = {
   "ob.s5.trust.secure": "Secure checkout",
   "ob.s5.join": "Join 42,000+ readers who finished the book.",
   "ob.error.register": "Registration failed. Please try again.",
+
+  // App — book detail
+  "book.opening": "Opening book…",
+  "book.notFound": "Book not found.",
+  "book.backToLibrary": "Back to library",
+  "book.processing.title": "Reading your book…",
+  "book.processing.body": "We're noting every page so chat and quizzes work great. Big books take a few minutes.",
+  "book.failed.title": "We hit a snag.",
+
+  // App — tabs + drawer
+  "app.tab.chat": "Chat",
+  "app.tab.notes": "Notes",
+  "app.tab.quiz": "Quiz",
+  "app.tab.translate": "Translate",
+
+  // App — notes / highlights panel
+  "notes.empty.title": "Highlight to remember.",
+  "notes.empty.body": "Select any text in the book to save it, add a note, or ask AI to explain. Your highlights live here and on your shelf.",
+  "notes.loading": "Loading notes…",
+  "notes.addNote": "+ Add a note",
+  "notes.notePlaceholder": "Write a note about this passage…",
+  "notes.saveNote": "Save note",
+  "notes.saving": "Saving…",
+  "notes.saveError": "Couldn't save note",
+  "notes.cancel": "Cancel",
+  "notes.askAiCta": "Ask AI about this passage",
+  "notes.askPlaceholder": "What do you want to know about this passage? (leave blank to just explain it)",
+  "notes.askSubmit": "Ask AI →",
+  "notes.thinking": "Thinking…",
+  "notes.askAgain": "ask again",
+  "notes.askAgainPending": "asking…",
+  "notes.aiQuestion": "AI · your question",
+  "notes.aiExplanation": "AI · explanation",
+  "notes.flipping": "flipping pages for context…",
+  "notes.deleteConfirm": "Delete this highlight?",
+
+  // App — quiz panel
+  "quiz.empty.title": "Ready for a quiz?",
+  "quiz.empty.body": "We'll write fresh questions from this book. No looking back — unless you want to.",
+  "quiz.howMany": "How many questions?",
+  "quiz.make": "Make my quiz",
+  "quiz.capReached": "Quiz cap reached",
+  "quiz.writing": "Writing your quiz…",
+  "quiz.forThisBook": "quizzes for this book",
+  "quiz.yours": "Your quizzes",
+  "quiz.retake": "Retake →",
+  "quiz.makeNew": "Generate a new one",
+  "quiz.rateLimited": "The AI provider is at capacity right now. Wait about a minute and try again — your existing quizzes are still here to retake.",
+  "quiz.check": "Check my answers ✓",
+  "quiz.pickMore": "Pick %n% more",
+  "quiz.checking": "Checking…",
+
+  // App — viewer toolbar (PDF + EPUB)
+  "viewer.highlight": "Highlight",
+  "viewer.addNote": "Add note",
+  "viewer.askAi": "Ask AI",
 };
 
 export const enTestimonials: Testimonial[] = [

@@ -338,6 +338,62 @@ export const de: Dict = {
   "ob.s5.trust.secure": "Sicherer Checkout",
   "ob.s5.join": "Schließ dich 42.000+ Lesern an, die das Buch beendet haben.",
   "ob.error.register": "Registrierung fehlgeschlagen. Bitte versuche es erneut.",
+
+  // App — book detail
+  "book.opening": "Buch wird geöffnet…",
+  "book.notFound": "Buch nicht gefunden.",
+  "book.backToLibrary": "Zurück zur Bibliothek",
+  "book.processing.title": "Wir lesen dein Buch…",
+  "book.processing.body": "Wir notieren jede Seite, damit Chat und Quiz tadellos funktionieren. Große Bücher brauchen ein paar Minuten.",
+  "book.failed.title": "Da ist etwas schiefgelaufen.",
+
+  // App — tabs + drawer
+  "app.tab.chat": "Chat",
+  "app.tab.notes": "Notizen",
+  "app.tab.quiz": "Quiz",
+  "app.tab.translate": "Übersetzen",
+
+  // App — notes / highlights panel
+  "notes.empty.title": "Markieren, was bleiben soll.",
+  "notes.empty.body": "Wähle eine Textstelle im Buch, um sie zu speichern, eine Notiz zu machen oder die KI um eine Erklärung zu bitten. Deine Markierungen leben hier und in deinem Regal.",
+  "notes.loading": "Notizen werden geladen…",
+  "notes.addNote": "+ Notiz hinzufügen",
+  "notes.notePlaceholder": "Schreib eine Notiz zu dieser Passage…",
+  "notes.saveNote": "Speichern",
+  "notes.saving": "Speichern…",
+  "notes.saveError": "Notiz konnte nicht gespeichert werden",
+  "notes.cancel": "Abbrechen",
+  "notes.askAiCta": "KI zu dieser Passage fragen",
+  "notes.askPlaceholder": "Was möchtest du über diese Passage wissen? (leer lassen, um sie einfach erklären zu lassen)",
+  "notes.askSubmit": "KI fragen →",
+  "notes.thinking": "Überlegt…",
+  "notes.askAgain": "nochmal fragen",
+  "notes.askAgainPending": "fragt nach…",
+  "notes.aiQuestion": "KI · deine Frage",
+  "notes.aiExplanation": "KI · Erklärung",
+  "notes.flipping": "blättert nach Kontext…",
+  "notes.deleteConfirm": "Diese Markierung löschen?",
+
+  // App — quiz panel
+  "quiz.empty.title": "Bereit für ein Quiz?",
+  "quiz.empty.body": "Wir schreiben frische Fragen aus diesem Buch. Kein Zurückblättern — es sei denn, du willst.",
+  "quiz.howMany": "Wie viele Fragen?",
+  "quiz.make": "Quiz erstellen",
+  "quiz.capReached": "Quiz-Limit erreicht",
+  "quiz.writing": "Dein Quiz wird geschrieben…",
+  "quiz.forThisBook": "Quizze für dieses Buch",
+  "quiz.yours": "Deine Quizze",
+  "quiz.retake": "Wiederholen →",
+  "quiz.makeNew": "Neues erstellen",
+  "quiz.rateLimited": "Der KI-Anbieter ist ausgelastet. Warte etwa eine Minute und versuche es nochmal — deine bestehenden Quizze stehen weiterhin zur Verfügung.",
+  "quiz.check": "Antworten prüfen ✓",
+  "quiz.pickMore": "Noch %n% auswählen",
+  "quiz.checking": "Wird geprüft…",
+
+  // App — viewer toolbar (PDF + EPUB)
+  "viewer.highlight": "Markieren",
+  "viewer.addNote": "Notiz hinzufügen",
+  "viewer.askAi": "KI fragen",
 };
 
 export const deTestimonials: Testimonial[] = [
