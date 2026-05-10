@@ -5,6 +5,7 @@ import { FAQ } from "@/components/landing/faq";
 import { LiveDemo } from "@/components/landing/live-demo";
 import { Pricing } from "@/components/landing/pricing";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { TranslifyMark } from "@/components/translify-mark";
 import { useI18n } from "@/lib/i18n";
 
 export default function Home() {
@@ -62,16 +63,7 @@ function SiteNav() {
 }
 
 function Logo() {
-  return (
-    <Link href="/" className="flex items-center gap-2.5 font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight text-[color:var(--color-ink)]">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-[color:var(--color-ink)] text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)]">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-        </svg>
-      </span>
-      Translify
-    </Link>
-  );
+  return <TranslifyMark size={36} wordmarkClassName="text-2xl" />;
 }
 
 /* ───────────────────────────── HERO ───────────────────────────── */

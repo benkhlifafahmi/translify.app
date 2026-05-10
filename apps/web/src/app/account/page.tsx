@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { TranslifyMark } from "@/components/translify-mark";
 import { TrialBanner } from "@/components/trial-banner";
 import { ApiError } from "@/lib/api";
 import { logout, me, updateProfile, type User } from "@/lib/auth";
@@ -165,17 +166,7 @@ function AccountInner() {
 function TopBar({ onLogout }: { onLogout: () => void }) {
   return (
     <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-6 pt-6 lg:px-10 lg:pt-8">
-      <Link
-        href="/library"
-        className="flex items-center gap-2.5 font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight text-[color:var(--color-ink)]"
-      >
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-[color:var(--color-ink)] text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)]">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-          </svg>
-        </span>
-        Translify
-      </Link>
+      <TranslifyMark href="/library" size={36} wordmarkClassName="text-xl" />
 
       <div className="flex items-center gap-2">
         <LanguageSwitcher compact />

@@ -12,6 +12,7 @@ import {
 import { getToken } from "@/lib/api";
 import { PdfViewer } from "@/components/pdf-viewer-lazy";
 import { EpubViewer } from "@/components/epub-viewer-lazy";
+import { TranslifyIcon } from "@/components/translify-mark";
 import { TranslatePanel } from "@/components/translate-panel";
 import { ChatPanel } from "@/components/chat-panel";
 import { QuizPanel } from "@/components/quiz-panel";
@@ -364,29 +365,49 @@ const PANEL_TONES: Record<Exclude<MobilePanel, null>, "sage" | "saffron" | "cora
 
 function BookHeader({ book }: { book: Book }) {
   return (
-    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/80 px-4 py-2.5 backdrop-blur sm:py-3 lg:px-7">
-      <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-        <Link
-          href="/library"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)] text-[color:var(--color-ink-soft)] transition-colors hover:bg-[color:var(--color-paper-2)] hover:text-[color:var(--color-ink)]"
-          aria-label="Back to library"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 12H5" />
-            <path d="m12 19-7-7 7-7" />
-          </svg>
-        </Link>
-        <div className="min-w-0">
-          <h1 className="truncate font-[family-name:var(--font-display)] text-base font-semibold leading-tight tracking-tight sm:text-lg">
-            {book.title}
-          </h1>
-          <p className="truncate text-[0.7rem] text-[color:var(--color-ink-soft)] sm:text-xs">
-            {book.author && <>{book.author} · </>}
-            {book.format.toUpperCase()}
-            {book.source_language && <> · {book.source_language.toUpperCase()}</>}
-            {book.page_count != null && <> · {book.page_count}p</>}
-          </p>
-        </div>
+    <header className="flex shrink-0 items-center gap-2 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/80 px-3 py-2.5 backdrop-blur sm:gap-3 sm:py-3 sm:px-4 lg:px-7">
+      {/* Back button — always visible. Slightly smaller on mobile. */}
+      <Link
+        href="/library"
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)] text-[color:var(--color-ink-soft)] transition-colors hover:bg-[color:var(--color-paper-2)] hover:text-[color:var(--color-ink)] sm:h-9 sm:w-9"
+        aria-label="Back to library"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 12H5" />
+          <path d="m12 19-7-7 7-7" />
+        </svg>
+      </Link>
+
+      {/* Translify mark — always visible, always clickable. On mobile, just
+          the icon. On desktop, icon + wordmark + divider before the book
+          title. This keeps the brand present even when the user is deep
+          inside a book, which the previous header lost. */}
+      <Link
+        href="/library"
+        aria-label="Translify"
+        className="flex shrink-0 items-center gap-2 font-[family-name:var(--font-display)] font-semibold tracking-tight text-[color:var(--color-ink)]"
+      >
+        <TranslifyIcon size={32} />
+        <span className="hidden text-lg lg:inline">Translify</span>
+      </Link>
+
+      {/* Divider before the book title on desktop only. On mobile space is
+          too tight; the icon alone is the brand cue. */}
+      <span
+        aria-hidden
+        className="hidden h-7 w-px shrink-0 bg-[color:var(--color-border)] lg:block"
+      />
+
+      <div className="min-w-0 flex-1">
+        <h1 className="truncate font-[family-name:var(--font-display)] text-base font-semibold leading-tight tracking-tight sm:text-lg">
+          {book.title}
+        </h1>
+        <p className="truncate text-[0.7rem] text-[color:var(--color-ink-soft)] sm:text-xs">
+          {book.author && <>{book.author} · </>}
+          {book.format.toUpperCase()}
+          {book.source_language && <> · {book.source_language.toUpperCase()}</>}
+          {book.page_count != null && <> · {book.page_count}p</>}
+        </p>
       </div>
     </header>
   );

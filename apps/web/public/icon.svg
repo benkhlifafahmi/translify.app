@@ -1,5 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <rect width="64" height="64" rx="14" fill="#20283A"/>
-  <path d="M14 50V14a6 6 0 0 1 6-6h32v48H20a6 6 0 0 0 0-12h32" stroke="#FAF6EE" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <circle cx="42" cy="22" r="3" fill="#E0A458"/>
+  <!-- Book outline -->
+  <path d="M14 50V14a6 6 0 0 1 6-6h32v48H20a6 6 0 0 0 0-12h32"
+        stroke="#FAF6EE" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Saffron ribbon bookmark -->
+  <path d="M38 8 v18 l4 -3.2 l4 3.2 v-18 z"
+        fill="#E0A458" stroke="#E0A458" stroke-width="1.4" stroke-linejoin="round"/>
 </svg>
