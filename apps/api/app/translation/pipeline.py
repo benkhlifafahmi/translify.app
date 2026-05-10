@@ -10,6 +10,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 import app.auth.models  # noqa: F401
 import app.models  # noqa: F401
+from app.auth.models import User
+from app.billing.plans import Plan, quota_for
+from app.billing.service import get_or_create_subscription
 from app.config import settings
 from app.models.book import Book, BookFormat
 from app.models.translation import Translation, TranslationStatus
@@ -52,11 +55,17 @@ async def run_translation_async(translation_id: str) -> None:
 
 
 async def _run(session, translation: Translation, book: Book) -> None:
+    # Look up the user's plan to decide which translation engine to use.
+    # Scholar / Family get the Sonnet-quality literary path; Reader / Free
+    # use Gemini Flash (~5x cheaper, quality comparable for prose).
+    literary = await _user_gets_literary(session, book.user_id)
+
     log.info(
-        "translation start: book=%s translation=%s target=%s",
+        "translation start: book=%s translation=%s target=%s literary=%s",
         book.id,
         translation.id,
         translation.target_language,
+        literary,
     )
     file_bytes = await asyncio.to_thread(get_object_bytes, book.file_key)
 
@@ -65,6 +74,7 @@ async def _run(session, translation: Translation, book: Book) -> None:
             file_bytes,
             source_lang=book.source_language,
             target_lang=translation.target_language,
+            literary=literary,
         )
         ext = "pdf"
         content_type = "application/pdf"
@@ -73,6 +83,7 @@ async def _run(session, translation: Translation, book: Book) -> None:
             file_bytes,
             source_lang=book.source_language,
             target_lang=translation.target_language,
+            literary=literary,
         )
         ext = "epub"
         content_type = "application/epub+zip"
@@ -89,3 +100,21 @@ async def _run(session, translation: Translation, book: Book) -> None:
     translation.completed_at = datetime.now(timezone.utc)
     await session.commit()
     log.info("translation done: %s -> %s (%d bytes)", translation.id, output_key, len(out_bytes))
+
+
+async def _user_gets_literary(session, user_id) -> bool:
+    """Return True if the user's plan includes the literary-translation flag.
+
+    Defaults to False on any error (missing user, no subscription) — we'd
+    rather translate cheaply than fail the job because of a billing edge.
+    """
+    try:
+        user = await session.get(User, user_id)
+        if user is None:
+            return False
+        sub = await get_or_create_subscription(user, session)
+        plan = Plan(sub.plan)
+        return quota_for(plan).literary_translation
+    except Exception:
+        log.warning("could not determine plan for user=%s; using standard engine", user_id)
+        return False

@@ -26,6 +26,7 @@ async def translate_epub(
     *,
     source_lang: str | None,
     target_lang: str,
+    literary: bool = False,
 ) -> bytes:
     with tempfile.NamedTemporaryFile(suffix=".epub") as tmp_in:
         tmp_in.write(source_bytes)
@@ -62,7 +63,10 @@ async def translate_epub(
         # leading/trailing whitespace when writing back.
         sources = [str(n).strip() for n in nodes]
         translations = await translate_segments(
-            sources, source_lang=source_lang, target_lang=target_lang
+            sources,
+            source_lang=source_lang,
+            target_lang=target_lang,
+            literary=literary,
         )
 
         # 3. Write translations back into each text node, preserving its

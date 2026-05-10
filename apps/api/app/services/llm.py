@@ -52,6 +52,20 @@ TASK_CONFIG: dict[str, dict[str, str]] = {
         "primary": "gemini-2.5-flash-lite",
         "fallback": "claude-haiku-4-5-20251001",
     },
+    "translate": {
+        # Standard translation (Free + Reader tiers). Flash gives us
+        # ~5x cost reduction vs Sonnet at quality that's comparable for
+        # straightforward prose. Haiku catches any Gemini downtime.
+        "primary": "gemini-2.5-flash",
+        "fallback": "claude-haiku-4-5-20251001",
+    },
+    "translate_literary": {
+        # Premium translation (Scholar + Family). Sonnet's nuance + register
+        # control matter most on literary works, classical philosophy,
+        # and other style-sensitive content.
+        "primary": "claude-sonnet-4-6",
+        "fallback": "claude-haiku-4-5-20251001",
+    },
 }
 
 

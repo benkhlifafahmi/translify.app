@@ -121,6 +121,7 @@ async def translate_pdf(
     *,
     source_lang: str | None,
     target_lang: str,
+    literary: bool = False,
 ) -> bytes:
     target_script = _classify_target(target_lang)
     log.info("translate_pdf: target_lang=%s script=%s", target_lang, target_script)
@@ -152,7 +153,10 @@ async def translate_pdf(
 
         sources = [r["text"] for r in records]
         translations = await translate_segments(
-            sources, source_lang=source_lang, target_lang=target_lang
+            sources,
+            source_lang=source_lang,
+            target_lang=target_lang,
+            literary=literary,
         )
         for record, translated in zip(records, translations, strict=True):
             record["translated"] = translated
