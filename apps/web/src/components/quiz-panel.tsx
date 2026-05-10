@@ -29,6 +29,11 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
   const [attempt, setAttempt] = useState<QuizAttempt | null>(null);
   const [count, setCount] = useState<number>(8);
 
+  // All hooks must run on every render, regardless of which view we render.
+  // questionRefs used to live further down (after early returns) which
+  // violated the rules of hooks → React #310.
+  const questionRefs = useRef<Record<string, HTMLLIElement | null>>({});
+
   const { data: existing = [] } = useQuery<QuizSummary[]>({
     queryKey: ["quizzes", bookId],
     queryFn: () => listQuizzes(bookId),
@@ -278,11 +283,9 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
   ).length;
   const progress = (answeredCount / quiz.questions.length) * 100;
 
-  // Refs to each question card so we can auto-scroll to the next unanswered
-  // one after the user picks an answer. Essential on mobile, where the drawer
-  // only shows one question at a time and the user otherwise has to manually
-  // hunt for what's next.
-  const questionRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  // Auto-scroll the next unanswered question into view after each answer.
+  // Essential on mobile, where the drawer only shows one question at a time.
+  // questionRefs itself is declared as a hook above (rules-of-hooks).
   const setQuestionRef = (id: string) => (el: HTMLLIElement | null) => {
     questionRefs.current[id] = el;
   };
