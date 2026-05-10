@@ -368,14 +368,22 @@ export function PdfViewer({
       </div>
 
       <style jsx global>{`
-        .translify-cite-mark {
-          background-color: rgba(224, 164, 88, 0.45);
+        /* The text layer renders text transparently on top of the canvas image
+           so users can select it. <mark> defaults to color: black, which
+           re-reveals the text-layer copy and double-renders it on top of the
+           canvas — looks blurry. Force the mark text transparent like the
+           surrounding spans, so only the canvas pixels show through. */
+        .translify-cite-mark,
+        .translify-saved-mark {
+          color: transparent;
           border-radius: 2px;
           padding: 0 1px;
+          mix-blend-mode: multiply;
+        }
+        .translify-cite-mark {
+          background-color: rgba(224, 164, 88, 0.55);
         }
         .translify-saved-mark {
-          border-radius: 2px;
-          padding: 0 1px;
           cursor: pointer;
           transition: filter 120ms ease;
         }
@@ -385,10 +393,10 @@ export function PdfViewer({
         .translify-saved-mark.has-note {
           box-shadow: inset 0 -2px 0 rgba(60, 40, 15, 0.45);
         }
-        .translify-hl-yellow { background-color: rgba(253, 230, 138, 0.7); }
-        .translify-hl-green  { background-color: rgba(187, 247, 208, 0.7); }
-        .translify-hl-blue   { background-color: rgba(191, 219, 254, 0.7); }
-        .translify-hl-pink   { background-color: rgba(251, 207, 232, 0.7); }
+        .translify-hl-yellow { background-color: rgba(253, 230, 138, 0.85); }
+        .translify-hl-green  { background-color: rgba(187, 247, 208, 0.85); }
+        .translify-hl-blue   { background-color: rgba(191, 219, 254, 0.85); }
+        .translify-hl-pink   { background-color: rgba(251, 207, 232, 0.85); }
       `}</style>
     </div>
   );
