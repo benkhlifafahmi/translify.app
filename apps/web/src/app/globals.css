@@ -599,6 +599,70 @@
   .vig-frame[data-activity] .vig-caption { opacity: 1; }
 }
 
+/* ===== Mini vignette — for the mobile-tab garden indicator =====
+   Same idea as the desktop vignette but choreographed at ~36-44px scale
+   with shorter, snappier timing. */
+
+@keyframes vig-mini-plant-sway {
+  0%, 100% { transform: rotate(-2deg); }
+  50%      { transform: rotate(2deg); }
+}
+@keyframes vig-mini-farmer-walk {
+  0%   { transform: translateX(-130%); opacity: 0; }
+  18%  { transform: translateX(0);    opacity: 1; }
+  72%  { transform: translateX(0);    opacity: 1; }
+  100% { transform: translateX(-130%); opacity: 0; }
+}
+@keyframes vig-mini-droplet {
+  0%, 28%   { opacity: 0; transform: translateY(0); }
+  34%       { opacity: 1; transform: translateY(0); }
+  58%       { opacity: 1; transform: translateY(11px); }
+  64%, 100% { opacity: 0; transform: translateY(13px) scale(0.5); }
+}
+@keyframes vig-mini-plant-drink {
+  0%, 58% { transform: scale(1); filter: brightness(1) saturate(1); }
+  66%     { transform: scale(1.12); filter: brightness(1.12) saturate(1.18); }
+  82%     { transform: scale(1); filter: brightness(1) saturate(1); }
+  100%    { transform: scale(1); filter: brightness(1) saturate(1); }
+}
+@keyframes vig-mini-spark {
+  0%, 50% { opacity: 0; transform: scale(0.3); }
+  60%     { opacity: 1; transform: scale(1.4); }
+  76%     { opacity: 0.6; transform: scale(1); }
+  100%    { opacity: 0; transform: scale(0.7); }
+}
+@keyframes vig-mini-ring {
+  0%   { opacity: 0; transform: scale(0.6); }
+  20%  { opacity: 0.9; }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+.vig-mini-plant   { animation: vig-mini-plant-sway 5s ease-in-out infinite; transform-origin: 50% 100%; }
+.vig-mini-farmer  { opacity: 0; }
+.vig-mini-droplet { opacity: 0; }
+.vig-mini-spark   { opacity: 0; transform-origin: 50% 50%; }
+.vig-mini-ring    { opacity: 0; transform-origin: 50% 50%; }
+
+.vig-mini[data-activity="water"] .vig-mini-farmer { animation: vig-mini-farmer-walk 1.9s ease-out forwards; }
+.vig-mini[data-activity="water"] .vig-mini-droplet { animation: vig-mini-droplet 1.9s ease-in forwards; }
+.vig-mini[data-activity="water"] .vig-mini-plant  { animation: vig-mini-plant-drink 1.9s ease-in-out forwards, vig-mini-plant-sway 5s ease-in-out infinite; }
+.vig-mini[data-activity="water"] .vig-mini-ring   { animation: vig-mini-ring 1.9s ease-out forwards; }
+
+.vig-mini[data-activity="plant"] .vig-mini-farmer { animation: vig-mini-farmer-walk 2.1s ease-out forwards; }
+.vig-mini[data-activity="plant"] .vig-mini-spark  { animation: vig-mini-spark 2.1s ease-out forwards; }
+.vig-mini[data-activity="plant"] .vig-mini-ring   { animation: vig-mini-ring 2.1s ease-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vig-mini-plant { animation: none; }
+  .vig-mini[data-activity] .vig-mini-farmer,
+  .vig-mini[data-activity] .vig-mini-droplet,
+  .vig-mini[data-activity] .vig-mini-plant,
+  .vig-mini[data-activity] .vig-mini-spark,
+  .vig-mini[data-activity] .vig-mini-ring {
+    animation: none !important;
+  }
+}
+
 .garden-plant {
   transform: translateX(-50%) rotate(-1.2deg);
   transform-origin: 50% 100%;

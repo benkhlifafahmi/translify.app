@@ -33,6 +33,11 @@ import {
   ReaderGardenVignette,
   type ReaderGardenVignetteHandle,
 } from "@/components/garden/reader-garden-vignette";
+import {
+  MobileGardenTab,
+  type MobileGardenTabHandle,
+} from "@/components/garden/mobile-garden-tab";
+import { MobileGardenPanel } from "@/components/garden/mobile-garden-panel";
 import type {
   Highlight,
   HighlightAction,
@@ -40,7 +45,7 @@ import type {
 } from "@/components/pdf-viewer";
 
 type RightTab = "chat" | "quiz" | "notes";
-type MobilePanel = null | "translate" | "chat" | "notes" | "quiz";
+type MobilePanel = null | "translate" | "chat" | "notes" | "quiz" | "garden";
 
 export default function BookDetailPage({
   params,
@@ -82,20 +87,31 @@ export default function BookDetailPage({
   // to /gardens/{bookId}/events when the user passes a threshold or leaves.
   const { markReached } = useReadingTracker(bookId);
 
-  // Floating "the farmer is doing something" vignette in the corner of the
-  // reader. We hold a ref so it can be triggered imperatively from the page-
-  // reached / highlight-save handlers without re-rendering on every event.
+  // Floating "the farmer is doing something" vignette — desktop bottom-left
+  // tile and the mobile bottom-tab garden chip both animate from the same
+  // activity signals. We hold refs so the page-reached / highlight-save
+  // handlers can trigger them without re-rendering on every event.
   const vignetteRef = useRef<ReaderGardenVignetteHandle | null>(null);
+  const mobileGardenRef = useRef<MobileGardenTabHandle | null>(null);
   const furthestPageRef = useRef(0);
+
+  const playGardenActivity = useCallback(
+    (kind: "water" | "plant", caption?: string) => {
+      vignetteRef.current?.play(kind, caption);
+      mobileGardenRef.current?.play(kind);
+    },
+    [],
+  );
+
   const onPageReached = useCallback(
     (page: number) => {
       markReached(page);
       if (page > furthestPageRef.current) {
         furthestPageRef.current = page;
-        vignetteRef.current?.play("water", `+ page ${page}`);
+        playGardenActivity("water", `+ page ${page}`);
       }
     },
-    [markReached],
+    [markReached, playGardenActivity],
   );
 
   const { data: book, isLoading, isError } = useQuery<Book>({
@@ -167,8 +183,9 @@ export default function BookDetailPage({
       });
       // On mobile, open the Notes drawer so the user lands on the new card.
       setMobilePanel("notes");
-      // Plant a sapling in the garden vignette to celebrate the highlight.
-      vignetteRef.current?.play("plant", "+ new leaf");
+      // Plant a sapling in the garden vignette to celebrate the highlight —
+      // fires on both the desktop tile and the mobile tab.
+      playGardenActivity("plant", "+ new leaf");
     },
   });
 
@@ -353,10 +370,20 @@ export default function BookDetailPage({
               {viewerNode}
             </section>
 
-            {/* Paper-tab bottom strip — sits flush with the bottom edge */}
+            {/* Paper-tab bottom strip — sits flush with the bottom edge. The
+                Garden tab is a live mini-vignette that animates on activity,
+                rendered inline rather than as a flat icon. */}
             <PaperTabBar
               counts={{ notes: highlights.length }}
               onOpen={setMobilePanel}
+              gardenSlot={
+                <MobileGardenTab
+                  ref={mobileGardenRef}
+                  bookId={bookId}
+                  label={t("app.tab.garden") || "Garden"}
+                  onOpen={() => setMobilePanel("garden")}
+                />
+              }
             />
           </div>
 
@@ -371,6 +398,7 @@ export default function BookDetailPage({
             {mobilePanel === "chat"      && chatPanelNode}
             {mobilePanel === "notes"     && notesPanelNode}
             {mobilePanel === "quiz"      && quizPanelNode}
+            {mobilePanel === "garden"    && <MobileGardenPanel bookId={bookId} />}
           </MobileDrawer>
 
           {/* Floating garden vignette — desktop-only. The farmer comes out
@@ -389,6 +417,7 @@ const PANEL_TONES: Record<Exclude<MobilePanel, null>, "sage" | "saffron" | "cora
   chat: "sage",
   notes: "saffron",
   quiz: "coral",
+  garden: "sage",
 };
 
 // ───────────────────────── Book header ─────────────────────────
@@ -500,9 +529,13 @@ function TabPill({
 function PaperTabBar({
   counts,
   onOpen,
+  gardenSlot,
 }: {
   counts: { notes: number };
   onOpen: (panel: MobilePanel) => void;
+  /** Live mini-vignette tab rendered next to Quiz. Passed in from the page
+   *  so it can hold an animation ref triggered by reading activity. */
+  gardenSlot?: React.ReactNode;
 }) {
   const { t } = useI18n();
   return (
@@ -520,7 +553,7 @@ function PaperTabBar({
         aria-hidden
         className="pointer-events-none absolute -top-px left-1/2 h-px w-32 -translate-x-1/2 bg-gradient-to-r from-transparent via-[color:var(--color-saffron)]/60 to-transparent"
       />
-      <div className="grid grid-cols-4 gap-1 px-2 py-2">
+      <div className={`grid ${gardenSlot ? "grid-cols-5" : "grid-cols-4"} gap-1 px-2 py-2`}>
         <PaperTabBtn
           tone="plum"
           icon={
@@ -565,6 +598,7 @@ function PaperTabBar({
           label={t("app.tab.quiz")}
           onClick={() => onOpen("quiz")}
         />
+        {gardenSlot}
       </div>
     </nav>
   );

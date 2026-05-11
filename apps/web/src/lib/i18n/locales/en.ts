@@ -404,6 +404,7 @@ export const en: Dict = {
   "app.tab.notes": "Notes",
   "app.tab.quiz": "Quiz",
   "app.tab.translate": "Translate",
+  "app.tab.garden": "Garden",
 
   // App — notes / highlights panel
   "notes.empty.title": "Highlight to remember.",
