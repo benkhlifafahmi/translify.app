@@ -1,0 +1,24 @@
+<svg width="200" height="52" viewBox="0 0 240 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Spine -->
+  <rect x="8" y="10" width="5" height="46" rx="2.5" fill="#20283A"/>
+  <!-- Pages -->
+  <rect x="13" y="14" width="28" height="40" rx="2.5" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="1.5"/>
+  <rect x="17" y="14" width="24" height="40" rx="2.5" fill="#F4ECDB" stroke="#E5D8BC" stroke-width="1.2"/>
+  <rect x="21" y="14" width="20" height="40" rx="2.5" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1"/>
+  <!-- Page lines -->
+  <line x1="25" y1="24" x2="37" y2="24" stroke="#D4C29C" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="25" y1="30" x2="37" y2="30" stroke="#D4C29C" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="25" y1="36" x2="33" y2="36" stroke="#D4C29C" stroke-width="1.4" stroke-linecap="round"/>
+  <!-- Speech bubble -->
+  <rect x="36" y="4" width="34" height="26" rx="9" fill="#E0A458"/>
+  <!-- Bubble tail -->
+  <path d="M42 28 L38 38 L52 28Z" fill="#E0A458"/>
+  <!-- Script in bubble: Arabic curl -->
+  <path d="M43 13 Q48 9 53 13 Q58 17 63 13" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.9"/>
+  <!-- Latin T -->
+  <text x="41" y="25" font-family="serif" font-size="10" fill="white" font-weight="bold" opacity="0.8">T</text>
+  <!-- CJK -->
+  <text x="54" y="25" font-family="serif" font-size="8" fill="white" opacity="0.7">文</text>
+  <!-- Wordmark -->
+  <text x="82" y="42" font-family="'Fraunces', Georgia, 'Times New Roman', serif" font-size="30" font-weight="400" fill="#20283A" letter-spacing="-0.8">translify</text>
+</svg>

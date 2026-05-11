@@ -244,6 +244,40 @@
 .animate-pop-in { animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 .hover-wiggle:hover { animation: wiggle 0.4s ease-in-out; }
 
+/* ===== Lumi mascot — float, bubble, toast =====
+   Used by /components/lumi/*. Scoped to dedicated classes so they don't
+   leak into other animations. */
+
+@keyframes lumi-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+@keyframes lumi-bubble-in {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.96); }
+  60%  { transform: translateY(0) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes lumi-toast-in {
+  0%   { opacity: 0; transform: translateX(24px) scale(0.94); }
+  60%  { transform: translateX(-2px) scale(1.01); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes lumi-line-fade {
+  0%   { opacity: 0; transform: translateY(3px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.lumi-float     { animation: lumi-float 4s ease-in-out infinite; transform-origin: 50% 60%; }
+.lumi-bubble-in { animation: lumi-bubble-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.lumi-toast-in  { animation: lumi-toast-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.lumi-line-fade { animation: lumi-line-fade 0.3s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lumi-float, .lumi-bubble-in, .lumi-toast-in, .lumi-line-fade {
+    animation: none !important;
+  }
+}
+
 .shimmer {
   background: linear-gradient(
     90deg,

@@ -1,0 +1,80 @@
+<svg width="200" height="222" viewBox="0 0 180 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Lumi — Translify's Paper Owl Mascot</title>
+
+  <!-- Drop shadow -->
+  <ellipse cx="90" cy="196" rx="38" ry="6" fill="rgba(32,40,58,.10)"/>
+
+  <!-- Left wing (page feathers) -->
+  <path d="M42 110 Q18 90 14 60 Q20 72 30 78 Q16 62 22 42 Q28 60 38 68 Q26 50 36 32 Q40 52 48 62 Q40 80 44 108Z"
+        fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.2"/>
+  <line x1="22" y1="56" x2="36" y2="64" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+  <line x1="28" y1="72" x2="40" y2="78" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+  <line x1="18" y1="68" x2="30" y2="74" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+
+  <!-- Right wing (mirrored) -->
+  <path d="M138 110 Q162 90 166 60 Q160 72 150 78 Q164 62 158 42 Q152 60 142 68 Q154 50 144 32 Q140 52 132 62 Q140 80 136 108Z"
+        fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.2"/>
+  <line x1="158" y1="56" x2="144" y2="64" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+  <line x1="152" y1="72" x2="140" y2="78" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+  <line x1="162" y1="68" x2="150" y2="74" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+
+  <!-- Body -->
+  <ellipse cx="90" cy="126" rx="46" ry="54" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+  <!-- Tummy -->
+  <ellipse cx="90" cy="136" rx="28" ry="34" fill="#F4ECDB" stroke="#E5D8BC" stroke-width="1"/>
+
+  <!-- Sage scarf/collar -->
+  <path d="M56 105 Q90 96 124 105 Q118 116 90 118 Q62 116 56 105Z" fill="#7BA17C"/>
+  <path d="M85 115 Q90 122 95 115" stroke="#5F8763" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Head -->
+  <ellipse cx="90" cy="84" rx="38" ry="36" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+
+  <!-- Ear tufts -->
+  <path d="M60 58 L54 42 L68 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M120 58 L126 42 L112 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M61 55 L57 46 L66 53Z" fill="#E0A458" opacity="0.4"/>
+  <path d="M119 55 L123 46 L114 53Z" fill="#E0A458" opacity="0.4"/>
+
+  <!-- Face disc -->
+  <ellipse cx="90" cy="86" rx="30" ry="28" fill="none" stroke="#E5D8BC" stroke-width="1.5" stroke-dasharray="3 2"/>
+
+  <!-- Left eye (Arabic-style crescent pupil) -->
+  <circle cx="75" cy="82" r="12" fill="#20283A"/>
+  <circle cx="75" cy="82" r="10" fill="white"/>
+  <circle cx="75" cy="83" r="6" fill="#20283A"/>
+  <circle cx="77" cy="80" r="2" fill="white"/>
+  <path d="M71 84 Q73 88 76 84" stroke="#E0A458" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+
+  <!-- Right eye (Latin serif flourish pupil) -->
+  <circle cx="105" cy="82" r="12" fill="#20283A"/>
+  <circle cx="105" cy="82" r="10" fill="white"/>
+  <circle cx="105" cy="83" r="6" fill="#20283A"/>
+  <circle cx="107" cy="80" r="2" fill="white"/>
+  <path d="M102 87 L104 84 L106 87" stroke="#7BA17C" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Beak -->
+  <path d="M85 92 L90 100 L95 92 Q90 89 85 92Z" fill="#E0A458"/>
+
+  <!-- Belly text lines -->
+  <line x1="70" y1="140" x2="110" y2="140" stroke="#D4C29C" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="72" y1="149" x2="108" y2="149" stroke="#D4C29C" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="75" y1="158" x2="104" y2="158" stroke="#D4C29C" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Book in left talon -->
+  <g transform="translate(54,162) rotate(-12)">
+    <rect width="20" height="26" rx="2" fill="#20283A"/>
+    <rect x="3" y="0" width="17" height="26" rx="2" fill="#F4ECDB" stroke="#D4C29C" stroke-width="0.8"/>
+    <line x1="6" y1="8" x2="17" y2="8" stroke="#D4C29C" stroke-width="0.8"/>
+    <line x1="6" y1="12" x2="17" y2="12" stroke="#D4C29C" stroke-width="0.8"/>
+    <line x1="6" y1="16" x2="13" y2="16" stroke="#D4C29C" stroke-width="0.8"/>
+    <rect x="14" y="0" width="4" height="10" rx="1" fill="#E0A458"/>
+    <path d="M14 10 L16 8 L18 10" fill="#E0A458"/>
+  </g>
+
+  <!-- Talons -->
+  <path d="M72 180 Q68 186 64 184 M72 180 Q72 188 68 188 M72 180 Q76 188 72 188"
+        stroke="#D4C29C" stroke-width="2" stroke-linecap="round"/>
+  <path d="M108 180 Q104 186 100 184 M108 180 Q108 188 104 188 M108 180 Q112 188 108 188"
+        stroke="#D4C29C" stroke-width="2" stroke-linecap="round"/>
+</svg>

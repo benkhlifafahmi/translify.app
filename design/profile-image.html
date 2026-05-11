@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Translify — Profile Image · 400 × 400</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,300&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #1A2030;
+  font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48px 24px 80px; gap: 40px;
+}
+
+.page-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: rgba(250,246,238,.25); text-align: center;
+}
+
+/* ── Export target — exactly 400×400 ─────────────────────────────── */
+#export-target {
+  width: 400px;
+  height: 400px;
+  flex-shrink: 0;
+}
+
+/* ── Preview row ─────────────────────────────────────────────────── */
+.preview-row {
+  display: flex; align-items: flex-end; gap: 32px;
+  justify-content: center;
+}
+.preview-item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.preview-label-sm {
+  font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: rgba(250,246,238,.25);
+}
+
+.preview-circle-lg  { width: 200px; height: 200px; border-radius: 50%; overflow: hidden; }
+.preview-circle-md  { width: 80px;  height: 80px;  border-radius: 50%; overflow: hidden; }
+.preview-circle-sm  { width: 48px;  height: 48px;  border-radius: 50%; overflow: hidden; }
+.preview-circle-xs  { width: 32px;  height: 32px;  border-radius: 50%; overflow: hidden; }
+
+.preview-circle-lg  svg,
+.preview-circle-md  svg,
+.preview-circle-sm  svg,
+.preview-circle-xs  svg { width: 100%; height: 100%; }
+
+/* ── Export instructions ─────────────────────────────────────────── */
+.instructions {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 24px 28px;
+  max-width: 480px;
+  width: 100%;
+}
+.instructions h3 {
+  font-size: 13px; font-weight: 700; letter-spacing: .04em;
+  color: rgba(250,246,238,.7); margin-bottom: 16px;
+  text-transform: uppercase;
+}
+.step {
+  display: flex; gap: 12px; align-items: flex-start;
+  margin-bottom: 12px;
+}
+.step:last-child { margin-bottom: 0; }
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(224,164,88,.18); color: #E0A458;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.step p { font-size: 13px; line-height: 1.5; color: rgba(250,246,238,.55); }
+.step code {
+  font-family: ui-monospace, monospace; font-size: 12px;
+  background: rgba(255,255,255,.07); padding: 1px 6px; border-radius: 4px;
+  color: #E0A458;
+}
+
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+.lumi-float { animation: float 4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<p class="page-label">Profile Image · 400 × 400 px · Twitter / X</p>
+
+<!-- ── Export target (exact 400×400) ────────────────────────────── -->
+<div id="export-target">
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg-glow" cx="50%" cy="46%" r="55%">
+      <stop offset="0%" stop-color="#2C3A52"/>
+      <stop offset="100%" stop-color="#20283A"/>
+    </radialGradient>
+    <radialGradient id="saffron-halo" cx="50%" cy="42%" r="48%">
+      <stop offset="0%" stop-color="#E0A458" stop-opacity="0.13"/>
+      <stop offset="100%" stop-color="#E0A458" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sage-accent" cx="20%" cy="70%" r="40%">
+      <stop offset="0%" stop-color="#7BA17C" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#7BA17C" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.028 0"/>
+    </filter>
+    <clipPath id="circle-clip">
+      <circle cx="200" cy="200" r="200"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="400" fill="url(#bg-glow)"/>
+  <rect width="400" height="400" fill="url(#saffron-halo)"/>
+  <rect width="400" height="400" fill="url(#sage-accent)"/>
+
+  <!-- Grain texture -->
+  <rect width="400" height="400" filter="url(#grain)" opacity="1"/>
+
+  <!-- Subtle concentric ring (very faint) -->
+  <circle cx="200" cy="196" r="150" fill="none" stroke="rgba(250,246,238,.028)" stroke-width="1"/>
+  <circle cx="200" cy="196" r="185" fill="none" stroke="rgba(250,246,238,.018)" stroke-width="1"/>
+
+  <!-- Lumi — centered, scaled 2× from 180×200 viewBox, shifted slightly up -->
+  <!-- translate(20, -2) scale(2.0) → Lumi occupies x:20–380, y:-2–398 -->
+  <g transform="translate(20, -2) scale(2.0)">
+
+    <!-- Shadow -->
+    <ellipse cx="90" cy="196" rx="38" ry="6" fill="rgba(0,0,0,.22)"/>
+
+    <!-- Wings — default (natural, welcoming) -->
+    <path d="M42 110 Q18 90 14 60 Q20 72 30 78 Q16 62 22 42 Q28 60 38 68 Q26 50 36 32 Q40 52 48 62 Q40 80 44 108Z"
+          fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.2"/>
+    <line x1="22" y1="56" x2="36" y2="64" stroke="#D4C29C" stroke-width="0.8" opacity=".7"/>
+    <line x1="28" y1="72" x2="40" y2="78" stroke="#D4C29C" stroke-width="0.8" opacity=".7"/>
+    <line x1="18" y1="68" x2="30" y2="74" stroke="#D4C29C" stroke-width="0.8" opacity=".7"/>
+
+    <path d="M138 110 Q162 90 166 60 Q160 72 150 78 Q164 62 158 42 Q152 60 142 68 Q154 50 144 32 Q140 52 132 62 Q140 80 136 108Z"
+          fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.2"/>
+    <line x1="158" y1="56" x2="144" y2="64" stroke="#D4C29C" stroke-width="0.8" opacity=".7"/>
+    <line x1="152" y1="72" x2="140" y2="78" stroke="#D4C29C" stroke-width="0.8" opacity=".7"/>
+    <line x1="162" y1="68" x2="150" y2="74" stroke="#D4C29C" stroke-width="0.8" opacity=".7"/>
+
+    <!-- Body -->
+    <ellipse cx="90" cy="126" rx="46" ry="54" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+    <ellipse cx="90" cy="136" rx="28" ry="34" fill="#F4ECDB" stroke="#E5D8BC" stroke-width="1"/>
+
+    <!-- Sage scarf -->
+    <path d="M56 105 Q90 96 124 105 Q118 116 90 118 Q62 116 56 105Z" fill="#7BA17C"/>
+    <path d="M85 115 Q90 122 95 115" stroke="#5F8763" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+    <!-- Belly text lines -->
+    <line x1="70" y1="140" x2="110" y2="140" stroke="#D4C29C" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="72" y1="149" x2="108" y2="149" stroke="#D4C29C" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="75" y1="158" x2="104" y2="158" stroke="#D4C29C" stroke-width="1.2" stroke-linecap="round"/>
+
+    <!-- Book in talon -->
+    <g transform="translate(54,162) rotate(-12)">
+      <rect width="20" height="26" rx="2" fill="#20283A"/>
+      <rect x="3" y="0" width="17" height="26" rx="2" fill="#F4ECDB" stroke="#D4C29C" stroke-width=".8"/>
+      <line x1="6" y1="8" x2="17" y2="8" stroke="#D4C29C" stroke-width=".8"/>
+      <line x1="6" y1="12" x2="17" y2="12" stroke="#D4C29C" stroke-width=".8"/>
+      <line x1="6" y1="16" x2="13" y2="16" stroke="#D4C29C" stroke-width=".8"/>
+      <rect x="14" y="0" width="4" height="10" rx="1" fill="#E0A458"/>
+      <path d="M14 10 L16 8 L18 10" fill="#E0A458"/>
+    </g>
+
+    <!-- Talons -->
+    <path d="M72 180 Q68 186 64 184 M72 180 Q72 188 68 188 M72 180 Q76 188 72 188"
+          stroke="#D4C29C" stroke-width="2" stroke-linecap="round"/>
+    <path d="M108 180 Q104 186 100 184 M108 180 Q108 188 104 188 M108 180 Q112 188 108 188"
+          stroke="#D4C29C" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Head -->
+    <ellipse cx="90" cy="84" rx="38" ry="36" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+
+    <!-- Ear tufts -->
+    <path d="M60 58 L54 42 L68 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M120 58 L126 42 L112 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M61 55 L57 46 L66 53Z" fill="#E0A458" opacity=".42"/>
+    <path d="M119 55 L123 46 L114 53Z" fill="#E0A458" opacity=".42"/>
+
+    <!-- Face disc -->
+    <ellipse cx="90" cy="86" rx="30" ry="28" fill="none" stroke="#E5D8BC" stroke-width="1.5" stroke-dasharray="3 2"/>
+
+    <!-- Eyes — open, natural (default state) -->
+    <circle cx="75" cy="82" r="12" fill="#20283A"/>
+    <circle cx="75" cy="82" r="10" fill="white"/>
+    <circle cx="75" cy="83" r="6" fill="#20283A"/>
+    <circle cx="77" cy="80" r="2" fill="white"/>
+    <path d="M71 84 Q73 88 76 84" stroke="#E0A458" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+
+    <circle cx="105" cy="82" r="12" fill="#20283A"/>
+    <circle cx="105" cy="82" r="10" fill="white"/>
+    <circle cx="105" cy="83" r="6" fill="#20283A"/>
+    <circle cx="107" cy="80" r="2" fill="white"/>
+    <path d="M102 87 L104 84 L106 87" stroke="#7BA17C" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Beak -->
+    <path d="M85 92 L90 100 L95 92 Q90 89 85 92Z" fill="#E0A458"/>
+  </g>
+
+  <!-- Sparkle top-right (in absolute coords) -->
+  <path d="M318 72 L320 78 L326 78 L321.5 82 L323.5 88 L318 84.5 L312.5 88 L314.5 82 L310 78 L316 78 Z"
+        fill="#E0A458" opacity=".55"/>
+  <circle cx="328" cy="62" r="3.5" fill="#E0A458" opacity=".4"/>
+  <circle cx="308" cy="66" r="2.5" fill="#7BA17C" opacity=".38"/>
+
+  <!-- Sparkle bottom-left -->
+  <path d="M78 342 L79 346 L83 346 L80 348.5 L81 352.5 L78 350.5 L75 352.5 L76 348.5 L73 346 L77 346 Z"
+        fill="#E0A458" opacity=".35"/>
+
+  <!-- Small floating glyphs (very subtle) -->
+  <text x="44" y="72" font-family="serif" font-size="28" fill="#E0A458" opacity=".055" font-style="italic">ع</text>
+  <text x="330" y="340" font-family="serif" font-size="22" fill="#7BA17C" opacity=".06">α</text>
+</svg>
+</div>
+
+<!-- ── Size previews ────────────────────────────────────────────────── -->
+<div class="preview-row">
+
+  <div class="preview-item">
+    <div class="preview-circle-lg" id="clone-lg"></div>
+    <span class="preview-label-sm">200px</span>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:20px;align-items:center;">
+    <div class="preview-item">
+      <div class="preview-circle-md" id="clone-md"></div>
+      <span class="preview-label-sm">80px · nav</span>
+    </div>
+    <div style="display:flex;gap:16px;align-items:flex-end;">
+      <div class="preview-item">
+        <div class="preview-circle-sm" id="clone-sm"></div>
+        <span class="preview-label-sm">48px</span>
+      </div>
+      <div class="preview-item">
+        <div class="preview-circle-xs" id="clone-xs"></div>
+        <span class="preview-label-sm">32px</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Export instructions ───────────────────────────────────────── -->
+<div class="instructions">
+  <h3>Export as PNG</h3>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <p>Open DevTools → <code>F12</code></p>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <p>In the <strong style="color:rgba(250,246,238,.8)">Elements</strong> panel, find <code>&lt;div id="export-target"&gt;</code></p>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <p>Right-click it → <strong style="color:#E0A458">Capture node screenshot</strong><br>
+    Saves a 400×400 PNG to Downloads.</p>
+  </div>
+
+  <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06);">
+    <p style="font-size:12px;color:rgba(250,246,238,.3);margin-bottom:10px;">
+      OR — headless one-liner (requires Chrome + ImageMagick):
+    </p>
+    <code style="display:block;font-size:11px;font-family:ui-monospace,monospace;background:rgba(0,0,0,.3);padding:10px 12px;border-radius:8px;color:#E0A458;line-height:1.7;word-break:break-all;">
+      google-chrome --headless --screenshot=/tmp/lumi.png --window-size=400,400 --hide-scrollbars "file://$(pwd)/profile-image.html" &amp;&amp; convert /tmp/lumi.png -gravity North -crop 400x400+0+0 +repage profile-export.png
+    </code>
+  </div>
+</div>
+
+<script>
+// Clone the SVG into each preview container
+const src = document.querySelector('#export-target svg');
+['clone-lg','clone-md','clone-sm','clone-xs'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const clone = src.cloneNode(true);
+  clone.removeAttribute('width'); clone.removeAttribute('height');
+  clone.style.width = '100%'; clone.style.height = '100%';
+  el.appendChild(clone);
+});
+</script>
+</body>
+</html>

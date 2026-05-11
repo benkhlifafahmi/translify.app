@@ -5,7 +5,12 @@
       "Bash(uv sync *)",
       "Bash(pnpm install *)",
       "Bash(flutter analyze *)",
-      "Bash(~/development/flutter/bin/flutter analyze *)"
+      "Bash(~/development/flutter/bin/flutter analyze *)",
+      "Bash(xdg-open *)",
+      "Bash(npx tsc *)",
+      "Bash(timeout 30 npx next build)",
+      "Bash(npx next *)",
+      "Bash(docker compose *)"
     ]
   }
 }

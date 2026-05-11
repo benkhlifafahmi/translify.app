@@ -7,6 +7,7 @@ import { uploadBook, type Book } from "@/lib/books";
 import { ApiError, getToken } from "@/lib/api";
 import { parseQuotaError, upgradeUrl } from "@/lib/quota";
 import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
+import { useLumi } from "@/components/lumi/lumi-context";
 
 const ACCEPTED = ".pdf,.epub,application/pdf,application/epub+zip";
 
@@ -23,6 +24,7 @@ export function UploadButton() {
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
 
+  const { bumpXP } = useLumi();
   const enabled = typeof window !== "undefined" && !!getToken();
   const { data: sub } = useQuery<Subscription>({
     queryKey: ["subscription"],
@@ -51,6 +53,7 @@ export function UploadButton() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["books"] });
+      bumpXP(15, "+15 XP — Book added!");
     },
     onError: (err) => {
       const quota = parseQuotaError(err);

@@ -18,6 +18,9 @@ import {
 } from "@/lib/highlights";
 import { TranslifyMark } from "@/components/translify-mark";
 import { getToken } from "@/lib/api";
+import { LumiHud } from "@/components/lumi/lumi-hud";
+import { LumiGuide } from "@/components/lumi/lumi-guide";
+import { useLumi } from "@/components/lumi/lumi-context";
 
 export default function LibraryPage() {
   const router = useRouter();
@@ -72,6 +75,20 @@ export default function LibraryPage() {
     if (userError) router.replace("/login");
   }, [userError, router]);
 
+  // Lumi achievement triggers — react to library state changes.
+  const { award } = useLumi();
+  useEffect(() => {
+    if (!user) return;
+    award("welcome");
+  }, [user, award]);
+
+  useEffect(() => {
+    if (!books) return;
+    if (books.length >= 1) award("first-upload");
+    if (books.length >= 5) award("five-books");
+    if (books.some((b) => b.status === "ready")) award("first-translation");
+  }, [books, award]);
+
   const onLogout = async () => {
     await logout();
     router.replace("/login");
@@ -110,7 +127,10 @@ export default function LibraryPage() {
         />
 
         <div className="flex items-center gap-2">
-          <span className="hidden rounded-full bg-[color:var(--color-paper-3)]/70 px-3 py-1.5 text-xs font-medium text-[color:var(--color-ink-soft)] sm:inline-flex">
+          <div className="hidden md:block">
+            <LumiHud />
+          </div>
+          <span className="hidden rounded-full bg-[color:var(--color-paper-3)]/70 px-3 py-1.5 text-xs font-medium text-[color:var(--color-ink-soft)] lg:inline-flex">
             {user?.email}
           </span>
           <Link
@@ -260,30 +280,34 @@ function RecentNotesStrip({
 
 function EmptyShelf() {
   return (
-    <div className="card-paper-lifted relative mx-auto max-w-2xl overflow-hidden p-10 text-center sm:p-14">
+    <div className="card-paper-lifted relative mx-auto max-w-3xl overflow-hidden p-8 sm:p-12">
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-[color:var(--color-saffron)]/15 blur-2xl"
+        className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-[color:var(--color-saffron)]/20 blur-2xl"
       />
       <div
         aria-hidden
         className="pointer-events-none absolute -right-12 -bottom-12 h-44 w-44 rounded-full bg-[color:var(--color-sage)]/15 blur-2xl"
       />
 
-      <div className="relative mx-auto mb-5 grid h-20 w-20 place-items-center rounded-3xl bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)]">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-          <path d="M9 8h6M9 12h6" />
-        </svg>
+      <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-2">
+        <LumiGuide
+          state="waving"
+          size={160}
+          lines={[
+            "Hi! I'm Lumi — your reading companion. Drop your first book and I'll get to work.",
+            "PDF or EPUB, any language. Once you upload, I'll read it, translate it, and we can chat about it together.",
+            "Bonus: every book you finish earns XP and helps your garden grow 🌱",
+          ]}
+          bubblePosition="right"
+        />
       </div>
 
-      <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">
-        Your shelf is empty — for now.
-      </h2>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
-        Drag in your first PDF or EPUB. We'll read it, translate it, and get it
-        ready for chat and quizzes — usually within a minute or two.
-      </p>
+      <div className="relative mt-8 border-t border-dashed border-[color:var(--color-border-strong)] pt-6 text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--color-ink-soft)]">
+          Drag a file anywhere on this page, or use the upload button above.
+        </p>
+      </div>
     </div>
   );
 }

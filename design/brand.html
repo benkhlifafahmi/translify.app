@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Translify — Brand Identity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --paper:      #FAF6EE;
+    --paper-2:    #F4ECDB;
+    --ink:        #20283A;
+    --ink-soft:   #4A5263;
+    --saffron:    #E0A458;
+    --saffron-d:  #C8893E;
+    --sage:       #7BA17C;
+    --sage-d:     #5F8763;
+    --coral:      #E2786C;
+    --plum:       #6B5B95;
+    --border:     #E5D8BC;
+    --ff-display: 'Fraunces', ui-serif, Georgia, serif;
+    --ff-body:    'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--ff-body);
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(at 15% 5%,  rgba(224,164,88,.10) 0, transparent 40%),
+      radial-gradient(at 94% 8%,  rgba(123,161,124,.08) 0, transparent 36%),
+      radial-gradient(at 78% 95%, rgba(226,120,108,.07) 0, transparent 34%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.13  0 0 0 0 0.08  0 0 0 0.035 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    background-attachment: fixed;
+  }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 64px 32px 120px; }
+
+  /* — headers — */
+  .section-label {
+    font-family: var(--ff-body);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 28px;
+  }
+  .section { margin-bottom: 80px; }
+
+  h1.brand-title {
+    font-family: var(--ff-display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .brand-subtitle {
+    font-size: 1rem;
+    color: var(--ink-soft);
+    margin-bottom: 64px;
+  }
+
+  /* — card — */
+  .card {
+    background: linear-gradient(180deg, #FFFCF3 0%, var(--paper) 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 2px 0 rgba(74,60,30,.04), 0 22px 44px -18px rgba(74,60,30,.18);
+  }
+  .card-dark {
+    background: var(--ink);
+    border-color: rgba(255,255,255,.08);
+  }
+  .card-saffron {
+    background: linear-gradient(135deg, #FFF3DC 0%, #FDEBC4 100%);
+    border-color: rgba(224,164,88,.35);
+  }
+
+  /* — logo grid — */
+  .logo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .logo-cell {
+    border-radius: 16px;
+    padding: 36px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--border);
+  }
+  .logo-cell-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+  /* — mascot section — */
+  .mascot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .pose-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  /* — palette — */
+  .palette {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .swatch {
+    width: 80px;
+  }
+  .swatch-color {
+    height: 64px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,.06);
+    margin-bottom: 8px;
+  }
+  .swatch-name { font-size: 0.72rem; font-weight: 600; color: var(--ink); }
+  .swatch-hex  { font-size: 0.65rem; color: var(--ink-soft); font-family: ui-monospace, monospace; }
+
+  /* — animations — */
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  @keyframes blink { 0%,90%,100%{transform:scaleY(1)} 94%,96%{transform:scaleY(0.05)} }
+  @keyframes book-open { 0%{transform:rotate(0deg)} 50%{transform:rotate(-12deg)} 100%{transform:rotate(0deg)} }
+  @keyframes sparkle { 0%,100%{opacity:0;transform:scale(0)} 50%{opacity:1;transform:scale(1)} }
+  @keyframes wave { 0%{transform:rotate(0deg)} 25%{transform:rotate(20deg)} 75%{transform:rotate(-10deg)} 100%{transform:rotate(0deg)} }
+
+  .lumi-float { animation: float 4s ease-in-out infinite; }
+  .lumi-eye   { animation: blink 5s ease-in-out infinite; transform-origin: 50% 50%; }
+  .lumi-wing-l { transform-origin: 90% 30%; }
+  .lumi-wing-l:hover { animation: wave 0.6s ease-in-out; }
+
+  .sparkle-1 { animation: sparkle 2.4s ease-in-out 0.0s infinite; }
+  .sparkle-2 { animation: sparkle 2.4s ease-in-out 0.8s infinite; }
+  .sparkle-3 { animation: sparkle 2.4s ease-in-out 1.6s infinite; }
+
+  /* — type specimens — */
+  .type-specimen { margin-bottom: 20px; }
+  .type-display { font-family: var(--ff-display); font-size: 2.4rem; font-weight: 400; letter-spacing: -0.03em; color: var(--ink); }
+  .type-body { font-family: var(--ff-body); font-size: 1rem; color: var(--ink-soft); line-height: 1.6; }
+  .type-tag { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); opacity: 0.55; margin-bottom: 4px; }
+
+  /* — usage chips — */
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .chip {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: rgba(32,40,58,.06);
+    color: var(--ink);
+    border: 1px solid var(--border);
+  }
+  .chip-saffron { background: rgba(224,164,88,.15); border-color: rgba(224,164,88,.4); color: var(--saffron-d); }
+  .chip-sage    { background: rgba(123,161,124,.15); border-color: rgba(123,161,124,.4); color: var(--sage-d); }
+
+  hr.deco { border: none; border-top: 1px dashed var(--border); margin: 56px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1 class="brand-title">Translify</h1>
+  <p class="brand-subtitle">Brand Identity — Logo, Mascot &amp; Design Tokens</p>
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 1 — LOGO MARK
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-label">01 — Logo Mark</p>
+    <div class="logo-grid">
+
+      <!-- Light -->
+      <div class="logo-cell" style="background:linear-gradient(180deg,#FFFCF3,var(--paper));">
+        <svg width="120" height="48" viewBox="0 0 240 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Icon mark: book pages → speech bubble -->
+          <g transform="translate(0,8)">
+            <!-- Book spine -->
+            <rect x="8" y="10" width="5" height="60" rx="2.5" fill="#20283A"/>
+            <!-- Pages stack -->
+            <rect x="13" y="14" width="36" height="52" rx="3" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="1.5"/>
+            <rect x="17" y="14" width="32" height="52" rx="3" fill="#F4ECDB" stroke="#E5D8BC" stroke-width="1.2"/>
+            <rect x="21" y="14" width="28" height="52" rx="3" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1"/>
+            <!-- Page lines -->
+            <line x1="26" y1="26" x2="44" y2="26" stroke="#D4C29C" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="26" y1="33" x2="44" y2="33" stroke="#D4C29C" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="26" y1="40" x2="38" y2="40" stroke="#D4C29C" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Speech bubble emerging from top-right of book -->
+            <rect x="38" y="4" width="44" height="34" rx="10" fill="#E0A458"/>
+            <!-- Bubble tail -->
+            <path d="M44 36 L40 46 L54 36Z" fill="#E0A458"/>
+            <!-- Script characters inside bubble -->
+            <!-- Arabic-style squiggle -->
+            <path d="M47 15 Q52 10 57 15 Q62 20 67 15" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.9"/>
+            <!-- Latin T -->
+            <text x="46" y="30" font-family="serif" font-size="11" fill="white" opacity="0.75" font-weight="bold">T</text>
+            <!-- CJK-ish -->
+            <text x="60" y="30" font-family="serif" font-size="9" fill="white" opacity="0.65">文</text>
+          </g>
+          <!-- Wordmark -->
+          <text x="100" y="52" font-family="'Fraunces', Georgia, serif" font-size="34" font-weight="400" fill="#20283A" letter-spacing="-1">translify</text>
+        </svg>
+        <span class="logo-cell-label" style="color:var(--ink-soft)">On Light</span>
+      </div>
+
+      <!-- Dark -->
+      <div class="logo-cell card-dark">
+        <svg width="120" height="48" viewBox="0 0 240 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(0,8)">
+            <rect x="8" y="10" width="5" height="60" rx="2.5" fill="#FAF6EE"/>
+            <rect x="13" y="14" width="36" height="52" rx="3" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.18)" stroke-width="1.5"/>
+            <rect x="17" y="14" width="32" height="52" rx="3" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.12)" stroke-width="1.2"/>
+            <rect x="21" y="14" width="28" height="52" rx="3" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+            <line x1="26" y1="26" x2="44" y2="26" stroke="rgba(255,255,255,.25)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="26" y1="33" x2="44" y2="33" stroke="rgba(255,255,255,.25)" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="26" y1="40" x2="38" y2="40" stroke="rgba(255,255,255,.25)" stroke-width="1.5" stroke-linecap="round"/>
+            <rect x="38" y="4" width="44" height="34" rx="10" fill="#E0A458"/>
+            <path d="M44 36 L40 46 L54 36Z" fill="#E0A458"/>
+            <path d="M47 15 Q52 10 57 15 Q62 20 67 15" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.9"/>
+            <text x="46" y="30" font-family="serif" font-size="11" fill="white" opacity="0.75" font-weight="bold">T</text>
+            <text x="60" y="30" font-family="serif" font-size="9" fill="white" opacity="0.65">文</text>
+          </g>
+          <text x="100" y="52" font-family="'Fraunces', Georgia, serif" font-size="34" font-weight="400" fill="#FAF6EE" letter-spacing="-1">translify</text>
+        </svg>
+        <span class="logo-cell-label" style="color:rgba(250,246,238,.4)">On Dark</span>
+      </div>
+
+      <!-- Icon only -->
+      <div class="logo-cell card-saffron">
+        <svg width="72" height="72" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="80" height="80" rx="18" fill="#20283A"/>
+          <!-- Book spine -->
+          <rect x="10" y="14" width="6" height="52" rx="3" fill="#FAF6EE"/>
+          <!-- Pages -->
+          <rect x="16" y="18" width="30" height="44" rx="3" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <rect x="20" y="18" width="26" height="44" rx="3" fill="rgba(255,255,255,.14)" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
+          <line x1="25" y1="28" x2="40" y2="28" stroke="rgba(255,255,255,.3)" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="25" y1="34" x2="40" y2="34" stroke="rgba(255,255,255,.3)" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="25" y1="40" x2="35" y2="40" stroke="rgba(255,255,255,.3)" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Bubble -->
+          <rect x="36" y="8" width="36" height="28" rx="9" fill="#E0A458"/>
+          <path d="M42 34 L38 44 L52 34Z" fill="#E0A458"/>
+          <path d="M43 17 Q48 12 53 17 Q58 22 63 17" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <text x="42" y="30" font-family="serif" font-size="10" fill="white" font-weight="bold">T</text>
+          <text x="55" y="30" font-family="serif" font-size="8" fill="white" opacity="0.8">文</text>
+        </svg>
+        <span class="logo-cell-label" style="color:var(--saffron-d)">App Icon</span>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="deco">
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 2 — MASCOT "LUMI"
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-label">02 — Mascot · Lumi the Paper Owl</p>
+    <p style="font-size:0.88rem;color:var(--ink-soft);margin-bottom:36px;max-width:500px;">
+      Lumi is Translify's resident scholar — a paper owl whose wing-feathers are pages,
+      whose eyes hold different scripts, and who is always caught mid-translation.
+      Warm, curious, never condescending.
+    </p>
+
+    <div class="mascot-grid">
+      <!-- Main mascot — large, animated -->
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:56px 40px;">
+        <div class="lumi-float" style="position:relative;display:inline-block;">
+          <!-- Sparkles -->
+          <svg class="sparkle-1" style="position:absolute;top:-18px;left:12px;width:18px;height:18px;" viewBox="0 0 20 20"><path d="M10 1 L11.5 8.5 L19 10 L11.5 11.5 L10 19 L8.5 11.5 L1 10 L8.5 8.5 Z" fill="#E0A458"/></svg>
+          <svg class="sparkle-2" style="position:absolute;top:4px;right:-8px;width:12px;height:12px;" viewBox="0 0 20 20"><path d="M10 1 L11.5 8.5 L19 10 L11.5 11.5 L10 19 L8.5 11.5 L1 10 L8.5 8.5 Z" fill="#7BA17C"/></svg>
+          <svg class="sparkle-3" style="position:absolute;bottom:10px;right:-16px;width:10px;height:10px;" viewBox="0 0 20 20"><path d="M10 1 L11.5 8.5 L19 10 L11.5 11.5 L10 19 L8.5 11.5 L1 10 L8.5 8.5 Z" fill="#E2786C"/></svg>
+
+          <!-- Lumi SVG — 180px tall -->
+          <svg width="180" height="200" viewBox="0 0 180 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Shadow -->
+            <ellipse cx="90" cy="196" rx="38" ry="6" fill="rgba(32,40,58,.1)"/>
+
+            <!-- Left wing (page feathers) -->
+            <g class="lumi-wing-l">
+              <path d="M42 110 Q18 90 14 60 Q20 72 30 78 Q16 62 22 42 Q28 60 38 68 Q26 50 36 32 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.2"/>
+              <!-- Feather lines (page lines) -->
+              <line x1="22" y1="56" x2="36" y2="64" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+              <line x1="28" y1="72" x2="40" y2="78" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+              <line x1="18" y1="68" x2="30" y2="74" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+            </g>
+
+            <!-- Right wing -->
+            <g style="transform:scaleX(-1);transform-origin:90px 90px;">
+              <path d="M42 110 Q18 90 14 60 Q20 72 30 78 Q16 62 22 42 Q28 60 38 68 Q26 50 36 32 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.2"/>
+              <line x1="22" y1="56" x2="36" y2="64" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+              <line x1="28" y1="72" x2="40" y2="78" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+              <line x1="18" y1="68" x2="30" y2="74" stroke="#D4C29C" stroke-width="0.8" opacity="0.7"/>
+            </g>
+
+            <!-- Body — paper owl -->
+            <ellipse cx="90" cy="126" rx="46" ry="54" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+            <!-- Body grain / tummy -->
+            <ellipse cx="90" cy="136" rx="28" ry="34" fill="#F4ECDB" stroke="#E5D8BC" stroke-width="1"/>
+
+            <!-- Sage scarf/collar -->
+            <path d="M56 105 Q90 96 124 105 Q118 116 90 118 Q62 116 56 105Z" fill="#7BA17C"/>
+            <path d="M85 115 Q90 122 95 115" stroke="#5F8763" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+            <!-- Head -->
+            <ellipse cx="90" cy="84" rx="38" ry="36" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+
+            <!-- Ear tufts -->
+            <path d="M60 58 L54 42 L68 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M120 58 L126 42 L112 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5" stroke-linejoin="round"/>
+            <!-- Tuft inner -->
+            <path d="M61 55 L57 46 L66 53Z" fill="#E0A458" opacity="0.4"/>
+            <path d="M119 55 L123 46 L114 53Z" fill="#E0A458" opacity="0.4"/>
+
+            <!-- Face disc (facial feather ring) -->
+            <ellipse cx="90" cy="86" rx="30" ry="28" fill="none" stroke="#E5D8BC" stroke-width="1.5" stroke-dasharray="3 2"/>
+
+            <!-- Left eye -->
+            <g class="lumi-eye">
+              <circle cx="75" cy="82" r="12" fill="#20283A"/>
+              <circle cx="75" cy="82" r="10" fill="white"/>
+              <!-- Arabic script-style pupil -->
+              <circle cx="75" cy="83" r="6" fill="#20283A"/>
+              <circle cx="77" cy="80" r="2" fill="white"/>
+              <!-- tiny crescent -->
+              <path d="M71 84 Q73 88 76 84" stroke="#E0A458" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            </g>
+
+            <!-- Right eye -->
+            <g class="lumi-eye" style="animation-delay:0.3s">
+              <circle cx="105" cy="82" r="12" fill="#20283A"/>
+              <circle cx="105" cy="82" r="10" fill="white"/>
+              <!-- Serif / Latin-style pupil -->
+              <circle cx="105" cy="83" r="6" fill="#20283A"/>
+              <circle cx="107" cy="80" r="2" fill="white"/>
+              <!-- tiny serif flourish -->
+              <path d="M102 87 L104 84 L106 87" stroke="#7BA17C" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+
+            <!-- Beak — saffron triangle -->
+            <path d="M85 92 L90 100 L95 92 Q90 89 85 92Z" fill="#E0A458"/>
+
+            <!-- Belly script lines (translated text) -->
+            <line x1="70" y1="140" x2="110" y2="140" stroke="#D4C29C" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="72" y1="149" x2="108" y2="149" stroke="#D4C29C" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="75" y1="158" x2="104" y2="158" stroke="#D4C29C" stroke-width="1.2" stroke-linecap="round"/>
+
+            <!-- Tiny book in left talon -->
+            <g transform="translate(54, 162) rotate(-12)">
+              <rect width="20" height="26" rx="2" fill="#20283A"/>
+              <rect x="3" y="0" width="17" height="26" rx="2" fill="#F4ECDB" stroke="#D4C29C" stroke-width="0.8"/>
+              <line x1="6" y1="8" x2="17" y2="8" stroke="#D4C29C" stroke-width="0.8"/>
+              <line x1="6" y1="12" x2="17" y2="12" stroke="#D4C29C" stroke-width="0.8"/>
+              <line x1="6" y1="16" x2="13" y2="16" stroke="#D4C29C" stroke-width="0.8"/>
+              <!-- Saffron bookmark -->
+              <rect x="14" y="0" width="4" height="10" rx="1" fill="#E0A458"/>
+              <path d="M14 10 L16 8 L18 10" fill="#E0A458"/>
+            </g>
+
+            <!-- Feet / talons -->
+            <path d="M72 180 Q68 186 64 184 M72 180 Q72 188 68 188 M72 180 Q76 188 72 188" stroke="#D4C29C" stroke-width="2" stroke-linecap="round"/>
+            <path d="M108 180 Q104 186 100 184 M108 180 Q108 188 104 188 M108 180 Q112 188 108 188" stroke="#D4C29C" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div style="text-align:center;">
+          <div style="font-family:var(--ff-display);font-size:1.5rem;color:var(--ink);">Lumi</div>
+          <div style="font-size:0.78rem;color:var(--ink-soft);margin-top:2px;">The Paper Owl · Translify's companion</div>
+        </div>
+      </div>
+
+      <!-- Poses & sizes -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <!-- Personality notes -->
+        <div class="card" style="padding:28px;">
+          <div style="font-family:var(--ff-display);font-size:1rem;margin-bottom:14px;color:var(--ink);">Character Notes</div>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+            <li style="display:flex;gap:10px;font-size:0.84rem;color:var(--ink-soft);">
+              <span style="color:var(--saffron);font-size:1rem;">◆</span>
+              Wings are book pages — each feather a line of text
+            </li>
+            <li style="display:flex;gap:10px;font-size:0.84rem;color:var(--ink-soft);">
+              <span style="color:var(--sage);font-size:1rem;">◆</span>
+              Left eye: Arabic script curl · Right eye: Latin serif flourish
+            </li>
+            <li style="display:flex;gap:10px;font-size:0.84rem;color:var(--ink-soft);">
+              <span style="color:var(--coral);font-size:1rem;">◆</span>
+              Sage scarf = warmth, always mid-session
+            </li>
+            <li style="display:flex;gap:10px;font-size:0.84rem;color:var(--ink-soft);">
+              <span style="color:var(--plum);font-size:1rem;">◆</span>
+              Always holds an open book — never empty-handed
+            </li>
+            <li style="display:flex;gap:10px;font-size:0.84rem;color:var(--ink-soft);">
+              <span style="color:var(--saffron);font-size:1rem;">◆</span>
+              Sparkles = translation magic in progress
+            </li>
+          </ul>
+        </div>
+
+        <!-- Small sizes -->
+        <div class="card" style="padding:24px;">
+          <div style="font-size:0.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:18px;">Scale Tests</div>
+          <div class="pose-row">
+
+            <!-- 96px -->
+            <div style="text-align:center;">
+              <svg width="96" height="110" viewBox="0 0 180 200" fill="none">
+                <ellipse cx="90" cy="196" rx="38" ry="6" fill="rgba(32,40,58,.08)"/>
+                <path d="M42 110 Q18 90 14 60 Q20 72 30 78 Q22 42 38 68 Q26 50 36 32 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.5"/>
+                <g style="transform:scaleX(-1);transform-origin:90px 90px;">
+                  <path d="M42 110 Q18 90 14 60 Q20 72 30 78 Q22 42 38 68 Q26 50 36 32 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.5"/>
+                </g>
+                <ellipse cx="90" cy="126" rx="46" ry="54" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+                <ellipse cx="90" cy="136" rx="28" ry="34" fill="#F4ECDB" stroke="#E5D8BC" stroke-width="1"/>
+                <path d="M56 105 Q90 96 124 105 Q118 116 90 118 Q62 116 56 105Z" fill="#7BA17C"/>
+                <ellipse cx="90" cy="84" rx="38" ry="36" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+                <path d="M60 58 L54 42 L68 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5"/>
+                <path d="M120 58 L126 42 L112 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5"/>
+                <circle cx="75" cy="82" r="10" fill="#20283A"/>
+                <circle cx="75" cy="82" r="8.5" fill="white"/>
+                <circle cx="75" cy="83" r="5" fill="#20283A"/>
+                <circle cx="77" cy="80" r="1.8" fill="white"/>
+                <circle cx="105" cy="82" r="10" fill="#20283A"/>
+                <circle cx="105" cy="82" r="8.5" fill="white"/>
+                <circle cx="105" cy="83" r="5" fill="#20283A"/>
+                <circle cx="107" cy="80" r="1.8" fill="white"/>
+                <path d="M85 92 L90 100 L95 92 Q90 89 85 92Z" fill="#E0A458"/>
+              </svg>
+              <div style="font-size:0.65rem;color:var(--ink-soft)">96px</div>
+            </div>
+
+            <!-- 48px -->
+            <div style="text-align:center;">
+              <svg width="48" height="56" viewBox="0 0 180 200" fill="none">
+                <path d="M42 110 Q18 90 14 60 Q22 42 38 68 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#D4C29C" stroke-width="2"/>
+                <g style="transform:scaleX(-1);transform-origin:90px 90px;">
+                  <path d="M42 110 Q18 90 14 60 Q22 42 38 68 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#D4C29C" stroke-width="2"/>
+                </g>
+                <ellipse cx="90" cy="126" rx="46" ry="54" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="3"/>
+                <path d="M58 106 Q90 97 122 106 Q116 118 90 120 Q64 118 58 106Z" fill="#7BA17C"/>
+                <ellipse cx="90" cy="84" rx="38" ry="36" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="3"/>
+                <circle cx="75" cy="83" r="9" fill="#20283A"/>
+                <circle cx="75" cy="83" r="7" fill="white"/>
+                <circle cx="75" cy="84" r="4" fill="#20283A"/>
+                <circle cx="77" cy="81" r="1.5" fill="white"/>
+                <circle cx="105" cy="83" r="9" fill="#20283A"/>
+                <circle cx="105" cy="83" r="7" fill="white"/>
+                <circle cx="105" cy="84" r="4" fill="#20283A"/>
+                <circle cx="107" cy="81" r="1.5" fill="white"/>
+                <path d="M85 93 L90 102 L95 93 Q90 90 85 93Z" fill="#E0A458"/>
+              </svg>
+              <div style="font-size:0.65rem;color:var(--ink-soft)">48px</div>
+            </div>
+
+            <!-- 32px -->
+            <div style="text-align:center;">
+              <svg width="32" height="36" viewBox="0 0 180 200" fill="none">
+                <ellipse cx="90" cy="126" rx="52" ry="58" fill="#FAF6EE" stroke="#D4C29C" stroke-width="4"/>
+                <path d="M52 108 Q90 98 128 108 Q122 122 90 124 Q58 122 52 108Z" fill="#7BA17C"/>
+                <ellipse cx="90" cy="80" rx="42" ry="40" fill="#FAF6EE" stroke="#D4C29C" stroke-width="4"/>
+                <circle cx="73" cy="80" r="11" fill="#20283A"/>
+                <circle cx="73" cy="80" r="8" fill="white"/>
+                <circle cx="73" cy="82" r="5" fill="#20283A"/>
+                <circle cx="76" cy="78" r="2" fill="white"/>
+                <circle cx="107" cy="80" r="11" fill="#20283A"/>
+                <circle cx="107" cy="80" r="8" fill="white"/>
+                <circle cx="107" cy="82" r="5" fill="#20283A"/>
+                <circle cx="110" cy="78" r="2" fill="white"/>
+                <path d="M84 94 L90 104 L96 94 Q90 90 84 94Z" fill="#E0A458"/>
+              </svg>
+              <div style="font-size:0.65rem;color:var(--ink-soft)">32px</div>
+            </div>
+
+            <!-- 20px favicon -->
+            <div style="text-align:center;">
+              <svg width="20" height="20" viewBox="0 0 180 200" fill="none">
+                <ellipse cx="90" cy="130" rx="55" ry="60" fill="#FAF6EE"/>
+                <ellipse cx="90" cy="80" rx="45" ry="42" fill="#FAF6EE"/>
+                <circle cx="70" cy="80" r="14" fill="#20283A"/>
+                <circle cx="70" cy="80" r="10" fill="white"/>
+                <circle cx="70" cy="82" r="6" fill="#20283A"/>
+                <circle cx="73" cy="78" r="2.5" fill="white"/>
+                <circle cx="110" cy="80" r="14" fill="#20283A"/>
+                <circle cx="110" cy="80" r="10" fill="white"/>
+                <circle cx="110" cy="82" r="6" fill="#20283A"/>
+                <circle cx="113" cy="78" r="2.5" fill="white"/>
+                <path d="M83 96 L90 108 L97 96 Q90 91 83 96Z" fill="#E0A458"/>
+                <path d="M48 112 Q90 100 132 112" fill="#7BA17C"/>
+              </svg>
+              <div style="font-size:0.65rem;color:var(--ink-soft)">20px</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Emotion states -->
+        <div class="card" style="padding:24px;">
+          <div style="font-size:0.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:16px;">States</div>
+          <div style="display:flex;gap:16px;align-items:flex-end;">
+
+            <!-- Thinking -->
+            <div style="text-align:center;">
+              <svg width="64" height="72" viewBox="0 0 180 200" fill="none">
+                <path d="M42 110 Q18 90 14 60 Q22 42 38 68 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.5"/>
+                <g style="transform:scaleX(-1);transform-origin:90px 90px;">
+                  <path d="M42 110 Q18 90 14 60 Q22 42 38 68 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.5"/>
+                </g>
+                <ellipse cx="90" cy="126" rx="46" ry="54" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+                <path d="M56 105 Q90 96 124 105 Q118 116 90 118 Q62 116 56 105Z" fill="#7BA17C"/>
+                <ellipse cx="90" cy="84" rx="38" ry="36" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+                <path d="M60 58 L54 42 L68 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5"/>
+                <path d="M120 58 L126 42 L112 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5"/>
+                <!-- squinting/thinking eyes -->
+                <path d="M67 82 Q75 77 83 82" stroke="#20283A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                <path d="M97 82 Q105 77 113 82" stroke="#20283A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                <path d="M85 95 L90 102 L95 95 Q90 92 85 95Z" fill="#E0A458"/>
+                <!-- thought dots -->
+                <circle cx="128" cy="54" r="4" fill="var(--saffron)" opacity="0.7"/>
+                <circle cx="137" cy="42" r="6" fill="var(--saffron)" opacity="0.8"/>
+                <circle cx="148" cy="28" r="9" fill="var(--saffron)" opacity="0.9"/>
+                <!-- question mark in thought -->
+                <text x="144" y="33" font-size="10" font-weight="bold" fill="white" font-family="serif">?</text>
+              </svg>
+              <div style="font-size:0.65rem;color:var(--ink-soft);margin-top:4px;">Thinking</div>
+            </div>
+
+            <!-- Happy -->
+            <div style="text-align:center;">
+              <svg width="64" height="72" viewBox="0 0 180 200" fill="none">
+                <path d="M42 110 Q18 90 14 60 Q22 42 38 68 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.5"/>
+                <g style="transform:scaleX(-1);transform-origin:90px 90px;">
+                  <path d="M42 110 Q18 90 14 60 Q22 42 38 68 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.5"/>
+                </g>
+                <ellipse cx="90" cy="126" rx="46" ry="54" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+                <path d="M56 105 Q90 96 124 105 Q118 116 90 118 Q62 116 56 105Z" fill="#7BA17C"/>
+                <ellipse cx="90" cy="84" rx="38" ry="36" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+                <path d="M60 58 L54 42 L68 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5"/>
+                <path d="M120 58 L126 42 L112 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5"/>
+                <!-- happy ^_^ eyes -->
+                <path d="M66 85 Q75 78 84 85" stroke="#20283A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                <path d="M96 85 Q105 78 114 85" stroke="#20283A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                <!-- big smile -->
+                <path d="M78 98 Q90 110 102 98" stroke="#E0A458" stroke-width="3" stroke-linecap="round" fill="none"/>
+                <!-- rosy cheeks -->
+                <circle cx="67" cy="92" r="7" fill="#E2786C" opacity="0.25"/>
+                <circle cx="113" cy="92" r="7" fill="#E2786C" opacity="0.25"/>
+              </svg>
+              <div style="font-size:0.65rem;color:var(--ink-soft);margin-top:4px;">Success!</div>
+            </div>
+
+            <!-- Sleeping/idle -->
+            <div style="text-align:center;">
+              <svg width="64" height="72" viewBox="0 0 180 200" fill="none">
+                <path d="M42 110 Q18 90 14 60 Q22 42 38 68 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#E5D8BC" stroke-width="1.5" opacity="0.6"/>
+                <g style="transform:scaleX(-1);transform-origin:90px 90px;">
+                  <path d="M42 110 Q18 90 14 60 Q22 42 38 68 Q40 52 48 62 Q40 80 44 108Z" fill="#F4ECDB" stroke="#E5D8BC" stroke-width="1.5" opacity="0.6"/>
+                </g>
+                <ellipse cx="90" cy="126" rx="46" ry="54" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+                <path d="M56 105 Q90 96 124 105 Q118 116 90 118 Q62 116 56 105Z" fill="#7BA17C" opacity="0.7"/>
+                <ellipse cx="90" cy="84" rx="38" ry="36" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+                <!-- sleeping lines -->
+                <path d="M68 84 Q75 84 82 84" stroke="#D4C29C" stroke-width="3" stroke-linecap="round"/>
+                <path d="M98 84 Q105 84 112 84" stroke="#D4C29C" stroke-width="3" stroke-linecap="round"/>
+                <path d="M84 95 L90 101 L96 95 Q90 92 84 95Z" fill="#E0A458" opacity="0.7"/>
+                <!-- Z's -->
+                <text x="124" y="70" font-size="12" fill="var(--ink-soft)" opacity="0.5" font-family="serif" font-weight="bold">z</text>
+                <text x="132" y="58" font-size="9" fill="var(--ink-soft)" opacity="0.4" font-family="serif" font-weight="bold">z</text>
+                <text x="140" y="48" font-size="7" fill="var(--ink-soft)" opacity="0.3" font-family="serif" font-weight="bold">z</text>
+              </svg>
+              <div style="font-size:0.65rem;color:var(--ink-soft);margin-top:4px;">Idle</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="deco">
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 3 — COLOUR PALETTE
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-label">03 — Colour Palette</p>
+    <div class="palette">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#20283A;"></div>
+        <div class="swatch-name">Ink</div>
+        <div class="swatch-hex">#20283A</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#FAF6EE;border:1px solid #E5D8BC;"></div>
+        <div class="swatch-name">Paper</div>
+        <div class="swatch-hex">#FAF6EE</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#E0A458;"></div>
+        <div class="swatch-name">Saffron</div>
+        <div class="swatch-hex">#E0A458</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#C8893E;"></div>
+        <div class="swatch-name">Saffron Deep</div>
+        <div class="swatch-hex">#C8893E</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#7BA17C;"></div>
+        <div class="swatch-name">Sage</div>
+        <div class="swatch-hex">#7BA17C</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#E2786C;"></div>
+        <div class="swatch-name">Coral</div>
+        <div class="swatch-hex">#E2786C</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#6B5B95;"></div>
+        <div class="swatch-name">Plum</div>
+        <div class="swatch-hex">#6B5B95</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="deco">
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 4 — TYPOGRAPHY
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-label">04 — Typography</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div class="card">
+        <div class="type-tag">Display · Fraunces</div>
+        <div class="type-display">Translate<br><em style="font-weight:300;font-style:italic;">the world.</em></div>
+        <div class="chips">
+          <span class="chip chip-saffron">Headings</span>
+          <span class="chip chip-saffron">Logo type</span>
+          <span class="chip chip-saffron">Callouts</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="type-tag">Body · Hanken Grotesk</div>
+        <div class="type-body" style="margin-top:8px;">
+          Upload any PDF or EPUB in any language. Translify's AI reads it, translates it, and lets you chat with it — all in one warm, distraction-free library.
+        </div>
+        <div class="chips">
+          <span class="chip chip-sage">Body copy</span>
+          <span class="chip chip-sage">UI labels</span>
+          <span class="chip chip-sage">Captions</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="deco">
+
+  <!-- ═══════════════════════════════════════════
+       SECTION 5 — LOGO + MASCOT IN CONTEXT
+  ═══════════════════════════════════════════ -->
+  <div class="section">
+    <p class="section-label">05 — In Context</p>
+    <div class="card-dark card" style="padding:48px 40px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;">
+      <!-- Left: wordmark -->
+      <div>
+        <svg width="200" height="52" viewBox="0 0 240 64" fill="none">
+          <g transform="translate(0,2)">
+            <rect x="8" y="8" width="5" height="46" rx="2.5" fill="#FAF6EE"/>
+            <rect x="13" y="12" width="28" height="38" rx="2" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+            <rect x="17" y="12" width="24" height="38" rx="2" fill="rgba(255,255,255,.13)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+            <rect x="38" y="2" width="34" height="26" rx="8" fill="#E0A458"/>
+            <path d="M42 27 L39 36 L50 27Z" fill="#E0A458"/>
+            <path d="M44 11 Q48 8 52 11 Q56 14 60 11" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+            <text x="42" y="23" font-family="serif" font-size="8" fill="white" font-weight="bold">T</text>
+            <text x="53" y="23" font-family="serif" font-size="7" fill="white" opacity="0.8">文</text>
+          </g>
+          <text x="82" y="40" font-family="'Fraunces', Georgia, serif" font-size="28" font-weight="400" fill="#FAF6EE" letter-spacing="-0.5">translify</text>
+        </svg>
+        <p style="color:rgba(250,246,238,.45);font-size:0.82rem;margin-top:8px;max-width:280px;line-height:1.5;">
+          Read, translate &amp; chat with any book.<br>Your multilingual library, powered by AI.
+        </p>
+      </div>
+
+      <!-- Right: mini Lumi -->
+      <div style="position:relative;">
+        <svg width="110" height="126" viewBox="0 0 180 200" fill="none">
+          <path d="M42 110 Q18 90 14 60 Q22 42 38 68 Q40 52 48 62 Q40 80 44 108Z" fill="rgba(250,246,238,.12)" stroke="rgba(250,246,238,.2)" stroke-width="1.5"/>
+          <g style="transform:scaleX(-1);transform-origin:90px 90px;">
+            <path d="M42 110 Q18 90 14 60 Q22 42 38 68 Q40 52 48 62 Q40 80 44 108Z" fill="rgba(250,246,238,.12)" stroke="rgba(250,246,238,.2)" stroke-width="1.5"/>
+          </g>
+          <ellipse cx="90" cy="126" rx="46" ry="54" fill="rgba(250,246,238,.15)" stroke="rgba(250,246,238,.25)" stroke-width="2"/>
+          <ellipse cx="90" cy="136" rx="28" ry="34" fill="rgba(250,246,238,.08)" stroke="rgba(250,246,238,.15)" stroke-width="1"/>
+          <path d="M56 105 Q90 96 124 105 Q118 116 90 118 Q62 116 56 105Z" fill="#7BA17C"/>
+          <ellipse cx="90" cy="84" rx="38" ry="36" fill="rgba(250,246,238,.18)" stroke="rgba(250,246,238,.3)" stroke-width="2"/>
+          <path d="M60 58 L54 42 L68 54Z" fill="rgba(250,246,238,.12)" stroke="rgba(250,246,238,.2)" stroke-width="1.5"/>
+          <path d="M120 58 L126 42 L112 54Z" fill="rgba(250,246,238,.12)" stroke="rgba(250,246,238,.2)" stroke-width="1.5"/>
+          <circle cx="75" cy="82" r="10" fill="#20283A"/>
+          <circle cx="75" cy="82" r="8" fill="white"/>
+          <circle cx="75" cy="83" r="5" fill="#20283A"/>
+          <circle cx="77" cy="80" r="1.8" fill="white"/>
+          <circle cx="105" cy="82" r="10" fill="#20283A"/>
+          <circle cx="105" cy="82" r="8" fill="white"/>
+          <circle cx="105" cy="83" r="5" fill="#20283A"/>
+          <circle cx="107" cy="80" r="1.8" fill="white"/>
+          <path d="M85 93 L90 101 L95 93 Q90 90 85 93Z" fill="#E0A458"/>
+        </svg>
+        <!-- sparkle dots -->
+        <div style="position:absolute;top:-4px;right:4px;width:10px;height:10px;background:var(--saffron);border-radius:50%;opacity:.7;"></div>
+        <div style="position:absolute;top:10px;right:-8px;width:6px;height:6px;background:var(--sage);border-radius:50%;opacity:.6;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:center;margin-top:48px;">
+    <p style="font-family:var(--ff-display);font-size:1.1rem;color:var(--ink-soft);font-style:italic;">
+      "Every book, in every language — at home in your library."
+    </p>
+    <p style="font-size:0.72rem;color:var(--ink-soft);opacity:.45;margin-top:10px;letter-spacing:.04em;">
+      TRANSLIFY BRAND IDENTITY · 2026
+    </p>
+  </div>
+
+</div>
+</body>
+</html>
