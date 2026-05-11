@@ -8,7 +8,7 @@ import '../api/api_client.dart';
 import '../state/progress.dart';
 import '../state/session.dart';
 import '../theme/tokens.dart';
-import '../widgets/owl_mascot.dart';
+import '../widgets/lumi_mascot.dart';
 import '../widgets/paper_background.dart';
 import '../widgets/quest_button.dart';
 import '../widgets/sticker_card.dart';
@@ -113,7 +113,7 @@ class _UploadScreenState extends State<UploadScreen> {
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
                     ),
-                    const OwlMascot(mood: OwlMood.cheer, size: 60),
+                    const LumiMascot(mood: LumiMood.cheer, size: 60),
                   ],
                 ),
                 const SizedBox(height: 20),

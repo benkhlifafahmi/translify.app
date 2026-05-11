@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../state/session.dart';
 import '../theme/tokens.dart';
-import '../widgets/owl_mascot.dart';
+import '../widgets/lumi_mascot.dart';
 import '../widgets/paper_background.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const OwlMascot(mood: OwlMood.happy, size: 140),
+              const LumiMascot(mood: LumiMood.happy, size: 140),
               const SizedBox(height: 18),
               Text(
                 'Translify',

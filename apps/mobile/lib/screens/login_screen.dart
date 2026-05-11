@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../api/api_client.dart';
 import '../state/session.dart';
 import '../theme/tokens.dart';
-import '../widgets/owl_mascot.dart';
+import '../widgets/lumi_mascot.dart';
 import '../widgets/paper_background.dart';
 import '../widgets/quest_button.dart';
 import '../widgets/quest_input.dart';
@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      const OwlMascot(mood: OwlMood.happy, size: 132),
+                      const LumiMascot(mood: LumiMood.happy, size: 132),
                       Positioned(
                         right: -32,
                         top: -8,

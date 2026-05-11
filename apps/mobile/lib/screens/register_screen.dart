@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../api/api_client.dart';
 import '../state/session.dart';
 import '../theme/tokens.dart';
-import '../widgets/owl_mascot.dart';
+import '../widgets/lumi_mascot.dart';
 import '../widgets/paper_background.dart';
 import '../widgets/quest_button.dart';
 import '../widgets/quest_input.dart';
@@ -73,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Center(child: OwlMascot(mood: OwlMood.cheer, size: 120)),
+                const Center(child: LumiMascot(mood: LumiMood.cheer, size: 120)),
                 const SizedBox(height: 16),
                 Text('Make my shelf.',
                     style: Theme.of(context).textTheme.displaySmall),

@@ -21,11 +21,11 @@ void main() {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(const TranslifyQuestApp());
+  runApp(const TranslifyApp());
 }
 
-class TranslifyQuestApp extends StatelessWidget {
-  const TranslifyQuestApp({super.key});
+class TranslifyApp extends StatelessWidget {
+  const TranslifyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class TranslifyQuestApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-        title: 'Translify Quest',
+        title: 'Translify',
         debugShowCheckedModeBanner: false,
         theme: buildTheme(),
         routes: {

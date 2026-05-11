@@ -7,7 +7,7 @@ import '../../api/models.dart';
 import '../../state/progress.dart';
 import '../../state/session.dart';
 import '../../theme/tokens.dart';
-import '../../widgets/owl_mascot.dart';
+import '../../widgets/lumi_mascot.dart';
 import '../../widgets/quest_button.dart';
 
 class ChatPanel extends StatefulWidget {
@@ -116,7 +116,7 @@ class _ChatPanelState extends State<ChatPanel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            OwlMascot(mood: OwlMood.thinking, size: 80),
+            LumiMascot(mood: LumiMood.thinking, size: 80),
             SizedBox(height: 6),
             Text('warming up the librarian…',
                 style: TextStyle(
@@ -228,7 +228,7 @@ class _StarterGrid extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8, bottom: 12),
       child: Column(
         children: [
-          const OwlMascot(mood: OwlMood.cheer, size: 90),
+          const LumiMascot(mood: LumiMood.cheer, size: 90),
           const SizedBox(height: 8),
           Text('Ask me anything about your book.',
               style: Theme.of(context).textTheme.titleLarge,
@@ -297,7 +297,7 @@ class _Bubble extends StatelessWidget {
           if (!isUser) ...[
             Container(
               padding: const EdgeInsets.all(2),
-              child: const OwlMascot(mood: OwlMood.happy, size: 36),
+              child: const LumiMascot(mood: LumiMood.happy, size: 36),
             ),
             const SizedBox(width: 6),
           ],
@@ -465,7 +465,7 @@ class _ThinkingBubbleState extends State<_ThinkingBubble>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const OwlMascot(mood: OwlMood.thinking, size: 36),
+          const LumiMascot(mood: LumiMood.thinking, size: 36),
           const SizedBox(width: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

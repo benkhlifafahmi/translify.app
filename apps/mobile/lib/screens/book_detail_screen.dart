@@ -7,11 +7,12 @@ import '../api/api_client.dart';
 import '../api/models.dart';
 import '../state/session.dart';
 import '../theme/tokens.dart';
-import '../widgets/owl_mascot.dart';
+import '../widgets/lumi_mascot.dart';
 import '../widgets/paper_background.dart';
 import '../widgets/sticker_card.dart';
 import '../widgets/xp_bar.dart';
 import 'panels/chat_panel.dart';
+import 'panels/garden_panel.dart';
 import 'panels/quiz_panel.dart';
 import 'panels/read_panel.dart';
 import 'panels/translate_panel.dart';
@@ -30,14 +31,15 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   String? _selectedTranslationId;
   int _tab = 0;
 
-  static const _tabs = ['Read', 'Translate', 'Chat', 'Quiz'];
+  static const _tabs = ['Read', 'Translate', 'Chat', 'Quiz', 'Garden'];
   static const _tabIcons = [
     Icons.menu_book_rounded,
     Icons.public_rounded,
     Icons.forum_rounded,
     Icons.bolt_rounded,
+    Icons.local_florist_rounded,
   ];
-  static const _tabColors = [T.saffron, T.sky, T.mint, T.candy];
+  static const _tabColors = [T.saffron, T.sky, T.mint, T.candy, T.plum];
 
   @override
   void initState() {
@@ -77,9 +79,12 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final ready = _book?.status == BookStatus.ready;
     return Scaffold(
+      extendBody: true,
       body: PaperBackground(
         child: SafeArea(
+          bottom: false,
           child: Column(
             children: [
               _Header(book: _book, onBack: () => Navigator.of(context).pop()),
@@ -87,16 +92,9 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                 const Expanded(child: _Loading())
               else if (_error != null)
                 Expanded(child: _Error(error: _error!, onRetry: _refresh))
-              else if (_book!.status != BookStatus.ready)
+              else if (!ready)
                 Expanded(child: _NotReady(book: _book!))
-              else ...[
-                _TabBar(
-                  current: _tab,
-                  onTap: (i) => setState(() => _tab = i),
-                  tabs: _tabs,
-                  icons: _tabIcons,
-                  colors: _tabColors,
-                ),
+              else
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 250),
@@ -117,11 +115,19 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                     ),
                   ),
                 ),
-              ],
             ],
           ),
         ),
       ),
+      bottomNavigationBar: ready
+          ? _TabBar(
+              current: _tab,
+              onTap: (i) => setState(() => _tab = i),
+              tabs: _tabs,
+              icons: _tabIcons,
+              colors: _tabColors,
+            )
+          : null,
     );
   }
 
@@ -151,6 +157,8 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
           bookId: b.id,
           translationId: _selectedTranslationId,
         );
+      case 4:
+        return GardenPanel(bookId: b.id);
     }
     return const SizedBox.shrink();
   }
@@ -231,59 +239,75 @@ class _TabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: T.paper,
-          borderRadius: BorderRadius.circular(T.radiusPill),
-          border: Border.all(color: T.ink, width: 1.6),
-          boxShadow: T.stickerShadow(y: 3),
-        ),
-        child: Row(
-          children: List.generate(tabs.length, (i) {
-            final active = i == current;
-            return Expanded(
-              child: GestureDetector(
-                onTap: () => onTap(i),
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: active ? colors[i] : Colors.transparent,
-                    borderRadius: BorderRadius.circular(T.radiusPill),
-                    border: active
-                        ? Border.all(color: T.ink, width: 1.4)
-                        : null,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        icons[i],
-                        size: 18,
-                        color: active ? T.ink : T.inkSoft,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        tabs[i],
-                        style: TextStyle(
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: T.paper,
+            borderRadius: BorderRadius.circular(T.radiusPill),
+            border: Border.all(color: T.ink, width: 1.4),
+            boxShadow: T.stickerShadow(y: 3),
+          ),
+          // Active tab expands (flex 2) with icon + label; inactive collapses
+          // to icon-only (flex 1). Lets all 5 fit on a phone width comfortably.
+          child: Row(
+            children: List.generate(tabs.length, (i) {
+              final active = i == current;
+              return Expanded(
+                flex: active ? 22 : 11,
+                child: GestureDetector(
+                  onTap: () => onTap(i),
+                  behavior: HitTestBehavior.opaque,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutCubic,
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: active ? 10 : 0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: active ? colors[i] : Colors.transparent,
+                      borderRadius: BorderRadius.circular(T.radiusPill),
+                      border: active
+                          ? Border.all(color: T.ink, width: 1.2)
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          icons[i],
+                          size: 18,
                           color: active ? T.ink : T.inkSoft,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          fontFamily: 'Nunito',
-                          letterSpacing: 0.4,
                         ),
-                      ),
-                    ],
+                        if (active) ...[
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              tabs[i],
+                              maxLines: 1,
+                              overflow: TextOverflow.fade,
+                              softWrap: false,
+                              style: const TextStyle(
+                                color: T.ink,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          ),
         ),
       ),
     );
@@ -298,7 +322,7 @@ class _Loading extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          OwlMascot(mood: OwlMood.thinking, size: 100),
+          LumiMascot(mood: LumiMood.thinking, size: 100),
           SizedBox(height: 10),
           Text(
             'Opening your book…',
@@ -331,7 +355,7 @@ class _Error extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const OwlMascot(mood: OwlMood.sad, size: 80),
+                const LumiMascot(mood: LumiMood.sad, size: 80),
                 const SizedBox(height: 8),
                 Text('Couldn\'t open this book',
                     style: Theme.of(context).textTheme.titleLarge),
@@ -381,7 +405,7 @@ class _NotReady extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const OwlMascot(mood: OwlMood.sad, size: 90),
+                const LumiMascot(mood: LumiMood.sad, size: 90),
                 const SizedBox(height: 8),
                 Text('We hit a snag.',
                     style: Theme.of(context).textTheme.titleLarge),
@@ -407,7 +431,7 @@ class _NotReady extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const OwlMascot(mood: OwlMood.thinking, size: 100),
+            const LumiMascot(mood: LumiMood.thinking, size: 100),
             const SizedBox(height: 6),
             Text('Reading your book…',
                 style: Theme.of(context).textTheme.headlineSmall),

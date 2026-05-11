@@ -12,7 +12,9 @@
       "Bash(npx next *)",
       "Bash(docker compose *)",
       "Bash(python -c \"from app.main import app; print\\('OK', [r.path for r in app.routes if '/profiles' in r.path]\\)\")",
-      "Bash(uv run *)"
+      "Bash(uv run *)",
+      "Bash(flutter test *)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/routes/quizzes.py'\\).read\\(\\)\\); ast.parse\\(open\\('app/schemas/quiz.py'\\).read\\(\\)\\); print\\('OK'\\)\")"
     ]
   }
 }

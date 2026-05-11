@@ -24,6 +24,7 @@ from app.schemas.quiz import (
     QuizAttemptCreate,
     QuizAttemptRead,
     QuizCreateRequest,
+    QuizGradeRequest,
     QuizQuestionPublic,
     QuizRead,
     QuizSummary,
@@ -202,6 +203,42 @@ async def get_quiz(
         scope_label=quiz.scope_label,
         questions=_public_questions(quiz),
         created_at=quiz.created_at,
+    )
+
+
+@router.post("/quizzes/{quiz_id}/grade", response_model=QuizAnswerResult)
+async def grade_one(
+    payload: QuizGradeRequest,
+    quiz_id: uuid.UUID = Path(...),
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> QuizAnswerResult:
+    """Grade a single question without persisting an attempt.
+
+    Used by the mobile card-by-card UI so the user can see Lumi's reaction
+    immediately. The full attempt is still submitted once at the end via
+    /quizzes/{id}/attempts to keep XP and Garden side effects in one place.
+    """
+    quiz = await _get_owned_quiz(quiz_id, user, session)
+    target: dict | None = None
+    for q in quiz.questions:
+        if isinstance(q, dict) and str(q.get("id", "")) == payload.question_id:
+            target = q
+            break
+    if target is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Question not found in this quiz.",
+        )
+    correct_index = int(target.get("answer_index", -1))
+    given_index = int(payload.answer_index)
+    is_correct = given_index == correct_index and correct_index >= 0
+    return QuizAnswerResult(
+        question_id=payload.question_id,
+        given_index=given_index,
+        correct_index=correct_index,
+        correct=is_correct,
+        explanation=str(target.get("explanation", "")),
     )
 
 

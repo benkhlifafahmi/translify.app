@@ -213,4 +213,19 @@ class QuizService {
     );
     return QuizAttempt.fromJson(res);
   }
+
+  /// Peek at the correct answer for a single question without persisting an
+  /// attempt — used by the card-by-card mobile flow so Lumi can react
+  /// immediately. The final attempt is still submitted via [submit] at the end.
+  Future<AnswerResult> gradeOne(
+    String quizId, {
+    required String questionId,
+    required int answerIndex,
+  }) async {
+    final res = await _api.post<Map<String, dynamic>>(
+      '/quizzes/$quizId/grade',
+      body: {'question_id': questionId, 'answer_index': answerIndex},
+    );
+    return AnswerResult.fromJson(res);
+  }
 }

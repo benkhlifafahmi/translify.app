@@ -8,7 +8,7 @@ import '../../api/models.dart';
 import '../../state/progress.dart';
 import '../../state/session.dart';
 import '../../theme/tokens.dart';
-import '../../widgets/owl_mascot.dart';
+import '../../widgets/lumi_mascot.dart';
 import '../../widgets/quest_button.dart';
 import '../../widgets/sticker_card.dart';
 
@@ -121,7 +121,7 @@ class _TranslatePanelState extends State<TranslatePanel> {
           tilt: -0.008,
           child: Row(
             children: [
-              const OwlMascot(mood: OwlMood.cheer, size: 56),
+              const LumiMascot(mood: LumiMood.cheer, size: 56),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

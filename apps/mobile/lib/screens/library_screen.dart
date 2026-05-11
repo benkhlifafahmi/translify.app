@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import '../api/models.dart';
 import '../state/session.dart';
 import '../theme/tokens.dart';
-import '../widgets/owl_mascot.dart';
+import '../widgets/lumi_mascot.dart';
 import '../widgets/paper_background.dart';
 import '../widgets/quest_button.dart';
 import '../widgets/sticker_card.dart';
@@ -144,8 +144,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             ),
                             Transform.translate(
                               offset: const Offset(8, -8),
-                              child: const OwlMascot(
-                                  mood: OwlMood.happy, size: 90),
+                              child: const LumiMascot(
+                                  mood: LumiMood.happy, size: 90),
                             ),
                           ],
                         ),
@@ -381,7 +381,7 @@ class _EmptyShelf extends StatelessWidget {
               children: [
                 const Row(
                   children: [
-                    OwlMascot(mood: OwlMood.thinking, size: 60),
+                    LumiMascot(mood: LumiMood.thinking, size: 60),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -420,7 +420,7 @@ class _ShelfLoading extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          OwlMascot(mood: OwlMood.thinking, size: 100),
+          LumiMascot(mood: LumiMood.thinking, size: 100),
           SizedBox(height: 12),
           Text(
             'Dusting off your shelf…',
@@ -449,7 +449,7 @@ class _ShelfError extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const OwlMascot(mood: OwlMood.sad, size: 100),
+            const LumiMascot(mood: LumiMood.sad, size: 100),
             const SizedBox(height: 10),
             Text('Couldn\'t open the shelf',
                 style: Theme.of(context).textTheme.titleLarge),

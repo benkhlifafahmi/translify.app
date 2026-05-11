@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:translify/theme/tokens.dart';
-import 'package:translify/widgets/owl_mascot.dart';
+import 'package:translify/widgets/lumi_mascot.dart';
 import 'package:translify/widgets/quest_button.dart';
 import 'package:translify/widgets/sticker_card.dart';
 
 void main() {
-  testWidgets('OwlMascot renders', (tester) async {
+  testWidgets('LumiMascot renders', (tester) async {
     await tester.pumpWidget(MaterialApp(
       theme: buildTheme(),
-      home: const Scaffold(body: Center(child: OwlMascot())),
+      home: const Scaffold(body: Center(child: LumiMascot())),
     ));
-    expect(find.byType(OwlMascot), findsOneWidget);
+    expect(find.byType(LumiMascot), findsOneWidget);
   });
 
   testWidgets('QuestButton fires onPressed', (tester) async {

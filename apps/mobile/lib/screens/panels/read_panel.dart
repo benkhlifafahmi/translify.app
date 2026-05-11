@@ -9,7 +9,7 @@ import '../../api/api_client.dart';
 import '../../api/models.dart';
 import '../../state/session.dart';
 import '../../theme/tokens.dart';
-import '../../widgets/owl_mascot.dart';
+import '../../widgets/lumi_mascot.dart';
 import '../../widgets/quest_button.dart';
 import '../../widgets/sticker_card.dart';
 import '../pdf_reader_screen.dart';
@@ -136,7 +136,7 @@ class _ReadPanelState extends State<ReadPanel> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const OwlMascot(mood: OwlMood.sad, size: 80),
+                  const LumiMascot(mood: LumiMood.sad, size: 80),
                   const SizedBox(height: 8),
                   Text(
                     _error!,
@@ -164,7 +164,7 @@ class _ReadPanelState extends State<ReadPanel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            OwlMascot(mood: OwlMood.thinking, size: 80),
+            LumiMascot(mood: LumiMood.thinking, size: 80),
             SizedBox(height: 6),
             Text(
               'Loading pages…',

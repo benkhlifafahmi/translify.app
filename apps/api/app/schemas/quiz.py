@@ -53,6 +53,14 @@ class QuizAttemptCreate(BaseModel):
     answers: list[QuizAttemptAnswer]
 
 
+class QuizGradeRequest(BaseModel):
+    """Single-question peek used by the mobile card-by-card flow.
+    Does not persist an attempt; the client still POSTs the full attempt
+    when the quiz finishes so XP / Garden side effects fire once."""
+    question_id: str
+    answer_index: int
+
+
 class QuizAnswerResult(BaseModel):
     question_id: str
     given_index: int
