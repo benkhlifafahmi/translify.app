@@ -41,6 +41,8 @@ interface Props {
   onClickSavedHighlight?: (id: string) => void;
   /** Controlled current page (e.g. driven by "jump to highlight" from sidebar). */
   goToPage?: { page: number; nonce: number } | null;
+  /** Fires whenever the visible page advances to a new high-water mark. */
+  onPageReached?: (page: number) => void;
 }
 
 const COLOR_TO_CLASS: Record<SavedHighlightColor, string> = {
@@ -58,6 +60,7 @@ export function PdfViewer({
   onSelectionAction,
   onClickSavedHighlight,
   goToPage,
+  onPageReached,
 }: Props) {
   const { t } = useI18n();
   const [numPages, setNumPages] = useState<number | null>(null);
@@ -77,6 +80,12 @@ export function PdfViewer({
     setError(null);
     setSelection(null);
   }, [fileUrl]);
+
+  // Page-reached signal — fires on every page change. The tracker hook
+  // de-duplicates by keeping only the furthest page reached.
+  useEffect(() => {
+    if (page > 0) onPageReached?.(page);
+  }, [page, onPageReached]);
 
   useEffect(() => {
     if (!containerRef.current) return;

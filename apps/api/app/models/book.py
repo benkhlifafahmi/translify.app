@@ -57,6 +57,11 @@ class Book(Base):
     )
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Book-level AI summary, generated once at ingest end. Used as the
+    # primary context for quiz generation (vs. random chunk sampling) so
+    # quizzes test the book's actual ideas rather than localized passages.
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

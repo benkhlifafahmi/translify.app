@@ -66,6 +66,13 @@ TASK_CONFIG: dict[str, dict[str, str]] = {
         "primary": "claude-sonnet-4-6",
         "fallback": "claude-haiku-4-5-20251001",
     },
+    "summarize": {
+        # Book summary generated once at ingest time. Gemini Flash handles
+        # large contexts well (1M tokens) and the structured prose output
+        # is fine on Flash quality. Haiku catches Gemini outages.
+        "primary": "gemini-2.5-flash",
+        "fallback": "claude-haiku-4-5-20251001",
+    },
 }
 
 

@@ -39,6 +39,8 @@ export interface EpubViewerProps {
   onClickSavedHighlight?: (id: string) => void;
   /** Imperative jump from outside (e.g. clicking a citation). */
   goToPage?: { page: number; nonce: number } | null;
+  /** Fires when the reader reaches a new high-water mark (1-indexed location). */
+  onPageReached?: (page: number) => void;
 }
 
 type Theme = "paper" | "sepia" | "night";

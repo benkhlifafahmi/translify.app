@@ -436,6 +436,70 @@
   }
 }
 
+/* ===== Reading Garden — gamification animations =====
+   Used by /garden routes. Scoped to component classes so they don't leak. */
+
+@keyframes garden-sway {
+  0%, 100% { transform: translateX(-50%) rotate(-1.2deg); }
+  50%      { transform: translateX(-50%) rotate(1.6deg); }
+}
+@keyframes garden-drop {
+  0%   { opacity: 0; transform: translate(-26px, 0) rotate(-12deg); }
+  10%  { opacity: 0.9; }
+  70%  { opacity: 0.9; transform: translate(-22px, 240px) rotate(-8deg); }
+  100% { opacity: 0;   transform: translate(-22px, 260px) scale(0.4); }
+}
+@keyframes garden-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(123, 161, 124, 0.22); }
+  50%      { box-shadow: 0 0 0 10px rgba(123, 161, 124, 0); }
+}
+@keyframes garden-growfill {
+  from { width: 0%; }
+  to   { width: var(--garden-fill, 0%); }
+}
+@keyframes garden-stamp {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(2.4) rotate(-22deg); }
+  60%  { opacity: 1; transform: translate(-50%, -50%) scale(0.9)  rotate(-4deg); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1)    rotate(-9deg); }
+}
+
+.garden-plant {
+  transform: translateX(-50%) rotate(-1.2deg);
+  transform-origin: 50% 100%;
+  animation: garden-sway 7s ease-in-out infinite;
+}
+.garden-droplet {
+  position: absolute;
+  left: 50%;
+  top: 50px;
+  width: 8px;
+  height: 12px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: linear-gradient(180deg, #88B0D8, #4A7CA6);
+  opacity: 0;
+  z-index: 4;
+  animation: garden-drop 6s ease-in 2s infinite;
+}
+.garden-pulse-dot {
+  animation: garden-pulse 1.8s ease-in-out infinite;
+}
+.garden-growth-fill {
+  width: 0;
+  animation: garden-growfill 1.6s cubic-bezier(0.6,0.05,0.2,1) 0.4s forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .garden-plant,
+  .garden-droplet,
+  .garden-pulse-dot,
+  .garden-growth-fill {
+    animation: none !important;
+  }
+  .garden-growth-fill {
+    width: var(--garden-fill, 0%) !important;
+  }
+}
+
 /* ===== RTL polish — flip directional motion & ornament =====
    We use `dir="rtl"` on <html> so logical properties handle most layout.
    These rules tame the few transforms / decorations that still need flipping. */

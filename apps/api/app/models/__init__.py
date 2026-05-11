@@ -2,6 +2,14 @@
 from app.models.book import Book, BookStatus
 from app.models.chat import Chat, ChatScope, Message, MessageRole
 from app.models.chunk import Chunk
+from app.models.garden import (
+    Garden,
+    GardenEvent,
+    GardenEventKind,
+    GardenHealth,
+    GardenSpecies,
+    GardenTendingAttempt,
+)
 from app.models.highlight import Highlight, HighlightColor
 from app.models.quiz import Quiz, QuizAttempt
 from app.models.subscription import (
@@ -18,6 +26,12 @@ __all__ = [
     "Chat",
     "ChatScope",
     "Chunk",
+    "Garden",
+    "GardenEvent",
+    "GardenEventKind",
+    "GardenHealth",
+    "GardenSpecies",
+    "GardenTendingAttempt",
     "Highlight",
     "HighlightColor",
     "Message",

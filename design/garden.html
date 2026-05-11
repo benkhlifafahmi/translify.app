@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Reader's Garden · Translify</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Caveat:wght@400..700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment: #F2EAD8;
+    --parchment-deep: #E8DDC4;
+    --parchment-shadow: #D9CBA8;
+    --ink: #1F1A14;
+    --ink-soft: #4A4036;
+    --ink-faint: #8A7C6A;
+    --moss: #4D6A3B;
+    --moss-deep: #2F4724;
+    --leaf: #7A9858;
+    --leaf-light: #A4BD7E;
+    --terracotta: #B85A3A;
+    --terracotta-dark: #8A3E26;
+    --mustard: #C99846;
+    --sun: #E8C56A;
+    --sky: #C9D4C2;
+    --wilt: #8B3A2E;
+    --glass: rgba(255, 252, 240, 0.18);
+    --rule: rgba(31, 26, 20, 0.18);
+    --rule-soft: rgba(31, 26, 20, 0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Paper texture overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    background-image:
+      radial-gradient(circle at 13% 17%, rgba(139, 110, 70, 0.06) 0%, transparent 25%),
+      radial-gradient(circle at 87% 73%, rgba(139, 110, 70, 0.05) 0%, transparent 30%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.4 0 0 0 0 0.25 0 0 0 0.12 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* Subtle vignette */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(80, 55, 25, 0.12) 100%);
+  }
+
+  .frame {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 32px 56px 80px;
+    position: relative;
+  }
+
+  /* ----- NAV ----- */
+  nav.bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0 22px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 36px;
+  }
+
+  .brand {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-variation-settings: "opsz" 144, "SOFT" 100;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand .mark {
+    display: inline-block;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--leaf-light), var(--moss-deep));
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.18), 0 1px 0 var(--parchment-shadow);
+  }
+  .brand em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--ink-soft);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 28px;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .nav-links a { color: inherit; text-decoration: none; position: relative; padding: 2px 0; }
+  .nav-links a.active { color: var(--ink); }
+  .nav-links a.active::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -6px;
+    height: 2px; background: var(--terracotta);
+  }
+
+  .user-chip {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--ink-soft);
+  }
+  .user-chip .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--mustard);
+    border: 1px solid var(--ink);
+    display: grid; place-items: center;
+    font-family: 'Fraunces', serif; font-weight: 600; color: var(--ink);
+  }
+
+  /* ----- HEADLINE ----- */
+  .plate-meta {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 14px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  .plate-meta .dot { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: currentColor; margin: 0 8px; vertical-align: middle; }
+
+  h1.title {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: "opsz" 144, "SOFT" 100;
+    font-weight: 300;
+    font-size: clamp(48px, 7.4vw, 104px);
+    line-height: 0.94;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  h1.title .of {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--terracotta);
+    display: inline-block;
+    transform: translateY(-4px);
+  }
+  h1.title .book {
+    display: block;
+    font-weight: 500;
+    font-style: italic;
+  }
+
+  .lede {
+    max-width: 580px;
+    font-size: 18px;
+    color: var(--ink-soft);
+    font-style: italic;
+    font-family: 'Newsreader', serif;
+  }
+  .lede .dropcap {
+    float: left;
+    font-family: 'Fraunces', serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 68px;
+    line-height: 0.85;
+    padding: 6px 10px 0 0;
+    color: var(--moss-deep);
+  }
+
+  /* ornamental divider */
+  .ornament {
+    display: flex; align-items: center; gap: 14px;
+    margin: 40px 0 28px;
+    color: var(--ink-faint);
+  }
+  .ornament hr {
+    flex: 1; border: none; border-top: 1px solid var(--rule);
+  }
+  .ornament svg { display: block; }
+
+  /* ----- MAIN STAGE ----- */
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: stretch;
+  }
+
+  /* GARDEN PLATE (left) */
+  .plate {
+    position: relative;
+    background: linear-gradient(180deg, #F6EFDD 0%, #EFE5CD 100%);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 28px 28px 0;
+    overflow: hidden;
+    min-height: 540px;
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.6),
+      inset 0 0 60px rgba(139, 100, 50, 0.07),
+      0 1px 0 var(--parchment-shadow),
+      0 20px 40px -30px rgba(60, 40, 10, 0.4);
+  }
+  .plate::before {
+    /* dashed inner frame like an herbarium specimen */
+    content: "";
+    position: absolute; inset: 14px;
+    border: 1px dashed var(--rule);
+    pointer-events: none;
+    border-radius: 1px;
+  }
+
+  .plate-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    position: relative; z-index: 2;
+    font-family: 'Fraunces', serif;
+    font-size: 13px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .plate-header .specimen {
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 17px;
+    color: var(--moss-deep);
+  }
+  .plate-header .specimen .latin {
+    font-weight: 500;
+  }
+  .plate-id {
+    font-feature-settings: "tnum";
+    color: var(--ink-faint);
+  }
+
+  .specimen-line {
+    font-family: 'Newsreader', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+    position: relative; z-index: 2;
+  }
+
+  /* SCENE — the living plant */
+  .scene {
+    position: relative;
+    height: 460px;
+    margin: 0 -10px;
+    z-index: 1;
+  }
+
+  .scene svg.plant {
+    position: absolute;
+    left: 50%;
+    top: 24px;
+    transform: translateX(-50%);
+    transform-origin: 50% 100%;
+    animation: sway 7s ease-in-out infinite;
+    z-index: 3;
+  }
+  @keyframes sway {
+    0%, 100% { transform: translateX(-50%) rotate(-1.2deg); }
+    50%      { transform: translateX(-50%) rotate(1.6deg); }
+  }
+
+  .scene svg.farmer {
+    position: absolute;
+    bottom: 28px;
+    right: 14%;
+    z-index: 4;
+    filter: drop-shadow(0 2px 0 rgba(60,40,10,0.1));
+  }
+
+  /* glass terrarium dome */
+  .scene .dome {
+    position: absolute;
+    inset: 12px 8% 16px 8%;
+    z-index: 2;
+    border-radius: 220px 220px 14px 14px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.36) 0%, rgba(255,255,255,0.06) 30%, rgba(180,160,110,0.07) 100%);
+    border: 1px solid rgba(60,40,10,0.18);
+    box-shadow:
+      inset 0 8px 24px rgba(255,255,255,0.6),
+      inset 0 -6px 18px rgba(120,90,40,0.15),
+      inset 22px 0 28px -20px rgba(255,255,255,0.4);
+    pointer-events: none;
+  }
+  .scene .dome::after {
+    /* highlight streak */
+    content: "";
+    position: absolute;
+    top: 18px; left: 22%;
+    width: 26px; height: 56%;
+    border-radius: 100px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.55), transparent);
+    transform: rotate(-8deg);
+  }
+
+  /* horizon / soil bed */
+  .scene .soil {
+    position: absolute;
+    left: 8%; right: 8%;
+    bottom: 16px;
+    height: 56px;
+    z-index: 3;
+    background:
+      linear-gradient(180deg, #8B6939 0%, #5A4423 100%);
+    border-radius: 6px 6px 14px 14px;
+    box-shadow: inset 0 2px 0 #A38456, inset 0 -8px 16px rgba(0,0,0,0.25);
+  }
+  .scene .soil::before {
+    /* speckles */
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    background-image:
+      radial-gradient(circle at 12% 40%, #3a2a14 1px, transparent 2px),
+      radial-gradient(circle at 28% 70%, #3a2a14 1px, transparent 2px),
+      radial-gradient(circle at 47% 30%, #2c1f0d 1px, transparent 2px),
+      radial-gradient(circle at 63% 64%, #3a2a14 1px, transparent 2px),
+      radial-gradient(circle at 81% 38%, #2c1f0d 1px, transparent 2px),
+      radial-gradient(circle at 92% 72%, #3a2a14 1px, transparent 2px);
+    opacity: 0.85;
+  }
+
+  /* margin annotation on plate */
+  .plate-note {
+    position: absolute;
+    top: 30%; right: 18px;
+    transform: rotate(3deg);
+    font-family: 'Caveat', cursive;
+    font-size: 18px;
+    color: var(--terracotta-dark);
+    line-height: 1.15;
+    text-align: right;
+    z-index: 5;
+    max-width: 130px;
+    opacity: 0.85;
+  }
+  .plate-note .arrow {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--terracotta);
+    transform: rotate(-160deg) translateY(-4px);
+  }
+
+  .plate-note-2 {
+    position: absolute;
+    bottom: 110px; left: 22px;
+    transform: rotate(-2deg);
+    font-family: 'Caveat', cursive;
+    font-size: 17px;
+    color: var(--moss-deep);
+    z-index: 5;
+    opacity: 0.85;
+  }
+
+  /* falling water droplet */
+  .droplet {
+    position: absolute;
+    left: 50%; top: 50px;
+    width: 8px; height: 12px;
+    background: linear-gradient(180deg, #88B0D8, #4A7CA6);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    transform: translateX(-26px) rotate(-12deg);
+    opacity: 0;
+    z-index: 4;
+    animation: drop 6s ease-in 2s infinite;
+  }
+  @keyframes drop {
+    0% { opacity: 0; transform: translate(-26px, 0) rotate(-12deg); }
+    10% { opacity: 0.9; }
+    70% { opacity: 0.9; transform: translate(-22px, 240px) rotate(-8deg); }
+    100% { opacity: 0; transform: translate(-22px, 260px) scale(0.4); }
+  }
+
+  /* plate caption strip */
+  .plate-caption {
+    position: relative; z-index: 2;
+    display: flex; justify-content: space-between;
+    padding: 16px 4px 22px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-soft);
+    border-top: 1px dashed var(--rule);
+    margin-top: -8px;
+  }
+  .plate-caption strong {
+    font-style: normal;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 11px;
+    display: block;
+    margin-bottom: 2px;
+    color: var(--ink-faint);
+  }
+
+  /* ----- STATS PANEL (right) ----- */
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .panel-card {
+    border: 1px solid var(--rule);
+    padding: 22px 24px;
+    background: rgba(255,250,237,0.55);
+    border-radius: 2px;
+    position: relative;
+  }
+
+  .vitality {
+    background: linear-gradient(180deg, #F6EFDD 0%, #EFE5CD 100%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.7);
+  }
+  .vitality-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 14px;
+  }
+  .vitality-head h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+    font-style: italic;
+  }
+  .vitality-head .pulse {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Fraunces', serif;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--moss-deep);
+  }
+  .vitality-head .pulse .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--leaf);
+    box-shadow: 0 0 0 4px rgba(122, 152, 88, 0.22);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(122, 152, 88, 0.22); }
+    50% { box-shadow: 0 0 0 10px rgba(122, 152, 88, 0.0); }
+  }
+
+  .water-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .droplet-meter {
+    display: flex; gap: 6px;
+  }
+  .droplet-meter svg {
+    width: 22px; height: 28px;
+  }
+
+  .countdown {
+    text-align: right;
+  }
+  .countdown .num {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 42px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    font-feature-settings: "tnum";
+  }
+  .countdown .num .small {
+    font-size: 22px;
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .countdown .label {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--ink-faint);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .growth-bar {
+    height: 10px;
+    border: 1px solid var(--rule);
+    background: var(--parchment-deep);
+    border-radius: 100px;
+    position: relative;
+    overflow: hidden;
+  }
+  .growth-bar .fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--leaf), var(--moss));
+    border-radius: 100px;
+    animation: growfill 1.6s cubic-bezier(0.6,0.05,0.2,1) 0.4s forwards;
+  }
+  @keyframes growfill { to { width: 62%; } }
+
+  .growth-bar .marker {
+    position: absolute; top: -3px;
+    width: 2px; height: 16px;
+    background: var(--ink);
+  }
+  .growth-bar .marker.q { left: 25%; }
+  .growth-bar .marker.f { left: 100%; transform: translateX(-2px); }
+
+  .growth-meta {
+    display: flex; justify-content: space-between;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-top: 8px;
+  }
+  .growth-meta b {
+    color: var(--moss-deep);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  /* stat grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-top: 1px dashed var(--rule);
+    margin-top: 22px;
+  }
+  .stat-cell {
+    padding: 18px 4px 4px;
+    border-right: 1px dashed var(--rule);
+  }
+  .stat-cell:nth-child(even) { border-right: none; padding-left: 22px; }
+  .stat-cell:nth-child(3),
+  .stat-cell:nth-child(4) { border-top: 1px dashed var(--rule); padding-top: 18px; }
+  .stat-cell .label {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .stat-cell .val {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 30px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    font-feature-settings: "tnum";
+  }
+  .stat-cell .val sup {
+    font-size: 14px;
+    font-style: italic;
+    color: var(--ink-faint);
+    margin-left: 2px;
+  }
+  .stat-cell .sub {
+    font-size: 12px;
+    color: var(--ink-faint);
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+  /* quiz card */
+  .quiz-card {
+    background:
+      linear-gradient(180deg, #FBF3DD 0%, #F4E9C9 100%);
+    border: 1px solid var(--ink);
+    position: relative;
+    overflow: hidden;
+  }
+  .quiz-card::before {
+    content: "";
+    position: absolute;
+    top: 0; right: 0;
+    width: 64px; height: 64px;
+    background: var(--ink);
+    transform: rotate(45deg) translate(28px, -28px);
+  }
+  .quiz-card::after {
+    content: "Q";
+    position: absolute;
+    top: 6px; right: 10px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--parchment);
+    font-size: 20px;
+    z-index: 2;
+  }
+  .quiz-card h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.1;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .quiz-card h3 em { color: var(--terracotta); font-style: italic; }
+  .quiz-card p {
+    font-size: 14px;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-bottom: 16px;
+    max-width: 88%;
+  }
+  .quiz-cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--ink);
+    color: var(--parchment);
+    padding: 12px 22px;
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    border-radius: 1px;
+    transition: transform .25s ease, background .25s ease;
+  }
+  .quiz-cta:hover {
+    background: var(--moss-deep);
+    transform: translateX(4px);
+  }
+  .quiz-cta .arrow {
+    transition: transform .25s ease;
+  }
+  .quiz-cta:hover .arrow { transform: translateX(4px); }
+
+  .quiz-countdown {
+    position: absolute;
+    bottom: 18px; right: 22px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    text-align: right;
+    color: var(--ink-soft);
+  }
+  .quiz-countdown b {
+    display: block;
+    font-style: normal;
+    font-weight: 500;
+    color: var(--ink);
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    font-feature-settings: "tnum";
+  }
+  .quiz-countdown small {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-style: normal;
+  }
+
+  /* ----- JOURNAL ----- */
+  section.journal {
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 48px;
+    align-items: start;
+  }
+
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 12px;
+  }
+  .section-head h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: 34px;
+    letter-spacing: -0.01em;
+  }
+  .section-head .meta {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .log {
+    list-style: none;
+    position: relative;
+  }
+  .log::before {
+    content: "";
+    position: absolute;
+    left: 96px;
+    top: 6px; bottom: 6px;
+    border-left: 1px dashed var(--rule);
+  }
+  .log li {
+    display: grid;
+    grid-template-columns: 96px 28px 1fr auto;
+    align-items: center;
+    gap: 18px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .log li:last-child { border-bottom: none; }
+
+  .log .when {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+  .log .icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--parchment-deep);
+    border: 1px solid var(--rule);
+    display: grid; place-items: center;
+    color: var(--moss-deep);
+    z-index: 1;
+  }
+  .log .icon.q { background: var(--sun); color: var(--ink); }
+  .log .icon.r { background: var(--terracotta); color: var(--parchment); }
+  .log .icon.b { background: var(--moss-deep); color: var(--parchment); }
+  .log .what {
+    font-size: 16px;
+  }
+  .log .what em {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+  .log .gain {
+    font-family: 'Fraunces', serif;
+    font-feature-settings: "tnum";
+    font-size: 15px;
+    color: var(--moss);
+    font-weight: 500;
+  }
+  .log .gain.warn { color: var(--wilt); }
+
+  /* species sidecar */
+  .sidecar {
+    background: linear-gradient(180deg, #F6EFDD 0%, #EFE5CD 100%);
+    border: 1px solid var(--rule);
+    padding: 22px 22px 18px;
+    position: relative;
+  }
+  .sidecar h3 {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+  .sidecar .sub {
+    font-size: 13px;
+    color: var(--ink-faint);
+    font-style: italic;
+    margin-bottom: 18px;
+  }
+  .species-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .species {
+    border: 1px solid var(--rule);
+    background: var(--parchment);
+    padding: 14px 12px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+    position: relative;
+  }
+  .species:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 18px -16px rgba(60,40,10,0.55);
+  }
+  .species.selected {
+    background: var(--ink);
+    color: var(--parchment);
+    border-color: var(--ink);
+  }
+  .species.selected .name { color: var(--parchment); }
+  .species.selected .latin { color: rgba(242, 234, 216, 0.6); }
+  .species svg { display: block; margin: 0 auto 8px; }
+  .species .name {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink);
+  }
+  .species .latin {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 2px;
+  }
+  .species.locked { opacity: 0.55; cursor: not-allowed; }
+  .species.locked::after {
+    content: "🔒";
+    position: absolute; inset: auto 6px 6px auto;
+    font-size: 10px;
+    opacity: 0.6;
+  }
+
+  /* ----- OTHER GARDENS ----- */
+  section.other {
+    margin-top: 64px;
+  }
+  .other-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 22px;
+  }
+  .garden-card {
+    border: 1px solid var(--rule);
+    background: rgba(255,250,237,0.55);
+    padding: 18px 18px 16px;
+    position: relative;
+    transition: transform .3s ease, box-shadow .3s ease;
+    cursor: pointer;
+  }
+  .garden-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 30px -22px rgba(60,40,10,0.5);
+  }
+  .garden-card .mini-scene {
+    position: relative;
+    height: 120px;
+    background: linear-gradient(180deg, #F6EFDD 0%, #EFE5CD 100%);
+    border: 1px dashed var(--rule);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .garden-card .mini-scene .soil-mini {
+    position: absolute; left: 8px; right: 8px; bottom: 6px; height: 14px;
+    background: linear-gradient(180deg, #8B6939, #5A4423);
+    border-radius: 4px;
+  }
+  .garden-card .health {
+    position: absolute; top: 8px; right: 8px;
+    font-family: 'Fraunces', serif;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--moss-deep);
+    background: rgba(255,250,237,0.85);
+    padding: 3px 6px;
+    border: 1px solid var(--rule);
+  }
+  .garden-card .health.warn { color: var(--wilt); }
+  .garden-card .title {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.15;
+    margin-bottom: 4px;
+  }
+  .garden-card .author {
+    font-size: 12px;
+    color: var(--ink-faint);
+    font-style: italic;
+    margin-bottom: 12px;
+  }
+  .garden-card .mini-bar {
+    height: 4px; background: var(--parchment-deep); border-radius: 100px;
+    overflow: hidden;
+  }
+  .garden-card .mini-bar .fill {
+    height: 100%; background: var(--moss);
+  }
+  .garden-card.dying .mini-bar .fill { background: var(--wilt); }
+
+  /* footer */
+  footer.legend {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+  footer.legend .colophon {
+    max-width: 480px;
+  }
+  footer.legend small {
+    font-style: normal;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-size: 11px;
+  }
+
+  /* entrance animation */
+  .reveal {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: reveal 0.9s cubic-bezier(0.2,0.7,0.2,1) forwards;
+  }
+  .reveal.d1 { animation-delay: 0.05s; }
+  .reveal.d2 { animation-delay: 0.18s; }
+  .reveal.d3 { animation-delay: 0.32s; }
+  .reveal.d4 { animation-delay: 0.46s; }
+  .reveal.d5 { animation-delay: 0.6s; }
+  .reveal.d6 { animation-delay: 0.78s; }
+  @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
+
+  /* responsive */
+  @media (max-width: 1080px) {
+    .frame { padding: 24px 28px 60px; }
+    .stage { grid-template-columns: 1fr; }
+    section.journal { grid-template-columns: 1fr; }
+    .other-grid { grid-template-columns: repeat(2, 1fr); }
+    h1.title { font-size: clamp(40px, 9vw, 80px); }
+  }
+  @media (max-width: 640px) {
+    .other-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <!-- NAV -->
+  <nav class="bar reveal d1">
+    <div class="brand"><span class="mark"></span>Translify<em>&nbsp;·&nbsp;Garden</em></div>
+    <div class="nav-links">
+      <a href="#">Library</a>
+      <a href="#" class="active">Garden</a>
+      <a href="#">Almanac</a>
+      <a href="#">Account</a>
+    </div>
+    <div class="user-chip">
+      <span>Maya Okafor</span>
+      <span class="avatar">M</span>
+    </div>
+  </nav>
+
+  <!-- META -->
+  <div class="plate-meta reveal d2">
+    <span>Plate № 04 <span class="dot"></span> Volume II <span class="dot"></span> Cultivated since 11 Apr 2026</span>
+    <span>Climate: temperate · prose <span class="dot"></span> Reader: M. Okafor</span>
+  </div>
+
+  <!-- TITLE -->
+  <h1 class="title reveal d2">
+    <span class="of">The Garden of</span>
+    <span class="book">One Hundred Years <em style="font-style:normal;color:var(--ink-faint);">of</em> Solitude</span>
+  </h1>
+
+  <p class="lede reveal d3">
+    <span class="dropcap">A</span> living record of your reading. Each page turned waters the soil; each
+    answered question sends a new leaf into the light. Tend faithfully — neglect, and the green will turn.
+  </p>
+
+  <!-- ornament -->
+  <div class="ornament reveal d3">
+    <hr/>
+    <svg width="24" height="14" viewBox="0 0 24 14">
+      <path d="M0 7 Q 6 0, 12 7 T 24 7" stroke="currentColor" stroke-width="1" fill="none"/>
+      <circle cx="12" cy="7" r="1.4" fill="currentColor"/>
+    </svg>
+    <hr/>
+  </div>
+
+  <!-- ============ STAGE ============ -->
+  <section class="stage">
+
+    <!-- LEFT: GARDEN PLATE -->
+    <div class="plate reveal d3">
+      <div class="plate-header">
+        <span class="specimen">specimen <span class="latin">— Ficus litteraria</span></span>
+        <span class="plate-id">№ 04 · 0011</span>
+      </div>
+      <div class="specimen-line">cultivated in the soil of <em>magical realism</em> · stage IV of VII</div>
+
+      <!-- the scene -->
+      <div class="scene">
+        <div class="dome"></div>
+        <div class="droplet"></div>
+
+        <!-- THE PLANT -->
+        <svg class="plant" width="280" height="380" viewBox="0 0 280 380" fill="none">
+          <!-- stem -->
+          <path d="M140 360 C 134 300, 152 250, 138 200 C 126 160, 154 130, 142 80"
+                stroke="#3F5A2D" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+          <!-- secondary stem -->
+          <path d="M140 280 C 160 270, 178 254, 188 226"
+                stroke="#3F5A2D" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M138 220 C 118 212, 96 196, 88 168"
+                stroke="#3F5A2D" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M142 150 C 158 144, 174 130, 182 110"
+                stroke="#3F5A2D" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+          <!-- leaves -->
+          <g id="leaves">
+            <!-- bottom right leaf -->
+            <path d="M188 226 C 214 218, 232 200, 230 178 C 212 188, 196 206, 188 226 Z"
+                  fill="#7A9858" stroke="#3F5A2D" stroke-width="1.4"/>
+            <path d="M188 226 C 214 218, 232 200, 230 178" stroke="#3F5A2D" stroke-width="0.8" fill="none" opacity="0.5"/>
+
+            <!-- bottom left leaf -->
+            <path d="M88 168 C 64 168, 44 156, 40 134 C 60 142, 78 152, 88 168 Z"
+                  fill="#8FAD68" stroke="#3F5A2D" stroke-width="1.4"/>
+
+            <!-- middle right leaf (big) -->
+            <path d="M182 110 C 212 100, 232 78, 230 50 C 206 62, 188 84, 182 110 Z"
+                  fill="#6E8C4E" stroke="#3F5A2D" stroke-width="1.4"/>
+            <path d="M182 110 C 212 100, 232 78, 230 50" stroke="#3F5A2D" stroke-width="0.8" fill="none" opacity="0.5"/>
+
+            <!-- middle left leaf -->
+            <path d="M150 116 C 130 102, 110 90, 92 96 C 104 112, 126 124, 150 116 Z"
+                  fill="#8FAD68" stroke="#3F5A2D" stroke-width="1.4"/>
+
+            <!-- top leaves -->
+            <path d="M142 80 C 156 56, 178 42, 198 46 C 188 70, 168 84, 142 80 Z"
+                  fill="#7A9858" stroke="#3F5A2D" stroke-width="1.4"/>
+            <path d="M142 80 C 128 56, 108 44, 88 50 C 96 72, 118 86, 142 80 Z"
+                  fill="#A4BD7E" stroke="#3F5A2D" stroke-width="1.4"/>
+
+            <!-- bud / flower top -->
+            <g transform="translate(142 38)">
+              <circle r="6" fill="#E8C56A" stroke="#3F5A2D" stroke-width="1.2"/>
+              <circle r="2" fill="#B85A3A"/>
+              <path d="M0 -6 C 4 -10, 8 -8, 6 -2 Z" fill="#B85A3A" stroke="#3F5A2D" stroke-width="1"/>
+              <path d="M-6 0 C -10 -4, -8 -8, -2 -6 Z" fill="#B85A3A" stroke="#3F5A2D" stroke-width="1"/>
+              <path d="M0 6 C -4 10, -8 8, -6 2 Z" fill="#B85A3A" stroke="#3F5A2D" stroke-width="1"/>
+              <path d="M6 0 C 10 4, 8 8, 2 6 Z" fill="#B85A3A" stroke="#3F5A2D" stroke-width="1"/>
+            </g>
+          </g>
+        </svg>
+
+        <!-- THE FARMER -->
+        <svg class="farmer" width="78" height="120" viewBox="0 0 78 120" fill="none">
+          <!-- shadow -->
+          <ellipse cx="39" cy="116" rx="22" ry="3" fill="rgba(0,0,0,0.15)"/>
+          <!-- legs -->
+          <path d="M30 92 L 28 114" stroke="#3D2A18" stroke-width="6" stroke-linecap="round"/>
+          <path d="M46 92 L 48 114" stroke="#3D2A18" stroke-width="6" stroke-linecap="round"/>
+          <!-- body -->
+          <path d="M22 56 C 22 48, 26 44, 38 44 C 50 44, 56 48, 56 56 L 56 94 C 56 96, 54 98, 50 98 L 26 98 C 22 98, 22 96, 22 94 Z"
+                fill="#B85A3A" stroke="#1F1A14" stroke-width="1.6"/>
+          <!-- apron / overall straps -->
+          <path d="M28 48 L 28 96 M 50 48 L 50 96" stroke="#1F1A14" stroke-width="0.8" opacity="0.5"/>
+          <!-- arm holding watering can -->
+          <path d="M56 62 L 70 76 L 68 86" stroke="#B85A3A" stroke-width="6" stroke-linecap="round"/>
+          <!-- watering can -->
+          <g transform="translate(60 82)">
+            <rect x="0" y="0" width="14" height="12" fill="#8A8E8C" stroke="#1F1A14" stroke-width="1.2" rx="1"/>
+            <path d="M14 2 L 20 -2 L 20 4 L 14 6 Z" fill="#8A8E8C" stroke="#1F1A14" stroke-width="1.2"/>
+            <path d="M-1 0 C -4 -2, -2 -6, 2 -4" stroke="#1F1A14" stroke-width="1.2" fill="none"/>
+          </g>
+          <!-- head -->
+          <circle cx="39" cy="34" r="11" fill="#E2B98A" stroke="#1F1A14" stroke-width="1.6"/>
+          <!-- hair tuft -->
+          <path d="M30 28 C 32 22, 46 22, 48 28" stroke="#3D2A18" stroke-width="2" fill="#3D2A18"/>
+          <!-- eyes -->
+          <circle cx="35" cy="34" r="0.9" fill="#1F1A14"/>
+          <circle cx="43" cy="34" r="0.9" fill="#1F1A14"/>
+          <!-- smile -->
+          <path d="M35 39 Q 39 41, 43 39" stroke="#1F1A14" stroke-width="1" fill="none" stroke-linecap="round"/>
+          <!-- straw hat -->
+          <ellipse cx="39" cy="22" rx="22" ry="5" fill="#C99846" stroke="#1F1A14" stroke-width="1.4"/>
+          <path d="M28 22 C 30 12, 48 12, 50 22 Z" fill="#E2B26A" stroke="#1F1A14" stroke-width="1.4"/>
+          <path d="M28 22 L 50 22" stroke="#1F1A14" stroke-width="0.6" opacity="0.6"/>
+          <!-- hat band -->
+          <path d="M28 21 C 32 24, 46 24, 50 21" stroke="#4D6A3B" stroke-width="1.6" fill="none"/>
+        </svg>
+
+        <!-- soil bed -->
+        <div class="soil"></div>
+
+        <!-- handwritten margin notes -->
+        <div class="plate-note">
+          new bud<br>this morning
+          <div class="arrow">↩</div>
+        </div>
+        <div class="plate-note-2">
+          ※ watered by ch. 14
+        </div>
+      </div>
+
+      <div class="plate-caption">
+        <div>
+          <strong>Drawn from life</strong>
+          The Garden of M. Okafor, May 11
+        </div>
+        <div style="text-align:right">
+          <strong>Hand · Translify Almanac</strong>
+          fig. iv · stage of bud
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: PANEL -->
+    <aside class="panel">
+
+      <!-- VITALITY -->
+      <div class="panel-card vitality reveal d4">
+        <div class="vitality-head">
+          <h2>Vitality</h2>
+          <span class="pulse"><span class="dot"></span>Thriving</span>
+        </div>
+
+        <div class="water-row">
+          <div class="droplet-meter" title="Water reserve">
+            <!-- 5 droplets, 4 filled -->
+            <svg viewBox="0 0 22 28"><path d="M11 2 C 4 12, 2 18, 11 26 C 20 18, 18 12, 11 2 Z" fill="#88B0D8" stroke="#1F1A14" stroke-width="1.2"/></svg>
+            <svg viewBox="0 0 22 28"><path d="M11 2 C 4 12, 2 18, 11 26 C 20 18, 18 12, 11 2 Z" fill="#88B0D8" stroke="#1F1A14" stroke-width="1.2"/></svg>
+            <svg viewBox="0 0 22 28"><path d="M11 2 C 4 12, 2 18, 11 26 C 20 18, 18 12, 11 2 Z" fill="#88B0D8" stroke="#1F1A14" stroke-width="1.2"/></svg>
+            <svg viewBox="0 0 22 28"><path d="M11 2 C 4 12, 2 18, 11 26 C 20 18, 18 12, 11 2 Z" fill="#88B0D8" stroke="#1F1A14" stroke-width="1.2"/></svg>
+            <svg viewBox="0 0 22 28"><path d="M11 2 C 4 12, 2 18, 11 26 C 20 18, 18 12, 11 2 Z" fill="none" stroke="#1F1A14" stroke-width="1.2"/></svg>
+          </div>
+          <div class="countdown">
+            <div class="num">4<span class="small">/5</span></div>
+            <div class="label">days of reserve</div>
+          </div>
+        </div>
+
+        <div class="growth-bar" title="62% to bloom">
+          <div class="fill"></div>
+          <span class="marker q"></span>
+          <span class="marker f"></span>
+        </div>
+        <div class="growth-meta">
+          <span><b>Stage IV</b> · bud forming</span>
+          <span>62 % to bloom</span>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-cell">
+            <div class="label">Pages turned</div>
+            <div class="val">214<sup>/417</sup></div>
+            <div class="sub">+18 since Tuesday</div>
+          </div>
+          <div class="stat-cell">
+            <div class="label">Quizzes answered</div>
+            <div class="val">11<sup>/24</sup></div>
+            <div class="sub">94% accuracy</div>
+          </div>
+          <div class="stat-cell">
+            <div class="label">New leaves</div>
+            <div class="val">7</div>
+            <div class="sub">last grown 2h ago</div>
+          </div>
+          <div class="stat-cell">
+            <div class="label">Streak</div>
+            <div class="val">12<sup>d</sup></div>
+            <div class="sub">personal best · 19d</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div class="panel-card quiz-card reveal d5">
+        <h3>The weekly tending — <em>due in 2 days</em></h3>
+        <p>Five questions on chapters 9–14. Miss the window and Ficus litteraria will begin to wilt.</p>
+        <button class="quiz-cta">Begin the rite <span class="arrow">→</span></button>
+        <div class="quiz-countdown">
+          <b>49:12:08</b>
+          <small>until thirst</small>
+        </div>
+      </div>
+
+    </aside>
+  </section>
+
+  <!-- ============ JOURNAL ============ -->
+  <section class="journal">
+
+    <div>
+      <div class="section-head reveal d5">
+        <h2>Growth Journal</h2>
+        <span class="meta">last seven days</span>
+      </div>
+      <ul class="log reveal d5">
+        <li>
+          <span class="when">11 May · 09:14</span>
+          <span class="icon b">
+            <svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 2 L 11 2 L 11 12 L 7 10 L 3 12 Z" fill="currentColor"/></svg>
+          </span>
+          <span class="what">Read <em>chapters 13 — 14, “Of Many Aurelianos”</em></span>
+          <span class="gain">+ 6 leaves</span>
+        </li>
+        <li>
+          <span class="when">10 May · 22:01</span>
+          <span class="icon q">
+            <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1 L 9 5 L 13 6 L 10 9 L 11 13 L 7 11 L 3 13 L 4 9 L 1 6 L 5 5 Z" fill="currentColor"/></svg>
+          </span>
+          <span class="what">Quiz on Macondo's founding — <em>5/5 correct</em></span>
+          <span class="gain">+ new bud</span>
+        </li>
+        <li>
+          <span class="when">09 May · 18:42</span>
+          <span class="icon">
+            <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="3" fill="currentColor"/></svg>
+          </span>
+          <span class="what">Watered — finished a 30-minute reading session</span>
+          <span class="gain">+ 1 droplet</span>
+        </li>
+        <li>
+          <span class="when">08 May · 07:30</span>
+          <span class="icon r">
+            <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 2 C 3 6, 3 9, 7 12 C 11 9, 11 6, 7 2 Z" fill="currentColor"/></svg>
+          </span>
+          <span class="what">Skipped tending — <em>vitality dropped from 5 to 4</em></span>
+          <span class="gain warn">− 1 droplet</span>
+        </li>
+        <li>
+          <span class="when">06 May · 21:18</span>
+          <span class="icon q">
+            <svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1 L 9 5 L 13 6 L 10 9 L 11 13 L 7 11 L 3 13 L 4 9 L 1 6 L 5 5 Z" fill="currentColor"/></svg>
+          </span>
+          <span class="what">Weekly tending — <em>passed with 4/5</em></span>
+          <span class="gain">+ 12% growth</span>
+        </li>
+        <li>
+          <span class="when">04 May · 14:55</span>
+          <span class="icon b">
+            <svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 2 L 11 2 L 11 12 L 7 10 L 3 12 Z" fill="currentColor"/></svg>
+          </span>
+          <span class="what">Translation queue completed — <em>EN ⟶ FR, 218 pp.</em></span>
+          <span class="gain">+ stage advance</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SIDECAR: PICK SPECIES -->
+    <aside class="sidecar reveal d6">
+      <h3>Choose a species</h3>
+      <p class="sub">Pick the plant that will grow alongside this book. Each species rewards different reading habits.</p>
+      <div class="species-grid">
+        <div class="species selected">
+          <svg width="48" height="56" viewBox="0 0 48 56">
+            <path d="M24 50 C 22 36, 28 26, 22 12" stroke="#A4BD7E" stroke-width="2.5" fill="none"/>
+            <path d="M24 32 C 36 28, 40 18, 36 10 C 28 14, 24 22, 24 32 Z" fill="#A4BD7E" stroke="#3F5A2D" stroke-width="1.2"/>
+            <path d="M24 38 C 12 36, 8 26, 12 18 C 20 22, 24 28, 24 38 Z" fill="#A4BD7E" stroke="#3F5A2D" stroke-width="1.2"/>
+            <circle cx="22" cy="12" r="3" fill="#B85A3A" stroke="#3F5A2D" stroke-width="1.2"/>
+          </svg>
+          <div class="name">Ficus litteraria</div>
+          <div class="latin">novel-fig</div>
+        </div>
+        <div class="species">
+          <svg width="48" height="56" viewBox="0 0 48 56">
+            <path d="M24 50 L 24 18" stroke="#3F5A2D" stroke-width="2.5"/>
+            <path d="M24 30 L 16 22 M 24 24 L 32 16 M 24 22 L 14 14 M 24 18 L 32 8" stroke="#3F5A2D" stroke-width="1.5"/>
+            <circle cx="24" cy="14" r="6" fill="#E8C56A" stroke="#3F5A2D" stroke-width="1.4"/>
+            <circle cx="24" cy="14" r="2" fill="#B85A3A"/>
+          </svg>
+          <div class="name">Helianthus</div>
+          <div class="latin">poet's sunflower</div>
+        </div>
+        <div class="species">
+          <svg width="48" height="56" viewBox="0 0 48 56">
+            <path d="M24 50 C 22 38, 16 32, 16 22" stroke="#3F5A2D" stroke-width="2"/>
+            <path d="M22 50 C 24 38, 32 32, 32 22" stroke="#3F5A2D" stroke-width="2"/>
+            <ellipse cx="16" cy="20" rx="6" ry="10" fill="#7A9858" stroke="#3F5A2D" stroke-width="1.2" transform="rotate(-15 16 20)"/>
+            <ellipse cx="32" cy="20" rx="6" ry="10" fill="#7A9858" stroke="#3F5A2D" stroke-width="1.2" transform="rotate(15 32 20)"/>
+          </svg>
+          <div class="name">Lavandula</div>
+          <div class="latin">essay-lavender</div>
+        </div>
+        <div class="species locked">
+          <svg width="48" height="56" viewBox="0 0 48 56">
+            <path d="M24 50 C 24 40, 24 30, 24 14" stroke="#3F5A2D" stroke-width="2"/>
+            <path d="M24 30 C 14 28, 8 20, 8 8 C 18 12, 24 20, 24 30 Z" fill="#6E8C4E" stroke="#3F5A2D" stroke-width="1.2"/>
+            <path d="M24 28 C 34 26, 40 18, 40 6 C 30 10, 24 18, 24 28 Z" fill="#6E8C4E" stroke="#3F5A2D" stroke-width="1.2"/>
+            <circle cx="24" cy="6" r="3" fill="#C99846" stroke="#3F5A2D" stroke-width="1.2"/>
+          </svg>
+          <div class="name">Monstera</div>
+          <div class="latin">epic-leaf</div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px; padding-top:14px; border-top:1px dashed var(--rule);">
+        <div style="font-family:'Fraunces',serif; font-style:italic; font-size:14px; margin-bottom:8px;">Design your farmer</div>
+        <div style="display:flex; gap:8px;">
+          <div style="flex:1; aspect-ratio:1; border:1px solid var(--ink); display:grid; place-items:center; background:#FBF3DD;">
+            <svg width="40" height="56" viewBox="0 0 78 120"><ellipse cx="39" cy="22" rx="22" ry="5" fill="#C99846" stroke="#1F1A14" stroke-width="1.4"/><path d="M28 22 C 30 12, 48 12, 50 22 Z" fill="#E2B26A" stroke="#1F1A14" stroke-width="1.4"/><circle cx="39" cy="34" r="11" fill="#E2B98A" stroke="#1F1A14" stroke-width="1.6"/><path d="M22 56 C 22 48, 26 44, 38 44 C 50 44, 56 48, 56 56 L 56 94 C 56 96, 54 98, 50 98 L 26 98 C 22 98, 22 96, 22 94 Z" fill="#B85A3A" stroke="#1F1A14" stroke-width="1.6"/></svg>
+          </div>
+          <div style="flex:1; aspect-ratio:1; border:1px dashed var(--rule); display:grid; place-items:center; color:var(--ink-faint); font-style:italic; font-family:'Fraunces',serif; font-size:13px;">hat ▾</div>
+          <div style="flex:1; aspect-ratio:1; border:1px dashed var(--rule); display:grid; place-items:center; color:var(--ink-faint); font-style:italic; font-family:'Fraunces',serif; font-size:13px;">coat ▾</div>
+          <div style="flex:1; aspect-ratio:1; border:1px dashed var(--rule); display:grid; place-items:center; color:var(--ink-faint); font-style:italic; font-family:'Fraunces',serif; font-size:13px;">tool ▾</div>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ============ OTHER GARDENS ============ -->
+  <section class="other">
+    <div class="section-head reveal d6">
+      <h2>Other gardens under your care</h2>
+      <span class="meta">3 thriving · 1 wilting</span>
+    </div>
+    <div class="other-grid">
+
+      <div class="garden-card reveal d6">
+        <div class="mini-scene">
+          <span class="health">thriving</span>
+          <svg style="position:absolute; left:50%; bottom:18px; transform:translateX(-50%);" width="58" height="80" viewBox="0 0 58 80">
+            <path d="M29 78 L 29 30" stroke="#3F5A2D" stroke-width="3"/>
+            <path d="M29 50 C 14 48, 6 38, 6 22 C 20 24, 29 32, 29 50 Z" fill="#7A9858" stroke="#3F5A2D" stroke-width="1.2"/>
+            <path d="M29 44 C 44 42, 52 32, 52 16 C 38 18, 29 26, 29 44 Z" fill="#8FAD68" stroke="#3F5A2D" stroke-width="1.2"/>
+            <circle cx="29" cy="14" r="4" fill="#E8C56A" stroke="#3F5A2D" stroke-width="1.2"/>
+          </svg>
+          <div class="soil-mini"></div>
+        </div>
+        <div class="title">Beloved</div>
+        <div class="author">Toni Morrison</div>
+        <div class="mini-bar"><div class="fill" style="width:84%"></div></div>
+      </div>
+
+      <div class="garden-card reveal d6">
+        <div class="mini-scene">
+          <span class="health">budding</span>
+          <svg style="position:absolute; left:50%; bottom:18px; transform:translateX(-50%);" width="58" height="80" viewBox="0 0 58 80">
+            <path d="M29 78 L 29 40" stroke="#3F5A2D" stroke-width="3"/>
+            <ellipse cx="20" cy="40" rx="8" ry="14" fill="#7A9858" stroke="#3F5A2D" stroke-width="1.2" transform="rotate(-20 20 40)"/>
+            <ellipse cx="38" cy="40" rx="8" ry="14" fill="#7A9858" stroke="#3F5A2D" stroke-width="1.2" transform="rotate(20 38 40)"/>
+            <ellipse cx="29" cy="28" rx="6" ry="12" fill="#A4BD7E" stroke="#3F5A2D" stroke-width="1.2"/>
+          </svg>
+          <div class="soil-mini"></div>
+        </div>
+        <div class="title">The Master and Margarita</div>
+        <div class="author">Mikhail Bulgakov</div>
+        <div class="mini-bar"><div class="fill" style="width:41%"></div></div>
+      </div>
+
+      <div class="garden-card dying reveal d6">
+        <div class="mini-scene">
+          <span class="health warn">wilting</span>
+          <svg style="position:absolute; left:50%; bottom:18px; transform:translateX(-50%);" width="58" height="80" viewBox="0 0 58 80">
+            <path d="M29 78 C 28 60, 32 50, 26 38" stroke="#7A6A4A" stroke-width="3" fill="none"/>
+            <path d="M26 50 C 16 56, 10 64, 12 70" stroke="#7A6A4A" stroke-width="2" fill="none"/>
+            <path d="M26 42 C 38 46, 44 56, 42 62" stroke="#7A6A4A" stroke-width="2" fill="none"/>
+            <ellipse cx="12" cy="68" rx="5" ry="3" fill="#A89060" stroke="#7A6A4A" stroke-width="1" opacity="0.9"/>
+            <ellipse cx="42" cy="60" rx="5" ry="3" fill="#A89060" stroke="#7A6A4A" stroke-width="1" opacity="0.9" transform="rotate(20 42 60)"/>
+          </svg>
+          <div class="soil-mini"></div>
+        </div>
+        <div class="title">Crime and Punishment</div>
+        <div class="author">Fyodor Dostoevsky</div>
+        <div class="mini-bar"><div class="fill" style="width:18%"></div></div>
+      </div>
+
+      <div class="garden-card reveal d6">
+        <div class="mini-scene">
+          <span class="health">thriving</span>
+          <svg style="position:absolute; left:50%; bottom:18px; transform:translateX(-50%);" width="58" height="80" viewBox="0 0 58 80">
+            <path d="M29 78 L 29 16" stroke="#3F5A2D" stroke-width="3"/>
+            <path d="M29 32 L 18 24 M 29 26 L 40 18 M 29 22 L 14 14" stroke="#3F5A2D" stroke-width="1.6"/>
+            <circle cx="29" cy="14" r="8" fill="#E8C56A" stroke="#3F5A2D" stroke-width="1.4"/>
+            <circle cx="29" cy="14" r="3" fill="#B85A3A"/>
+          </svg>
+          <div class="soil-mini"></div>
+        </div>
+        <div class="title">A Thousand Plateaus</div>
+        <div class="author">Deleuze &amp; Guattari</div>
+        <div class="mini-bar"><div class="fill" style="width:67%"></div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="legend">
+    <div class="colophon">
+      <small>Colophon</small><br>
+      Composed in Fraunces &amp; Newsreader. Specimens drawn by hand. The Garden is a private record:
+      no plant, leaf, or wilt is shared without your permission.
+    </div>
+    <div>
+      <small>Translify Almanac</small><br>
+      <em>Vol. ii · plate 04 · 2026</em>
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>
