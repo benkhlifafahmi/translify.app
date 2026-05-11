@@ -7,6 +7,8 @@ export interface User {
   is_verified: boolean;
   display_name: string | null;
   preferred_language: string;
+  family_safe_mode: boolean;
+  active_profile_id: string | null;
 }
 
 export async function login(email: string, password: string): Promise<User> {
@@ -48,6 +50,7 @@ export interface UpdateProfileInput {
   preferred_language?: string;
   password?: string;
   email?: string;
+  family_safe_mode?: boolean;
 }
 
 export async function updateProfile(input: UpdateProfileInput): Promise<User> {

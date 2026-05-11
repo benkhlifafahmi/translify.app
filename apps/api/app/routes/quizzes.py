@@ -12,6 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
 from app.auth.users import current_active_user
+from app.billing.active_profile import resolve_active_profile
+from app.billing.family_safe import is_family_safe_active
 from app.billing.quota import reserve_quiz_for_book
 from app.db import get_async_session
 from app.models.book import Book, BookStatus
@@ -118,7 +120,9 @@ async def create_quiz(
         )
 
     # Plan + per-book quiz quota gate — raises 402 with structured detail.
-    await reserve_quiz_for_book(user, book.id, session)
+    sub = await reserve_quiz_for_book(user, book.id, session)
+    active_profile = await resolve_active_profile(user, session)
+    family_safe = is_family_safe_active(user, sub, active_profile)
 
     output_language: str | None = None
     if payload.translation_id is not None:
@@ -141,6 +145,7 @@ async def create_quiz(
             book_title=book.title,
             question_count=payload.question_count,
             output_language=output_language,
+            family_safe=family_safe,
         )
     except AnthropicRateLimitError as exc:
         # Anthropic per-minute token quota — distinct from our own quota.

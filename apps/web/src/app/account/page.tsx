@@ -9,6 +9,14 @@ import { TrialBanner } from "@/components/trial-banner";
 import { ApiError } from "@/lib/api";
 import { logout, me, updateProfile, type User } from "@/lib/auth";
 import {
+  activateProfile,
+  createProfile,
+  deleteProfile as deleteProfileRequest,
+  listProfiles,
+  type Profile,
+  type ProfileKind,
+} from "@/lib/profiles";
+import {
   getSubscription,
   isUnlimited,
   planName,
@@ -28,7 +36,7 @@ import {
   xpToNextLevel,
 } from "@/lib/lumi-progress";
 
-type Tab = "profile" | "subscription" | "lumi" | "security" | "danger";
+type Tab = "profile" | "profiles" | "subscription" | "lumi" | "security" | "danger";
 
 const PLAN_PRICES: Record<Exclude<Plan, "free">, { monthly: number; yearly: number }> = {
   reader:  { monthly: 14, yearly: 11 },
@@ -152,6 +160,9 @@ function AccountInner() {
           {tab === "profile" && (
             <ProfileSection user={user} setUser={setUser} setFlash={setFlash} />
           )}
+          {tab === "profiles" && (
+            <ProfilesSection user={user} setUser={setUser} sub={sub} setFlash={setFlash} />
+          )}
           {tab === "subscription" && (
             <SubscriptionSection sub={sub} setSub={setSub} setFlash={setFlash} />
           )}
@@ -202,6 +213,7 @@ function TopBar({ onLogout }: { onLogout: () => void }) {
 function SideNav({ tab, setTab, sub }: { tab: Tab; setTab: (t: Tab) => void; sub: Subscription }) {
   const items: { id: Tab; label: string; sub: string; icon: string }[] = [
     { id: "profile",      label: "Reader card",    sub: "Name · email · language",       icon: "✦" },
+    { id: "profiles",     label: "Family readers", sub: "Switch between profiles",       icon: "❋" },
     { id: "subscription", label: "Subscription",   sub: "Plan · billing · usage",        icon: "❀" },
     { id: "lumi",         label: "Lumi & progress", sub: "Level · XP · achievements",     icon: "🦉" },
     { id: "security",     label: "Security",       sub: "Password · sessions",           icon: "◇" },
@@ -286,6 +298,7 @@ function ProfileSection({
   const [name, setName] = useState(user.display_name ?? "");
   const [email, setEmail] = useState(user.email);
   const [language, setLanguage] = useState(user.preferred_language ?? "en");
+  const [familySafe, setFamilySafe] = useState(user.family_safe_mode);
   const [submitting, setSubmitting] = useState(false);
 
   const initial = (user.display_name || user.email || "?").charAt(0).toUpperCase();
@@ -297,6 +310,7 @@ function ProfileSection({
       const updated = await updateProfile({
         display_name: name || null,
         preferred_language: language,
+        family_safe_mode: familySafe,
         ...(email !== user.email ? { email } : {}),
       });
       setUser(updated);
@@ -374,6 +388,35 @@ function ProfileSection({
             </div>
           </Field>
 
+          {/* Family-safe content toggle. Always visible so users see it exists;
+              actual effect requires the Family plan (backend silently ignores
+              the toggle on lower tiers, the preference still persists). */}
+          <Field label="Family-safe mode">
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-3 transition-colors hover:border-[color:var(--color-coral)]">
+              <input
+                type="checkbox"
+                checked={familySafe}
+                onChange={(e) => setFamilySafe(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[color:var(--color-coral-deep)]"
+              />
+              <span className="flex-1 text-start">
+                <span className="flex items-center gap-2">
+                  <span className="text-[0.85rem] font-semibold text-[color:var(--color-ink)]">
+                    Kid-safe content posture
+                  </span>
+                  <span className="rounded-full bg-[color:var(--color-coral)]/15 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[color:var(--color-coral-deep)]">
+                    Family plan
+                  </span>
+                </span>
+                <span className="mt-1 block text-[0.72rem] leading-snug text-[color:var(--color-ink-soft)]">
+                  Lumi softens chat answers and quiz questions — no graphic violence,
+                  no explicit content, no shock-value passages. Translation faithfully
+                  reproduces the source either way.
+                </span>
+              </span>
+            </label>
+          </Field>
+
           <button
             type="submit"
             disabled={submitting}
@@ -426,6 +469,346 @@ function ProfileSection({
         </div>
       </form>
     </SectionShell>
+  );
+}
+
+/* ─────────────────────── Profiles (Family) ─────────────────────── */
+
+function ProfilesSection({
+  user,
+  setUser,
+  sub,
+  setFlash,
+}: {
+  user: User;
+  setUser: (u: User) => void;
+  sub: Subscription;
+  setFlash: (f: { tone: "success" | "error" | "info"; text: string } | null) => void;
+}) {
+  const router = useRouter();
+  const [profiles, setProfiles] = useState<Profile[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newKind, setNewKind] = useState<ProfileKind>("adult");
+  const [newAvatar, setNewAvatar] = useState<string>("lumi");
+
+  // Initial load. Mutated locally on create/delete for snappier UX.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await listProfiles();
+        if (!cancelled) setProfiles(list);
+      } catch (err) {
+        if (!cancelled) {
+          setFlash({
+            tone: "error",
+            text: err instanceof ApiError ? err.message : "Couldn't load profiles.",
+          });
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [setFlash]);
+
+  const quota = sub.quota.profiles;
+  const remaining = profiles ? Math.max(0, quota - profiles.length) : 0;
+  const atCap = profiles ? profiles.length >= quota : false;
+
+  const onActivate = async (id: string) => {
+    setBusy(id);
+    try {
+      await activateProfile(id);
+      setUser({ ...user, active_profile_id: id });
+      setFlash({ tone: "success", text: "Reader switched." });
+      // Force a fresh load of book/highlight context in case a child profile
+      // is now active (the chat / quiz routes resolve family-safe per request,
+      // but it's nice for the picker label to update everywhere).
+      router.refresh();
+    } catch (err) {
+      setFlash({
+        tone: "error",
+        text: err instanceof ApiError ? err.message : "Couldn't switch reader.",
+      });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const onDelete = async (id: string) => {
+    if (!confirm("Delete this reader profile? Their reading history is kept under the household.")) {
+      return;
+    }
+    setBusy(id);
+    try {
+      await deleteProfileRequest(id);
+      setProfiles((prev) => prev?.filter((p) => p.id !== id) ?? null);
+      if (user.active_profile_id === id) {
+        setUser({ ...user, active_profile_id: null });
+      }
+      setFlash({ tone: "success", text: "Profile removed." });
+    } catch (err) {
+      setFlash({
+        tone: "error",
+        text: err instanceof ApiError ? err.message : "Couldn't delete that profile.",
+      });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const onCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim()) return;
+    setCreating(true);
+    try {
+      const created = await createProfile({
+        name: newName.trim(),
+        kind: newKind,
+        avatar_seed: newAvatar,
+      });
+      setProfiles((prev) => (prev ? [...prev, created] : [created]));
+      setNewName("");
+      setNewKind("adult");
+      setNewAvatar("lumi");
+      setFlash({ tone: "success", text: `${created.name} joined the shelf.` });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 402) {
+        setFlash({
+          tone: "info",
+          text: "You're at your plan's reader limit — upgrade to Family for up to 5.",
+        });
+      } else {
+        setFlash({
+          tone: "error",
+          text: err instanceof ApiError ? err.message : "Couldn't add that reader.",
+        });
+      }
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <SectionShell
+      eyebrow="Family readers"
+      title="One household, many readers."
+      lede={
+        quota > 1
+          ? `Switch profiles to keep each reader's vibe distinct. Up to ${quota} readers on your plan.`
+          : "Family plans get up to 5 reader profiles — one for each person on the shelf."
+      }
+    >
+      {profiles === null ? (
+        <p className="text-[color:var(--color-ink-soft)]">Loading profiles…</p>
+      ) : (
+        <div className="flex flex-col gap-8">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {profiles.map((p) => (
+              <ProfileCard
+                key={p.id}
+                profile={p}
+                active={user.active_profile_id === p.id}
+                busy={busy === p.id}
+                onActivate={() => onActivate(p.id)}
+                onDelete={p.is_default ? undefined : () => onDelete(p.id)}
+              />
+            ))}
+          </div>
+
+          {atCap ? (
+            <div className="rounded-2xl border border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper-2)] p-5 text-[0.8rem] text-[color:var(--color-ink-soft)]">
+              {quota === 1 ? (
+                <>
+                  <strong className="text-[color:var(--color-ink)]">One reader per shelf on this plan.</strong>{" "}
+                  Upgrade to Family for up to 5 readers + per-child kid-safe mode.
+                </>
+              ) : (
+                <>You've filled all {quota} reader slots — remove one to add another.</>
+              )}
+            </div>
+          ) : (
+            <form
+              onSubmit={onCreate}
+              className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-5 shadow-[var(--shadow-paper)]"
+            >
+              <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-saffron-deep)]">
+                Add a reader · {remaining} slot{remaining === 1 ? "" : "s"} left
+              </p>
+              <h4 className="mt-1 font-[family-name:var(--font-display)] text-[1.4rem] font-semibold text-[color:var(--color-ink)]">
+                Who's joining the shelf?
+              </h4>
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr_auto]">
+                <Field label="Reader name">
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="paper-input"
+                    placeholder="e.g. Yara"
+                    maxLength={60}
+                    required
+                  />
+                </Field>
+                <Field label="Reader kind">
+                  <div className="flex gap-2">
+                    {(["adult", "child"] as const).map((k) => {
+                      const sel = newKind === k;
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => setNewKind(k)}
+                          className={`flex-1 rounded-xl border px-3 py-2 text-[0.78rem] font-semibold transition-colors ${
+                            sel
+                              ? "border-[color:var(--color-coral-deep)] bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)]"
+                              : "border-[color:var(--color-border)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)]"
+                          }`}
+                        >
+                          {k === "adult" ? "Grown-up" : "Kid (safe mode on)"}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Field>
+                <div className="flex items-end">
+                  <button
+                    type="submit"
+                    disabled={creating || !newName.trim()}
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[color:var(--color-ink)] px-6 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)] transition-transform hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {creating ? "Adding…" : "Add reader"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <Field label="Avatar">
+                  <AvatarPicker value={newAvatar} onChange={setNewAvatar} />
+                </Field>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
+    </SectionShell>
+  );
+}
+
+function ProfileCard({
+  profile,
+  active,
+  busy,
+  onActivate,
+  onDelete,
+}: {
+  profile: Profile;
+  active: boolean;
+  busy: boolean;
+  onActivate: () => void;
+  onDelete?: () => void;
+}) {
+  // Avoid pulling avatarEmoji statically — keeps the bundle a touch leaner
+  // for tabs that never get visited.
+  const emoji = AVATAR_EMOJI[profile.avatar_seed] ?? "🦉";
+  return (
+    <div
+      className={`relative rounded-2xl border p-5 shadow-[var(--shadow-paper)] transition-transform hover:-translate-y-[2px] ${
+        active
+          ? "border-[color:var(--color-saffron-deep)] bg-gradient-to-br from-[#FFFCF3] to-[#FBE9C2]"
+          : "border-[color:var(--color-border)] bg-[color:var(--color-paper)]"
+      }`}
+    >
+      {active && (
+        <span className="absolute -top-2 left-4 rounded-[2px] bg-[color:var(--color-saffron)] px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-[0.2em] text-[color:var(--color-accent-foreground)] shadow-[0_2px_4px_rgba(60,40,15,0.15)]">
+          Currently reading
+        </span>
+      )}
+      <div className="flex items-start gap-3">
+        <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[color:var(--color-paper-3)] text-[1.8rem] shadow-[inset_0_0_0_1px_var(--color-border)]">
+          {emoji}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-[family-name:var(--font-display)] text-[1.25rem] font-semibold leading-tight text-[color:var(--color-ink)]">
+            {profile.name}
+          </p>
+          <p className="text-[0.72rem] uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
+            {profile.kind === "child" ? "Kid · safe mode" : "Grown-up"}
+            {profile.is_default && " · default"}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onActivate}
+          disabled={active || busy}
+          className={`flex-1 rounded-full px-4 py-2 text-[0.78rem] font-semibold transition-colors ${
+            active
+              ? "cursor-default bg-[color:var(--color-ink)]/10 text-[color:var(--color-ink-soft)]"
+              : "bg-[color:var(--color-ink)] text-[color:var(--color-paper)] hover:-translate-y-[1px]"
+          } disabled:cursor-not-allowed`}
+        >
+          {active ? "Selected" : busy ? "Switching…" : "Switch to this reader"}
+        </button>
+        {onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={busy}
+            aria-label={`Delete ${profile.name}`}
+            className="grid h-9 w-9 place-items-center rounded-full border border-[color:var(--color-border)] text-[color:var(--color-ink-soft)] transition-colors hover:border-[color:var(--color-coral)] hover:text-[color:var(--color-coral-deep)] disabled:opacity-40"
+          >
+            ⌫
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const AVATAR_EMOJI: Record<string, string> = {
+  lumi: "🦉",
+  fox: "🦊",
+  bear: "🐻",
+  panda: "🐼",
+  cat: "🐱",
+  rabbit: "🐰",
+  dragon: "🐉",
+  unicorn: "🦄",
+};
+
+function AvatarPicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (seed: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {Object.entries(AVATAR_EMOJI).map(([seed, emoji]) => {
+        const sel = value === seed;
+        return (
+          <button
+            key={seed}
+            type="button"
+            onClick={() => onChange(seed)}
+            aria-label={`Avatar ${seed}`}
+            className={`grid h-11 w-11 place-items-center rounded-xl border text-[1.4rem] transition-transform hover:-translate-y-[1px] ${
+              sel
+                ? "border-[color:var(--color-saffron-deep)] bg-gradient-to-br from-[#FFFCF3] to-[#FBE9C2] shadow-[var(--shadow-paper)]"
+                : "border-[color:var(--color-border)] bg-[color:var(--color-paper)]"
+            }`}
+          >
+            {emoji}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

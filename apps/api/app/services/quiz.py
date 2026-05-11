@@ -16,6 +16,7 @@ from collections.abc import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.billing.family_safe import safe_addendum
 from app.models.chunk import Chunk
 from app.services.llm import complete
 
@@ -34,6 +35,7 @@ async def generate_quiz(
     book_title: str,
     question_count: int = DEFAULT_QUESTION_COUNT,
     output_language: str | None = None,
+    family_safe: bool = False,
 ) -> list[dict]:
     """Return a list of question dicts:
         {id, type: 'mcq', prompt, choices: [..], answer_index, explanation}
@@ -48,6 +50,7 @@ async def generate_quiz(
         context=context,
         question_count=question_count,
         output_language=output_language,
+        family_safe=family_safe,
     )
 
     resp = await complete(
@@ -71,6 +74,7 @@ def _build_prompts(
     context: str,
     question_count: int,
     output_language: str | None,
+    family_safe: bool = False,
 ) -> tuple[str, str]:
     language_instruction = ""
     if output_language:
@@ -87,6 +91,7 @@ def _build_prompts(
         "concept, fact, or argument from the book. "
         f"Generate exactly {question_count} questions."
         + language_instruction
+        + safe_addendum(family_safe)
     )
 
     user = (

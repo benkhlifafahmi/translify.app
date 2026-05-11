@@ -14,6 +14,7 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.billing.family_safe import safe_addendum
 from app.ingest.embeddings import embed_query
 from app.models.book import Book
 from app.models.chat import Message, MessageRole
@@ -39,6 +40,7 @@ async def answer_question(
     history: list[Message],
     answer_language: str | None = None,
     task: str = "chat",
+    family_safe: bool = False,
 ) -> tuple[str, list[dict], dict]:
     """Return (assistant_text, citations, token_usage).
 
@@ -88,6 +90,7 @@ async def answer_question(
         "the sources, say so plainly. Cite sources inline as [1], [2], etc., "
         "matching the [Source N] labels."
         + language_instruction
+        + safe_addendum(family_safe)
         + f"\n\n=== SOURCES ===\n{context_block}\n=== END SOURCES ==="
     )
 

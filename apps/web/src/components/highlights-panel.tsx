@@ -68,6 +68,7 @@ export function HighlightsPanel({ bookId, open, onConsumed, onJumpToPage }: Prop
 
   return (
     <div className="flex h-full flex-col overflow-y-auto px-3 py-3">
+      <ExportNotesBar bookId={bookId} count={highlights.length} />
       <div className="flex flex-col gap-2.5">
         {highlights.map((h) => (
           <HighlightCard
@@ -439,6 +440,87 @@ function EmptyNotesState() {
       <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
         {t("notes.empty.body")}
       </p>
+    </div>
+  );
+}
+
+// Header strip above the highlight cards: count + Markdown export.
+// Backend gates the route on the Scholar/Family `annotated_export` quota and
+// returns 402 otherwise — we let the user click and surface the upgrade
+// message inline rather than hiding the affordance entirely.
+function ExportNotesBar({ bookId, count }: { bookId: string; count: number }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const onExport = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("translify_jwt")
+          : null;
+      const res = await fetch(`${apiUrl}/books/${bookId}/annotations.md`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (res.status === 402) {
+        setErr("Annotated export is a Scholar / Family feature. Upgrade to download your notes.");
+        return;
+      }
+      if (!res.ok) {
+        setErr(`Export failed (${res.status}). Try again in a moment.`);
+        return;
+      }
+      const blob = await res.blob();
+      // Try to honour the server's Content-Disposition filename; fall back
+      // to a generic one if the header is missing or not parseable.
+      const dispo = res.headers.get("Content-Disposition") || "";
+      const match = /filename="([^"]+)"/.exec(dispo);
+      const filename = match?.[1] ?? `annotations-${bookId}.md`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setErr("Network error while exporting. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mb-3 flex items-center justify-between gap-2 rounded-xl border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40 px-3 py-2">
+      <span className="text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-ink-soft)]">
+        <span className="tabular-nums text-[color:var(--color-ink)]">{count}</span>{" "}
+        {count === 1 ? "annotation" : "annotations"}
+      </span>
+      <div className="flex flex-col items-end gap-1">
+        <button
+          type="button"
+          onClick={onExport}
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-ink)] px-3 py-1 text-[0.72rem] font-semibold text-[color:var(--color-paper)] transition-transform hover:-translate-y-[1px] disabled:opacity-50"
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          {busy ? "Preparing…" : "Export .md"}
+        </button>
+        {err && (
+          <span className="text-[0.65rem] leading-tight text-[color:var(--color-coral-deep)]">
+            {err}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

@@ -11,6 +11,7 @@ from app.models.garden import (
     GardenTendingAttempt,
 )
 from app.models.highlight import Highlight, HighlightColor
+from app.models.profile import ProfileKind, ReaderProfile
 from app.models.quiz import Quiz, QuizAttempt
 from app.models.subscription import (
     StripeEvent,
@@ -36,8 +37,10 @@ __all__ = [
     "HighlightColor",
     "Message",
     "MessageRole",
+    "ProfileKind",
     "Quiz",
     "QuizAttempt",
+    "ReaderProfile",
     "StripeEvent",
     "Subscription",
     "SubscriptionStatus",

@@ -9,8 +9,10 @@ from datetime import timedelta
 
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from urllib.parse import quote
 
 from app import upload_session
 from app.auth.models import User
@@ -28,8 +30,11 @@ from app.schemas.book import (
 )
 from app.schemas.translation import FileUrlResponse
 from app.storage import get_s3_client, presigned_get_url, presigned_put_url
+from app.billing.plans import Plan, quota_for
+from app.billing.quota import require_active_plan
+from app.services.annotated_export import render_book_export
 from app.workers.jobs import process_book
-from app.workers.queue import QUEUE_INGEST, get_queue
+from app.workers.queue import QUEUE_INGEST, queue_for
 
 log = logging.getLogger(__name__)
 
@@ -144,6 +149,43 @@ async def get_book_file_url(
     )
 
 
+@router.get("/{book_id}/annotations.md")
+async def export_book_annotations(
+    book_id: uuid.UUID = Path(...),
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> Response:
+    """Download a book's highlights + notes as a Markdown file.
+
+    Gated on ``annotated_export`` — Scholar / Family only. Free / Reader get
+    a 402 (Payment Required) so the frontend can show an upgrade prompt.
+    """
+    book = await _get_owned_book(book_id, user, session)
+    sub = await require_active_plan(user, session)
+    if not quota_for(Plan(sub.plan)).annotated_export:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "error": "feature_locked",
+                "message": "Annotated export is a Scholar/Family feature.",
+                "feature": "annotated_export",
+                "plan": sub.plan,
+            },
+        )
+    filename, body = await render_book_export(book, session)
+    # RFC 5987 — encode non-ASCII filenames safely for Content-Disposition.
+    encoded = quote(filename)
+    return Response(
+        content=body,
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": (
+                f"attachment; filename=\"{filename}\"; filename*=UTF-8''{encoded}"
+            ),
+        },
+    )
+
+
 @router.post("/upload-url", response_model=UploadUrlResponse)
 async def create_upload_url(
     payload: UploadUrlRequest,
@@ -207,7 +249,8 @@ async def finalize_upload(
     page_count = _peek_page_count(fmt, pending["file_key"], actual_size)
 
     # Plan + quota gate — raises 402 with structured detail when over limit.
-    await reserve_book_upload(user, page_count, session)
+    sub = await reserve_book_upload(user, page_count, session)
+    priority = quota_for(Plan(sub.plan)).priority_queue
 
     book = Book(
         user_id=user.id,
@@ -226,7 +269,7 @@ async def finalize_upload(
 
     upload_session.consume(payload.upload_id)
 
-    get_queue(QUEUE_INGEST).enqueue(
+    queue_for(QUEUE_INGEST, priority=priority).enqueue(
         process_book,
         str(book.id),
         job_id=f"process_book_{book.id}",

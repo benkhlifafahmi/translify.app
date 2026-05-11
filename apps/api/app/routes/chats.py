@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
 from app.auth.users import current_active_user
+from app.billing.active_profile import resolve_active_profile
+from app.billing.family_safe import is_family_safe_active
 from app.billing.quota import require_active_plan
 from app.db import get_async_session
 from app.models.book import Book, BookStatus
@@ -131,7 +133,9 @@ async def send_message(
     session: AsyncSession = Depends(get_async_session),
 ) -> SendMessageResponse:
     # Gate the live-cost path (LLM call) on having an active plan.
-    await require_active_plan(user, session)
+    sub = await require_active_plan(user, session)
+    active_profile = await resolve_active_profile(user, session)
+    family_safe = is_family_safe_active(user, sub, active_profile)
     chat = await _get_owned_chat(chat_id, user, session)
     if chat.book_id is None:
         raise HTTPException(
@@ -179,6 +183,7 @@ async def send_message(
             question=payload.content.strip(),
             history=history,
             answer_language=answer_language,
+            family_safe=family_safe,
         )
     except Exception as exc:
         log.exception("chat answer failed for chat=%s", chat_id)

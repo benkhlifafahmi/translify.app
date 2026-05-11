@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
 from app.auth.users import current_active_user
+from app.billing.plans import Plan, quota_for
 from app.billing.quota import require_active_plan
 from app.db import get_async_session
 from app.models.book import Book, BookStatus
@@ -22,7 +23,7 @@ from app.schemas.translation import (
 )
 from app.storage import presigned_get_url
 from app.workers.jobs import translate_book
-from app.workers.queue import QUEUE_TRANSLATE, get_queue
+from app.workers.queue import QUEUE_TRANSLATE, queue_for
 
 log = logging.getLogger(__name__)
 
@@ -93,7 +94,8 @@ async def create_translation(
         )
 
     # Translations are a paid feature — gate on active plan.
-    await require_active_plan(user, session)
+    sub = await require_active_plan(user, session)
+    priority = quota_for(Plan(sub.plan)).priority_queue
 
     target_lang = payload.target_language.strip().lower()
     if not target_lang:
@@ -127,7 +129,7 @@ async def create_translation(
             existing_t.output_format = None
             await session.commit()
             await session.refresh(existing_t)
-            _enqueue(existing_t.id)
+            _enqueue(existing_t.id, priority=priority)
         return existing_t
 
     translation = Translation(
@@ -140,7 +142,7 @@ async def create_translation(
     await session.commit()
     await session.refresh(translation)
 
-    _enqueue(translation.id)
+    _enqueue(translation.id, priority=priority)
     return translation
 
 
@@ -160,7 +162,8 @@ async def retry_translation(
     session: AsyncSession = Depends(get_async_session),
 ) -> Translation:
     """Re-run a translation in place. Useful in dev when tweaking the engine."""
-    await require_active_plan(user, session)
+    sub = await require_active_plan(user, session)
+    priority = quota_for(Plan(sub.plan)).priority_queue
     translation = await _get_owned_translation(translation_id, user, session)
     if translation.status == TranslationStatus.in_progress:
         raise HTTPException(
@@ -175,7 +178,7 @@ async def retry_translation(
     translation.completed_at = None
     await session.commit()
     await session.refresh(translation)
-    _enqueue(translation.id)
+    _enqueue(translation.id, priority=priority)
     return translation
 
 
@@ -197,8 +200,8 @@ async def get_translation_file_url(
     )
 
 
-def _enqueue(translation_id: uuid.UUID) -> None:
-    get_queue(QUEUE_TRANSLATE).enqueue(
+def _enqueue(translation_id: uuid.UUID, *, priority: bool = False) -> None:
+    queue_for(QUEUE_TRANSLATE, priority=priority).enqueue(
         translate_book,
         str(translation_id),
         job_id=f"translate_{translation_id}",
