@@ -22,13 +22,16 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
-profile_kind = sa.Enum("adult", "child", name="profilekind")
+# Declared with ``create_type=False`` so the column reference below does not
+# try to re-CREATE the type. We create it explicitly with checkfirst=True so
+# re-runs after a partial failure are safe.
+profile_kind = sa.Enum("adult", "child", name="profilekind", create_type=False)
 
 
 def upgrade() -> None:
-    # Create the enum type explicitly so we can reuse it; SQLAlchemy's
-    # ``checkfirst=True`` keeps re-runs (or partial failures) idempotent.
-    profile_kind.create(op.get_bind(), checkfirst=True)
+    sa.Enum("adult", "child", name="profilekind").create(
+        op.get_bind(), checkfirst=True
+    )
 
     op.create_table(
         "reader_profiles",
@@ -117,4 +120,4 @@ def downgrade() -> None:
     op.drop_column("users", "active_profile_id")
     op.drop_index("ix_reader_profiles_user_id", table_name="reader_profiles")
     op.drop_table("reader_profiles")
-    profile_kind.drop(op.get_bind(), checkfirst=True)
+    sa.Enum(name="profilekind").drop(op.get_bind(), checkfirst=True)
