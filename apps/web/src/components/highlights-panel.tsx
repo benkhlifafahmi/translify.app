@@ -17,6 +17,7 @@ import { ApiError } from "@/lib/api";
 import { parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
 import { useI18n } from "@/lib/i18n";
+import { Lumi } from "@/components/lumi/lumi";
 
 export interface OpenHighlightState {
   id: string;
@@ -251,6 +252,13 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
 
       {editingNote ? (
         <div className="mb-2 flex flex-col gap-1.5">
+          {/* Lumi perches on top of the note block, animating as if she's writing alongside */}
+          <div className="lumi-bubble-in -mb-1 flex items-end gap-1.5">
+            <Lumi state="writing" size={56} animate />
+            <span className="mb-1 rounded-full bg-[color:var(--color-saffron)]/15 px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-saffron-deep)]">
+              writing with you
+            </span>
+          </div>
           <textarea
             value={noteDraft}
             onChange={(e) => setNoteDraft(e.target.value)}
@@ -361,9 +369,12 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
         )}
 
         {askAi.isPending && !highlight.ai_answer && (
-          <p className="mt-1.5 text-[0.7rem] italic text-[color:var(--color-ink-soft)]">
-            {t("notes.flipping")}
-          </p>
+          <div className="lumi-bubble-in mt-2 flex items-center gap-2 rounded-lg bg-[color:var(--color-coral)]/10 px-2.5 py-1.5">
+            <Lumi state="thinking" size={48} animate />
+            <p className="text-[0.72rem] italic text-[color:var(--color-coral-deep)]">
+              {t("notes.flipping")}
+            </p>
+          </div>
         )}
 
         {askAi.isError &&

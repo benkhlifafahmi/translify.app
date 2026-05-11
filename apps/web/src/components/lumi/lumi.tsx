@@ -18,7 +18,8 @@ export type LumiState =
   | "sad"
   | "focused"
   | "sleepy"
-  | "confused";
+  | "confused"
+  | "writing";
 
 interface LumiProps {
   state?: LumiState;
@@ -53,6 +54,7 @@ const WINGS: Record<LumiState, [number, number]> = {
   focused: [0, 0],
   sleepy: [-8, 8],
   confused: [-6, 12],
+  writing: [4, -4],
 };
 
 const HEAD_TILT: Partial<Record<LumiState, number>> = { confused: -8 };
@@ -241,6 +243,7 @@ function Eyes({ state }: { state: LumiState }) {
         </>
       );
     case "reading":
+    case "writing":
       return (
         <>
           <circle cx="75" cy="82" r="12" fill="#20283A" />
@@ -547,6 +550,32 @@ function Extras({ state }: { state: LumiState }) {
       <g>
         <text x="130" y="46" fontFamily="serif" fontSize="17" fill="#E0A458" opacity=".82">?</text>
         <text x="143" y="62" fontFamily="serif" fontSize="12" fill="#E0A458" opacity=".6">?</text>
+      </g>
+    );
+  }
+  if (state === "writing") {
+    // Quill + scribbled lines, rendered AFTER the body so they overlay the talons.
+    // The .lumi-pencil-arm group gets a CSS tilt animation (see globals.css).
+    return (
+      <g>
+        {/* Scribble lines under the feet, simulating paper */}
+        <g opacity="0.55">
+          <line x1="56" y1="186" x2="122" y2="186" stroke="#D4C29C" strokeWidth="0.8" strokeLinecap="round" />
+          <line x1="60" y1="190" x2="118" y2="190" stroke="#D4C29C" strokeWidth="0.8" strokeLinecap="round" />
+          <line x1="58" y1="194" x2="100" y2="194" stroke="#D4C29C" strokeWidth="0.8" strokeLinecap="round" />
+        </g>
+        {/* Quill in right talon — wrapped for animation */}
+        <g className="lumi-pencil-arm" style={{ transformOrigin: "108px 178px" }}>
+          <line x1="108" y1="178" x2="124" y2="158" stroke="#C8893E" strokeWidth="3" strokeLinecap="round" />
+          <polygon points="124,158 121,153 127,156" fill="#E0A458" />
+          {/* Quill plume */}
+          <path
+            d="M124 158 Q132 150 130 142 Q126 148 124 158Z"
+            fill="#7BA17C"
+            opacity="0.85"
+          />
+          <line x1="106" y1="180" x2="103" y2="184" stroke="#20283A" strokeWidth="2" strokeLinecap="round" />
+        </g>
       </g>
     );
   }

@@ -272,8 +272,16 @@
 .lumi-toast-in  { animation: lumi-toast-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 .lumi-line-fade { animation: lumi-line-fade 0.3s ease-out both; }
 
+/* Writing state — the quill tilts back and forth as if Lumi is scribbling. */
+@keyframes lumi-write-tilt {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-9deg); }
+  60%      { transform: rotate(6deg); }
+}
+.lumi-pencil-arm { animation: lumi-write-tilt 1.4s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
-  .lumi-float, .lumi-bubble-in, .lumi-toast-in, .lumi-line-fade {
+  .lumi-float, .lumi-bubble-in, .lumi-toast-in, .lumi-line-fade, .lumi-pencil-arm {
     animation: none !important;
   }
 }

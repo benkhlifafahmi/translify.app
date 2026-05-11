@@ -220,17 +220,17 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
         {/* Empty state — no saved quizzes, full-screen CTA */}
         {!hasSaved && (
           <div className="flex h-full flex-col items-center justify-center gap-5 px-6 py-8 text-center">
-            <div className="grid h-16 w-16 place-items-center rounded-3xl bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)]">
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
+            <div>
+              <Lumi state={generate.isPending ? "focused" : "thinking"} size={150} animate />
             </div>
             <div>
               <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">
-                {t("quiz.empty.title")}
+                {generate.isPending ? "Lumi is writing your quiz…" : t("quiz.empty.title")}
               </h3>
               <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
-                {t("quiz.empty.body")}
+                {generate.isPending
+                  ? "Picking the trickiest passages and turning them into questions. Won't be long."
+                  : t("quiz.empty.body")}
               </p>
             </div>
 

@@ -1,9 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="14" fill="#20283A"/>
-  <!-- Book outline -->
-  <path d="M14 50V14a6 6 0 0 1 6-6h32v48H20a6 6 0 0 0 0-12h32"
-        stroke="#FAF6EE" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <!-- Saffron ribbon bookmark -->
-  <path d="M38 8 v18 l4 -3.2 l4 3.2 v-18 z"
-        fill="#E0A458" stroke="#E0A458" stroke-width="1.4" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Translify · Lumi mark.
+       Square 200×200 with full-bleed ink background so it works as a
+       "maskable" PWA icon (OS may crop the corners into a circle/squircle).
+       Lumi sits in the inner ~70% safe zone, centered. -->
+
+  <!-- Ink background — fills the full tile -->
+  <rect width="200" height="200" rx="40" fill="#20283A"/>
+
+  <!-- Lumi centered, scaled to ~70% of canvas -->
+  <g transform="translate(37 30) scale(0.7)">
+    <!-- Wings -->
+    <path d="M42 110 Q18 90 14 60 Q20 72 30 78 Q16 62 22 42 Q28 60 38 68 Q26 50 36 32 Q40 52 48 62 Q40 80 44 108Z"
+          fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.2"/>
+    <path d="M138 110 Q162 90 166 60 Q160 72 150 78 Q164 62 158 42 Q152 60 142 68 Q154 50 144 32 Q140 52 132 62 Q140 80 136 108Z"
+          fill="#F4ECDB" stroke="#D4C29C" stroke-width="1.2"/>
+
+    <!-- Body + tummy -->
+    <ellipse cx="90" cy="126" rx="46" ry="54" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+    <ellipse cx="90" cy="136" rx="28" ry="34" fill="#F4ECDB" stroke="#E5D8BC" stroke-width="1"/>
+
+    <!-- Sage scarf -->
+    <path d="M56 105 Q90 96 124 105 Q118 116 90 118 Q62 116 56 105Z" fill="#7BA17C"/>
+
+    <!-- Head -->
+    <ellipse cx="90" cy="84" rx="38" ry="36" fill="#FAF6EE" stroke="#E5D8BC" stroke-width="2"/>
+
+    <!-- Ear tufts -->
+    <path d="M60 58 L54 42 L68 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M120 58 L126 42 L112 54Z" fill="#FAF6EE" stroke="#D4C29C" stroke-width="1.5" stroke-linejoin="round"/>
+
+    <!-- Eyes -->
+    <circle cx="75" cy="82" r="12" fill="#20283A"/>
+    <circle cx="75" cy="82" r="10" fill="#FAF6EE"/>
+    <circle cx="75" cy="83" r="6" fill="#20283A"/>
+    <circle cx="77" cy="80" r="2" fill="#FAF6EE"/>
+
+    <circle cx="105" cy="82" r="12" fill="#20283A"/>
+    <circle cx="105" cy="82" r="10" fill="#FAF6EE"/>
+    <circle cx="105" cy="83" r="6" fill="#20283A"/>
+    <circle cx="107" cy="80" r="2" fill="#FAF6EE"/>
+
+    <!-- Saffron beak -->
+    <path d="M85 92 L90 100 L95 92 Q90 89 85 92Z" fill="#E0A458"/>
+  </g>
 </svg>

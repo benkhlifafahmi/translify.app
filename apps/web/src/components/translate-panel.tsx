@@ -12,6 +12,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
+import { Lumi } from "@/components/lumi/lumi";
 
 const LANGUAGES: { code: string; label: string; flag: string }[] = [
   { code: "en", label: "English", flag: "🇬🇧" },
@@ -102,29 +103,47 @@ export function TranslatePanel({
         </p>
       </div>
 
-      <div className="card-paper flex flex-col gap-3 p-4">
-        <label className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-          Translate into
-        </label>
-        <select
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          className="rounded-xl border-[1.5px] border-[color:var(--color-border)] bg-white/70 px-3 py-2.5 text-sm font-medium focus:border-[color:var(--color-saffron)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-saffron)]/30"
-        >
-          {LANGUAGES.filter((l) => l.code !== sourceLanguage).map((l) => (
-            <option key={l.code} value={l.code}>
-              {l.flag}  {l.label}
-            </option>
-          ))}
-        </select>
-        <Button
-          variant="accent"
-          size="default"
-          onClick={() => create.mutate(target)}
-          disabled={isPending}
-        >
-          {isPending ? "Translating…" : "Translate this book"}
-        </Button>
+      <div className="card-paper relative flex flex-col gap-3 p-4">
+        {/* Lumi takes over the card while a translation is in flight */}
+        {isPending && (
+          <div className="lumi-bubble-in flex flex-col items-center gap-2 py-4">
+            <Lumi state="translating" size={140} animate />
+            <p className="text-center text-[0.78rem] font-semibold italic text-[color:var(--color-saffron-deep)]">
+              Lumi is translating into{" "}
+              {LANGUAGES.find((l) => l.code === target)?.label ?? target}…
+            </p>
+            <p className="max-w-[220px] text-center text-[0.72rem] leading-snug text-[color:var(--color-ink-soft)]">
+              Keep the layout, swap the words — usually a minute or two.
+            </p>
+          </div>
+        )}
+
+        {!isPending && (
+          <>
+            <label className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
+              Translate into
+            </label>
+            <select
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+              className="rounded-xl border-[1.5px] border-[color:var(--color-border)] bg-white/70 px-3 py-2.5 text-sm font-medium focus:border-[color:var(--color-saffron)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-saffron)]/30"
+            >
+              {LANGUAGES.filter((l) => l.code !== sourceLanguage).map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.flag}  {l.label}
+                </option>
+              ))}
+            </select>
+            <Button
+              variant="accent"
+              size="default"
+              onClick={() => create.mutate(target)}
+              disabled={isPending}
+            >
+              Translate this book
+            </Button>
+          </>
+        )}
 
         {create.isError && (() => {
           const quota = parseQuotaError(create.error);

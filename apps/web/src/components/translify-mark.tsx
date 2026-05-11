@@ -3,14 +3,11 @@ import Link from "next/link";
 // One source of truth for the Translify mark.
 //
 // Design intent:
-//   - Book outline (paper-cream stroke on deep-ink tile) = "this is a book product"
-//   - Saffron ribbon-bookmark hanging out the top = the brand mark, says "you
-//     keep your place here." Universally readable as a reading symbol.
-//   - The ribbon's V-notch matches the existing brand vocabulary of small
-//     hand-drawn paper details.
-//
-// The two-color design degrades fine at small sizes — at 16px the ribbon
-// becomes a 2px saffron stub, still legible as "something marked".
+//   - The mascot Lumi (paper owl) on a deep-ink tile = "this is Translify".
+//   - Simplified geometry — head, ear tufts, two eyes, saffron beak, sage scarf —
+//     so the silhouette stays readable from 16px favicon up to 60px avatar.
+//   - Wings/body intentionally omitted at icon scale; they don't survive small
+//     sizes. Full Lumi lives in components/lumi/lumi.tsx for hero contexts.
 
 interface MarkProps {
   /** Square tile size in px. Defaults to 36. */
@@ -21,37 +18,38 @@ interface MarkProps {
 
 /** Just the icon tile — no wordmark. Used for tight spaces. */
 export function TranslifyIcon({ size = 36, className = "" }: MarkProps) {
-  // Outer tile uses CSS vars so dark backgrounds (e.g. landing footer) still
-  // look right if we ever invert.
   return (
     <span
       aria-hidden
-      className={`grid shrink-0 place-items-center rounded-xl bg-[color:var(--color-ink)] text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)] ${className}`}
+      className={`grid shrink-0 place-items-center rounded-xl bg-[color:var(--color-ink)] shadow-[0_2px_0_rgba(20,16,8,0.4)] ${className}`}
       style={{ width: size, height: size }}
     >
       <svg
-        width={Math.round(size * 0.6)}
-        height={Math.round(size * 0.6)}
+        width={Math.round(size * 0.78)}
+        height={Math.round(size * 0.78)}
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden
       >
-        {/* Book outline — same path the brand has been using; familiar shape. */}
+        {/* Ear tufts */}
+        <path d="M6.8 5 L5.4 2 L8.2 4.2Z" fill="#FAF6EE" />
+        <path d="M17.2 5 L18.6 2 L15.8 4.2Z" fill="#FAF6EE" />
+        {/* Head */}
+        <ellipse cx="12" cy="11" rx="8.4" ry="7.6" fill="#FAF6EE" />
+        {/* Left eye */}
+        <circle cx="9" cy="10.2" r="2.4" fill="#20283A" />
+        <circle cx="9" cy="10.2" r="1.5" fill="#FAF6EE" />
+        <circle cx="9.2" cy="10.4" r="0.95" fill="#20283A" />
+        {/* Right eye */}
+        <circle cx="15" cy="10.2" r="2.4" fill="#20283A" />
+        <circle cx="15" cy="10.2" r="1.5" fill="#FAF6EE" />
+        <circle cx="15.2" cy="10.4" r="0.95" fill="#20283A" />
+        {/* Saffron beak */}
+        <path d="M10.6 13.2 L12 15.2 L13.4 13.2 Q12 12.6 10.6 13.2Z" fill="#E0A458" />
+        {/* Sage scarf */}
         <path
-          d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* Saffron ribbon bookmark — the distinguishing element. */}
-        <path
-          d="M13 2 v7 l1.5 -1.2 l1.5 1.2 v-7"
-          fill="#E0A458"
-          stroke="#E0A458"
-          strokeWidth="0.6"
-          strokeLinejoin="round"
+          d="M5.4 17.6 Q12 15.8 18.6 17.6 Q17.2 21.4 12 22 Q6.8 21.4 5.4 17.6Z"
+          fill="#7BA17C"
         />
       </svg>
     </span>

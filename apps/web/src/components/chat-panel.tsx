@@ -18,6 +18,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
+import { Lumi } from "@/components/lumi/lumi";
 
 interface Props {
   bookId: string;
@@ -245,13 +246,11 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick }: Pr
 function EmptyChatState({ onPick }: { onPick: (s: string) => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-2 text-center">
-      <div className="mb-4 grid h-14 w-14 place-items-center rounded-3xl bg-[color:var(--color-sage)]/15 text-[color:var(--color-sage-deep)]">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
+      <div className="mb-1">
+        <Lumi state="happy" size={140} animate />
       </div>
       <h4 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-        Ask about the book.
+        Ask Lumi anything about the book.
       </h4>
       <p className="mb-5 mt-1.5 max-w-xs text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
         Every answer points back to the exact passage — click the page chip to
@@ -274,15 +273,15 @@ function EmptyChatState({ onPick }: { onPick: (s: string) => void }) {
 }
 
 function ThinkingBubble() {
+  // Lumi takes over the "AI is thinking" moment — bigger and more characterful
+  // than the old dot-bouncer. Sits left-aligned like an assistant message.
   return (
-    <div className="flex justify-start">
-      <div className="rounded-2xl rounded-bl-md bg-[color:var(--color-paper-3)]/70 px-4 py-3 text-sm text-[color:var(--color-ink-soft)]">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[color:var(--color-sage)]" style={{ animationDelay: "0ms" }} />
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[color:var(--color-sage)]" style={{ animationDelay: "150ms" }} />
-          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[color:var(--color-sage)]" style={{ animationDelay: "300ms" }} />
-          <span className="ml-2 italic">flipping pages…</span>
-        </span>
+    <div className="flex items-end gap-2.5">
+      <div className="shrink-0">
+        <Lumi state="thinking" size={84} animate />
+      </div>
+      <div className="rounded-2xl rounded-bl-md bg-[color:var(--color-paper-3)]/70 px-4 py-3 text-sm italic text-[color:var(--color-ink-soft)]">
+        flipping pages…
       </div>
     </div>
   );
