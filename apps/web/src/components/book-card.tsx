@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteBook, formatBytes, type Book } from "@/lib/books";
 
@@ -35,6 +36,7 @@ export function BookCard({
   noteCount?: number;
 }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const del = useMutation({
     mutationFn: () => deleteBook(book.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["books"] }),
@@ -45,6 +47,12 @@ export function BookCard({
     e.stopPropagation();
     if (!confirm(`Remove "${book.title}" from your shelf?`)) return;
     del.mutate();
+  };
+
+  const onGarden = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/garden/${book.id}`);
   };
 
   const tone = SPINE_TONES[index % SPINE_TONES.length];
@@ -127,15 +135,27 @@ export function BookCard({
         <span className={`font-semibold ${ready ? "text-[color:var(--color-saffron-deep)]" : "text-[color:var(--color-ink-soft)]"}`}>
           {ready ? "Open →" : "Almost ready"}
         </span>
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={del.isPending}
-          className="rounded-full px-2 py-1 text-[color:var(--color-ink-soft)] opacity-0 transition-opacity hover:bg-[color:var(--color-destructive)]/10 hover:text-[color:var(--color-destructive)] focus:opacity-100 group-hover:opacity-100 disabled:opacity-50"
-          aria-label="Delete book"
-        >
-          {del.isPending ? "…" : "Remove"}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={onGarden}
+            className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[color:var(--color-ink-soft)] transition-colors hover:bg-[color:var(--color-sage)]/12 hover:text-[color:var(--color-sage-deep)]"
+            aria-label="Open this book's garden"
+            title="Open this book's garden"
+          >
+            <span aria-hidden>🌿</span>
+            <span className="hidden sm:inline">Garden</span>
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={del.isPending}
+            className="rounded-full px-2 py-1 text-[color:var(--color-ink-soft)] opacity-0 transition-opacity hover:bg-[color:var(--color-destructive)]/10 hover:text-[color:var(--color-destructive)] focus:opacity-100 group-hover:opacity-100 disabled:opacity-50"
+            aria-label="Delete book"
+          >
+            {del.isPending ? "…" : "Remove"}
+          </button>
+        </div>
       </div>
     </Link>
   );

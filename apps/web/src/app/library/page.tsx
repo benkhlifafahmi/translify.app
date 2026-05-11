@@ -114,6 +114,12 @@ export default function LibraryPage() {
             {user?.email}
           </span>
           <Link
+            href="/garden"
+            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3.5 text-xs font-semibold text-[color:var(--color-ink)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-sage)]"
+          >
+            <span aria-hidden>🌿</span> Garden
+          </Link>
+          <Link
             href="/account"
             className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3.5 text-xs font-semibold text-[color:var(--color-ink)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-border-strong)]"
           >

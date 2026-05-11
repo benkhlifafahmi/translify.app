@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,6 +29,10 @@ import {
   type Highlight as SavedHighlightT,
 } from "@/lib/highlights";
 import { useReadingTracker } from "@/lib/reading-tracker";
+import {
+  ReaderGardenVignette,
+  type ReaderGardenVignetteHandle,
+} from "@/components/garden/reader-garden-vignette";
 import type {
   Highlight,
   HighlightAction,
@@ -77,6 +81,22 @@ export default function BookDetailPage({
   // Garden tracker — counts furthest-page-reached and flushes a "read" event
   // to /gardens/{bookId}/events when the user passes a threshold or leaves.
   const { markReached } = useReadingTracker(bookId);
+
+  // Floating "the farmer is doing something" vignette in the corner of the
+  // reader. We hold a ref so it can be triggered imperatively from the page-
+  // reached / highlight-save handlers without re-rendering on every event.
+  const vignetteRef = useRef<ReaderGardenVignetteHandle | null>(null);
+  const furthestPageRef = useRef(0);
+  const onPageReached = useCallback(
+    (page: number) => {
+      markReached(page);
+      if (page > furthestPageRef.current) {
+        furthestPageRef.current = page;
+        vignetteRef.current?.play("water", `+ page ${page}`);
+      }
+    },
+    [markReached],
+  );
 
   const { data: book, isLoading, isError } = useQuery<Book>({
     queryKey: ["book", bookId],
@@ -147,6 +167,8 @@ export default function BookDetailPage({
       });
       // On mobile, open the Notes drawer so the user lands on the new card.
       setMobilePanel("notes");
+      // Plant a sapling in the garden vignette to celebrate the highlight.
+      vignetteRef.current?.play("plant", "+ new leaf");
     },
   });
 
@@ -206,7 +228,7 @@ export default function BookDetailPage({
         setMobilePanel("notes");
       }}
       goToPage={goToPage}
-      onPageReached={markReached}
+      onPageReached={onPageReached}
     />
   ) : (
     <EpubViewer
@@ -223,7 +245,7 @@ export default function BookDetailPage({
         setMobilePanel("notes");
       }}
       goToPage={goToPage}
-      onPageReached={markReached}
+      onPageReached={onPageReached}
     />
   );
 
@@ -350,6 +372,12 @@ export default function BookDetailPage({
             {mobilePanel === "notes"     && notesPanelNode}
             {mobilePanel === "quiz"      && quizPanelNode}
           </MobileDrawer>
+
+          {/* Floating garden vignette — desktop-only. The farmer comes out
+              to water the plant whenever a new page is reached, and plants
+              a sapling whenever a highlight is saved. See
+              reader-garden-vignette.tsx for the animation choreography. */}
+          <ReaderGardenVignette ref={vignetteRef} bookId={bookId} />
         </>
       )}
     </main>
@@ -412,6 +440,18 @@ function BookHeader({ book }: { book: Book }) {
           {book.page_count != null && <> · {book.page_count}p</>}
         </p>
       </div>
+
+      {/* Garden chip — quick step out to this book's reading garden. Kept
+          compact on mobile (just the leaf), full label from sm up. */}
+      <Link
+        href={`/garden/${book.id}`}
+        aria-label="Open this book's garden"
+        title="Open this book's garden"
+        className="ml-auto inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-2.5 text-xs font-semibold text-[color:var(--color-ink-soft)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-sage)] hover:text-[color:var(--color-sage-deep)] sm:h-9 sm:px-3.5"
+      >
+        <span aria-hidden>🌿</span>
+        <span className="hidden sm:inline">Garden</span>
+      </Link>
     </header>
   );
 }
