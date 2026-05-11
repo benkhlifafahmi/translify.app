@@ -37,6 +37,9 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
   // questionRefs used to live further down (after early returns) which
   // violated the rules of hooks → React #310.
   const questionRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  // Ref on the inner scroll container so we scroll just inside it — never
+  // letting scrollIntoView walk up to scroll the outer page.
+  const questionsScrollRef = useRef<HTMLDivElement | null>(null);
 
   const { data: existing = [] } = useQuery<QuizSummary[]>({
     queryKey: ["quizzes", bookId],
@@ -304,17 +307,27 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
     const updated = { ...answers, [questionId]: choiceIdx };
     setAnswers(updated);
     // Find the next still-unanswered question after this one and scroll it
-    // into view. If they're answering out of order, this jumps to whatever
-    // comes next that they haven't done — which is usually what you want.
+    // into view inside the inner panel only — never the outer page.
     const currentIdx = quiz!.questions.findIndex((qq) => qq.id === questionId);
     const next = quiz!.questions
       .slice(currentIdx + 1)
       .find((qq) => updated[qq.id] == null);
     if (!next) return;
     requestAnimationFrame(() => {
-      questionRefs.current[next.id]?.scrollIntoView({
+      const container = questionsScrollRef.current;
+      const target = questionRefs.current[next.id];
+      if (!container || !target) return;
+      // Compute target's offset relative to the scroll container, then
+      // scroll the container directly. This intentionally avoids
+      // Element.scrollIntoView() because that walks up scrollable ancestors
+      // and can scroll the parent page on dedicated quiz routes.
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const desiredTop = targetRect.top - containerRect.top + container.scrollTop;
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      container.scrollTo({
+        top: Math.max(0, Math.min(desiredTop, maxScroll)),
         behavior: "smooth",
-        block: "start",
       });
     });
   };
@@ -338,7 +351,7 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+      <div ref={questionsScrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <ol className="flex flex-col gap-5">
           {quiz.questions.map((q, i) => (
             <li
