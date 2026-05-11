@@ -27,24 +27,26 @@ export default function OpengraphImage() {
               width: 64,
               height: 64,
               borderRadius: 14,
-              background: "#14100A",
-              color: "#FAF6EE",
+              background: "#20283A",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="none">
+              <path d="M6.8 5 L5.4 2 L8.2 4.2Z" fill="#FAF6EE" />
+              <path d="M17.2 5 L18.6 2 L15.8 4.2Z" fill="#FAF6EE" />
+              <ellipse cx="12" cy="11" rx="8.4" ry="7.6" fill="#FAF6EE" />
+              <circle cx="9" cy="10.2" r="2.4" fill="#20283A" />
+              <circle cx="9" cy="10.2" r="1.5" fill="#FAF6EE" />
+              <circle cx="9.2" cy="10.4" r="0.95" fill="#20283A" />
+              <circle cx="15" cy="10.2" r="2.4" fill="#20283A" />
+              <circle cx="15" cy="10.2" r="1.5" fill="#FAF6EE" />
+              <circle cx="15.2" cy="10.4" r="0.95" fill="#20283A" />
+              <path d="M10.6 13.2 L12 15.2 L13.4 13.2 Q12 12.6 10.6 13.2Z" fill="#E0A458" />
               <path
-                d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M13 2 v7 l1.5 -1.2 l1.5 1.2 v-7"
-                fill="#E0A458"
+                d="M5.4 17.6 Q12 15.8 18.6 17.6 Q17.2 21.4 12 22 Q6.8 21.4 5.4 17.6Z"
+                fill="#7BA17C"
               />
             </svg>
           </div>

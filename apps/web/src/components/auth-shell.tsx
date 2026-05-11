@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { Lumi } from "@/components/lumi/lumi";
+import { TranslifyIcon } from "@/components/translify-mark";
 
 interface Props {
   eyebrow: string;
@@ -28,13 +29,10 @@ export function AuthShell({ eyebrow, title, subtitle, children }: Props) {
 
         <Link
           href="/"
+          aria-label="Translify"
           className="relative z-10 flex items-center gap-2.5 font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight text-[color:var(--color-ink)]"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-[color:var(--color-ink)] text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)]">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-            </svg>
-          </span>
+          <TranslifyIcon size={36} />
           Translify
         </Link>
 
