@@ -81,6 +81,7 @@ export function EpubViewer({
   onSelectionAction,
   onClickSavedHighlight,
   goToPage,
+  onPageReached,
 }: EpubViewerProps) {
   const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -358,6 +359,10 @@ export function EpubViewer({
           const minutes = Math.max(1, Math.round((remaining * 1024) / 1100));
           // Cap chapter estimate to "the rest of the book" — close enough.
           setChapterMinutesLeft(minutes);
+
+          // Page-reached signal — treat each epubjs location as a "page".
+          // 1024 chars per location is roughly one paperback-sized page.
+          if (currentLoc > 0) onPageReached?.(currentLoc + 1);
         }
       } catch {
         /* noop */

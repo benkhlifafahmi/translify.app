@@ -28,6 +28,7 @@ import {
   listBookHighlights,
   type Highlight as SavedHighlightT,
 } from "@/lib/highlights";
+import { useReadingTracker } from "@/lib/reading-tracker";
 import type {
   Highlight,
   HighlightAction,
@@ -72,6 +73,10 @@ export default function BookDetailPage({
   useEffect(() => {
     if (mounted && !getToken()) router.replace("/login");
   }, [mounted, router]);
+
+  // Garden tracker — counts furthest-page-reached and flushes a "read" event
+  // to /gardens/{bookId}/events when the user passes a threshold or leaves.
+  const { markReached } = useReadingTracker(bookId);
 
   const { data: book, isLoading, isError } = useQuery<Book>({
     queryKey: ["book", bookId],
@@ -201,6 +206,7 @@ export default function BookDetailPage({
         setMobilePanel("notes");
       }}
       goToPage={goToPage}
+      onPageReached={markReached}
     />
   ) : (
     <EpubViewer
@@ -217,6 +223,7 @@ export default function BookDetailPage({
         setMobilePanel("notes");
       }}
       goToPage={goToPage}
+      onPageReached={markReached}
     />
   );
 

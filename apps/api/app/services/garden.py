@@ -7,8 +7,11 @@ lazily on read — there's no cron yet.
 """
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timedelta, timezone
+
+log = logging.getLogger(__name__)
 
 from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -376,16 +379,56 @@ def stock_tending_questions(book: Book) -> list[dict]:
     ]
 
 
-def make_tending_pack(book: Book) -> list[dict]:
-    """For now: just the stock pack. Future: hand-off to AI question generator."""
-    return stock_tending_questions(book)
+async def make_tending_pack(
+    session: AsyncSession, book: Book
+) -> list[dict]:
+    """Generate the weekly tending pack.
+
+    Tries the AI quiz generator first; falls back to the stock placeholders
+    if generation fails (rate-limited, no chunks, malformed JSON). The rite
+    is core to the gamification loop — it must always succeed even when the
+    AI provider is down.
+    """
+    # Imported lazily to avoid a circular import: app.services.quiz pulls in
+    # app.models.book.
+    from app.services.quiz import generate_quiz
+
+    try:
+        raw = await generate_quiz(
+            session=session,
+            book_id=book.id,
+            book_title=book.title,
+            question_count=TENDING_QUESTION_COUNT,
+        )
+    except Exception as exc:  # noqa: BLE001 — fallback is intentional
+        log.warning("Tending AI generation failed for book=%s: %s — using stock pack", book.id, exc)
+        return stock_tending_questions(book)
+
+    # generate_quiz uses `answer_index`; the garden schema and scoring use
+    # `correct_index`. Normalize at the persistence boundary.
+    out: list[dict] = []
+    for q in raw[:TENDING_QUESTION_COUNT]:
+        if not isinstance(q, dict):
+            continue
+        out.append(
+            {
+                "id": str(q.get("id") or uuid.uuid4()),
+                "prompt": str(q.get("prompt", "")).strip(),
+                "choices": [str(c).strip() for c in q.get("choices", []) if str(c).strip()],
+                "correct_index": int(q.get("answer_index", -1)),
+                "explanation": str(q.get("explanation", "")).strip(),
+            }
+        )
+    if not out:
+        return stock_tending_questions(book)
+    return out
 
 
 async def ensure_tending_pack(
     session: AsyncSession, garden: Garden, book: Book
 ) -> list[dict]:
     if not garden.current_tending:
-        garden.current_tending = make_tending_pack(book)
+        garden.current_tending = await make_tending_pack(session, book)
     return garden.current_tending
 
 
