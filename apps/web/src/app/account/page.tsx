@@ -19,8 +19,16 @@ import {
   type Subscription,
 } from "@/lib/billing";
 import { LOCALES, useI18n } from "@/lib/i18n";
+import { Lumi } from "@/components/lumi/lumi";
+import { useLumi } from "@/components/lumi/lumi-context";
+import {
+  ACHIEVEMENTS,
+  LEVEL_TITLES,
+  LEVELS,
+  xpToNextLevel,
+} from "@/lib/lumi-progress";
 
-type Tab = "profile" | "subscription" | "security" | "danger";
+type Tab = "profile" | "subscription" | "lumi" | "security" | "danger";
 
 const PLAN_PRICES: Record<Exclude<Plan, "free">, { monthly: number; yearly: number }> = {
   reader:  { monthly: 14, yearly: 11 },
@@ -147,6 +155,7 @@ function AccountInner() {
           {tab === "subscription" && (
             <SubscriptionSection sub={sub} setSub={setSub} setFlash={setFlash} />
           )}
+          {tab === "lumi" && <LumiSection />}
           {tab === "security" && <SecuritySection setFlash={setFlash} />}
           {tab === "danger" && <DangerSection user={user} />}
         </section>
@@ -194,6 +203,7 @@ function SideNav({ tab, setTab, sub }: { tab: Tab; setTab: (t: Tab) => void; sub
   const items: { id: Tab; label: string; sub: string; icon: string }[] = [
     { id: "profile",      label: "Reader card",    sub: "Name · email · language",       icon: "✦" },
     { id: "subscription", label: "Subscription",   sub: "Plan · billing · usage",        icon: "❀" },
+    { id: "lumi",         label: "Lumi & progress", sub: "Level · XP · achievements",     icon: "🦉" },
     { id: "security",     label: "Security",       sub: "Password · sessions",           icon: "◇" },
     { id: "danger",       label: "Danger zone",    sub: "Delete account",                icon: "⌫" },
   ];
@@ -920,6 +930,170 @@ function SecuritySection({
           {submitting ? "Updating…" : "Update password"}
         </button>
       </form>
+    </SectionShell>
+  );
+}
+
+/* ─────────────────────── Lumi & Progress ─────────────────────── */
+
+function LumiSection() {
+  const { progress } = useLumi();
+  const xpInfo = xpToNextLevel(progress);
+  const title = LEVEL_TITLES[progress.level];
+  const allLevels = [1, 2, 3, 4, 5] as const;
+
+  return (
+    <SectionShell
+      eyebrow="Companion"
+      title="Lumi & your progress"
+      lede="Track your reading journey. Every book translated, quiz aced, and day kept is a feather in Lumi's wings."
+    >
+      {/* Hero card — current state of Lumi */}
+      <div className="relative overflow-hidden rounded-3xl border-[1.5px] border-[color:var(--color-border)] bg-gradient-to-br from-[#FFFCF3] to-[color:var(--color-paper-2)] p-6 sm:p-8">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-12 -top-16 h-56 w-56 rounded-full bg-[color:var(--color-saffron)]/20 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -bottom-16 h-56 w-56 rounded-full bg-[color:var(--color-sage)]/15 blur-3xl"
+        />
+
+        <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-8">
+          <div className="shrink-0">
+            <Lumi state="happy" size={180} level={progress.level} animate />
+          </div>
+          <div className="flex-1 text-center sm:text-left">
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[color:var(--color-saffron-deep)]">
+              Level {progress.level} · {title}
+            </p>
+            <h3 className="mt-1 font-[family-name:var(--font-display)] text-[clamp(1.6rem,3vw,2.2rem)] font-semibold leading-tight tracking-tight">
+              {progress.xp.toLocaleString()}{" "}
+              <span className="text-[color:var(--color-ink-soft)]">XP</span>
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
+              {xpInfo
+                ? `${xpInfo.needed.toLocaleString()} XP to Level ${progress.level + 1}.`
+                : "You've reached the highest rank. Lumi salutes you. 🦉"}
+            </p>
+
+            {/* XP bar */}
+            <div className="mt-4 max-w-md">
+              <div className="relative h-2.5 overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[color:var(--color-saffron)] to-[color:var(--color-saffron-deep)] transition-[width] duration-700 ease-out"
+                  style={{ width: xpInfo ? `${xpInfo.pct}%` : "100%" }}
+                />
+              </div>
+              {xpInfo && (
+                <p className="mt-1.5 font-mono text-[10px] tabular-nums text-[color:var(--color-ink-soft)]">
+                  {progress.xp} / {xpInfo.next} XP
+                </p>
+              )}
+            </div>
+
+            {/* Streak */}
+            {progress.streakDays > 0 && (
+              <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-coral)]/15 px-3 py-1 text-[12px] font-semibold text-[color:var(--color-coral-deep)]">
+                <span aria-hidden>🔥</span>
+                <span>{progress.streakDays}-day streak</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Level ladder */}
+      <div className="mt-6 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)]/60 p-5">
+        <h4 className="mb-4 font-[family-name:var(--font-display)] text-[1.1rem] font-semibold tracking-tight">
+          The ladder
+        </h4>
+        <div className="grid grid-cols-5 gap-3">
+          {allLevels.map((lv) => {
+            const reached = progress.level >= lv;
+            const threshold = LEVELS[lv - 1] ?? 0;
+            return (
+              <div
+                key={lv}
+                className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-all ${
+                  reached
+                    ? "border-[color:var(--color-saffron)] bg-[color:var(--color-saffron)]/8"
+                    : "border-dashed border-[color:var(--color-border)] opacity-50"
+                }`}
+              >
+                <div className={reached ? "" : "grayscale"}>
+                  <Lumi state="neutral" size={56} level={lv} animate={false} />
+                </div>
+                <div className="text-center">
+                  <p className="font-[family-name:var(--font-display)] text-[0.75rem] font-semibold text-[color:var(--color-ink)]">
+                    Lv {lv}
+                  </p>
+                  <p className="text-[0.65rem] leading-tight text-[color:var(--color-ink-soft)]">
+                    {LEVEL_TITLES[lv]}
+                  </p>
+                  <p className="mt-0.5 font-mono text-[0.62rem] tabular-nums text-[color:var(--color-ink-soft)]/70">
+                    {threshold} XP
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Achievements grid */}
+      <div className="mt-6 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)]/60 p-5">
+        <div className="mb-4 flex items-baseline justify-between gap-3">
+          <h4 className="font-[family-name:var(--font-display)] text-[1.1rem] font-semibold tracking-tight">
+            Achievements
+          </h4>
+          <span className="font-mono text-[11px] tabular-nums text-[color:var(--color-ink-soft)]">
+            {progress.awarded.length} / {Object.keys(ACHIEVEMENTS).length}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {Object.entries(ACHIEVEMENTS).map(([id, ach]) => {
+            const earned = progress.awarded.includes(id);
+            return (
+              <div
+                key={id}
+                className={`flex items-center gap-3 rounded-xl border p-3 transition-all ${
+                  earned
+                    ? "border-[color:var(--color-saffron)]/50 bg-gradient-to-br from-[#FFF8E8] to-[color:var(--color-paper)] shadow-[var(--shadow-paper)]"
+                    : "border-dashed border-[color:var(--color-border)] bg-[color:var(--color-paper)]/40 opacity-60"
+                }`}
+              >
+                <div
+                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg text-xl ${
+                    earned
+                      ? "bg-[color:var(--color-saffron)]/20"
+                      : "bg-[color:var(--color-paper-3)] grayscale"
+                  }`}
+                >
+                  <span aria-hidden>{ach.emoji}</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-[family-name:var(--font-display)] text-[0.92rem] font-semibold leading-tight text-[color:var(--color-ink)]">
+                    {ach.title}
+                  </p>
+                  <p className="mt-0.5 text-[0.75rem] leading-tight text-[color:var(--color-ink-soft)]">
+                    {ach.description}
+                  </p>
+                </div>
+                <div
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[0.65rem] font-bold ${
+                    earned
+                      ? "bg-[color:var(--color-saffron)] text-white"
+                      : "bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]"
+                  }`}
+                >
+                  +{ach.xp} XP
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </SectionShell>
   );
 }

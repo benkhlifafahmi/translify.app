@@ -6,6 +6,7 @@ import { LiveDemo } from "@/components/landing/live-demo";
 import { Pricing } from "@/components/landing/pricing";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { TranslifyMark } from "@/components/translify-mark";
+import { Lumi } from "@/components/lumi/lumi";
 import { useI18n } from "@/lib/i18n";
 
 export default function Home() {
@@ -119,10 +120,35 @@ function Hero() {
         </ul>
       </div>
 
-      <div className="lg:col-span-5">
+      <div className="relative lg:col-span-5">
         <BookStack />
+        {/* Lumi peeks in — small, waving, introducing herself */}
+        <div className="pointer-events-none absolute -bottom-6 -left-6 hidden lg:block">
+          <HeroLumiPeek />
+        </div>
       </div>
     </section>
+  );
+}
+
+function HeroLumiPeek() {
+  return (
+    <div className="lumi-bubble-in flex items-end gap-3">
+      <div className="pointer-events-auto">
+        <Lumi state="waving" size={92} />
+      </div>
+      <div className="lumi-bubble-in pointer-events-auto -mb-2 hidden xl:block">
+        <div className="relative rounded-2xl border-[1.5px] border-[color:var(--color-saffron)]/40 bg-gradient-to-br from-[#FFF7E5] to-[#FBEDD0] px-3.5 py-2 shadow-[var(--shadow-paper)]">
+          <span
+            aria-hidden
+            className="absolute -left-1.5 bottom-3 h-3 w-3 rotate-45 border-b-[1.5px] border-l-[1.5px] border-[color:var(--color-saffron)]/40 bg-[#FFF7E5]"
+          />
+          <p className="font-[family-name:var(--font-display)] text-[13px] font-medium leading-snug text-[color:var(--color-ink)]">
+            Hi, I'm Lumi!
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 

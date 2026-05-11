@@ -17,6 +17,8 @@ import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
 import { parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
 import { useI18n } from "@/lib/i18n";
+import { useLumi } from "@/components/lumi/lumi-context";
+import { Lumi, type LumiState } from "@/components/lumi/lumi";
 
 interface Props {
   bookId: string;
@@ -72,6 +74,7 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
     },
   });
 
+  const { award } = useLumi();
   const submit = useMutation<QuizAttempt, Error, void>({
     mutationFn: async () => {
       if (!quiz) throw new Error("No quiz");
@@ -83,7 +86,13 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
         })),
       );
     },
-    onSuccess: setAttempt,
+    onSuccess: (result) => {
+      setAttempt(result);
+      award("first-quiz");
+      if (result.total > 0 && result.score === result.total) {
+        award("perfect-quiz");
+      }
+    },
   });
 
   if (attempt && quiz) {
@@ -487,23 +496,31 @@ function ResultsView({
   const pct =
     attempt.total > 0 ? Math.round((attempt.score / attempt.total) * 100) : 0;
   const flavor = pickFlavor(pct);
+  // Lumi reflects the result — celebrates perfection, beams at 80%+, thinks otherwise.
+  const lumiState: LumiState =
+    pct === 100 ? "celebrating" : pct >= 80 ? "happy" : pct >= 50 ? "thinking" : "sad";
 
   return (
     <div className="flex h-full flex-col">
       <div className="shrink-0 border-b border-[color:var(--color-border)] bg-gradient-to-br from-[color:var(--color-saffron)]/12 via-transparent to-[color:var(--color-coral)]/10 px-5 py-5">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-          {flavor.kicker}
-        </p>
-        <div className="mt-2 flex items-baseline gap-3">
-          <span className="font-[family-name:var(--font-display)] text-5xl font-semibold leading-none tracking-tight text-[color:var(--color-ink)]">
-            {attempt.score}
-            <span className="text-[color:var(--color-ink-soft)]">/{attempt.total}</span>
-          </span>
-          <span className={`badge-pill ${flavor.tone}`}>{pct}%</span>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
+              {flavor.kicker}
+            </p>
+            <div className="mt-2 flex items-baseline gap-3">
+              <span className="font-[family-name:var(--font-display)] text-5xl font-semibold leading-none tracking-tight text-[color:var(--color-ink)]">
+                {attempt.score}
+                <span className="text-[color:var(--color-ink-soft)]">/{attempt.total}</span>
+              </span>
+              <span className={`badge-pill ${flavor.tone}`}>{pct}%</span>
+            </div>
+            <p className="mt-3 max-w-md text-sm text-[color:var(--color-ink-soft)]">
+              {flavor.message}
+            </p>
+          </div>
+          <QuizLumi state={lumiState} />
         </div>
-        <p className="mt-3 max-w-md text-sm text-[color:var(--color-ink-soft)]">
-          {flavor.message}
-        </p>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
@@ -629,4 +646,13 @@ function pickFlavor(pct: number) {
     message: "Tough one. Skim the cited passages and try again — that's exactly how learning works.",
     tone: "bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)]",
   };
+}
+
+// Inline Lumi for the quiz results header — small, mood-reactive.
+function QuizLumi({ state }: { state: LumiState }) {
+  return (
+    <div className="hidden shrink-0 sm:block">
+      <Lumi state={state} size={92} />
+    </div>
+  );
 }

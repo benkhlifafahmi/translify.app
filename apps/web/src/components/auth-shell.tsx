@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
+import { Lumi } from "@/components/lumi/lumi";
 
 interface Props {
   eyebrow: string;
@@ -59,6 +60,11 @@ export function AuthShell({ eyebrow, title, subtitle, children }: Props) {
             <span className="grid h-7 w-7 place-items-center rounded-full bg-[color:var(--color-coral)] text-white ring-2 ring-[#F8E9C5]">★</span>
           </span>
           <span>{t("auth.shell.foot")}</span>
+        </div>
+
+        {/* Lumi peeks from the bottom-right corner of the brand panel */}
+        <div className="pointer-events-none absolute bottom-4 right-4 z-10">
+          <Lumi state="waving" size={110} animate />
         </div>
       </section>
 

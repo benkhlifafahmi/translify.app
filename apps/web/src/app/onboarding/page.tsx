@@ -8,6 +8,7 @@ import { register } from "@/lib/auth";
 import { startCheckout } from "@/lib/billing";
 import { useI18n, LOCALES, type Locale } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { Lumi } from "@/components/lumi/lumi";
 
 type Persona = "student" | "curious" | "pro" | "family";
 
@@ -285,6 +286,9 @@ function Step1({
 
   return (
     <div className="stagger">
+      <div className="mx-auto mb-2 flex justify-center">
+        <Lumi state="waving" size={120} animate />
+      </div>
       <StepHeader eyebrow={t("ob.s1.eyebrow")} title={t("ob.s1.title")} subtitle={t("ob.s1.subtitle")} />
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2">

@@ -33,6 +33,7 @@ import {
   ReaderGardenVignette,
   type ReaderGardenVignetteHandle,
 } from "@/components/garden/reader-garden-vignette";
+import { Lumi } from "@/components/lumi/lumi";
 import {
   MobileGardenTab,
   type MobileGardenTabHandle,
@@ -760,30 +761,39 @@ function NotReadyState({ book }: { book: Book }) {
   const { t } = useI18n();
   if (book.status === "failed") {
     return (
-      <div className="mx-auto mt-16 max-w-xl px-6">
-        <div className="card-paper rounded-2xl border-[color:var(--color-destructive)]/40 p-6 text-sm text-[color:var(--color-destructive)]">
-          <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
-            {t("book.failed.title")}
-          </p>
-          {book.error_message && (
-            <p className="mt-1 opacity-80">{book.error_message}</p>
-          )}
+      <div className="mx-auto mt-12 max-w-xl px-6">
+        <div className="card-paper relative flex flex-col items-center gap-4 rounded-3xl border-[color:var(--color-destructive)]/30 p-8 text-center">
+          <Lumi state="sad" size={140} animate />
+          <div>
+            <p className="font-[family-name:var(--font-display)] text-xl font-semibold text-[color:var(--color-ink)]">
+              {t("book.failed.title")}
+            </p>
+            {book.error_message && (
+              <p className="mt-2 text-sm text-[color:var(--color-destructive)]/80">
+                {book.error_message}
+              </p>
+            )}
+            <p className="mt-3 text-xs italic text-[color:var(--color-ink-soft)]">
+              Lumi tried her best. Want to upload again?
+            </p>
+          </div>
         </div>
       </div>
     );
   }
   return (
-    <div className="mx-auto mt-16 max-w-xl px-6 text-center">
-      <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-3xl bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)]">
-        <svg className="animate-spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 12a9 9 0 1 1-6.2-8.5" />
-        </svg>
+    <div className="mx-auto mt-12 max-w-xl px-6 text-center">
+      <div className="mx-auto mb-2 inline-block">
+        <Lumi state="translating" size={160} animate />
       </div>
       <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
         {t("book.processing.title")}
       </h2>
       <p className="mt-2 text-sm text-[color:var(--color-ink-soft)]">
         {t("book.processing.body")}
+      </p>
+      <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-saffron)]/15 px-3 py-1 text-[11px] font-semibold text-[color:var(--color-saffron-deep)]">
+        <span aria-hidden>✨</span> Lumi is reading it now
       </p>
     </div>
   );
