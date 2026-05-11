@@ -15,6 +15,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 revision: str = "0009"
 down_revision: str | None = "0008"
@@ -22,14 +23,16 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
-# Declared with ``create_type=False`` so the column reference below does not
-# try to re-CREATE the type. We create it explicitly with checkfirst=True so
-# re-runs after a partial failure are safe.
-profile_kind = sa.Enum("adult", "child", name="profilekind", create_type=False)
+# Use postgresql.ENUM with ``create_type=False`` so the column reference below
+# does not auto-emit a CREATE TYPE. The explicit ``.create(checkfirst=True)``
+# below is the one and only emission.
+profile_kind = postgresql.ENUM(
+    "adult", "child", name="profilekind", create_type=False
+)
 
 
 def upgrade() -> None:
-    sa.Enum("adult", "child", name="profilekind").create(
+    postgresql.ENUM("adult", "child", name="profilekind").create(
         op.get_bind(), checkfirst=True
     )
 
@@ -120,4 +123,4 @@ def downgrade() -> None:
     op.drop_column("users", "active_profile_id")
     op.drop_index("ix_reader_profiles_user_id", table_name="reader_profiles")
     op.drop_table("reader_profiles")
-    sa.Enum(name="profilekind").drop(op.get_bind(), checkfirst=True)
+    postgresql.ENUM(name="profilekind").drop(op.get_bind(), checkfirst=True)
