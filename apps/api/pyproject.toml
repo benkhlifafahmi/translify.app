@@ -13,6 +13,7 @@ dependencies = [
     "alembic>=1.14.0",
     "pgvector>=0.3.6",
     "fastapi-users[sqlalchemy]>=14.0.0",
+    "httpx-oauth[httpx]>=0.15.0",
     "python-jose[cryptography]>=3.3.0",
     "passlib[bcrypt]>=1.7.4",
     "boto3>=1.35.0",

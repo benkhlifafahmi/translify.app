@@ -33,7 +33,9 @@
       "WebFetch(domain:readlang.com)",
       "WebFetch(domain:www.lingq.com)",
       "WebFetch(domain:checkthat.ai)",
-      "Bash(pnpm --filter web typecheck)"
+      "Bash(pnpm --filter web typecheck)",
+      "Bash(xargs ls)",
+      "Bash(python3 -c \"import httpx_oauth\")"
     ]
   }
 }

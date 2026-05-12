@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.auth.schemas import UserCreate, UserRead, UserUpdate
-from app.auth.users import auth_backend, fastapi_users
+from app.auth.users import auth_backend, fastapi_users, google_oauth_client
 from app.config import settings
 from app.routes.billing import router as billing_router
 from app.routes.books import router as books_router
@@ -88,6 +88,28 @@ app.include_router(
     fastapi_users.get_users_router(UserRead, UserUpdate),
     prefix="/users",
     tags=["users"],
+)
+
+# Google OAuth routes (no-ops when GOOGLE_CLIENT_ID is empty)
+app.include_router(
+    fastapi_users.get_oauth_router(
+        google_oauth_client,
+        auth_backend,
+        settings.jwt_secret,
+        associate_by_email=True,
+        is_verified_by_default=True,
+    ),
+    prefix="/auth/google",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_oauth_associate_router(
+        google_oauth_client,
+        UserRead,
+        settings.jwt_secret,
+    ),
+    prefix="/auth/associate/google",
+    tags=["auth"],
 )
 
 # Domain routes

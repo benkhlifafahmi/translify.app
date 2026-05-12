@@ -55,6 +55,10 @@ class Settings(BaseSettings):
     # First-month discount applied via Stripe coupon (created in dashboard).
     stripe_first_month_coupon: str = ""
 
+    # Google OAuth (leave empty to disable the Google login button)
+    google_client_id: str = ""
+    google_client_secret: str = ""
+
     # Transactional email (Resend)
     resend_api_key: str = ""
     email_from_name: str = "Translify"

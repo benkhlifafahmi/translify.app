@@ -87,3 +87,27 @@ export async function requestVerificationResend(email: string): Promise<void> {
   });
 }
 
+// ─── Google OAuth ──────────────────────────────────────────────────────────────
+
+/** Returns the Google authorization URL to redirect the user to. */
+export async function getGoogleAuthUrl(callbackUrl: string): Promise<string> {
+  const res = await api<{ authorization_url: string }>(
+    `/auth/google/authorize?redirect_url=${encodeURIComponent(callbackUrl)}`,
+  );
+  return res.authorization_url;
+}
+
+/** Exchanges the Google OAuth code+state for a JWT. Called from the callback page. */
+export async function loginWithGoogleCallback(
+  code: string,
+  state: string,
+  callbackUrl: string,
+): Promise<User> {
+  const params = new URLSearchParams({ code, state, redirect_url: callbackUrl });
+  const res = await api<{ access_token: string; token_type: string }>(
+    `/auth/google/callback?${params.toString()}`,
+  );
+  setToken(res.access_token);
+  return await me();
+}
+

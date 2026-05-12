@@ -14,13 +14,19 @@ from fastapi_users.authentication import (
     JWTStrategy,
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
+from httpx_oauth.clients.google import GoogleOAuth2
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.models import User
+from app.auth.models import OAuthAccount, User
 from app.config import settings
 from app.db import get_async_session
 from app.emails import client as email_client
 from app.emails import templates as email_templates
+
+google_oauth_client = GoogleOAuth2(
+    client_id=settings.google_client_id,
+    client_secret=settings.google_client_secret,
+)
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +34,7 @@ log = logging.getLogger(__name__)
 async def get_user_db(
     session: AsyncSession = Depends(get_async_session),
 ) -> AsyncGenerator[SQLAlchemyUserDatabase, None]:
-    yield SQLAlchemyUserDatabase(session, User)
+    yield SQLAlchemyUserDatabase(session, User, OAuthAccount)
 
 
 def _verify_url(token: str) -> str:

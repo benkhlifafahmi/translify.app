@@ -4,11 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api";
-import { register } from "@/lib/auth";
+import { register, getGoogleAuthUrl } from "@/lib/auth";
 import { startCheckout } from "@/lib/billing";
 import { LOCALES, type Locale } from "@/lib/i18n";
 import { Lumi, type LumiState } from "@/components/lumi/lumi";
 import { TranslifyIcon } from "@/components/translify-mark";
+
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
+const GOOGLE_CALLBACK = `${SITE}/auth/google/callback`;
 
 // ─── Static BG data (deterministic — no hydration mismatch) ──────────────────
 const BG_BOOKS = [
@@ -820,6 +823,16 @@ function StepAccount({
           )}
         </div>
 
+        {/* Google sign-in */}
+        <GoogleButton callbackUrl={GOOGLE_CALLBACK} />
+
+        {/* Divider */}
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
+          <span className="text-[0.72rem] font-semibold" style={{ color: "var(--color-ink-soft)" }}>or continue with email</span>
+          <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
+        </div>
+
         <div className="flex flex-col gap-3.5">
           <GameField icon="👤" type="text"     placeholder="Your name (optional)"     value={name}  onChange={setName}  autoComplete="name"         />
           <GameField icon="📧" type="email"    placeholder="Email address"            value={email} onChange={setEmail} autoComplete="email" required />
@@ -1016,6 +1029,54 @@ function GameField({
         <span className="animate-pop-in grid h-5 w-5 shrink-0 place-items-center rounded-full text-[0.58rem] font-bold text-white" style={{ background: "var(--color-sage-deep)" }}>✓</span>
       )}
     </div>
+  );
+}
+
+// ─── Google OAuth button ──────────────────────────────────────────────────────
+function GoogleButton({ callbackUrl }: { callbackUrl: string }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    setLoading(true);
+    try {
+      const url = await getGoogleAuthUrl(callbackUrl);
+      window.location.href = url;
+    } catch {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={loading}
+      className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border-2 font-[family-name:var(--font-display)] text-[0.95rem] font-semibold transition-all hover:-translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-50"
+      style={{
+        borderColor: "var(--color-border-strong)",
+        background: "white",
+        color: "var(--color-ink)",
+        boxShadow: "0 3px 0 rgba(74,60,30,0.09)",
+      }}
+    >
+      {loading ? (
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+      ) : (
+        <GoogleLogo />
+      )}
+      {loading ? "Redirecting…" : "Continue with Google"}
+    </button>
+  );
+}
+
+function GoogleLogo() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
+      <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.25-.164-1.84H9v3.48h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908C16.658 14.013 17.64 11.706 17.64 9.2z"/>
+      <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+      <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+      <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/>
+    </svg>
   );
 }
 
