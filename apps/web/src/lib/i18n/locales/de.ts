@@ -320,6 +320,9 @@ export const de: Dict = {
   "ob.s5.passwordHint": "Mindestens 8 Zeichen",
   "ob.s5.start": "Meine 14-Tage-Probezeit starten",
   "ob.s5.tryFree": "Oder erst testen — 2 Seiten gratis",
+  "ob.s5.startFree": "Kostenlos starten — keine Karte nötig",
+  "ob.s5.noCard": "Keine Kreditkarte · jederzeit kündbar",
+  "ob.s5.subscribeCta": "Schon überzeugt? Mit 40% Rabatt abonnieren →",
   "ob.s5.submitting": "Dein Regal wird vorbereitet…",
   "ob.s5.terms":
     "Mit dem Start deines Tests stimmst du unseren AGB zu · ",

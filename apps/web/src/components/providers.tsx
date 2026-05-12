@@ -5,6 +5,7 @@ import { useState } from "react";
 import { I18nProvider } from "@/lib/i18n";
 import { LumiProvider } from "@/components/lumi/lumi-context";
 import { LumiToastStack } from "@/components/lumi/lumi-toast-stack";
+import { PHProvider, PostHogPageview } from "@/components/posthog-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [client] = useState(
@@ -20,13 +21,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }),
   );
   return (
-    <QueryClientProvider client={client}>
-      <I18nProvider>
-        <LumiProvider>
-          {children}
-          <LumiToastStack />
-        </LumiProvider>
-      </I18nProvider>
-    </QueryClientProvider>
+    <PHProvider>
+      <QueryClientProvider client={client}>
+        <I18nProvider>
+          <LumiProvider>
+            <PostHogPageview />
+            {children}
+            <LumiToastStack />
+          </LumiProvider>
+        </I18nProvider>
+      </QueryClientProvider>
+    </PHProvider>
   );
 }

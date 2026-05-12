@@ -320,6 +320,9 @@ export const id: Dict = {
   "ob.s5.passwordHint": "Minimal 8 karakter",
   "ob.s5.start": "Mulai uji coba 14 hariku",
   "ob.s5.tryFree": "Atau coba dulu — 2 halaman gratis",
+  "ob.s5.startFree": "Mulai gratis — tanpa kartu",
+  "ob.s5.noCard": "Tanpa kartu kredit · batalkan kapan saja",
+  "ob.s5.subscribeCta": "Sudah yakin? Berlangganan dengan diskon 40% →",
   "ob.s5.submitting": "Menyiapkan rakmu…",
   "ob.s5.terms":
     "Dengan memulai uji coba kamu setuju dengan ketentuan kami · ",

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalShell, H2 } from "@/components/legal-shell";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
-const UPDATED = "2026-05-11";
+const UPDATED = "2026-05-12";
 
 export const metadata: Metadata = {
   title: "Cookie Policy",
@@ -80,6 +80,11 @@ export default function CookiesPage() {
             <td className="border border-[color:var(--color-border)] px-3 py-2">Aggregate page-view counts and traffic sources.</td>
             <td className="border border-[color:var(--color-border)] px-3 py-2">Cookieless. No personal data, no fingerprinting. <a href="https://plausible.io/data-policy" rel="noopener" target="_blank" className="underline">Data policy</a>.</td>
           </tr>
+          <tr>
+            <td className="border border-[color:var(--color-border)] px-3 py-2">PostHog</td>
+            <td className="border border-[color:var(--color-border)] px-3 py-2">Product analytics: funnel analysis, session recordings, and feature flags to improve the onboarding experience.</td>
+            <td className="border border-[color:var(--color-border)] px-3 py-2">Uses localStorage/cookie (<code>ph_*</code>). EU endpoint (<code>eu.i.posthog.com</code>). GDPR-compliant. No data sold to third parties. <a href="https://posthog.com/privacy" rel="noopener" target="_blank" className="underline">Privacy policy</a>.</td>
+          </tr>
         </tbody>
       </table>
 
@@ -88,11 +93,11 @@ export default function CookiesPage() {
       <p>To be explicit, Translify does not use any of these:</p>
 
       <ul className="list-disc space-y-1 pl-6">
-        <li>Google Analytics, Mixpanel, Amplitude, Heap, or other behavioral analytics platforms.</li>
+        <li>Google Analytics, Mixpanel, Amplitude, Heap, or other third-party behavioral advertising platforms. We use PostHog for internal product analytics only — see section 2 above.</li>
         <li>Facebook Pixel, TikTok Pixel, LinkedIn Insight Tag, or other ad-network trackers.</li>
         <li>Re-marketing or conversion-tracking cookies for any advertising network.</li>
         <li>Third-party fonts that track requests (we use Google Fonts via Next.js's self-hosted pipeline, which does not load from Google's servers at runtime).</li>
-        <li>Heatmap or session-replay tools (Hotjar, FullStory, LogRocket).</li>
+        <li>Third-party heatmap or session-replay tools (Hotjar, FullStory, LogRocket, Microsoft Clarity). Session recordings are handled by PostHog under our own account.</li>
       </ul>
 
       <H2>4. Managing storage</H2>

@@ -24,7 +24,8 @@
       "Bash(awk '/^class SelectableRegionState extends State/,/^}/' /home/ben/development/flutter/packages/flutter/lib/src/widgets/selectable_region.dart)",
       "WebFetch(domain:help.syncfusion.com)",
       "Bash(echo \"EXIT: $?\")",
-      "Bash(grep -c '^  {$' /home/ben/workspace/BKGroup/translify.app/apps/web/src/app/blog/_posts.ts)"
+      "Bash(grep -c '^  {$' /home/ben/workspace/BKGroup/translify.app/apps/web/src/app/blog/_posts.ts)",
+      "Bash(pnpm add *)"
     ]
   }
 }

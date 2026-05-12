@@ -320,6 +320,9 @@ export const ms: Dict = {
   "ob.s5.passwordHint": "Minimum 8 aksara",
   "ob.s5.start": "Mulakan percubaan 14 hari saya",
   "ob.s5.tryFree": "Atau cuba dulu — 2 halaman percuma",
+  "ob.s5.startFree": "Mulakan percuma — tiada kad diperlukan",
+  "ob.s5.noCard": "Tanpa kad kredit · batal bila-bila masa",
+  "ob.s5.subscribeCta": "Dah yakin? Langgan dengan 40% diskaun →",
   "ob.s5.submitting": "Menyiapkan rak anda…",
   "ob.s5.terms":
     "Dengan memulakan percubaan, anda bersetuju dengan terma kami · ",

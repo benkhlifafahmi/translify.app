@@ -319,6 +319,9 @@ export const ja: Dict = {
   "ob.s5.passwordHint": "8文字以上",
   "ob.s5.start": "14日間の無料トライアルを始める",
   "ob.s5.tryFree": "まず試す — 2ページ無料",
+  "ob.s5.startFree": "無料で始める — カード不要",
+  "ob.s5.noCard": "クレジットカード不要 · いつでもキャンセル",
+  "ob.s5.subscribeCta": "すでに決めた方は 40%オフで登録 →",
   "ob.s5.submitting": "本棚を準備中…",
   "ob.s5.terms":
     "トライアルを始めると利用規約に同意したことになります · ",

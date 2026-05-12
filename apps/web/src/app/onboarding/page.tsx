@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePostHog } from "posthog-js/react";
 import { ApiError } from "@/lib/api";
 import { register } from "@/lib/auth";
 import { startCheckout } from "@/lib/billing";
@@ -64,6 +65,7 @@ const COUNTDOWN_SECS = 15 * 60; // 15-minute urgency timer
 export default function OnboardingPage() {
   const router = useRouter();
   const { t, dir } = useI18n();
+  const posthog = usePostHog();
 
   const [step, setStep] = useState(0);
   const [persona, setPersona] = useState<Persona | null>(null);
@@ -84,15 +86,40 @@ export default function OnboardingPage() {
     return true;
   }, [step, persona, targetLang, booksPerMonth]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    posthog?.capture("onboarding_started");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleNext = () => {
+    const stepPayloads: Record<number, Record<string, unknown>> = {
+      0: { persona },
+      1: { target_lang: targetLang },
+      2: { books_per_month: booksPerMonth },
+      3: { recommended_plan: personality?.recommendedPlan },
+    };
+    posthog?.capture("onboarding_step_complete", {
+      step: step + 1,
+      ...stepPayloads[step],
+    });
+    setStep((s) => Math.min(4, s + 1));
+  };
+
+  // Subscribe path: register then go straight to Stripe Checkout.
+  const handleSubscribe = async () => {
+    if (!email || !password) {
+      setError(t("ob.error.register"));
+      return;
+    }
     setError(null);
     setSubmitting(true);
+    posthog?.capture("onboarding_subscribe_clicked", {
+      plan: personality?.recommendedPlan,
+      cycle: "yearly",
+    });
     try {
       await register(email, password, name || undefined);
-
-      // Send the user straight to Stripe Checkout for the recommended plan,
-      // with the first-month discount that the timer was advertising.
+      posthog?.capture("signup_complete", { method: "subscribe" });
       if (personality) {
         try {
           const { url } = await startCheckout({
@@ -114,9 +141,8 @@ export default function OnboardingPage() {
     }
   };
 
-  // The "I'll try it first" path: register with no checkout, drop them into
-  // the library with their 2-page Free trial. The TrialBanner takes over the
-  // upsell from there.
+  // Free-trial path: register with no checkout, drop them into the library.
+  // The TrialBanner takes over upselling once they're inside the product.
   const handleTryFree = async () => {
     if (!email || !password) {
       setError(t("ob.error.register"));
@@ -124,8 +150,10 @@ export default function OnboardingPage() {
     }
     setError(null);
     setSubmitting(true);
+    posthog?.capture("onboarding_free_trial_clicked");
     try {
       await register(email, password, name || undefined);
+      posthog?.capture("signup_complete", { method: "free_trial" });
       router.push("/library?trial=started");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("ob.error.register"));
@@ -205,8 +233,8 @@ export default function OnboardingPage() {
               setPassword={setPassword}
               error={error}
               submitting={submitting}
-              onSubmit={handleSubmit}
               onTryFree={handleTryFree}
+              onSubscribe={handleSubscribe}
             />
           )}
         </div>
@@ -225,7 +253,7 @@ export default function OnboardingPage() {
             </button>
             <button
               type="button"
-              onClick={() => setStep((s) => Math.min(4, s + 1))}
+              onClick={handleNext}
               disabled={!canNext}
               className="group inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-ink)] px-7 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.4)] transition-all hover:-translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
             >
@@ -736,8 +764,8 @@ function Step5({
   setPassword,
   error,
   submitting,
-  onSubmit,
   onTryFree,
+  onSubscribe,
 }: {
   personality: Personality;
   name: string;
@@ -748,13 +776,15 @@ function Step5({
   setPassword: (s: string) => void;
   error: string | null;
   submitting: boolean;
-  onSubmit: (e: React.FormEvent) => void;
   onTryFree: () => void;
+  onSubscribe: () => void;
 }) {
   const { t } = useI18n();
 
   const planName = t(`plan.${personality.recommendedPlan}.name`);
   const discounted = Math.round(personality.monthly * 0.6);
+
+  const formReady = !!email && !!password;
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-start">
@@ -762,7 +792,7 @@ function Step5({
       <div className="stagger">
         <StepHeader eyebrow={t("ob.s5.eyebrow")} title={t("ob.s5.title")} subtitle={t("ob.s5.subtitle")} />
 
-        <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5">
+        <div className="mt-8 flex flex-col gap-5">
           <Field label={t("ob.s5.name")}>
             <input
               type="text"
@@ -775,7 +805,6 @@ function Step5({
           <Field label={t("ob.s5.email")}>
             <input
               type="email"
-              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
@@ -786,7 +815,6 @@ function Step5({
           <Field label={t("ob.s5.password")}>
             <input
               type="password"
-              required
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -802,29 +830,35 @@ function Step5({
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="group mt-2 inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[color:var(--color-ink)] px-7 font-[family-name:var(--font-display)] text-[1.05rem] font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_14px_28px_-10px_rgba(20,16,8,0.45)] transition-all hover:-translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
-          >
-            {submitting ? t("ob.s5.submitting") : t("ob.s5.start")}
-          </button>
-
-          {/* Quiet secondary path — same form, no checkout. The library is a
-              giant upsell once they land. */}
+          {/* Primary CTA: free trial — no payment required */}
           <button
             type="button"
-            disabled={submitting || !email || !password}
+            disabled={submitting || !formReady}
             onClick={onTryFree}
+            className="group mt-2 inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[color:var(--color-ink)] px-7 font-[family-name:var(--font-display)] text-[1.05rem] font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_14px_28px_-10px_rgba(20,16,8,0.45)] transition-all hover:-translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+          >
+            {submitting ? t("ob.s5.submitting") : t("ob.s5.startFree")}
+            <span className="transition-transform group-hover:translate-x-1">→</span>
+          </button>
+
+          <p className="text-center text-[0.76rem] text-[color:var(--color-ink-soft)]">
+            {t("ob.s5.noCard")}
+          </p>
+
+          {/* Secondary path: subscribe now with 40% off */}
+          <button
+            type="button"
+            disabled={submitting || !formReady}
+            onClick={onSubscribe}
             className="-mt-1 self-center text-[0.85rem] font-medium text-[color:var(--color-ink-soft)] underline decoration-dotted decoration-[color:var(--color-ink-soft)]/40 underline-offset-4 transition-colors hover:text-[color:var(--color-ink)] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {t("ob.s5.tryFree")}
+            {t("ob.s5.subscribeCta")}
           </button>
 
           <p className="text-center text-[0.78rem] text-[color:var(--color-ink-soft)]">
             {t("ob.s5.terms")}<Link href="/login" className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4">{t("ob.s5.terms.haveAccount")}</Link>
           </p>
-        </form>
+        </div>
 
         <style jsx>{`
           .ob-input {

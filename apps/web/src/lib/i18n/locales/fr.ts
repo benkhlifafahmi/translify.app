@@ -320,6 +320,9 @@ export const fr: Dict = {
   "ob.s5.passwordHint": "Au moins 8 caractères",
   "ob.s5.start": "Commencer mon essai de 14 jours",
   "ob.s5.tryFree": "Ou essayez d’abord — 2 pages gratuites",
+  "ob.s5.startFree": "Commencer gratuitement — sans carte",
+  "ob.s5.noCard": "Sans carte bancaire · annulation à tout moment",
+  "ob.s5.subscribeCta": "Déjà convaincu·e ? S’abonner avec −40% →",
   "ob.s5.submitting": "On prépare votre étagère…",
   "ob.s5.terms":
     "En commençant votre essai, vous acceptez nos conditions · ",
