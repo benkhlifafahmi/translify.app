@@ -96,6 +96,7 @@ app.include_router(
         google_oauth_client,
         auth_backend,
         settings.jwt_secret,
+        redirect_url="https://translify.app/auth/google/callback",
         associate_by_email=True,
         is_verified_by_default=True,
     ),
