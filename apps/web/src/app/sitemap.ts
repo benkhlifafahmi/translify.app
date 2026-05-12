@@ -21,6 +21,7 @@ const COMPETITORS = ["readlang", "immersive-translate", "kindle-translate", "dee
 const STATIC_PATHS = [
   { path: "/",               priority: 1.0,  changeFrequency: "weekly"  as const },
   { path: "/pricing",        priority: 0.95, changeFrequency: "monthly" as const },
+  { path: "/join",           priority: 0.95, changeFrequency: "monthly" as const },
   { path: "/onboarding",     priority: 0.9,  changeFrequency: "monthly" as const },
   { path: "/languages",      priority: 0.8,  changeFrequency: "monthly" as const },
   { path: "/blog",           priority: 0.8,  changeFrequency: "weekly"  as const },
