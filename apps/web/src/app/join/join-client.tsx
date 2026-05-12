@@ -10,8 +10,6 @@ import { LOCALES, type Locale } from "@/lib/i18n";
 import { Lumi, type LumiState } from "@/components/lumi/lumi";
 import { TranslifyIcon } from "@/components/translify-mark";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
-const GOOGLE_CALLBACK = `${SITE}/auth/google/callback`;
 
 // ─── Static BG data (deterministic — no hydration mismatch) ──────────────────
 const BG_BOOKS = [
@@ -824,7 +822,7 @@ function StepAccount({
         </div>
 
         {/* Google sign-in */}
-        <GoogleButton callbackUrl={GOOGLE_CALLBACK} />
+        <GoogleButton />
 
         {/* Divider */}
         <div className="flex items-center gap-3">
@@ -1033,13 +1031,13 @@ function GameField({
 }
 
 // ─── Google OAuth button ──────────────────────────────────────────────────────
-function GoogleButton({ callbackUrl }: { callbackUrl: string }) {
+function GoogleButton() {
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
     setLoading(true);
     try {
-      const url = await getGoogleAuthUrl(callbackUrl);
+      const url = await getGoogleAuthUrl("https://translify.app/auth/google/callback");
       window.location.href = url;
     } catch {
       setLoading(false);

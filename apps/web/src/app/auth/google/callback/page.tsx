@@ -7,9 +7,6 @@ import { TranslifyIcon } from "@/components/translify-mark";
 import { loginWithGoogleCallback } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
-const CALLBACK_URL = `${SITE}/auth/google/callback`;
-
 function CallbackInner() {
   const router = useRouter();
   const params = useSearchParams();
@@ -35,7 +32,7 @@ function CallbackInner() {
       return;
     }
 
-    loginWithGoogleCallback(code, state, CALLBACK_URL)
+    loginWithGoogleCallback(code, state, "https://translify.app/auth/google/callback")
       .then(() => router.replace("/library?welcome=1"))
       .catch((e) => {
         setErrMsg(e instanceof ApiError ? e.message : "Something went wrong. Please try again.");

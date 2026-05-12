@@ -11,8 +11,6 @@ import { ApiError } from "@/lib/api";
 import { AuthShell } from "@/components/auth-shell";
 import { useI18n } from "@/lib/i18n";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
-const GOOGLE_CALLBACK = `${SITE}/auth/google/callback`;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,7 +39,7 @@ export default function LoginPage() {
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
-      const url = await getGoogleAuthUrl(GOOGLE_CALLBACK);
+      const url = await getGoogleAuthUrl("https://translify.app/auth/google/callback");
       window.location.href = url;
     } catch {
       setGoogleLoading(false);
