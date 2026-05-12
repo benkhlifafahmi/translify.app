@@ -119,7 +119,7 @@ export const ar: Dict = {
   "pricing.title.2": "اقرأ أفضل في 30 يومًا",
   "pricing.title.3": "— أو استرد كل قرش.",
   "pricing.preamble":
-    "لا نقدّم خطة مجانية لأن ترجمة الكتب جيّدًا ليست مجانية لنا أيضًا — لكننا نقف وراء النتيجة. إن لم يُغيّر Translify طريقة قراءتك في الشهر الأول، راسلنا ونعيد لك المبلغ. بلا استمارات.",
+    "ابدأ مجانًا — بلا بطاقة ولا مهلة. أو انتقل مباشرةً إلى خطة مدفوعة مع 14 يومًا تجربة مجانية. في كلتا الحالتين، إن لم يُغيّر Translify طريقة قراءتك في الشهر الأول، نُعيد لك المبلغ كاملًا. بلا استمارات.",
   "pricing.monthly": "شهريًا",
   "pricing.yearly": "سنويًا",
   "pricing.save": "وفّر 20%",
@@ -135,11 +135,21 @@ export const ar: Dict = {
   "pricing.refund.cta": "جرّبه 30 يومًا",
   "pricing.days": "يومًا",
 
+  "plan.free.name": "مجاني",
+  "plan.free.tagline": "جرّب Translify — بلا بطاقة، بلا مدة محدودة.",
+  "plan.free.cta": "ابدأ مجانًا",
+  "plan.free.f1": "80 صفحة / شهر",
+  "plan.free.f2": "لغتا هدف",
+  "plan.free.f3": "ترجمة فقط",
+  "plan.free.f4": "PDF و EPUB",
+  "plan.free.f5": "دعم المجتمع",
+  "plan.free.f6": "",
+
   "plan.reader.name": "Reader",
   "plan.reader.tagline":
     "للفضوليين — أنهِ بضعة كتب شهريًا بلغة جديدة.",
   "plan.reader.cta": "ابدأ بـ Reader",
-  "plan.reader.f1": "2000 صفحة / شهر (≈ 10 كتب)",
+  "plan.reader.f1": "600 صفحة / شهر (≈ 3 كتب)",
   "plan.reader.f2": "كل اللغات الـ14",
   "plan.reader.f3": "قراءة جنبًا إلى جنب",
   "plan.reader.f4": "محادثة مع استشهاد",

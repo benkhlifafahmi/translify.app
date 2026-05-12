@@ -41,7 +41,7 @@ type Tab = "profile" | "profiles" | "subscription" | "lumi" | "security" | "dang
 const PLAN_PRICES: Record<Exclude<Plan, "free">, { monthly: number; yearly: number }> = {
   reader:  { monthly: 9.99,  yearly: 7.99  },
   scholar: { monthly: 18.99, yearly: 14.99 },
-  family:  { monthly: 24.99, yearly: 20    },
+  family:  { monthly: 27.99, yearly: 22    },
 };
 
 export default function AccountPage() {
@@ -1143,7 +1143,7 @@ function PlanStamp({
   const price = PLAN_PRICES[plan][cycle];
 
   const features: Record<typeof plan, string[]> = {
-    reader: ["2,000 pages / month", "All 14 languages", "Side-by-side reading", "Chat with citations", "Quiz mode (10 q / book)"],
+    reader: ["600 pages / month (~3 books)", "All 14 languages", "Side-by-side reading", "Chat with citations", "Quiz mode (10 q / book)"],
     scholar: ["Unlimited pages", "Literary translation (Anthropic)", "Priority queue", "Annotated PDF export", "Smart vocabulary lists"],
     family: ["Everything in Scholar", "5 reader profiles", "Kid-safe mode", "Parent dashboard"],
   };

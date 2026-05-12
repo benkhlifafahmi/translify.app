@@ -7,17 +7,18 @@ import { useI18n } from "@/lib/i18n";
 type Cycle = "monthly" | "yearly";
 
 interface PlanShape {
-  id: "reader" | "scholar" | "family";
+  id: "free" | "reader" | "scholar" | "family";
   monthly: number;
   yearly: number;
   best?: boolean;
-  tone: "paper" | "saffron" | "sage";
+  tone: "free" | "paper" | "saffron" | "sage";
 }
 
 const PLAN_SHAPES: PlanShape[] = [
+  { id: "free",    monthly: 0,     yearly: 0,     tone: "free" },
   { id: "reader",  monthly: 9.99,  yearly: 7.99,  tone: "paper" },
   { id: "scholar", monthly: 18.99, yearly: 14.99, tone: "saffron", best: true },
-  { id: "family",  monthly: 24.99, yearly: 20,    tone: "sage" },
+  { id: "family",  monthly: 27.99, yearly: 22,    tone: "sage" },
 ];
 
 export function Pricing() {
@@ -25,7 +26,7 @@ export function Pricing() {
   const { t } = useI18n();
 
   return (
-    <section id="pricing" className="relative z-10 mx-auto max-w-6xl px-8 pb-24 pt-12 lg:px-14 lg:pt-20">
+    <section id="pricing" className="relative z-10 mx-auto max-w-7xl px-8 pb-24 pt-12 lg:px-14 lg:pt-20">
       <div className="text-center">
         <span className="badge-pill bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-saffron)]" />
@@ -85,7 +86,7 @@ export function Pricing() {
       </div>
 
       {/* Plan grid */}
-      <div className="mt-12 grid gap-6 lg:grid-cols-3 lg:gap-7">
+      <div className="mt-12 grid gap-6 lg:grid-cols-4 lg:gap-5">
         {PLAN_SHAPES.map((plan) => (
           <PlanCard key={plan.id} plan={plan} cycle={cycle} />
         ))}
@@ -124,10 +125,23 @@ export function Pricing() {
   );
 }
 
+function fmtPrice(n: number): string {
+  const rounded = Math.round(n * 100) / 100;
+  return rounded % 1 === 0 ? String(rounded) : rounded.toFixed(2);
+}
+
 function PlanCard({ plan, cycle }: { plan: PlanShape; cycle: Cycle }) {
   const { t } = useI18n();
   const price = cycle === "monthly" ? plan.monthly : plan.yearly;
+  const isFree = plan.id === "free";
+
   const tones: Record<PlanShape["tone"], { card: string; ring: string; chip: string; chipText: string }> = {
+    free: {
+      card: "bg-[color:var(--color-paper)]",
+      ring: "border-[color:var(--color-border)]",
+      chip: "bg-[color:var(--color-ink)]/8",
+      chipText: "text-[color:var(--color-ink-soft)]",
+    },
     paper: {
       card: "bg-[color:var(--color-paper)]",
       ring: "border-[color:var(--color-border)]",
@@ -156,7 +170,7 @@ function PlanCard({ plan, cycle }: { plan: PlanShape; cycle: Cycle }) {
     t(`plan.${plan.id}.f4`),
     t(`plan.${plan.id}.f5`),
     t(`plan.${plan.id}.f6`),
-  ];
+  ].filter(Boolean);
 
   return (
     <div
@@ -180,14 +194,22 @@ function PlanCard({ plan, cycle }: { plan: PlanShape; cycle: Cycle }) {
       </p>
 
       <div className="mt-6 flex items-baseline gap-1">
-        <span className="font-[family-name:var(--font-display)] text-[3.4rem] font-semibold leading-none tracking-tight">
-          €{price}
-        </span>
+        {isFree ? (
+          <span className="font-[family-name:var(--font-display)] text-[3.4rem] font-semibold leading-none tracking-tight">
+            €0
+          </span>
+        ) : (
+          <span className="font-[family-name:var(--font-display)] text-[3.4rem] font-semibold leading-none tracking-tight">
+            €{fmtPrice(price)}
+          </span>
+        )}
         <span className="text-sm text-[color:var(--color-ink-soft)]">{t("pricing.month")}</span>
       </div>
       <p className="mt-1 text-xs text-[color:var(--color-ink-soft)]">
-        {cycle === "yearly"
-          ? `${t("pricing.billed.yearly.before")}${price * 12}${t("pricing.billed.yearly.after")}`
+        {isFree
+          ? " "
+          : cycle === "yearly"
+          ? `${t("pricing.billed.yearly.before")}${fmtPrice(price * 12)}${t("pricing.billed.yearly.after")}`
           : t("pricing.billed.monthly")}
       </p>
 
@@ -216,9 +238,11 @@ function PlanCard({ plan, cycle }: { plan: PlanShape; cycle: Cycle }) {
       >
         {t(`plan.${plan.id}.cta`)}
       </Link>
-      <p className="mt-3 text-center text-[0.7rem] text-[color:var(--color-ink-soft)]">
-        {t("pricing.guarantee")}
-      </p>
+      {!isFree && (
+        <p className="mt-3 text-center text-[0.7rem] text-[color:var(--color-ink-soft)]">
+          {t("pricing.guarantee")}
+        </p>
+      )}
     </div>
   );
 }

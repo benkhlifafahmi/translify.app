@@ -7,9 +7,9 @@ import { TranslifyIcon } from "@/components/translify-mark";
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
 
 export const metadata: Metadata = {
-  title: "Pricing — from €7.99/mo with a 14-day trial",
+  title: "Pricing — Free tier + plans from €7.99/mo",
   description:
-    "Translify pricing — Reader, Scholar, and Family plans starting at €7.99/month. 14-day free trial on every plan, 30-day money-back guarantee, no card required to start.",
+    "Translify pricing — Free, Reader, Scholar, and Family plans. Start free (no card), upgrade from €7.99/month. 30-day money-back guarantee on every paid plan.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: "Translify Pricing",
@@ -36,13 +36,14 @@ export default function PricingPage() {
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "EUR",
-      lowPrice: "7.99",
-      highPrice: "20",
-      offerCount: "3",
+      lowPrice: "0",
+      highPrice: "22",
+      offerCount: "4",
       offers: [
+        { "@type": "Offer", name: "Free", price: "0", priceCurrency: "EUR", url: `${SITE}/pricing#free` },
         { "@type": "Offer", name: "Reader", price: "7.99", priceCurrency: "EUR", url: `${SITE}/pricing#reader` },
         { "@type": "Offer", name: "Scholar", price: "14.99", priceCurrency: "EUR", url: `${SITE}/pricing#scholar` },
-        { "@type": "Offer", name: "Family", price: "20", priceCurrency: "EUR", url: `${SITE}/pricing#family` },
+        { "@type": "Offer", name: "Family", price: "22", priceCurrency: "EUR", url: `${SITE}/pricing#family` },
       ],
     },
   };
@@ -87,13 +88,13 @@ export default function PricingPage() {
           Honest pricing
         </span>
         <h1 className="mt-4 font-[family-name:var(--font-display)] text-[clamp(2.4rem,5vw,3.6rem)] font-semibold leading-tight tracking-tight">
-          Three plans.{" "}
+          Start free.{" "}
           <em className="text-[color:var(--color-saffron-deep)]">No surprises.</em>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-[color:var(--color-ink-soft)]">
-          14-day free trial on every plan. 30-day money-back guarantee on
-          every paid plan. Cancel any time in one click — no retention loop,
-          no &ldquo;wait, can we keep you?&rdquo; — just the cancel button.
+          A free tier forever — no card, no deadline. Paid plans from €7.99/month.
+          30-day money-back guarantee on every paid plan. Cancel any time in one
+          click — no retention loop, no &ldquo;wait, can we keep you?&rdquo; — just the cancel button.
         </p>
       </section>
 

@@ -102,7 +102,7 @@ export default function Page() {
         If you're reading Hegel for class or a Japanese business book
         you've been putting off for a year, that combination is hard to
         find elsewhere. If you mostly want to read web articles in Spanish
-        and build vocabulary, you're overpaying. €7.99–20/mo, 14-day trial,
+        and build vocabulary, you're overpaying. €0–22/mo, 14-day trial,
         30-day money-back. Onward.
       </p>
 
@@ -259,7 +259,7 @@ export default function Page() {
               <td className="border border-[color:var(--color-border)] px-3 py-2">✓ With citations</td>
               <td className="border border-[color:var(--color-border)] px-3 py-2">✓</td>
               <td className="border border-[color:var(--color-border)] px-3 py-2">✓</td>
-              <td className="border border-[color:var(--color-border)] px-3 py-2">€7.99–20/mo</td>
+              <td className="border border-[color:var(--color-border)] px-3 py-2">€0–22/mo</td>
             </tr>
             <tr className="bg-[color:var(--color-paper-2)]/30">
               <td className="border border-[color:var(--color-border)] px-3 py-2 font-semibold">Readlang</td>

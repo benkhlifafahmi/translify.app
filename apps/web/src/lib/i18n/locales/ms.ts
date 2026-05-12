@@ -120,7 +120,7 @@ export const ms: Dict = {
   "pricing.title.2": "Baca lebih baik dalam 30 hari",
   "pricing.title.3": "— atau dapatkan setiap sen kembali.",
   "pricing.preamble":
-    "Kami tidak tawarkan tahap percuma sebab menterjemah buku dengan baik bukan percuma untuk kami juga — tetapi kami berdiri di sebalik hasilnya. Jika Translify tidak mengubah cara anda membaca dalam bulan pertama, e-melkan kami dan kami pulangkan sepenuhnya. Tiada borang.",
+    "Mulakan percuma — tiada kad, tiada tarikh tamat. Atau terus ke pelan berbayar dengan 14 hari percubaan percuma. Sama ada cara, jika Translify tidak mengubah cara anda membaca dalam bulan pertama, kami pulangkan sepenuhnya. Tiada borang.",
   "pricing.monthly": "Bulanan",
   "pricing.yearly": "Tahunan",
   "pricing.save": "Jimat 20%",
@@ -136,11 +136,21 @@ export const ms: Dict = {
   "pricing.refund.cta": "Cuba 30 hari",
   "pricing.days": "hari",
 
+  "plan.free.name": "Percuma",
+  "plan.free.tagline": "Cuba Translify — tiada kad, tiada tarikh tamat.",
+  "plan.free.cta": "Mula percuma",
+  "plan.free.f1": "80 halaman / bulan",
+  "plan.free.f2": "2 bahasa sasaran",
+  "plan.free.f3": "Terjemahan sahaja",
+  "plan.free.f4": "PDF & EPUB",
+  "plan.free.f5": "Sokongan komuniti",
+  "plan.free.f6": "",
+
   "plan.reader.name": "Reader",
   "plan.reader.tagline":
     "Untuk yang ingin tahu — habiskan beberapa buku sebulan dalam bahasa baru.",
   "plan.reader.cta": "Mula sebagai Reader",
-  "plan.reader.f1": "2,000 halaman / bulan (≈10 buku)",
+  "plan.reader.f1": "600 halaman / bulan (≈3 buku)",
   "plan.reader.f2": "Semua 14 bahasa",
   "plan.reader.f3": "Baca bersebelahan",
   "plan.reader.f4": "Sembang dengan rujukan",

@@ -53,8 +53,8 @@ const PERSONA_TO_PERSONALITY: Record<Persona, Personality> = {
   family: {
     key: "family",
     recommendedPlan: "family",
-    monthly: 24.99,
-    yearly: 20,
+    monthly: 27.99,
+    yearly: 22,
     tone: "coral",
     emoji: "❀",
   },

@@ -49,6 +49,19 @@ const SOFTWARE_APP = {
   offers: [
     {
       "@type": "Offer",
+      name: "Free",
+      price: "0",
+      priceCurrency: "EUR",
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: "0",
+        priceCurrency: "EUR",
+        unitCode: "MON",
+        referenceQuantity: { "@type": "QuantitativeValue", value: "80", unitText: "pages per month" },
+      },
+    },
+    {
+      "@type": "Offer",
       name: "Reader",
       price: "7.99",
       priceCurrency: "EUR",
@@ -57,7 +70,7 @@ const SOFTWARE_APP = {
         price: "7.99",
         priceCurrency: "EUR",
         unitCode: "MON",
-        referenceQuantity: { "@type": "QuantitativeValue", value: "2000", unitText: "pages per month" },
+        referenceQuantity: { "@type": "QuantitativeValue", value: "600", unitText: "pages per month" },
       },
     },
     {
@@ -75,11 +88,11 @@ const SOFTWARE_APP = {
     {
       "@type": "Offer",
       name: "Family",
-      price: "20",
+      price: "22",
       priceCurrency: "EUR",
       priceSpecification: {
         "@type": "UnitPriceSpecification",
-        price: "20",
+        price: "22",
         priceCurrency: "EUR",
         unitCode: "MON",
       },

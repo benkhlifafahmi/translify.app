@@ -120,7 +120,7 @@ export const de: Dict = {
   "pricing.title.2": "Lies besser in 30 Tagen",
   "pricing.title.3": "— oder bekomm jeden Cent zurück.",
   "pricing.preamble":
-    "Wir bieten keine Gratisstufe, weil gutes Bücherübersetzen für uns auch nicht gratis ist — aber wir stehen für das Ergebnis ein. Wenn Translify deine Lesart im ersten Monat nicht ändert, schreib uns und wir erstatten dich. Ohne Formulare.",
+    "Starte kostenlos — kein Karte, kein Ablaufdatum. Oder wechsel direkt zu einem Bezahlplan mit 14 Tagen Probephase. So oder so: Ändert Translify deine Lesart im ersten Monat nicht, erstatten wir dich vollständig. Ohne Formulare, ohne Friction.",
   "pricing.monthly": "Monatlich",
   "pricing.yearly": "Jährlich",
   "pricing.save": "20% sparen",
@@ -136,11 +136,21 @@ export const de: Dict = {
   "pricing.refund.cta": "30 Tage testen",
   "pricing.days": "Tage",
 
+  "plan.free.name": "Kostenlos",
+  "plan.free.tagline": "Translify ausprobieren — keine Karte, kein Ablaufdatum.",
+  "plan.free.cta": "Kostenlos starten",
+  "plan.free.f1": "80 Seiten / Monat",
+  "plan.free.f2": "2 Zielsprachen",
+  "plan.free.f3": "Nur Übersetzung",
+  "plan.free.f4": "PDF & EPUB",
+  "plan.free.f5": "Community-Support",
+  "plan.free.f6": "",
+
   "plan.reader.name": "Reader",
   "plan.reader.tagline":
     "Für die Neugierigen — beende ein paar Bücher pro Monat in einer neuen Sprache.",
   "plan.reader.cta": "Als Reader starten",
-  "plan.reader.f1": "2.000 Seiten / Monat (~10 Bücher)",
+  "plan.reader.f1": "600 Seiten / Monat (~3 Bücher)",
   "plan.reader.f2": "Alle 14 Sprachen",
   "plan.reader.f3": "Lesen Seite an Seite",
   "plan.reader.f4": "Chat mit Zitaten",

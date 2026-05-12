@@ -90,7 +90,7 @@ export function ConversionModal() {
             <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[color:var(--color-sage)]/25 text-[color:var(--color-sage-deep)]">
               ✓
             </span>
-            <span>2,000 pages a month — about 8 novels or one fat textbook</span>
+            <span>Unlimited pages — no throttling on Scholar or Family</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[color:var(--color-sage)]/25 text-[color:var(--color-sage-deep)]">
