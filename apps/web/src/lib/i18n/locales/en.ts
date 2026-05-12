@@ -295,10 +295,10 @@ export const en: Dict = {
   "ob.finish": "Make it mine",
 
   // Onboarding · Step 1 — persona
-  "ob.s1.eyebrow": "First, the why",
-  "ob.s1.title": "Why are you here?",
-  "ob.s1.subtitle":
-    "Pick the one that sounds most like you. We'll tailor the rest of the setup around it.",
+  "ob.s1.eyebrow": "Nice to meet you",
+  "ob.s1.lumi": "Hi! I'm Lumi, your reading guide.",
+  "ob.s1.title": "What brings you to Translify?",
+  "ob.s1.subtitle": "We'll build your shelf around your answer.",
   "ob.s1.opt.student": "I'm studying",
   "ob.s1.opt.student.body": "Textbooks, papers, exam prep — read in your strongest language.",
   "ob.s1.opt.curious": "I read for pleasure",
@@ -309,18 +309,18 @@ export const en: Dict = {
   "ob.s1.opt.family.body": "Bedtime stories and homework, in any language, kid-safe.",
 
   // Onboarding · Step 2 — language
-  "ob.s2.eyebrow": "Now, the language",
-  "ob.s2.title": "Which language do you read in?",
-  "ob.s2.subtitle":
-    "We'll translate every book you upload into this language — and keep the original layout.",
+  "ob.s2.eyebrow": "Great choice!",
+  "ob.s2.lumi": "Which language will you read in?",
+  "ob.s2.title": "Pick your reading language",
+  "ob.s2.subtitle": "We'll translate every book you upload into this language — layout preserved.",
   "ob.s2.rtl": "Right-to-left",
   "ob.s2.more": "+ 8 more languages — Italiano, Português, Nederlands, 中文, 한국어, Русский, हिन्दी, Türkçe",
 
   // Onboarding · Step 3 — volume slider
-  "ob.s3.eyebrow": "How much do you read?",
-  "ob.s3.title": "Books per month, roughly?",
-  "ob.s3.subtitle":
-    "Doesn't have to be exact. We'll match a plan to your pace.",
+  "ob.s3.eyebrow": "One more thing",
+  "ob.s3.lumi": "The more you read, the more Translify saves you.",
+  "ob.s3.title": "How many books a month, roughly?",
+  "ob.s3.subtitle": "No pressure — this just helps us suggest the right plan.",
   "ob.s3.unit.books": "Books / month",
 
   // Onboarding · Step 4 — personality reveal

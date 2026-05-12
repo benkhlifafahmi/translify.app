@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePostHog } from "posthog-js/react";
 import { ApiError } from "@/lib/api";
 import { register } from "@/lib/auth";
@@ -10,10 +10,10 @@ import { startCheckout } from "@/lib/billing";
 import { useI18n, LOCALES, type Locale } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Lumi } from "@/components/lumi/lumi";
+import { LumiGuide } from "@/components/lumi/lumi-guide";
 import { TranslifyIcon } from "@/components/translify-mark";
 
 type Persona = "student" | "curious" | "pro" | "family";
-
 type PersonalityKey = "scholar" | "curious" | "pro" | "family";
 
 interface Personality {
@@ -26,43 +26,14 @@ interface Personality {
 }
 
 const PERSONA_TO_PERSONALITY: Record<Persona, Personality> = {
-  student: {
-    key: "scholar",
-    recommendedPlan: "scholar",
-    monthly: 18.99,
-    yearly: 14.99,
-    tone: "saffron",
-    emoji: "✦",
-  },
-  curious: {
-    key: "curious",
-    recommendedPlan: "reader",
-    monthly: 9.99,
-    yearly: 7.99,
-    tone: "sage",
-    emoji: "✿",
-  },
-  pro: {
-    key: "pro",
-    recommendedPlan: "scholar",
-    monthly: 18.99,
-    yearly: 14.99,
-    tone: "plum",
-    emoji: "◆",
-  },
-  family: {
-    key: "family",
-    recommendedPlan: "family",
-    monthly: 27.99,
-    yearly: 22,
-    tone: "coral",
-    emoji: "❀",
-  },
+  student: { key: "scholar",  recommendedPlan: "scholar", monthly: 18.99, yearly: 14.99, tone: "saffron", emoji: "✦" },
+  curious: { key: "curious",  recommendedPlan: "reader",  monthly: 9.99,  yearly: 7.99,  tone: "sage",    emoji: "✿" },
+  pro:     { key: "pro",      recommendedPlan: "scholar", monthly: 18.99, yearly: 14.99, tone: "plum",    emoji: "◆" },
+  family:  { key: "family",   recommendedPlan: "family",  monthly: 27.99, yearly: 22,    tone: "coral",   emoji: "❀" },
 };
 
-const COUNTDOWN_SECS = 15 * 60; // 15-minute urgency timer
+const COUNTDOWN_SECS = 15 * 60;
 
-// Format a price to at most 2 decimal places, stripping unnecessary .00
 function fmtPrice(n: number): string {
   const rounded = Math.round(n * 100) / 100;
   return rounded % 1 === 0 ? String(rounded) : rounded.toFixed(2);
@@ -74,6 +45,7 @@ export default function OnboardingPage() {
   const posthog = usePostHog();
 
   const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
   const [persona, setPersona] = useState<Persona | null>(null);
   const [targetLang, setTargetLang] = useState<Locale>("en");
   const [booksPerMonth, setBooksPerMonth] = useState(4);
@@ -83,61 +55,77 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const personality = persona ? PERSONA_TO_PERSONALITY[persona] : null;
 
   const canNext = useMemo(() => {
-    if (step === 0) return persona !== null;
-    if (step === 1) return targetLang !== null;
     if (step === 2) return booksPerMonth > 0;
     return true;
-  }, [step, persona, targetLang, booksPerMonth]);
+  }, [step, booksPerMonth]);
 
   useEffect(() => {
     posthog?.capture("onboarding_started");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Clears any pending auto-advance timer to avoid stale navigation.
+  const clearAdvance = () => {
+    if (advanceTimer.current) {
+      clearTimeout(advanceTimer.current);
+      advanceTimer.current = null;
+    }
+  };
+
+  const goForward = (n: number, payload?: Record<string, unknown>) => {
+    if (payload) {
+      posthog?.capture("onboarding_step_complete", { step: n, ...payload });
+    }
+    setDirection(1);
+    setStep(n);
+  };
+
+  const handleBack = () => {
+    clearAdvance();
+    setDirection(-1);
+    setStep((s) => Math.max(0, s - 1));
+  };
+
+  // Steps 0 & 1: auto-advance on card click. Delay lets the selection animation show.
+  const handlePersonaSelect = (p: Persona) => {
+    setPersona(p);
+    clearAdvance();
+    advanceTimer.current = setTimeout(() => goForward(1, { persona: p }), 420);
+  };
+
+  const handleLangSelect = (l: Locale) => {
+    setTargetLang(l);
+    clearAdvance();
+    advanceTimer.current = setTimeout(() => goForward(2, { target_lang: l }), 320);
+  };
+
+  // Steps 2 & 3: explicit Continue button.
   const handleNext = () => {
-    const stepPayloads: Record<number, Record<string, unknown>> = {
-      0: { persona },
-      1: { target_lang: targetLang },
+    const payloads: Partial<Record<number, Record<string, unknown>>> = {
       2: { books_per_month: booksPerMonth },
       3: { recommended_plan: personality?.recommendedPlan },
     };
-    posthog?.capture("onboarding_step_complete", {
-      step: step + 1,
-      ...stepPayloads[step],
-    });
-    setStep((s) => Math.min(4, s + 1));
+    goForward(step + 1, payloads[step]);
   };
 
-  // Subscribe path: register then go straight to Stripe Checkout.
   const handleSubscribe = async () => {
-    if (!email || !password) {
-      setError(t("ob.error.register"));
-      return;
-    }
+    if (!email || !password) { setError(t("ob.error.register")); return; }
     setError(null);
     setSubmitting(true);
-    posthog?.capture("onboarding_subscribe_clicked", {
-      plan: personality?.recommendedPlan,
-      cycle: "yearly",
-    });
+    posthog?.capture("onboarding_subscribe_clicked", { plan: personality?.recommendedPlan, cycle: "yearly" });
     try {
       await register(email, password, name || undefined);
       posthog?.capture("signup_complete", { method: "subscribe" });
       if (personality) {
         try {
-          const { url } = await startCheckout({
-            plan: personality.recommendedPlan,
-            cycle: "yearly",
-            applyFirstMonthDiscount: true,
-          });
+          const { url } = await startCheckout({ plan: personality.recommendedPlan, cycle: "yearly", applyFirstMonthDiscount: true });
           window.location.href = url;
           return;
-        } catch {
-          // Stripe not configured, or transient failure — fall through to library.
-        }
+        } catch { /* Stripe not configured — fall through */ }
       }
       router.push("/library");
     } catch (err) {
@@ -147,13 +135,8 @@ export default function OnboardingPage() {
     }
   };
 
-  // Free-trial path: register with no checkout, drop them into the library.
-  // The TrialBanner takes over upselling once they're inside the product.
   const handleTryFree = async () => {
-    if (!email || !password) {
-      setError(t("ob.error.register"));
-      return;
-    }
+    if (!email || !password) { setError(t("ob.error.register")); return; }
     setError(null);
     setSubmitting(true);
     posthog?.capture("onboarding_free_trial_clicked");
@@ -167,6 +150,8 @@ export default function OnboardingPage() {
       setSubmitting(false);
     }
   };
+
+  const animClass = direction > 0 ? "ob-enter-forward" : "ob-enter-back";
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -182,61 +167,48 @@ export default function OnboardingPage() {
           <TranslifyIcon size={36} />
           Translify
         </Link>
-
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
-          <Link
-            href="/login"
-            className="hidden text-sm font-semibold text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)] sm:inline"
-          >
+          <Link href="/login" className="hidden text-sm font-semibold text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)] sm:inline">
             {t("ob.skip")}
           </Link>
         </div>
       </header>
 
-      {/* Progress dots */}
-      <div className="relative z-10 mx-auto mt-6 flex max-w-5xl items-center justify-center gap-2 px-6 lg:px-10">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <span
-            key={i}
-            className={`h-1.5 rounded-full transition-all duration-500 ${
-              i < step
-                ? "w-6 bg-[color:var(--color-saffron-deep)]"
-                : i === step
-                  ? "w-12 bg-[color:var(--color-ink)]"
-                  : "w-6 bg-[color:var(--color-paper-3)]"
-            }`}
+      {/* Progress bar */}
+      <div className="relative z-10 mx-auto mt-5 max-w-xs px-6">
+        <div className="h-2.5 overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
+          <div
+            className="h-full rounded-full bg-[color:var(--color-saffron-deep)] transition-all duration-500 ease-out"
+            style={{ width: `${((step + 1) / 5) * 100}%` }}
           />
-        ))}
+        </div>
+        <p className="mt-1 text-center text-[0.68rem] font-semibold uppercase tracking-[0.15em] text-[color:var(--color-ink-soft)]">
+          {step + 1} / 5
+        </p>
       </div>
 
-      <section className="relative z-10 mx-auto max-w-5xl px-6 pb-20 pt-10 lg:px-10 lg:pt-14">
-        <div key={step} className="animate-pop-in">
+      <section className="relative z-10 mx-auto max-w-5xl px-6 pb-20 pt-6 lg:px-10 lg:pt-10">
+        {/* Step content with directional slide animation */}
+        <div key={step} className={animClass}>
           {step === 0 && (
-            <Step1 persona={persona} setPersona={setPersona} />
+            <Step1 persona={persona} onSelect={handlePersonaSelect} />
           )}
           {step === 1 && (
-            <Step2 targetLang={targetLang} setTargetLang={setTargetLang} />
+            <Step2 targetLang={targetLang} onSelect={handleLangSelect} />
           )}
           {step === 2 && (
             <Step3 books={booksPerMonth} setBooks={setBooksPerMonth} />
           )}
           {step === 3 && personality && (
-            <Step4
-              personality={personality}
-              targetLang={targetLang}
-              books={booksPerMonth}
-            />
+            <Step4 personality={personality} targetLang={targetLang} books={booksPerMonth} />
           )}
           {step === 4 && personality && (
             <Step5
               personality={personality}
-              name={name}
-              setName={setName}
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
+              name={name} setName={setName}
+              email={email} setEmail={setEmail}
+              password={password} setPassword={setPassword}
               error={error}
               submitting={submitting}
               onTryFree={handleTryFree}
@@ -245,14 +217,13 @@ export default function OnboardingPage() {
           )}
         </div>
 
-        {/* Footer nav */}
-        {step < 4 && (
+        {/* Footer nav — hidden for auto-advance steps (0 & 1) */}
+        {step >= 2 && step < 4 && (
           <div className="mt-12 flex items-center justify-between gap-4">
             <button
               type="button"
-              onClick={() => setStep((s) => Math.max(0, s - 1))}
-              disabled={step === 0}
-              className="inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold text-[color:var(--color-ink-soft)] transition-colors hover:text-[color:var(--color-ink)] disabled:cursor-not-allowed disabled:opacity-30"
+              onClick={handleBack}
+              className="inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold text-[color:var(--color-ink-soft)] transition-colors hover:text-[color:var(--color-ink)]"
             >
               <span className={dir === "rtl" ? "rotate-180" : ""}>←</span>
               {t("ob.back")}
@@ -270,6 +241,20 @@ export default function OnboardingPage() {
             </button>
           </div>
         )}
+
+        {/* Back button only on auto-advance steps */}
+        {step === 1 && (
+          <div className="mt-8 flex justify-start">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold text-[color:var(--color-ink-soft)] transition-colors hover:text-[color:var(--color-ink)]"
+            >
+              <span className={dir === "rtl" ? "rotate-180" : ""}>←</span>
+              {t("ob.back")}
+            </button>
+          </div>
+        )}
       </section>
     </main>
   );
@@ -277,62 +262,48 @@ export default function OnboardingPage() {
 
 /* ───────────────────── STEP 1: Persona ───────────────────── */
 
-function Step1({
-  persona,
-  setPersona,
-}: {
-  persona: Persona | null;
-  setPersona: (p: Persona) => void;
-}) {
+function Step1({ persona, onSelect }: { persona: Persona | null; onSelect: (p: Persona) => void }) {
   const { t } = useI18n();
 
   const options: { id: Persona; emoji: string; tone: "saffron" | "sage" | "plum" | "coral" }[] = [
     { id: "student", emoji: "✦", tone: "saffron" },
     { id: "curious", emoji: "✿", tone: "sage" },
-    { id: "pro", emoji: "◆", tone: "plum" },
-    { id: "family", emoji: "❀", tone: "coral" },
+    { id: "pro",     emoji: "◆", tone: "plum" },
+    { id: "family",  emoji: "❀", tone: "coral" },
   ];
 
   const toneStyles = {
-    saffron: {
-      ring: "ring-[color:var(--color-saffron-deep)]",
-      bg: "bg-gradient-to-br from-[#FFFBF0] to-[#FBE9C2]",
-      icon: "bg-[color:var(--color-saffron)]/20 text-[color:var(--color-saffron-deep)]",
-    },
-    sage: {
-      ring: "ring-[color:var(--color-sage-deep)]",
-      bg: "bg-gradient-to-br from-[#F4F8EC] to-[#DDEAD2]",
-      icon: "bg-[color:var(--color-sage)]/20 text-[color:var(--color-sage-deep)]",
-    },
-    plum: {
-      ring: "ring-[color:var(--color-plum)]",
-      bg: "bg-gradient-to-br from-[#F4EEF7] to-[#E0D2EA]",
-      icon: "bg-[color:var(--color-plum)]/20 text-[color:var(--color-plum)]",
-    },
-    coral: {
-      ring: "ring-[color:var(--color-coral-deep)]",
-      bg: "bg-gradient-to-br from-[#FFF1EE] to-[#F6CCC4]",
-      icon: "bg-[color:var(--color-coral)]/20 text-[color:var(--color-coral-deep)]",
-    },
+    saffron: { ring: "ring-[color:var(--color-saffron-deep)]", bg: "bg-gradient-to-br from-[#FFFBF0] to-[#FBE9C2]", icon: "bg-[color:var(--color-saffron)]/20 text-[color:var(--color-saffron-deep)]" },
+    sage:    { ring: "ring-[color:var(--color-sage-deep)]",    bg: "bg-gradient-to-br from-[#F4F8EC] to-[#DDEAD2]", icon: "bg-[color:var(--color-sage)]/20 text-[color:var(--color-sage-deep)]" },
+    plum:    { ring: "ring-[color:var(--color-plum)]",         bg: "bg-gradient-to-br from-[#F4EEF7] to-[#E0D2EA]", icon: "bg-[color:var(--color-plum)]/20 text-[color:var(--color-plum)]" },
+    coral:   { ring: "ring-[color:var(--color-coral-deep)]",   bg: "bg-gradient-to-br from-[#FFF1EE] to-[#F6CCC4]", icon: "bg-[color:var(--color-coral)]/20 text-[color:var(--color-coral-deep)]" },
   };
 
   return (
-    <div className="stagger">
-      <div className="mx-auto mb-2 flex justify-center">
-        <Lumi state="waving" size={120} animate />
+    <div>
+      {/* Lumi greeting */}
+      <div className="mb-8 flex justify-center">
+        <LumiGuide
+          state={persona ? "celebrating" : "waving"}
+          size={96}
+          lines={t("ob.s1.lumi")}
+          bubblePosition="right"
+        />
       </div>
+
       <StepHeader eyebrow={t("ob.s1.eyebrow")} title={t("ob.s1.title")} subtitle={t("ob.s1.subtitle")} />
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2">
-        {options.map((opt) => {
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        {options.map((opt, i) => {
           const selected = persona === opt.id;
           const styles = toneStyles[opt.tone];
           return (
             <button
               key={opt.id}
               type="button"
-              onClick={() => setPersona(opt.id)}
-              className={`group relative flex items-start gap-5 rounded-[1.4rem] border border-[color:var(--color-border)] p-6 text-start transition-all duration-300 ${
+              onClick={() => onSelect(opt.id)}
+              style={{ animationDelay: `${i * 0.07}s` }}
+              className={`animate-float-in group relative flex items-start gap-5 rounded-[1.4rem] border border-[color:var(--color-border)] p-6 text-start transition-all duration-300 ${
                 selected
                   ? `ring-[2.5px] ${styles.ring} ${styles.bg} shadow-[var(--shadow-paper-lg)] scale-[1.02]`
                   : "bg-[color:var(--color-paper)] shadow-[var(--shadow-paper)] hover:-translate-y-1 hover:shadow-[var(--shadow-paper-lg)]"
@@ -366,29 +337,34 @@ function Step1({
 
 /* ───────────────────── STEP 2: Language picker ───────────────────── */
 
-function Step2({
-  targetLang,
-  setTargetLang,
-}: {
-  targetLang: Locale;
-  setTargetLang: (l: Locale) => void;
-}) {
+function Step2({ targetLang, onSelect }: { targetLang: Locale; onSelect: (l: Locale) => void }) {
   const { t } = useI18n();
 
   return (
-    <div className="stagger">
+    <div>
+      {/* Lumi */}
+      <div className="mb-7 flex justify-center">
+        <LumiGuide
+          state="happy"
+          size={80}
+          lines={t("ob.s2.lumi")}
+          bubblePosition="right"
+        />
+      </div>
+
       <StepHeader eyebrow={t("ob.s2.eyebrow")} title={t("ob.s2.title")} subtitle={t("ob.s2.subtitle")} />
 
-      <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {LOCALES.map((l) => {
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {LOCALES.map((l, i) => {
           const selected = targetLang === l.code;
           return (
             <button
               key={l.code}
               type="button"
-              onClick={() => setTargetLang(l.code)}
+              onClick={() => onSelect(l.code)}
               dir={l.dir}
-              className={`group flex items-center justify-between gap-3 rounded-2xl border-[1.5px] px-5 py-4 transition-all duration-300 ${
+              style={{ animationDelay: `${i * 0.04}s` }}
+              className={`animate-float-in group flex items-center justify-between gap-3 rounded-2xl border-[1.5px] px-5 py-4 transition-all duration-300 ${
                 selected
                   ? "border-[color:var(--color-saffron-deep)] bg-gradient-to-br from-[#FFFBF0] to-[#FBE9C2] shadow-[var(--shadow-paper-lg)]"
                   : "border-[color:var(--color-border)] bg-[color:var(--color-paper)] hover:-translate-y-[2px] hover:border-[color:var(--color-border-strong)]"
@@ -408,7 +384,7 @@ function Step2({
                 </span>
               </span>
               {selected && (
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[color:var(--color-ink)] text-[color:var(--color-paper)]">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[color:var(--color-ink)] text-[color:var(--color-paper)] animate-pop-in">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 6 9 17l-5-5" />
                   </svg>
@@ -419,7 +395,7 @@ function Step2({
         })}
       </div>
 
-      <div className="mt-8 rounded-2xl border border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper-2)]/40 px-5 py-3 text-center text-[0.85rem] text-[color:var(--color-ink-soft)]">
+      <div className="mt-6 rounded-2xl border border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper-2)]/40 px-5 py-3 text-center text-[0.85rem] text-[color:var(--color-ink-soft)]">
         {t("ob.s2.more")}
       </div>
     </div>
@@ -428,25 +404,26 @@ function Step2({
 
 /* ───────────────────── STEP 3: Books slider ───────────────────── */
 
-function Step3({
-  books,
-  setBooks,
-}: {
-  books: number;
-  setBooks: (n: number) => void;
-}) {
+function Step3({ books, setBooks }: { books: number; setBooks: (n: number) => void }) {
   const { t } = useI18n();
-
-  // Beautiful pip scale — visualizes their volume in books
   const max = 20;
   const pct = (books / max) * 100;
 
   return (
-    <div className="stagger">
+    <div>
+      {/* Lumi */}
+      <div className="mb-7 flex justify-center">
+        <LumiGuide
+          state="reading"
+          size={80}
+          lines={t("ob.s3.lumi")}
+          bubblePosition="right"
+        />
+      </div>
+
       <StepHeader eyebrow={t("ob.s3.eyebrow")} title={t("ob.s3.title")} subtitle={t("ob.s3.subtitle")} />
 
-      <div className="mt-12 rounded-[1.6rem] border border-[color:var(--color-border)] bg-gradient-to-br from-[#FFFCF3] to-[#F5E9CD] p-8 shadow-[var(--shadow-paper-lg)]">
-        {/* Big number */}
+      <div className="mt-10 rounded-[1.6rem] border border-[color:var(--color-border)] bg-gradient-to-br from-[#FFFCF3] to-[#F5E9CD] p-8 shadow-[var(--shadow-paper-lg)]">
         <div className="text-center">
           <div className="font-[family-name:var(--font-display)] text-[clamp(4rem,12vw,7rem)] font-semibold leading-none tracking-tight text-[color:var(--color-ink)]">
             {books}
@@ -457,12 +434,11 @@ function Step3({
           </p>
         </div>
 
-        {/* Visual book stack — grows with value */}
+        {/* Visual book stack */}
         <div className="mt-8 flex h-16 items-end justify-center gap-1 overflow-hidden">
           {Array.from({ length: max }).map((_, i) => {
             const filled = i < books;
             const colors = ["#E0A458", "#7BA17C", "#E2786C", "#6B5B95"];
-            const color = colors[i % colors.length];
             return (
               <span
                 key={i}
@@ -470,7 +446,7 @@ function Step3({
                 style={{
                   width: "clamp(8px, 1.6vw, 14px)",
                   height: filled ? `${30 + Math.random() * 40}px` : "8px",
-                  background: filled ? color : "rgba(74, 60, 30, 0.08)",
+                  background: filled ? colors[i % colors.length] : "rgba(74, 60, 30, 0.08)",
                   opacity: filled ? 0.9 : 1,
                   transitionDelay: `${i * 30}ms`,
                 }}
@@ -497,13 +473,8 @@ function Step3({
               aria-label={t("ob.s3.unit.books")}
             />
           </div>
-
           <div className="mt-3 flex justify-between text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-            <span>1</span>
-            <span>5</span>
-            <span>10</span>
-            <span>15</span>
-            <span>20+</span>
+            <span>1</span><span>5</span><span>10</span><span>15</span><span>20+</span>
           </div>
         </div>
       </div>
@@ -521,10 +492,7 @@ function Step3({
           cursor: grab;
           transition: transform 0.2s;
         }
-        .ob-slider::-webkit-slider-thumb:active {
-          transform: scale(1.15);
-          cursor: grabbing;
-        }
+        .ob-slider::-webkit-slider-thumb:active { transform: scale(1.15); cursor: grabbing; }
         .ob-slider::-moz-range-thumb {
           width: 30px;
           height: 30px;
@@ -541,16 +509,8 @@ function Step3({
 
 /* ───────────────────── STEP 4: The reveal ───────────────────── */
 
-function Step4({
-  personality,
-  targetLang,
-  books,
-}: {
-  personality: Personality;
-  targetLang: Locale;
-  books: number;
-}) {
-  const { t, locale } = useI18n();
+function Step4({ personality, targetLang, books }: { personality: Personality; targetLang: Locale; books: number }) {
+  const { t } = useI18n();
   const [secs, setSecs] = useState(COUNTDOWN_SECS);
 
   useEffect(() => {
@@ -561,51 +521,37 @@ function Step4({
   const mins = Math.floor(secs / 60);
   const ss = String(secs % 60).padStart(2, "0");
   const mm = String(mins).padStart(2, "0");
-
   const langInfo = LOCALES.find((l) => l.code === targetLang);
-
-  // Pricing math — 40% off first month creates urgency
   const baseMonthly = personality.monthly;
   const discounted = fmtPrice(baseMonthly * 0.6);
-  const annualSaving = Math.round((personality.monthly - personality.yearly) * 12);
-
   const toneStyles = {
-    saffron: {
-      bg: "bg-gradient-to-br from-[#FFFBF0] via-[#F8E1B0] to-[#F0CC85]",
-      ring: "border-[color:var(--color-saffron-deep)]",
-      chip: "bg-[color:var(--color-saffron-deep)] text-white",
-      accent: "text-[color:var(--color-saffron-deep)]",
-    },
-    sage: {
-      bg: "bg-gradient-to-br from-[#F4F8EC] via-[#CCDDC0] to-[#A9C5A8]",
-      ring: "border-[color:var(--color-sage-deep)]",
-      chip: "bg-[color:var(--color-sage-deep)] text-white",
-      accent: "text-[color:var(--color-sage-deep)]",
-    },
-    coral: {
-      bg: "bg-gradient-to-br from-[#FFF1EE] via-[#F4BBB1] to-[#E59C8F]",
-      ring: "border-[color:var(--color-coral-deep)]",
-      chip: "bg-[color:var(--color-coral-deep)] text-white",
-      accent: "text-[color:var(--color-coral-deep)]",
-    },
-    plum: {
-      bg: "bg-gradient-to-br from-[#F4EEF7] via-[#D2BFE0] to-[#B5A0CC]",
-      ring: "border-[color:var(--color-plum)]",
-      chip: "bg-[color:var(--color-plum)] text-white",
-      accent: "text-[color:var(--color-plum)]",
-    },
+    saffron: { bg: "bg-gradient-to-br from-[#FFFBF0] via-[#F8E1B0] to-[#F0CC85]", ring: "border-[color:var(--color-saffron-deep)]", chip: "bg-[color:var(--color-saffron-deep)] text-white", accent: "text-[color:var(--color-saffron-deep)]" },
+    sage:    { bg: "bg-gradient-to-br from-[#F4F8EC] via-[#CCDDC0] to-[#A9C5A8]",  ring: "border-[color:var(--color-sage-deep)]",     chip: "bg-[color:var(--color-sage-deep)] text-white",     accent: "text-[color:var(--color-sage-deep)]" },
+    coral:   { bg: "bg-gradient-to-br from-[#FFF1EE] via-[#F4BBB1] to-[#E59C8F]",  ring: "border-[color:var(--color-coral-deep)]",    chip: "bg-[color:var(--color-coral-deep)] text-white",    accent: "text-[color:var(--color-coral-deep)]" },
+    plum:    { bg: "bg-gradient-to-br from-[#F4EEF7] via-[#D2BFE0] to-[#B5A0CC]",  ring: "border-[color:var(--color-plum)]",          chip: "bg-[color:var(--color-plum)] text-white",          accent: "text-[color:var(--color-plum)]" },
   }[personality.tone];
 
   return (
     <div className="stagger">
+      {/* Lumi celebrating with reaction line */}
+      <div className="mb-6 flex justify-center">
+        <LumiGuide
+          state="celebrating"
+          size={80}
+          lines={[
+            "Your shelf is coming together! 🎉",
+            "Here's what I've picked for you.",
+          ]}
+          bubblePosition="right"
+        />
+      </div>
+
       <StepHeader eyebrow={t("ob.s4.eyebrow")} title="" subtitle="" />
 
       <div className="mt-2 text-center">
         <h1 className="font-[family-name:var(--font-display)] text-[clamp(2rem,5vw,3.6rem)] font-semibold leading-[1.05] tracking-tight">
           {t("ob.s4.title.pre")}{" "}
-          <em className={`${toneStyles.accent}`}>
-            {t(`personality.${personality.key}.name`)}
-          </em>
+          <em className={toneStyles.accent}>{t(`personality.${personality.key}.name`)}</em>
           {t("ob.s4.title.post")}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-[1rem] leading-relaxed text-[color:var(--color-ink-soft)]">
@@ -613,12 +559,11 @@ function Step4({
         </p>
       </div>
 
-      {/* Recommendation card with discount + countdown */}
-      <div className={`relative mx-auto mt-12 max-w-2xl overflow-hidden rounded-[1.8rem] border-[2px] ${toneStyles.ring} ${toneStyles.bg} p-8 shadow-[var(--shadow-paper-lg)] lg:p-10`}>
+      {/* Recommendation card */}
+      <div className={`relative mx-auto mt-10 max-w-2xl overflow-hidden rounded-[1.8rem] border-[2px] ${toneStyles.ring} ${toneStyles.bg} p-8 shadow-[var(--shadow-paper-lg)] lg:p-10`}>
         <div aria-hidden className="pointer-events-none absolute -right-20 -top-16 h-56 w-56 rounded-full bg-white/40 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-12 h-48 w-48 rounded-full bg-white/30 blur-3xl" />
 
-        {/* Tape */}
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 -rotate-[2deg]">
           <span className={`inline-flex items-center gap-1.5 rounded-full ${toneStyles.chip} px-4 py-1.5 text-[0.7rem] font-bold uppercase tracking-[0.2em] shadow-[0_8px_18px_-6px_rgba(20,16,8,0.4)]`}>
             ★ {t("ob.s4.recommended")}
@@ -626,7 +571,6 @@ function Step4({
         </div>
 
         <div className="relative grid gap-7 sm:grid-cols-[auto_1fr] sm:gap-8">
-          {/* Personality glyph */}
           <div className="flex justify-center sm:justify-start">
             <div className={`grid h-24 w-24 place-items-center rounded-3xl bg-white/60 backdrop-blur ${toneStyles.accent} font-[family-name:var(--font-display)] text-[3rem] shadow-[0_8px_22px_-8px_rgba(20,16,8,0.25)]`}>
               {personality.emoji}
@@ -634,7 +578,6 @@ function Step4({
           </div>
 
           <div>
-            {/* Plan name */}
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-ink-soft)]">
               {t("ob.s4.planRec")}
             </p>
@@ -642,7 +585,6 @@ function Step4({
               {t(`plan.${personality.recommendedPlan}.name`)}
             </h3>
 
-            {/* Price */}
             <div className="mt-5 flex items-end gap-3">
               <span className="font-[family-name:var(--font-display)] text-[3.6rem] font-semibold leading-none tracking-tight text-[color:var(--color-ink)]">
                 €{discounted}
@@ -659,14 +601,9 @@ function Step4({
               {t("ob.s4.then", { price: baseMonthly })}
             </p>
 
-            {/* Match reasons */}
             <ul className="mt-6 space-y-2 text-[0.92rem] text-[color:var(--color-ink)]">
-              <MatchRow icon="🎯">
-                {t("ob.s4.match.books", { books: books === 20 ? "20+" : books })}
-              </MatchRow>
-              <MatchRow icon={langInfo?.flag ?? "🌐"}>
-                {t("ob.s4.match.lang", { lang: langInfo?.label ?? "" })}
-              </MatchRow>
+              <MatchRow icon="🎯">{t("ob.s4.match.books", { books: books === 20 ? "20+" : books })}</MatchRow>
+              <MatchRow icon={langInfo?.flag ?? "🌐"}>{t("ob.s4.match.lang", { lang: langInfo?.label ?? "" })}</MatchRow>
               <MatchRow icon="∞">
                 {personality.recommendedPlan === "reader"
                   ? t("ob.s4.match.reader")
@@ -674,9 +611,7 @@ function Step4({
                     ? t("ob.s4.match.family")
                     : t("ob.s4.match.scholar")}
               </MatchRow>
-              <MatchRow icon="✓">
-                {t("ob.s4.match.basics")}
-              </MatchRow>
+              <MatchRow icon="✓">{t("ob.s4.match.basics")}</MatchRow>
             </ul>
           </div>
         </div>
@@ -704,7 +639,6 @@ function Step4({
         </div>
       </div>
 
-      {/* Social proof strip */}
       <SocialProof tone={personality.tone} />
     </div>
   );
@@ -721,36 +655,25 @@ function MatchRow({ icon, children }: { icon: string; children: React.ReactNode 
 
 function SocialProof({ tone }: { tone: Personality["tone"] }) {
   const { t } = useI18n();
-  const names: Record<Personality["tone"], string> = {
-    saffron: "Léa M.",
-    sage: "Adèle R.",
-    coral: "Daniel K.",
-    plum: "Mira T.",
-  };
+  const names: Record<Personality["tone"], string> = { saffron: "Léa M.", sage: "Adèle R.", coral: "Daniel K.", plum: "Mira T." };
   const name = names[tone];
-  const quote = t(`ob.s4.quote.${tone}`);
-  const toneLabel = t(`ob.s4.tone.${tone}`);
 
   return (
     <div className="mx-auto mt-10 max-w-2xl rounded-[1.4rem] border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-6 shadow-[var(--shadow-paper)]">
       <div className="flex items-start gap-4">
-        <span aria-hidden className="font-[family-name:var(--font-display)] text-[3rem] leading-[0.5] text-[color:var(--color-saffron-deep)]/45">
-          “
-        </span>
+        <span aria-hidden className="font-[family-name:var(--font-display)] text-[3rem] leading-[0.5] text-[color:var(--color-saffron-deep)]/45">"</span>
         <div className="flex-1">
           <p className="font-[family-name:var(--font-display)] text-[1rem] italic leading-snug text-[color:var(--color-ink)]">
-            {quote}
+            {t(`ob.s4.quote.${tone}`)}
           </p>
           <div className="mt-3 flex items-center gap-3">
             <span className="grid h-8 w-8 place-items-center rounded-full bg-[color:var(--color-paper-3)] font-[family-name:var(--font-display)] text-[0.8rem] font-semibold text-[color:var(--color-ink)]">
               {name.charAt(0)}
             </span>
             <span className="text-[0.78rem] font-semibold text-[color:var(--color-ink-soft)]">
-              {name} · {t("ob.s4.alsoA")} {toneLabel}
+              {name} · {t("ob.s4.alsoA")} {t(`ob.s4.tone.${tone}`)}
             </span>
-            <span className="ml-auto text-sm tracking-wider text-[color:var(--color-saffron-deep)]">
-              ★★★★★
-            </span>
+            <span className="ml-auto text-sm tracking-wider text-[color:var(--color-saffron-deep)]">★★★★★</span>
           </div>
         </div>
       </div>
@@ -761,73 +684,48 @@ function SocialProof({ tone }: { tone: Personality["tone"] }) {
 /* ───────────────────── STEP 5: Account creation ───────────────────── */
 
 function Step5({
-  personality,
-  name,
-  setName,
-  email,
-  setEmail,
-  password,
-  setPassword,
-  error,
-  submitting,
-  onTryFree,
-  onSubscribe,
+  personality, name, setName, email, setEmail, password, setPassword,
+  error, submitting, onTryFree, onSubscribe,
 }: {
   personality: Personality;
-  name: string;
-  setName: (s: string) => void;
-  email: string;
-  setEmail: (s: string) => void;
-  password: string;
-  setPassword: (s: string) => void;
+  name: string; setName: (s: string) => void;
+  email: string; setEmail: (s: string) => void;
+  password: string; setPassword: (s: string) => void;
   error: string | null;
   submitting: boolean;
   onTryFree: () => void;
   onSubscribe: () => void;
 }) {
   const { t } = useI18n();
-
   const planName = t(`plan.${personality.recommendedPlan}.name`);
   const discounted = fmtPrice(personality.monthly * 0.6);
-
   const formReady = !!email && !!password;
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-start">
       {/* Form column */}
       <div className="stagger">
+        {/* Lumi celebrating above the form */}
+        <div className="mb-6 flex justify-center lg:justify-start">
+          <LumiGuide
+            state="celebrating"
+            size={72}
+            lines={["Almost there! Let's create your shelf.", "Your reading journey starts now."]}
+            bubblePosition="right"
+          />
+        </div>
+
         <StepHeader eyebrow={t("ob.s5.eyebrow")} title={t("ob.s5.title")} subtitle={t("ob.s5.subtitle")} />
 
         <div className="mt-8 flex flex-col gap-5">
           <Field label={t("ob.s5.name")}>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("ob.s5.optional")}
-              className="ob-input"
-            />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("ob.s5.optional")} className="ob-input" />
           </Field>
           <Field label={t("ob.s5.email")}>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-              className="ob-input"
-            />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" className="ob-input" />
           </Field>
           <Field label={t("ob.s5.password")}>
-            <input
-              type="password"
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t("ob.s5.passwordHint")}
-              autoComplete="new-password"
-              className="ob-input"
-            />
+            <input type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("ob.s5.passwordHint")} autoComplete="new-password" className="ob-input" />
           </Field>
 
           {error && (
@@ -836,7 +734,6 @@ function Step5({
             </div>
           )}
 
-          {/* Primary CTA: free trial — no payment required */}
           <button
             type="button"
             disabled={submitting || !formReady}
@@ -851,7 +748,6 @@ function Step5({
             {t("ob.s5.noCard")}
           </p>
 
-          {/* Secondary path: subscribe now with 40% off */}
           <button
             type="button"
             disabled={submitting || !formReady}
@@ -862,7 +758,10 @@ function Step5({
           </button>
 
           <p className="text-center text-[0.78rem] text-[color:var(--color-ink-soft)]">
-            {t("ob.s5.terms")}<Link href="/login" className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4">{t("ob.s5.terms.haveAccount")}</Link>
+            {t("ob.s5.terms")}
+            <Link href="/login" className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4">
+              {t("ob.s5.terms.haveAccount")}
+            </Link>
           </p>
         </div>
 
@@ -903,11 +802,7 @@ function Step5({
             <div className="border-t border-[color:var(--color-border)] pt-3" />
             <Row
               label={<span className="font-[family-name:var(--font-display)] text-[1rem] font-semibold">{t("ob.s5.row.today")}</span>}
-              value={
-                <span className="font-[family-name:var(--font-display)] text-[1.4rem] font-semibold">
-                  €0
-                </span>
-              }
+              value={<span className="font-[family-name:var(--font-display)] text-[1.4rem] font-semibold">€0</span>}
             />
             <p className="text-[0.78rem] leading-snug text-[color:var(--color-ink-soft)]">
               {t("ob.s5.charge.pre")}
@@ -916,7 +811,6 @@ function Step5({
             </p>
           </div>
 
-          {/* Trust badges */}
           <div className="mt-6 grid grid-cols-3 gap-3 border-t border-[color:var(--color-border)] pt-5">
             <Trust icon="↺" label={t("ob.s5.trust.cancel")} />
             <Trust icon="€" label={t("ob.s5.trust.refund")} />
@@ -932,32 +826,22 @@ function Step5({
   );
 }
 
+/* ───────────────────── Shared ───────────────────── */
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-[0.78rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-ink-soft)]">
-        {label}
-      </span>
+      <span className="text-[0.78rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-ink-soft)]">{label}</span>
       {children}
     </label>
   );
 }
 
-function Row({
-  label,
-  value,
-  highlight = false,
-}: {
-  label: React.ReactNode;
-  value: React.ReactNode;
-  highlight?: boolean;
-}) {
+function Row({ label, value, highlight = false }: { label: React.ReactNode; value: React.ReactNode; highlight?: boolean }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-[color:var(--color-ink-soft)]">{label}</span>
-      <span className={highlight ? "font-bold text-[color:var(--color-coral-deep)]" : "font-semibold text-[color:var(--color-ink)]"}>
-        {value}
-      </span>
+      <span className={highlight ? "font-bold text-[color:var(--color-coral-deep)]" : "font-semibold text-[color:var(--color-ink)]"}>{value}</span>
     </div>
   );
 }
@@ -965,39 +849,23 @@ function Row({
 function Trust({ icon, label }: { icon: string; label: string }) {
   return (
     <div className="flex flex-col items-center gap-1 text-center">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-[color:var(--color-paper-2)] font-[family-name:var(--font-display)] text-[1.1rem] text-[color:var(--color-saffron-deep)]">
-        {icon}
-      </span>
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-[color:var(--color-paper-2)] font-[family-name:var(--font-display)] text-[1.1rem] text-[color:var(--color-saffron-deep)]">{icon}</span>
       <span className="text-[0.7rem] font-semibold leading-tight text-[color:var(--color-ink-soft)]">{label}</span>
     </div>
   );
 }
 
-/* ───────────────────── Shared ───────────────────── */
-
-function StepHeader({
-  eyebrow,
-  title,
-  subtitle,
-}: {
-  eyebrow: string;
-  title: string;
-  subtitle: string;
-}) {
+function StepHeader({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle: string }) {
   return (
     <div className="text-center">
-      <p className="text-[0.78rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-saffron-deep)]">
-        {eyebrow}
-      </p>
+      <p className="text-[0.78rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-saffron-deep)]">{eyebrow}</p>
       {title && (
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-[clamp(2rem,5vw,3.4rem)] font-semibold leading-[1.05] tracking-tight">
           {title}
         </h1>
       )}
       {subtitle && (
-        <p className="mx-auto mt-4 max-w-xl text-[1rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-          {subtitle}
-        </p>
+        <p className="mx-auto mt-4 max-w-xl text-[1rem] leading-relaxed text-[color:var(--color-ink-soft)]">{subtitle}</p>
       )}
     </div>
   );

@@ -243,6 +243,9 @@
 .animate-float-in { animation: float-in 0.5s ease-out both; }
 .animate-pop-in { animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 .hover-wiggle:hover { animation: wiggle 0.4s ease-in-out; }
+/* Directional page transitions for onboarding */
+.ob-enter-forward { animation: slide-left  0.38s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.ob-enter-back    { animation: slide-right 0.38s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
 /* ===== Lumi mascot — float, bubble, toast =====
    Used by /components/lumi/*. Scoped to dedicated classes so they don't
