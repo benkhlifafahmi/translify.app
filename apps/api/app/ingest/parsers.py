@@ -29,12 +29,17 @@ def parse(book_bytes: bytes, format_: BookFormat) -> list[Page]:
 
 
 def _parse_pdf(data: bytes) -> list[Page]:
-    # pypdf is fast and handles most PDFs. pdfplumber is in deps as a fallback
-    # we'll use only if pypdf returns no usable text — keep parsing cheap by default.
+    # PyMuPDF handles Arabic/RTL and CJK scripts correctly; pypdf and pdfplumber
+    # often return empty text on those PDFs. Try fitz first, then fall back.
+    pages = _parse_pdf_with_fitz(data)
+    if any(p.text.strip() for p in pages):
+        return pages
+
+    log.info("pymupdf produced no text; falling back to pypdf")
     from pypdf import PdfReader
 
     reader = PdfReader(io.BytesIO(data))
-    pages: list[Page] = []
+    pages = []
     extracted_any = False
     for i, page in enumerate(reader.pages, start=1):
         try:
@@ -51,6 +56,21 @@ def _parse_pdf(data: bytes) -> list[Page]:
 
     log.info("pypdf produced no text; falling back to pdfplumber")
     return _parse_pdf_with_plumber(data)
+
+
+def _parse_pdf_with_fitz(data: bytes) -> list[Page]:
+    import pymupdf
+
+    pages: list[Page] = []
+    with pymupdf.open(stream=data, filetype="pdf") as doc:
+        for i, page in enumerate(doc, start=1):
+            try:
+                text = page.get_text("text") or ""
+            except Exception:
+                log.warning("pymupdf failed on page %d", i, exc_info=True)
+                text = ""
+            pages.append(Page(number=i, text=_normalize(text)))
+    return pages
 
 
 def _parse_pdf_with_plumber(data: bytes) -> list[Page]:

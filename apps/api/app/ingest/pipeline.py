@@ -57,8 +57,11 @@ async def _run(session, book: Book) -> None:
     log.info("ingest downloaded %d bytes for %s", len(file_bytes), book.id)
 
     pages = await asyncio.to_thread(parse, file_bytes, book.format)
-    if not pages:
-        raise RuntimeError("Could not extract any text from the document.")
+    if not any(p.text.strip() for p in pages):
+        raise RuntimeError(
+            "No readable text found in this document. "
+            "Scanned or image-only PDFs aren't supported yet — please upload a text-based file."
+        )
 
     chunks = await asyncio.to_thread(chunk_pages, pages)
     if not chunks:
