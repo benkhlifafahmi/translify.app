@@ -50,6 +50,13 @@ class _TranslatePanelState extends State<TranslatePanel> {
   bool _loading = true;
   String? _error;
   Timer? _poll;
+  // Tracks the status we last saw for each translation id, so we can detect
+  // an in_progress → ready transition during this session and feed the
+  // garden a "translate" event. On the very first refresh we just seed this
+  // map without firing — anything already ready predates the session and
+  // shouldn't pollute the journal.
+  final Map<String, TranslationStatus> _prevStatuses = {};
+  bool _seededStatuses = false;
 
   @override
   void initState() {
@@ -74,14 +81,43 @@ class _TranslatePanelState extends State<TranslatePanel> {
   Future<void> _refresh({bool silent = false}) async {
     if (!silent) setState(() => _loading = true);
     try {
-      final list =
-          await context.read<Session>().translations.list(widget.bookId);
+      final session = context.read<Session>();
+      final list = await session.translations.list(widget.bookId);
       if (!mounted) return;
+      // Detect newly-ready translations and post a "translate" event so the
+      // garden journal records the milestone. Best-effort: a network failure
+      // here shouldn't bubble into the panel UI.
+      final newlyReady = <Translation>[];
+      if (_seededStatuses) {
+        for (final t in list) {
+          final prev = _prevStatuses[t.id];
+          if (t.status == TranslationStatus.ready &&
+              prev != null &&
+              prev != TranslationStatus.ready) {
+            newlyReady.add(t);
+          }
+        }
+      }
+      _prevStatuses
+        ..clear()
+        ..addEntries(list.map((t) => MapEntry(t.id, t.status)));
+      _seededStatuses = true;
       setState(() {
         _translations = list;
         _loading = false;
         _error = null;
       });
+      for (final t in newlyReady) {
+        final src = (widget.sourceLanguage ?? 'src').toUpperCase();
+        final dst = t.targetLanguage.toUpperCase();
+        try {
+          await session.gardens.recordEvent(
+            widget.bookId,
+            GardenEventKind.translate,
+            payload: {'pair': '$src → $dst'},
+          );
+        } catch (_) {}
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {

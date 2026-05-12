@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 
 import 'api/api_client.dart';
 import 'screens/book_detail_screen.dart';
+import 'screens/gardens_index_screen.dart';
 import 'screens/library_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/upload_screen.dart';
@@ -50,6 +52,8 @@ class TranslifyApp extends StatelessWidget {
           '/register': (_) => const RegisterScreen(),
           '/library': (_) => const LibraryScreen(),
           '/upload': (_) => const UploadScreen(),
+          '/gardens': (_) => const GardensIndexScreen(),
+          '/profile': (_) => const ProfileScreen(),
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/book') {

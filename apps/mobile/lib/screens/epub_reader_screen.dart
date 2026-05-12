@@ -1,78 +1,103 @@
 import 'dart:async';
 
+import 'package:epub_view/epub_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show SelectedContent;
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart' as pdf;
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../api/api_client.dart';
 import '../api/models.dart';
 import '../state/session.dart';
 import '../theme/tokens.dart';
 import '../widgets/highlight_actions.dart';
-import '../widgets/pdf_highlights.dart';
 
-class PdfReaderScreen extends StatefulWidget {
-  const PdfReaderScreen({
+const int _minSelectionChars = 2;
+
+class EpubReaderScreen extends StatefulWidget {
+  const EpubReaderScreen({
     super.key,
     required this.bookId,
     required this.bytes,
-    this.totalPages = 0,
     this.title,
-    this.initialPage = 1,
-    this.onPageReached,
+    this.initialChapter = 1,
+    this.onChapterReached,
   });
 
   final String bookId;
   final Uint8List bytes;
-
-  /// Hint only — the viewer reports the authoritative page count via
-  /// onDocumentLoaded. Pass 0 if you don't know it yet.
-  final int totalPages;
   final String? title;
-  final int initialPage;
+  final int initialChapter;
 
-  final void Function(int page)? onPageReached;
+  /// Fires whenever the user advances onto a new chapter. Used by the Garden
+  /// reading tracker — for EPUBs we treat each spine item as one "page".
+  final void Function(int chapter)? onChapterReached;
 
   @override
-  State<PdfReaderScreen> createState() => _PdfReaderScreenState();
+  State<EpubReaderScreen> createState() => _EpubReaderScreenState();
 }
 
-class _PdfReaderScreenState extends State<PdfReaderScreen> {
-  final PdfViewerController _pdf = PdfViewerController();
-  final GlobalKey<SfPdfViewerState> _viewerKey = GlobalKey();
-  late final PdfHighlightOverlay _overlay = PdfHighlightOverlay(_pdf);
-  pdf.PdfDocument? _document;
-
-  int _page = 1;
+class _EpubReaderScreenState extends State<EpubReaderScreen> {
+  late final EpubController _epub;
+  int _chapter = 1;
   int _total = 1;
+  bool _ready = false;
   bool _overlayVisible = true;
   Timer? _hideTimer;
+  SelectedContent? _selected;
   List<Highlight> _savedHighlights = const [];
-
-  static const int _minSelectionChars = 2;
-
-  String? _selectedText;
-  Rect? _selectionRect;
 
   @override
   void initState() {
     super.initState();
-    _page = widget.initialPage;
-    _total = widget.totalPages > 0 ? widget.totalPages : 1;
-    widget.onPageReached?.call(widget.initialPage);
+    _epub = EpubController(
+      document: EpubDocument.openData(widget.bytes),
+    );
+    _epub.currentValueListenable.addListener(_onChapter);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _scheduleHide();
+    _refreshSavedHighlights();
+  }
+
+  Future<void> _refreshSavedHighlights() async {
+    try {
+      final session = context.read<Session>();
+      final saved = await session.highlights.listForBook(widget.bookId);
+      if (!mounted) return;
+      setState(() => _savedHighlights = saved);
+    } catch (_) {
+      // Non-blocking.
+    }
   }
 
   @override
   void dispose() {
     _hideTimer?.cancel();
-    _document?.dispose();
-    _pdf.dispose();
+    _epub.currentValueListenable.removeListener(_onChapter);
+    _epub.dispose();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
+  }
+
+  void _onChapter() {
+    final v = _epub.currentValue;
+    if (v == null) return;
+    final n = v.chapterNumber;
+    if (n <= 0) return;
+    if (!_ready) {
+      final toc = _epub.tableOfContents();
+      _total = toc.isEmpty ? 1 : toc.length;
+      _ready = true;
+      if (widget.initialChapter > 1 && widget.initialChapter <= _total) {
+        _epub.scrollTo(index: widget.initialChapter - 1);
+      }
+    }
+    if (n != _chapter) {
+      setState(() => _chapter = n);
+      widget.onChapterReached?.call(n);
+    } else if (_total > 0 && _chapter == 1) {
+      widget.onChapterReached?.call(_chapter);
+    }
   }
 
   void _toggleOverlay() {
@@ -87,73 +112,27 @@ class _PdfReaderScreenState extends State<PdfReaderScreen> {
     });
   }
 
-  void _jumpTo(int page) {
-    final p = page.clamp(1, _total);
-    _pdf.jumpToPage(p);
-    setState(() => _page = p);
-    widget.onPageReached?.call(p);
+  void _jumpTo(int chapter) {
+    final c = chapter.clamp(1, _total);
+    _epub.scrollTo(index: c - 1);
+    setState(() => _chapter = c);
+    widget.onChapterReached?.call(c);
     _scheduleHide();
   }
 
-  Future<void> _onDocumentLoaded(PdfDocumentLoadedDetails d) async {
-    _document = d.document;
-    final n = d.document.pages.count;
-    if (n != _total) setState(() => _total = n);
-    if (widget.initialPage > 1 && widget.initialPage <= n) {
-      _pdf.jumpToPage(widget.initialPage);
-    }
-    await _loadSavedHighlights();
-  }
+  // ────────────────────────────── Selection actions ────────────────────
 
-  Future<void> _loadSavedHighlights() async {
-    final doc = _document;
-    if (doc == null) return;
+  String _currentSelection() => _selected?.plainText.trim() ?? '';
+
+  String? _currentCfi() {
     try {
-      final session = context.read<Session>();
-      final saved = await session.highlights.listForBook(widget.bookId);
-      if (!mounted) return;
-      _overlay.clear();
-      _overlay.renderAll(doc, saved);
-      setState(() => _savedHighlights = saved);
+      return _epub.generateEpubCfi();
     } catch (_) {
-      // Non-blocking — silently skip if the network call fails.
+      return null;
     }
   }
 
-  // ────────────────────────────── Selection ──────────────────────────
-
-  void _onSelectionChanged(PdfTextSelectionChangedDetails d) {
-    final text = d.selectedText;
-    final rect = d.globalSelectedRegion;
-    final hasUsableText =
-        text != null && text.trim().length >= _minSelectionChars;
-    if (!hasUsableText || rect == null) {
-      if (_selectedText != null) {
-        setState(() {
-          _selectedText = null;
-          _selectionRect = null;
-        });
-      }
-      return;
-    }
-    if (_selectedText == null) {
-      HapticFeedback.selectionClick();
-    }
-    setState(() {
-      _selectedText = text;
-      _selectionRect = rect;
-    });
-  }
-
-  List<PdfTextLine> _captureSelectionLines() {
-    final state = _viewerKey.currentState;
-    if (state == null) return const [];
-    return state.getSelectedTextLines();
-  }
-
-  // ────────────────────────────── Highlight CRUD ─────────────────────
-
-  Future<Highlight?> _createSaved(
+  Future<Highlight?> _createHighlight(
     String text, {
     HighlightColor color = HighlightColor.yellow,
     String? note,
@@ -161,27 +140,22 @@ class _PdfReaderScreenState extends State<PdfReaderScreen> {
     final session = context.read<Session>();
     return session.highlights.create(
       widget.bookId,
-      page: _page,
+      page: _chapter,
       text: text,
       color: color,
       note: note,
+      positionCfi: _currentCfi(),
     );
   }
 
-  void _afterCreate(Highlight h, List<PdfTextLine> lines) {
-    if (lines.isNotEmpty) _overlay.addFromTextLines(h, lines);
-    setState(() => _savedHighlights = [..._savedHighlights, h]);
-  }
-
-  Future<void> _onHighlightAction() async {
-    final text = _selectedText?.trim();
-    if (text == null || text.isEmpty) return;
-    final lines = _captureSelectionLines();
-    _pdf.clearSelection();
+  Future<void> _onHighlightAction(
+      {HighlightColor color = HighlightColor.yellow}) async {
+    final text = _currentSelection();
+    if (text.isEmpty) return;
     try {
-      final created = await _createSaved(text);
+      final created = await _createHighlight(text, color: color);
       if (created == null || !mounted) return;
-      _afterCreate(created, lines);
+      setState(() => _savedHighlights = [..._savedHighlights, created]);
       _flash('Saved highlight');
     } catch (e) {
       if (!mounted) return;
@@ -190,17 +164,15 @@ class _PdfReaderScreenState extends State<PdfReaderScreen> {
   }
 
   Future<void> _onNoteAction() async {
-    final text = _selectedText?.trim();
-    if (text == null || text.isEmpty) return;
-    final lines = _captureSelectionLines();
-    _pdf.clearSelection();
+    final text = _currentSelection();
+    if (text.isEmpty) return;
     final note = await showHighlightNoteSheet(context, passage: text);
     if (note == null || !mounted) return;
     try {
-      final created = await _createSaved(text,
+      final created = await _createHighlight(text,
           note: note.trim().isEmpty ? null : note.trim());
       if (created == null || !mounted) return;
-      _afterCreate(created, lines);
+      setState(() => _savedHighlights = [..._savedHighlights, created]);
       _flash('Saved note');
     } catch (e) {
       if (!mounted) return;
@@ -209,17 +181,15 @@ class _PdfReaderScreenState extends State<PdfReaderScreen> {
   }
 
   Future<void> _onAskAiAction() async {
-    final text = _selectedText?.trim();
-    if (text == null || text.isEmpty) return;
-    final lines = _captureSelectionLines();
-    _pdf.clearSelection();
+    final text = _currentSelection();
+    if (text.isEmpty) return;
     final session = context.read<Session>();
     Highlight? created;
     await showHighlightAskAiSheet(
       context,
       passage: text,
       runAsk: (question) async {
-        created ??= await _createSaved(text);
+        created ??= await _createHighlight(text);
         if (created == null) {
           throw ApiException(0, 'Could not create highlight.');
         }
@@ -229,9 +199,8 @@ class _PdfReaderScreenState extends State<PdfReaderScreen> {
         );
       },
     );
-    final fresh = created;
-    if (fresh != null && mounted) {
-      _afterCreate(fresh, lines);
+    if (created != null && mounted) {
+      setState(() => _savedHighlights = [..._savedHighlights, created!]);
     }
   }
 
@@ -246,40 +215,35 @@ class _PdfReaderScreenState extends State<PdfReaderScreen> {
           note: note,
           color: color,
         );
-        if (color != null) _overlay.updateColor(h.id, color);
-        if (mounted) {
-          setState(() {
-            _savedHighlights = [
-              for (final x in _savedHighlights)
-                if (x.id == next.id) next else x
-            ];
-          });
-        }
+        if (!mounted) return next;
+        setState(() {
+          _savedHighlights = [
+            for (final x in _savedHighlights)
+              if (x.id == next.id) next else x
+          ];
+        });
         return next;
       },
       onDelete: () async {
         await session.highlights.delete(h.id);
-        _overlay.removeById(h.id);
-        if (mounted) {
-          setState(() {
-            _savedHighlights = [
-              for (final x in _savedHighlights)
-                if (x.id != h.id) x
-            ];
-          });
-        }
+        if (!mounted) return;
+        setState(() {
+          _savedHighlights = [
+            for (final x in _savedHighlights)
+              if (x.id != h.id) x
+          ];
+        });
       },
       onAskAi: (question) async {
         final next =
             await session.highlights.askAi(h.id, question: question);
-        if (mounted) {
-          setState(() {
-            _savedHighlights = [
-              for (final x in _savedHighlights)
-                if (x.id == next.id) next else x
-            ];
-          });
-        }
+        if (!mounted) return next;
+        setState(() {
+          _savedHighlights = [
+            for (final x in _savedHighlights)
+              if (x.id == next.id) next else x
+          ];
+        });
         return next;
       },
     );
@@ -289,29 +253,20 @@ class _PdfReaderScreenState extends State<PdfReaderScreen> {
     final selected = await showHighlightsListSheet(
       context,
       highlights: _savedHighlights,
+      pageLabel: 'ch',
     );
     if (selected == null || !mounted) return;
-    _pdf.jumpToPage(selected.page);
-    setState(() => _page = selected.page);
-    await _openNoteCard(selected);
-  }
-
-  void _onAnnotationSelected(Annotation annotation) async {
-    final id = _overlay.idOf(annotation);
-    if (id == null) return;
-    try {
-      final session = context.read<Session>();
-      final saved = await session.highlights.listForBook(widget.bookId);
-      if (!mounted) return;
-      final hl = saved.firstWhere(
-        (h) => h.id == id,
-        orElse: () => throw StateError('highlight $id missing'),
-      );
-      await _openNoteCard(hl);
-    } catch (_) {
-      // Annotation may have been deleted server-side; clear the local copy.
-      _overlay.removeById(id);
+    final cfi = selected.positionCfi;
+    if (cfi != null && cfi.isNotEmpty) {
+      try {
+        _epub.gotoEpubCfi(cfi);
+      } catch (_) {
+        _epub.scrollTo(index: (selected.page - 1).clamp(0, _total));
+      }
+    } else {
+      _epub.scrollTo(index: (selected.page - 1).clamp(0, _total));
     }
+    await _openNoteCard(selected);
   }
 
   void _flash(String msg, {bool error = false}) {
@@ -340,57 +295,72 @@ class _PdfReaderScreenState extends State<PdfReaderScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          SfPdfViewer.memory(
-            widget.bytes,
-            key: _viewerKey,
-            controller: _pdf,
-            // Book-style pagination: one page at a time, swipe horizontally
-            // to flip. scrollDirection is implicit in single mode.
-            pageLayoutMode: PdfPageLayoutMode.single,
-            scrollDirection: PdfScrollDirection.horizontal,
-            pageSpacing: 0,
-            canShowTextSelectionMenu: false,
-            canShowPaginationDialog: false,
-            canShowScrollHead: false,
-            canShowScrollStatus: false,
-            onDocumentLoaded: _onDocumentLoaded,
-            onPageChanged: (d) {
-              final p = d.newPageNumber;
-              if (p == _page) return;
-              setState(() => _page = p);
-              widget.onPageReached?.call(p);
-            },
-            onTextSelectionChanged: _onSelectionChanged,
-            onAnnotationSelected: _onAnnotationSelected,
+          Container(
+            color: Colors.white,
+            child: SelectionArea(
+              onSelectionChanged: (content) {
+                final hadSelection =
+                    (_selected?.plainText.trim().length ?? 0) >=
+                        _minSelectionChars;
+                _selected = content;
+                final hasSelection =
+                    (content?.plainText.trim().length ?? 0) >=
+                        _minSelectionChars;
+                if (!hadSelection && hasSelection) {
+                  HapticFeedback.selectionClick();
+                }
+              },
+              contextMenuBuilder: _buildSelectionToolbar,
+              child: EpubView(
+                controller: _epub,
+                builders: EpubViewBuilders<DefaultBuilderOptions>(
+                  options: const DefaultBuilderOptions(
+                    textStyle: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 16,
+                      height: 1.6,
+                      color: Color(0xFF20283A),
+                    ),
+                  ),
+                  chapterDividerBuilder: (_) => const SizedBox(height: 24),
+                  loaderBuilder: (_) => const Center(
+                    child: CircularProgressIndicator(
+                        color: Colors.black38, strokeWidth: 2),
+                  ),
+                  errorBuilder: (_, err) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        err.toString(),
+                        style: const TextStyle(color: Colors.black54),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
           IgnorePointer(
-            ignoring: (_selectedText?.isNotEmpty ?? false),
+            ignoring: (_selected?.plainText.isNotEmpty ?? false),
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
               onTap: _toggleOverlay,
               child: const SizedBox.expand(),
             ),
           ),
-          if (_selectedText != null && _selectionRect != null)
-            HighlightSelectionToolbar(
-              anchor: _selectionRect!,
-              containerTopPadding: MediaQuery.of(context).padding.top,
-              onHighlight: _onHighlightAction,
-              onNote: _onNoteAction,
-              onAskAi: _onAskAiAction,
-            ),
           AnimatedSlide(
             offset: _overlayVisible ? Offset.zero : const Offset(0, -1),
             duration: const Duration(milliseconds: 240),
             curve: Curves.easeInOut,
             child: _TopBar(
               title: widget.title,
-              page: _page,
+              chapter: _chapter,
               total: _total,
               notesCount: _savedHighlights.length,
               onNotes:
                   _savedHighlights.isEmpty ? null : _openHighlightsList,
-              onClose: () => Navigator.of(context).pop(_page),
+              onClose: () => Navigator.of(context).pop(_chapter),
             ),
           ),
           Positioned(
@@ -402,7 +372,7 @@ class _PdfReaderScreenState extends State<PdfReaderScreen> {
               duration: const Duration(milliseconds: 240),
               curve: Curves.easeInOut,
               child: _BottomBar(
-                page: _page,
+                chapter: _chapter,
                 total: _total,
                 onChanged: (v) => _jumpTo(v.round()),
               ),
@@ -412,14 +382,50 @@ class _PdfReaderScreenState extends State<PdfReaderScreen> {
       ),
     );
   }
+
+  Widget _buildSelectionToolbar(
+    BuildContext context,
+    SelectableRegionState state,
+  ) {
+    return AdaptiveTextSelectionToolbar.buttonItems(
+      anchors: state.contextMenuAnchors,
+      buttonItems: <ContextMenuButtonItem>[
+        ...state.contextMenuButtonItems,
+        ContextMenuButtonItem(
+          label: 'Highlight',
+          onPressed: () async {
+            state.hideToolbar();
+            await _onHighlightAction();
+            state.clearSelection();
+          },
+        ),
+        ContextMenuButtonItem(
+          label: 'Note',
+          onPressed: () async {
+            state.hideToolbar();
+            await _onNoteAction();
+            state.clearSelection();
+          },
+        ),
+        ContextMenuButtonItem(
+          label: 'Ask AI',
+          onPressed: () async {
+            state.hideToolbar();
+            await _onAskAiAction();
+            state.clearSelection();
+          },
+        ),
+      ],
+    );
+  }
 }
 
-// ───────────────────────────────── Top bar ────────────────────────────
+// ─────────────────────────────── Top bar ──────────────────────────────
 
 class _TopBar extends StatelessWidget {
   const _TopBar({
     required this.title,
-    required this.page,
+    required this.chapter,
     required this.total,
     required this.onClose,
     this.notesCount = 0,
@@ -427,7 +433,7 @@ class _TopBar extends StatelessWidget {
   });
 
   final String? title;
-  final int page;
+  final int chapter;
   final int total;
   final VoidCallback onClose;
   final int notesCount;
@@ -537,7 +543,7 @@ class _TopBar extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.25), width: 1),
                 ),
                 child: Text(
-                  '$page / $total',
+                  'ch $chapter / $total',
                   style: const TextStyle(
                     color: Colors.white,
                     fontFamily: 'Nunito',
@@ -555,16 +561,14 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-// ─────────────────────────── Bottom bar — slider ─────────────────────
-
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
-    required this.page,
+    required this.chapter,
     required this.total,
     required this.onChanged,
   });
 
-  final int page;
+  final int chapter;
   final int total;
   final ValueChanged<double> onChanged;
 
@@ -607,8 +611,8 @@ class _BottomBar extends StatelessWidget {
                   child: Slider(
                     min: 1,
                     max: total.toDouble(),
-                    value: page.toDouble().clamp(1.0, total.toDouble()),
-                    label: '$page',
+                    value: chapter.toDouble().clamp(1.0, total.toDouble()),
+                    label: 'ch $chapter',
                     divisions: total > 1 ? total - 1 : null,
                     onChanged: onChanged,
                   ),

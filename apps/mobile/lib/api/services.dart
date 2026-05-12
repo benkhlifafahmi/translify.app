@@ -31,6 +31,23 @@ class AuthService {
     return User.fromJson(res);
   }
 
+  Future<User> updateMe({
+    String? displayName,
+    String? preferredLanguage,
+    bool? familySafeMode,
+    String? password,
+    String? email,
+  }) async {
+    final body = <String, dynamic>{};
+    if (displayName != null) body['display_name'] = displayName;
+    if (preferredLanguage != null) body['preferred_language'] = preferredLanguage;
+    if (familySafeMode != null) body['family_safe_mode'] = familySafeMode;
+    if (password != null && password.isNotEmpty) body['password'] = password;
+    if (email != null && email.isNotEmpty) body['email'] = email;
+    final res = await _api.patch<Map<String, dynamic>>('/users/me', body: body);
+    return User.fromJson(res);
+  }
+
   Future<void> logout() async {
     try {
       await _api.post<dynamic>('/auth/jwt/logout');
@@ -227,5 +244,235 @@ class QuizService {
       body: {'question_id': questionId, 'answer_index': answerIndex},
     );
     return AnswerResult.fromJson(res);
+  }
+}
+
+class GardenService {
+  GardenService(this._api);
+  final ApiClient _api;
+
+  /// GET /gardens — all gardens this user has started, one per book.
+  Future<List<GardenSummary>> list() async {
+    final res = await _api.get<List<dynamic>>('/gardens');
+    return res
+        .map((e) => GardenSummary.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// GET /gardens/{book_id} — the API auto-creates a garden the first time
+  /// it's fetched for a book, so this also doubles as "start garden".
+  Future<Garden> get(String bookId) async {
+    final res = await _api.get<Map<String, dynamic>>('/gardens/$bookId');
+    return Garden.fromJson(res);
+  }
+
+  /// POST /gardens/{book_id}/events — append a journal event and update
+  /// growth/vitality counters on the server. Returns the fresh GardenRead
+  /// payload so callers can refresh their local view without an extra GET.
+  ///
+  /// Common kinds:
+  ///   read     → `{pages: int, minutes?: int, chapter?: int}`
+  ///   quiz     → `{correct: int, total: int}`
+  ///   water    → `{}`
+  ///   skip     → `{}`
+  ///   translate→ `{pages?: int, pair?: string}`
+  Future<Garden> recordEvent(
+    String bookId,
+    GardenEventKind kind, {
+    Map<String, dynamic> payload = const {},
+  }) async {
+    final res = await _api.post<Map<String, dynamic>>(
+      '/gardens/$bookId/events',
+      body: {'kind': _eventKindToWire(kind), 'payload': payload},
+    );
+    return Garden.fromJson(res);
+  }
+
+  /// PATCH /gardens/{book_id} — update species, farmer, or both.
+  /// Returns the fresh GardenRead payload.
+  Future<Garden> update(
+    String bookId, {
+    GardenSpecies? species,
+    Farmer? farmer,
+  }) async {
+    final body = <String, dynamic>{};
+    if (species != null) body['species'] = speciesToWire(species);
+    if (farmer != null) body['farmer'] = farmer.toJson();
+    final res = await _api.patch<Map<String, dynamic>>(
+      '/gardens/$bookId',
+      body: body,
+    );
+    return Garden.fromJson(res);
+  }
+
+  /// GET /gardens/{book_id}/tending — fetch this week's tending pack.
+  Future<List<TendingQuestion>> getTending(String bookId) async {
+    final res =
+        await _api.get<List<dynamic>>('/gardens/$bookId/tending');
+    return res
+        .map((e) => TendingQuestion.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  static String _eventKindToWire(GardenEventKind k) => switch (k) {
+        GardenEventKind.read => 'read',
+        GardenEventKind.quiz => 'quiz',
+        GardenEventKind.water => 'water',
+        GardenEventKind.skip => 'skip',
+        GardenEventKind.translate => 'translate',
+        GardenEventKind.tend => 'tend',
+      };
+
+  /// POST /gardens/{book_id}/tending — submit answers and receive the verdict.
+  Future<TendingResult> submitTending(
+    String bookId,
+    List<({String questionId, int choiceIndex})> answers,
+  ) async {
+    final res = await _api.post<Map<String, dynamic>>(
+      '/gardens/$bookId/tending',
+      body: {
+        'answers': answers
+            .map((a) =>
+                {'question_id': a.questionId, 'choice_index': a.choiceIndex})
+            .toList(),
+      },
+    );
+    return TendingResult.fromJson(res);
+  }
+}
+
+class ProfileService {
+  ProfileService(this._api);
+  final ApiClient _api;
+
+  Future<List<ReaderProfile>> list() async {
+    final res = await _api.get<List<dynamic>>('/profiles');
+    return res
+        .map((e) => ReaderProfile.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<ReaderProfile> create({
+    required String name,
+    ProfileKind kind = ProfileKind.adult,
+    String avatarSeed = 'lumi',
+  }) async {
+    final res = await _api.post<Map<String, dynamic>>('/profiles', body: {
+      'name': name,
+      'kind': profileKindToWire(kind),
+      'avatar_seed': avatarSeed,
+    });
+    return ReaderProfile.fromJson(res);
+  }
+
+  Future<ReaderProfile> update(
+    String id, {
+    String? name,
+    ProfileKind? kind,
+    String? avatarSeed,
+  }) async {
+    final body = <String, dynamic>{};
+    if (name != null) body['name'] = name;
+    if (kind != null) body['kind'] = profileKindToWire(kind);
+    if (avatarSeed != null) body['avatar_seed'] = avatarSeed;
+    final res =
+        await _api.patch<Map<String, dynamic>>('/profiles/$id', body: body);
+    return ReaderProfile.fromJson(res);
+  }
+
+  Future<void> delete(String id) => _api.delete<dynamic>('/profiles/$id');
+
+  Future<ReaderProfile> activate(String id) async {
+    final res =
+        await _api.post<Map<String, dynamic>>('/profiles/$id/activate');
+    return ReaderProfile.fromJson(res);
+  }
+}
+
+class BillingService {
+  BillingService(this._api);
+  final ApiClient _api;
+
+  Future<Subscription> me() async {
+    final res = await _api.get<Map<String, dynamic>>('/billing/me');
+    return Subscription.fromJson(res);
+  }
+
+  Future<String> checkoutUrl({
+    required Plan plan,
+    required Cycle cycle,
+    bool applyFirstMonthDiscount = false,
+  }) async {
+    if (plan == Plan.free) {
+      throw ArgumentError('Cannot checkout for the free plan');
+    }
+    final res = await _api.post<Map<String, dynamic>>('/billing/checkout',
+        body: {
+          'plan': planToWire(plan),
+          'cycle': cycleToWire(cycle),
+          'apply_first_month_discount': applyFirstMonthDiscount,
+        });
+    return res['url'] as String;
+  }
+
+  Future<String> portalUrl() async {
+    final res = await _api.post<Map<String, dynamic>>('/billing/portal');
+    return res['url'] as String;
+  }
+}
+
+class HighlightService {
+  HighlightService(this._api);
+  final ApiClient _api;
+
+  Future<List<Highlight>> listForBook(String bookId) async {
+    final res = await _api.get<List<dynamic>>('/books/$bookId/highlights');
+    return res
+        .map((e) => Highlight.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<Highlight> create(
+    String bookId, {
+    required int page,
+    required String text,
+    HighlightColor color = HighlightColor.yellow,
+    String? note,
+    String? positionCfi,
+  }) async {
+    final res = await _api.post<Map<String, dynamic>>(
+      '/books/$bookId/highlights',
+      body: {
+        'page': page,
+        'text': text,
+        'color': hlColorToWire(color),
+        'note': note,
+        'position_cfi': positionCfi,
+      },
+    );
+    return Highlight.fromJson(res);
+  }
+
+  Future<Highlight> update(
+    String id, {
+    String? note,
+    HighlightColor? color,
+  }) async {
+    final body = <String, dynamic>{};
+    if (note != null) body['note'] = note;
+    if (color != null) body['color'] = hlColorToWire(color);
+    final res =
+        await _api.patch<Map<String, dynamic>>('/highlights/$id', body: body);
+    return Highlight.fromJson(res);
+  }
+
+  Future<void> delete(String id) => _api.delete<dynamic>('/highlights/$id');
+
+  Future<Highlight> askAi(String id, {String? question}) async {
+    final res = await _api.post<Map<String, dynamic>>(
+      '/highlights/$id/ask-ai',
+      body: {'question': question},
+    );
+    return Highlight.fromJson(res);
   }
 }

@@ -21,7 +21,12 @@ dependencies:
 
   # File picking + viewing
   file_picker: ^8.1.4
-  pdfx: ^2.8.0
+  syncfusion_flutter_pdfviewer: ^33.2.5
+  syncfusion_flutter_pdf: ^33.2.5
+  epub_view: ^3.2.0
+
+  # External browser (Stripe checkout / customer portal)
+  url_launcher: ^6.3.1
 
   # UI / fonts / fx
   google_fonts: ^6.2.1

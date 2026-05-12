@@ -108,6 +108,11 @@ class ApiClient {
   Future<T> delete<T>(String path) async =>
       _unwrap(await dio.delete(_dioPath(path)));
 
+  Future<T> patch<T>(String path,
+          {Object? body, Map<String, dynamic>? query}) async =>
+      _unwrap(await dio.patch(_dioPath(path),
+          data: body, queryParameters: query));
+
   Future<T> postForm<T>(String path, Map<String, String> form) async => _unwrap(
         await dio.post(
           _dioPath(path),

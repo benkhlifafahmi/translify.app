@@ -14,7 +14,15 @@
       "Bash(python -c \"from app.main import app; print\\('OK', [r.path for r in app.routes if '/profiles' in r.path]\\)\")",
       "Bash(uv run *)",
       "Bash(flutter test *)",
-      "Bash(python -c \"import ast; ast.parse\\(open\\('app/routes/quizzes.py'\\).read\\(\\)\\); ast.parse\\(open\\('app/schemas/quiz.py'\\).read\\(\\)\\); print\\('OK'\\)\")"
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/routes/quizzes.py'\\).read\\(\\)\\); ast.parse\\(open\\('app/schemas/quiz.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(flutter pub *)",
+      "Bash(dart compile *)",
+      "WebFetch(domain:pub.dev)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(flutter --version)",
+      "Bash(awk '/^class SelectableRegionState/,/^class [A-Z]/' /home/ben/development/flutter/packages/flutter/lib/src/widgets/selectable_region.dart)",
+      "Bash(awk '/^class SelectableRegionState extends State/,/^}/' /home/ben/development/flutter/packages/flutter/lib/src/widgets/selectable_region.dart)",
+      "WebFetch(domain:help.syncfusion.com)"
     ]
   }
 }

@@ -95,19 +95,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         const Expanded(child: HudBar()),
                         const SizedBox(width: 8),
                         IconButton(
-                          tooltip: 'Sign out',
-                          icon: const Icon(Icons.logout_rounded, color: T.ink),
+                          tooltip: 'Your gardens',
+                          icon: const Icon(Icons.local_florist_rounded,
+                              color: T.sageDeep),
                           style: IconButton.styleFrom(
                             backgroundColor: T.paper,
                             side: const BorderSide(color: T.ink, width: 1.4),
                             shape: const CircleBorder(),
                           ),
-                          onPressed: () async {
-                            await context.read<Session>().logout();
-                            if (!mounted) return;
-                            Navigator.of(context)
-                                .pushNamedAndRemoveUntil('/login', (_) => false);
-                          },
+                          onPressed: () =>
+                              Navigator.of(context).pushNamed('/gardens'),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          tooltip: 'Profile & settings',
+                          icon: const Icon(Icons.person_rounded, color: T.ink),
+                          style: IconButton.styleFrom(
+                            backgroundColor: T.paper,
+                            side: const BorderSide(color: T.ink, width: 1.4),
+                            shape: const CircleBorder(),
+                          ),
+                          onPressed: () =>
+                              Navigator.of(context).pushNamed('/profile'),
                         ),
                       ],
                     ),

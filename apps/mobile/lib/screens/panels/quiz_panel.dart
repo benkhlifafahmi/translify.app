@@ -69,8 +69,8 @@ class _QuizPanelState extends State<QuizPanel> {
       final answers = _quiz!.questions
           .map((q) => (questionId: q.id, answerIndex: _picks[q.id] ?? -1))
           .toList();
-      final attempt =
-          await context.read<Session>().quizzes.submit(_quiz!.id, answers);
+      final session = context.read<Session>();
+      final attempt = await session.quizzes.submit(_quiz!.id, answers);
       if (!mounted) return;
       setState(() => _attempt = attempt);
       final pct = attempt.total == 0 ? 0.0 : attempt.score / attempt.total;
@@ -82,6 +82,16 @@ class _QuizPanelState extends State<QuizPanel> {
       } else if (pct < 0.5) {
         await progress.spendHeart();
       }
+      // Feed the garden — server adds growth proportional to correctness and
+      // bumps the quiz counter. Best-effort: a network failure here shouldn't
+      // poison the result screen.
+      try {
+        await session.gardens.recordEvent(
+          widget.bookId,
+          GardenEventKind.quiz,
+          payload: {'correct': attempt.score, 'total': attempt.total},
+        );
+      } catch (_) {}
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)

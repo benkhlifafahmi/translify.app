@@ -12,7 +12,11 @@ class Session extends ChangeNotifier {
         books = BookService(api),
         translations = TranslationService(api),
         chats = ChatService(api),
-        quizzes = QuizService(api);
+        quizzes = QuizService(api),
+        gardens = GardenService(api),
+        profiles = ProfileService(api),
+        billing = BillingService(api),
+        highlights = HighlightService(api);
 
   final ApiClient api;
   final AuthService auth;
@@ -20,6 +24,10 @@ class Session extends ChangeNotifier {
   final TranslationService translations;
   final ChatService chats;
   final QuizService quizzes;
+  final GardenService gardens;
+  final ProfileService profiles;
+  final BillingService billing;
+  final HighlightService highlights;
 
   SessionPhase phase = SessionPhase.unknown;
   User? user;
@@ -58,5 +66,19 @@ class Session extends ChangeNotifier {
     user = null;
     phase = SessionPhase.signedOut;
     notifyListeners();
+  }
+
+  /// Replace [user] with a fresh copy (e.g. after editing /users/me) and
+  /// notify listeners so screens that show the profile re-render.
+  void setUser(User next) {
+    user = next;
+    notifyListeners();
+  }
+
+  Future<User> refreshUser() async {
+    final next = await auth.me();
+    user = next;
+    notifyListeners();
+    return next;
   }
 }
