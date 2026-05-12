@@ -50,11 +50,11 @@ const SOFTWARE_APP = {
     {
       "@type": "Offer",
       name: "Reader",
-      price: "11",
+      price: "7.99",
       priceCurrency: "EUR",
       priceSpecification: {
         "@type": "UnitPriceSpecification",
-        price: "11",
+        price: "7.99",
         priceCurrency: "EUR",
         unitCode: "MON",
         referenceQuantity: { "@type": "QuantitativeValue", value: "2000", unitText: "pages per month" },
@@ -63,11 +63,11 @@ const SOFTWARE_APP = {
     {
       "@type": "Offer",
       name: "Scholar",
-      price: "19",
+      price: "14.99",
       priceCurrency: "EUR",
       priceSpecification: {
         "@type": "UnitPriceSpecification",
-        price: "19",
+        price: "14.99",
         priceCurrency: "EUR",
         unitCode: "MON",
       },
@@ -75,11 +75,11 @@ const SOFTWARE_APP = {
     {
       "@type": "Offer",
       name: "Family",
-      price: "27",
+      price: "20",
       priceCurrency: "EUR",
       priceSpecification: {
         "@type": "UnitPriceSpecification",
-        price: "27",
+        price: "20",
         priceCurrency: "EUR",
         unitCode: "MON",
       },

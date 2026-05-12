@@ -29,38 +29,44 @@ const PERSONA_TO_PERSONALITY: Record<Persona, Personality> = {
   student: {
     key: "scholar",
     recommendedPlan: "scholar",
-    monthly: 24,
-    yearly: 19,
+    monthly: 18.99,
+    yearly: 14.99,
     tone: "saffron",
     emoji: "✦",
   },
   curious: {
     key: "curious",
     recommendedPlan: "reader",
-    monthly: 14,
-    yearly: 11,
+    monthly: 9.99,
+    yearly: 7.99,
     tone: "sage",
     emoji: "✿",
   },
   pro: {
     key: "pro",
     recommendedPlan: "scholar",
-    monthly: 24,
-    yearly: 19,
+    monthly: 18.99,
+    yearly: 14.99,
     tone: "plum",
     emoji: "◆",
   },
   family: {
     key: "family",
     recommendedPlan: "family",
-    monthly: 34,
-    yearly: 27,
+    monthly: 24.99,
+    yearly: 20,
     tone: "coral",
     emoji: "❀",
   },
 };
 
 const COUNTDOWN_SECS = 15 * 60; // 15-minute urgency timer
+
+// Format a price to at most 2 decimal places, stripping unnecessary .00
+function fmtPrice(n: number): string {
+  const rounded = Math.round(n * 100) / 100;
+  return rounded % 1 === 0 ? String(rounded) : rounded.toFixed(2);
+}
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -560,8 +566,8 @@ function Step4({
 
   // Pricing math — 40% off first month creates urgency
   const baseMonthly = personality.monthly;
-  const discounted = Math.round(baseMonthly * 0.6);
-  const annualSaving = (personality.monthly - personality.yearly) * 12;
+  const discounted = fmtPrice(baseMonthly * 0.6);
+  const annualSaving = Math.round((personality.monthly - personality.yearly) * 12);
 
   const toneStyles = {
     saffron: {
@@ -782,7 +788,7 @@ function Step5({
   const { t } = useI18n();
 
   const planName = t(`plan.${personality.recommendedPlan}.name`);
-  const discounted = Math.round(personality.monthly * 0.6);
+  const discounted = fmtPrice(personality.monthly * 0.6);
 
   const formReady = !!email && !!password;
 

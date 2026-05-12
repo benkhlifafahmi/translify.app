@@ -111,7 +111,7 @@ export function ConversionModal() {
             className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-[color:var(--color-ink)] px-6 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.4)] transition-transform hover:-translate-y-[1px]"
             onClick={() => setOpen(false)}
           >
-            Pick a plan — from €11/mo
+            Pick a plan — from €7.99/mo
           </Link>
           <button
             type="button"

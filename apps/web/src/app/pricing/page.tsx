@@ -7,20 +7,20 @@ import { TranslifyIcon } from "@/components/translify-mark";
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
 
 export const metadata: Metadata = {
-  title: "Pricing — €11/mo with a 14-day trial",
+  title: "Pricing — from €7.99/mo with a 14-day trial",
   description:
-    "Translify pricing — Reader, Scholar, and Family plans starting at €11/month. 14-day free trial on every plan, 30-day money-back guarantee, no card required to start.",
+    "Translify pricing — Reader, Scholar, and Family plans starting at €7.99/month. 14-day free trial on every plan, 30-day money-back guarantee, no card required to start.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     title: "Translify Pricing",
     description:
-      "Three plans, 14-day trial, 30-day money-back. From €11/month.",
+      "Three plans, 14-day trial, 30-day money-back. From €7.99/month.",
     url: `${SITE}/pricing`,
   },
   twitter: {
     card: "summary_large_image",
     title: "Translify Pricing",
-    description: "From €11/month. 14-day trial. 30-day money-back.",
+    description: "From €7.99/month. 14-day trial. 30-day money-back.",
   },
 };
 
@@ -36,13 +36,13 @@ export default function PricingPage() {
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "EUR",
-      lowPrice: "11",
-      highPrice: "27",
+      lowPrice: "7.99",
+      highPrice: "20",
       offerCount: "3",
       offers: [
-        { "@type": "Offer", name: "Reader", price: "11", priceCurrency: "EUR", url: `${SITE}/pricing#reader` },
-        { "@type": "Offer", name: "Scholar", price: "19", priceCurrency: "EUR", url: `${SITE}/pricing#scholar` },
-        { "@type": "Offer", name: "Family", price: "27", priceCurrency: "EUR", url: `${SITE}/pricing#family` },
+        { "@type": "Offer", name: "Reader", price: "7.99", priceCurrency: "EUR", url: `${SITE}/pricing#reader` },
+        { "@type": "Offer", name: "Scholar", price: "14.99", priceCurrency: "EUR", url: `${SITE}/pricing#scholar` },
+        { "@type": "Offer", name: "Family", price: "20", priceCurrency: "EUR", url: `${SITE}/pricing#family` },
       ],
     },
   };

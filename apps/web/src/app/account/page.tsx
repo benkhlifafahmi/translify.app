@@ -39,9 +39,9 @@ import {
 type Tab = "profile" | "profiles" | "subscription" | "lumi" | "security" | "danger";
 
 const PLAN_PRICES: Record<Exclude<Plan, "free">, { monthly: number; yearly: number }> = {
-  reader:  { monthly: 14, yearly: 11 },
-  scholar: { monthly: 24, yearly: 19 },
-  family:  { monthly: 34, yearly: 27 },
+  reader:  { monthly: 9.99,  yearly: 7.99  },
+  scholar: { monthly: 18.99, yearly: 14.99 },
+  family:  { monthly: 24.99, yearly: 20    },
 };
 
 export default function AccountPage() {

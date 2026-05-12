@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     q: "What's the cheapest AI book reading tool?",
-    a: "Readlang at $5/mo is the cheapest of the serious tools. Translify Reader is €11/mo. Immersive Translate Pro is $9.99/mo. The free tiers (Duoreader, Parallel Books) work for casual use but limit features.",
+    a: "Readlang at $5/mo is the cheapest of the serious tools. Translify Reader is €7.99/mo. Immersive Translate Pro is $9.99/mo. The free tiers (Duoreader, Parallel Books) work for casual use but limit features.",
   },
   {
     q: "Can I read foreign-language books in Kindle Translate instead?",
@@ -102,7 +102,7 @@ export default function Page() {
         If you're reading Hegel for class or a Japanese business book
         you've been putting off for a year, that combination is hard to
         find elsewhere. If you mostly want to read web articles in Spanish
-        and build vocabulary, you're overpaying. €11–27/mo, 14-day trial,
+        and build vocabulary, you're overpaying. €7.99–20/mo, 14-day trial,
         30-day money-back. Onward.
       </p>
 
@@ -259,7 +259,7 @@ export default function Page() {
               <td className="border border-[color:var(--color-border)] px-3 py-2">✓ With citations</td>
               <td className="border border-[color:var(--color-border)] px-3 py-2">✓</td>
               <td className="border border-[color:var(--color-border)] px-3 py-2">✓</td>
-              <td className="border border-[color:var(--color-border)] px-3 py-2">€11–27/mo</td>
+              <td className="border border-[color:var(--color-border)] px-3 py-2">€7.99–20/mo</td>
             </tr>
             <tr className="bg-[color:var(--color-paper-2)]/30">
               <td className="border border-[color:var(--color-border)] px-3 py-2 font-semibold">Readlang</td>

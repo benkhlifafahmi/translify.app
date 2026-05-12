@@ -82,9 +82,9 @@ const ALTERNATIVES: Record<string, CompetitorData> = {
       { name: "Premium", price: "$5/mo", features: ["Unlimited translations", "Unlimited flashcards", "Context-aware AI"] },
     ],
     translifyPricing: [
-      { name: "Reader", price: "€11/mo", features: ["2,000 pages/month", "Chat with book", "Quiz mode"] },
-      { name: "Scholar", price: "€19/mo", features: ["Unlimited pages", "AI-explained highlights", "Priority support"] },
-      { name: "Family", price: "€27/mo", features: ["Unlimited pages", "Up to 5 readers", "Kid-safe mode"] },
+      { name: "Reader", price: "€7.99/mo", features: ["2,000 pages/month", "Chat with book", "Quiz mode"] },
+      { name: "Scholar", price: "€14.99/mo", features: ["Unlimited pages", "AI-explained highlights", "Priority support"] },
+      { name: "Family", price: "€20/mo", features: ["Unlimited pages", "Up to 5 readers", "Kid-safe mode"] },
     ],
     whyCompetitor: [
       "You're a casual language learner who wants to read web articles or Kindle books, not study PDFs in depth.",
@@ -121,7 +121,7 @@ const ALTERNATIVES: Record<string, CompetitorData> = {
       },
       {
         q: "How does Translify pricing compare to Readlang's $5/month?",
-        a: "Translify's Reader plan is €11/month — more than double Readlang's Premium. The trade-off: Translify includes whole-book AI chat, AI-explained highlights, quiz generation, and full layout preservation. If you only need word-level translation, Readlang is cheaper. If you need a study companion, Translify is purpose-built for it.",
+        a: "Translify's Reader plan is €7.99/month — more than Readlang's Premium. The trade-off: Translify includes whole-book AI chat, AI-explained highlights, quiz generation, and full layout preservation. If you only need word-level translation, Readlang is cheaper. If you need a study companion, Translify is purpose-built for it.",
       },
       {
         q: "Which is better for university students?",
@@ -160,9 +160,9 @@ const ALTERNATIVES: Record<string, CompetitorData> = {
       { name: "Pro", price: "$9.99/mo or $70/yr", features: ["Unlimited translation", "PDF/EPUB bilingual", "Video subs", "20+ engines"] },
     ],
     translifyPricing: [
-      { name: "Reader", price: "€11/mo", features: ["2,000 pages/month", "Chat with book", "Quiz mode"] },
-      { name: "Scholar", price: "€19/mo", features: ["Unlimited pages", "AI-explained highlights", "Priority support"] },
-      { name: "Family", price: "€27/mo", features: ["Unlimited pages", "Up to 5 readers", "Kid-safe mode"] },
+      { name: "Reader", price: "€7.99/mo", features: ["2,000 pages/month", "Chat with book", "Quiz mode"] },
+      { name: "Scholar", price: "€14.99/mo", features: ["Unlimited pages", "AI-explained highlights", "Priority support"] },
+      { name: "Family", price: "€20/mo", features: ["Unlimited pages", "Up to 5 readers", "Kid-safe mode"] },
     ],
     whyCompetitor: [
       "You translate across many surfaces — websites, videos, meetings, images — and want one tool that does all of them.",
@@ -199,7 +199,7 @@ const ALTERNATIVES: Record<string, CompetitorData> = {
       },
       {
         q: "Which is cheaper?",
-        a: "Immersive Translate at $9.99/mo is slightly cheaper than Translify's Reader plan at €11/mo. If you only need bilingual book reading, Immersive Translate is a fine choice. Translify adds the chat, highlight, and quiz layers.",
+        a: "Immersive Translate at $9.99/mo is slightly more than Translify's Reader plan at €7.99/mo. If you only need bilingual book reading, Immersive Translate is a fine choice. Translify adds the chat, highlight, and quiz layers.",
       },
       {
         q: "Can I use both?",
@@ -234,9 +234,9 @@ const ALTERNATIVES: Record<string, CompetitorData> = {
       { name: "Bundled with Kindle", price: "Free with eligible titles", features: ["Limited to EN↔ES and DE→EN", "Kindle Store titles only"] },
     ],
     translifyPricing: [
-      { name: "Reader", price: "€11/mo", features: ["2,000 pages/month", "8 languages, 56 pairs", "Chat with book"] },
-      { name: "Scholar", price: "€19/mo", features: ["Unlimited pages", "AI-explained highlights", "Priority support"] },
-      { name: "Family", price: "€27/mo", features: ["Unlimited pages", "Up to 5 readers", "Kid-safe mode"] },
+      { name: "Reader", price: "€7.99/mo", features: ["2,000 pages/month", "8 languages, 56 pairs", "Chat with book"] },
+      { name: "Scholar", price: "€14.99/mo", features: ["Unlimited pages", "AI-explained highlights", "Priority support"] },
+      { name: "Family", price: "€20/mo", features: ["Unlimited pages", "Up to 5 readers", "Kid-safe mode"] },
     ],
     whyCompetitor: [
       "You only read Kindle Store titles in English↔Spanish or German→English.",
@@ -275,7 +275,7 @@ const ALTERNATIVES: Record<string, CompetitorData> = {
       },
       {
         q: "What's the price difference?",
-        a: "Kindle Translate is bundled (effectively free) on eligible Kindle Store titles. Translify is €11–€27/month. The trade-off is breadth: Translify works with any book, any source, in any of 56 language pairs.",
+        a: "Kindle Translate is bundled (effectively free) on eligible Kindle Store titles. Translify is €7.99–€20/month. The trade-off is breadth: Translify works with any book, any source, in any of 56 language pairs.",
       },
     ],
   },
@@ -304,9 +304,9 @@ const ALTERNATIVES: Record<string, CompetitorData> = {
       { name: "Advanced", price: "$28.74/mo", features: ["20 docs/month", "Glossaries"] },
     ],
     translifyPricing: [
-      { name: "Reader", price: "€11/mo", features: ["2,000 pages/month", "Chat with book", "Quiz mode"] },
-      { name: "Scholar", price: "€19/mo", features: ["Unlimited pages", "AI-explained highlights", "Priority support"] },
-      { name: "Family", price: "€27/mo", features: ["Unlimited pages", "Up to 5 readers", "Kid-safe mode"] },
+      { name: "Reader", price: "€7.99/mo", features: ["2,000 pages/month", "Chat with book", "Quiz mode"] },
+      { name: "Scholar", price: "€14.99/mo", features: ["Unlimited pages", "AI-explained highlights", "Priority support"] },
+      { name: "Family", price: "€20/mo", features: ["Unlimited pages", "Up to 5 readers", "Kid-safe mode"] },
     ],
     whyCompetitor: [
       "You need raw translation quality and that's it — you'll do your own reading and study elsewhere.",

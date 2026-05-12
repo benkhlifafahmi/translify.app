@@ -25,7 +25,14 @@
       "WebFetch(domain:help.syncfusion.com)",
       "Bash(echo \"EXIT: $?\")",
       "Bash(grep -c '^  {$' /home/ben/workspace/BKGroup/translify.app/apps/web/src/app/blog/_posts.ts)",
-      "Bash(pnpm add *)"
+      "Bash(pnpm add *)",
+      "Bash(pnpm build *)",
+      "Bash(node *)",
+      "WebSearch",
+      "WebFetch(domain:immersivetranslate.com)",
+      "WebFetch(domain:readlang.com)",
+      "WebFetch(domain:www.lingq.com)",
+      "WebFetch(domain:checkthat.ai)"
     ]
   }
 }
