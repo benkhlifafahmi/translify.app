@@ -103,15 +103,16 @@ export function EpubViewer({
   const [lineHeight, setLineHeight] = useState<number>(DEFAULT_LINE_HEIGHT);
   const [fontStack, setFontStack] = useState<string>(FONT_CHOICES[0].stack);
 
-  // Selection toolbar state. ``pos`` decides whether the slip floats above
-  // or below the selection — flipping to below saves us when the user
-  // selects near the top of the page (especially on mobile).
+  // Selection toolbar state — restored to the pre-session shape. The
+  // floating slip works on every browser when nothing fancy is layered on
+  // top; my earlier additions (native touchend listeners + iframe CSS
+  // injection) introduced regressions on iOS, so we revert to plain
+  // epubjs ``selected`` event handling.
   const [selection, setSelection] = useState<{
     text: string;
     cfi: string;
     top: number;
     left: number;
-    pos: "above" | "below";
   } | null>(null);
 
   // ───────────── Book load + initial render ─────────────
@@ -187,15 +188,6 @@ export function EpubViewer({
 
     rendition.themes.override("body", `background: ${t.bg} !important;`);
     rendition.themes.override("html", `background: ${t.bg} !important;`);
-    // Suppress the native iOS Copy/Look-Up/Share callout that otherwise
-    // sits on top of our highlight/note/ask-AI bar. Selection itself is
-    // still allowed — only the platform menu is muted. Safari is the only
-    // browser that paints this callout; the property is a no-op everywhere
-    // else.
-    rendition.themes.override(
-      "body, p, li, dd, dt, span",
-      "-webkit-touch-callout: none; -webkit-user-select: text; user-select: text;",
-    );
     rendition.themes.override("*", `color: ${t.ink};`);
     rendition.themes.override("a", `color: ${t.accent}; text-decoration-color: ${t.accent}`);
     rendition.themes.override("p, li, dd, dt", `line-height: ${lineHeight}; font-family: ${fontStack};`);
@@ -208,31 +200,13 @@ export function EpubViewer({
   }, [theme, fontSize, lineHeight, fontStack, ready]);
 
   // ───────────── Selection toolbar wiring ─────────────
-  //
-  // epub.js's built-in ``selected`` event fires from ``selectionchange`` and
-  // is unreliable on iOS Safari — the event sometimes never makes it out of
-  // the iframe, leaving the user with only the native Copy/Look-Up callout
-  // and no Translify toolbar. Our fix attaches native ``touchend`` /
-  // ``mouseup`` listeners to each iframe's document as soon as it's
-  // rendered, so the toolbar appears on every device the same way.
-  //
-  // We also inject a small ``<style>`` block directly into each iframe to
-  // suppress the iOS native callout. epubjs's ``themes.override`` runs
-  // through its CSS-rule injector which iOS sometimes ignores; injecting a
-  // raw stylesheet is the reliable path.
 
   useEffect(() => {
     const rendition = renditionRef.current;
     if (!rendition) return;
 
-    const host = containerRef.current;
-    if (!host) return;
-
-    /** Compute a fresh selection from a Contents object and push it to
-     *  React state. Pulls position from the iframe's bounding rect. */
-    const computeFromContents = (contents: Contents): void => {
-      const win = contents.window as Window;
-      const sel = win.getSelection?.();
+    const onSelected = (cfiRange: string, contents: Contents) => {
+      const sel = (contents.window as Window).getSelection?.();
       if (!sel || sel.isCollapsed) {
         setSelection(null);
         return;
@@ -242,117 +216,24 @@ export function EpubViewer({
         setSelection(null);
         return;
       }
+      // Position the toolbar relative to the host container, not the iframe —
+      // we read the iframe's offset within our container and add the selection
+      // rect from inside the iframe.
+      const host = containerRef.current;
+      if (!host) return;
       const range = sel.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      const iframe = win.frameElement as HTMLIFrameElement | null;
+      const iframe = (contents.window as Window).frameElement as HTMLIFrameElement | null;
       const ifRect = iframe?.getBoundingClientRect();
       const hostRect = host.getBoundingClientRect();
-      const rawTop = (ifRect?.top ?? 0) + rect.top - hostRect.top;
-      const TOOLBAR_HEIGHT = 56;
-      const enoughRoomAbove = rawTop >= TOOLBAR_HEIGHT + 12;
-      const pos: "above" | "below" = enoughRoomAbove ? "above" : "below";
-      const top = pos === "above"
-        ? Math.max(8, rawTop - 8)
-        : rawTop + rect.height + 8;
-      const rawLeft =
-        (ifRect?.left ?? 0) + rect.left - hostRect.left + rect.width / 2;
-      const left = Math.max(80, Math.min(rawLeft, hostRect.width - 80));
-      // Synthesize a CFI for the saved-highlight system. epub.js's
-      // Contents exposes a cfiFromRange helper; the cast keeps TS happy
-      // since the type def is incomplete here.
-      let cfi = "";
-      try {
-        const c = contents as unknown as { cfiFromRange?: (r: Range) => string };
-        cfi = c.cfiFromRange?.(range) ?? "";
-      } catch { /* fall back to empty — toolbar still works, just no inline mark */ }
-      setSelection({ text, cfi, top, left, pos });
+      const top = (ifRect?.top ?? 0) + rect.top - hostRect.top;
+      const left = (ifRect?.left ?? 0) + rect.left - hostRect.left + rect.width / 2;
+      setSelection({ text, cfi: cfiRange, top: Math.max(8, top - 8), left });
     };
 
-    // Per-Contents teardown so we don't leak listeners when a section
-    // unloads (user navigates / page-turns out of a chapter).
-    const cleanups = new WeakMap<Contents, () => void>();
-
-    const onRendered = (_section: unknown, contents: Contents) => {
-      const win = contents.window as Window;
-      const doc = win.document;
-
-      // ----- Suppress the iOS native callout -----
-      // Injected directly into the iframe so it can't be lost in epub.js's
-      // CSS-rule pipeline. ``user-select: text`` is kept so selection
-      // itself remains possible.
-      try {
-        const styleEl = doc.createElement("style");
-        styleEl.setAttribute("data-translify-selection", "");
-        styleEl.textContent = `
-          html, body, p, li, dd, dt, span, em, strong, h1, h2, h3, h4, h5, h6, div, blockquote, a {
-            -webkit-touch-callout: none !important;
-            -webkit-user-select: text !important;
-            user-select: text !important;
-          }
-        `;
-        doc.head.appendChild(styleEl);
-      } catch { /* sandboxed iframe — give up silently */ }
-
-      // ----- Selection event listeners -----
-      // touchend = iOS Safari finishes drag-to-select
-      // mouseup  = desktop / Android / mouse-driven trackpads
-      // selectionchange = tap-to-collapse → clear the toolbar immediately
-      const onTouchEnd = () => {
-        // Defer a frame so iOS has finalised the selection range after
-        // the user releases the second handle.
-        window.requestAnimationFrame(() => computeFromContents(contents));
-      };
-      const onMouseUp = () => {
-        window.requestAnimationFrame(() => computeFromContents(contents));
-      };
-      const onSelChange = () => {
-        const sel = win.getSelection?.();
-        if (!sel || sel.isCollapsed) setSelection(null);
-      };
-
-      doc.addEventListener("touchend", onTouchEnd, { passive: true });
-      doc.addEventListener("mouseup", onMouseUp);
-      doc.addEventListener("selectionchange", onSelChange);
-
-      cleanups.set(contents, () => {
-        doc.removeEventListener("touchend", onTouchEnd);
-        doc.removeEventListener("mouseup", onMouseUp);
-        doc.removeEventListener("selectionchange", onSelChange);
-      });
-    };
-
-    // Keep the original ``selected`` event as a redundant fallback for
-    // browsers where the manual listeners might race the iframe unload.
-    // Both code paths push the same state shape; React deduplicates.
-    const onSelected = (_cfiRange: string, contents: Contents) => {
-      computeFromContents(contents);
-    };
-
-    rendition.on("rendered", onRendered);
     rendition.on("selected", onSelected);
-
-    // Late-attach: any contents already on screen at the moment this effect
-    // first runs won't get the ``rendered`` event again. Walk the rendition's
-    // managed views and bootstrap listeners on each. The Rendition type def
-    // doesn't expose ``manager``, so we go through ``unknown``.
-    try {
-      type View = { contents?: Contents };
-      const r = rendition as unknown as { manager?: { views?: { _views?: View[] } } };
-      const views = r.manager?.views?._views;
-      if (Array.isArray(views)) {
-        for (const v of views) {
-          if (v.contents) onRendered(null, v.contents);
-        }
-      }
-    } catch { /* best-effort — fresh sections still get onRendered as they load */ }
-
     return () => {
-      rendition.off("rendered", onRendered);
       rendition.off("selected", onSelected);
-      // Listener cleanup happens automatically when iframes are torn down,
-      // but we run our recorded teardowns to be tidy where the iframe is
-      // still alive (e.g. theme change, fontSize re-render).
-      // WeakMap doesn't expose iteration; we don't track keys explicitly.
     };
   }, [ready]);
 
@@ -675,16 +556,13 @@ export function EpubViewer({
           </>
         )}
 
-        {/* Selection toolbar — torn-paper slip, floats near the selection.
-            `selection.pos` flips the slip below the selection when there
-            isn't enough room above; `left` is already clamped to the
-            canvas width so the -translate-x-1/2 transform stays visible
-            on narrow viewports. */}
+        {/* Selection toolbar — torn-paper slip.
+            z-50 keeps the slip above any active ReaderTutorial overlay so
+            the toolbar is never visually hidden by the coach-mark layer
+            (which sits at z-40). */}
         {selection && (
           <div
-            className={`absolute z-30 -translate-x-1/2 ${
-              selection.pos === "above" ? "-translate-y-full" : ""
-            }`}
+            className="absolute z-50 -translate-x-1/2 -translate-y-full"
             style={{ top: selection.top, left: selection.left }}
             onMouseDown={(e) => e.preventDefault()}
             onTouchStart={(e) => e.preventDefault()}
