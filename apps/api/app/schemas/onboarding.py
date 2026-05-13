@@ -36,3 +36,30 @@ class OnboardingLeadRead(BaseModel):
     last_seen_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ─── Silent-signup (email-only) ─────────────────────────────────────────────
+
+
+class StartSessionRequest(BaseModel):
+    """Body for ``POST /onboarding/start-session``."""
+    email: EmailStr
+    topics: list[str] | None = Field(default=None, max_length=20)
+    preferred_language: str | None = Field(default=None, min_length=2, max_length=8)
+    referrer: str | None = Field(default=None, max_length=512)
+
+
+class StartSessionResponse(BaseModel):
+    """What the browser uses to take action after start-session.
+
+    For brand-new emails: ``access_token`` is populated and the user is
+    logged in immediately — same JWT format the rest of the API uses.
+    For known emails: ``access_token`` is ``null`` and ``magic_link_sent``
+    is True — the user must click the email to log in (we never hand a JWT
+    to whoever typed in someone else's address).
+    """
+    user_id: uuid.UUID
+    is_new_user: bool
+    access_token: str | None = None
+    token_type: str = "bearer"
+    magic_link_sent: bool = False

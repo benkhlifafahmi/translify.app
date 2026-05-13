@@ -21,6 +21,8 @@ class BookRead(BaseModel):
     page_count: int | None
     status: BookStatus
     error_message: str | None
+    is_seed: bool = False
+    seed_slug: str | None = None
     created_at: datetime
     updated_at: datetime
 

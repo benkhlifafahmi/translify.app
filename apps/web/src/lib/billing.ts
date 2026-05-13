@@ -20,6 +20,9 @@ export interface Quota {
   priority_queue: boolean;
   family_safe_mode: boolean;
   literary_translation: boolean;
+  /** Page after which a Free reader is paywalled on seed books (1-indexed).
+   * Paid plans get the UNLIMITED sentinel and never trip the gate. */
+  seed_book_page_cap: number;
 }
 
 export interface Usage {

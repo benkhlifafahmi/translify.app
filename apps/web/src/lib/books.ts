@@ -13,6 +13,10 @@ export interface Book {
   page_count: number | null;
   status: BookStatus;
   error_message: string | null;
+  /** True for system-owned seed books that appear in every user's library. */
+  is_seed: boolean;
+  /** Stable identifier for the seed catalogue entry (NULL for user uploads). */
+  seed_slug: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -64,6 +64,7 @@ async def get_my_subscription(
             priority_queue=q.priority_queue,
             family_safe_mode=q.family_safe_mode,
             literary_translation=q.literary_translation,
+            seed_book_page_cap=q.seed_book_page_cap,
         ),
         usage=UsageRead(
             period_start=usage.period_start if usage else None,

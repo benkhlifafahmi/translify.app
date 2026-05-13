@@ -3,21 +3,30 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api";
-import { register, getGoogleAuthUrl } from "@/lib/auth";
+import { getGoogleAuthUrl, startSession } from "@/lib/auth";
+import { listBooks, type Book } from "@/lib/books";
 import { trackLead } from "@/lib/onboarding";
-import { Lumi, type LumiState } from "@/components/lumi/lumi";
+import { Lumi } from "@/components/lumi/lumi";
 import { TranslifyIcon } from "@/components/translify-mark";
-import { EpubViewer } from "@/components/epub-viewer-lazy";
 
-// ─── Steps & state ────────────────────────────────────────────────────────────
-type Step = "email" | "topics" | "shelf" | "experience" | "signup";
+// ─── Steps ────────────────────────────────────────────────────────────────────
+type Step =
+  | "email"        // 1. visitor types email → silent backend signup
+  | "magic-sent"   // 1b. (existing email) — show "check your inbox"
+  | "topics"       // 2. multi-select topic chips
+  | "shelf"        // 3. seed books matching their topics — tap one → /read/<id>
+  ;
 
-const STEP_ORDER: Step[] = ["email", "topics", "shelf", "experience", "signup"];
+const VISIBLE_STEPS: Step[] = ["email", "topics", "shelf"];
 
+// ─── Topics ───────────────────────────────────────────────────────────────────
 type TopicId =
   | "fiction" | "self-help" | "history" | "science"
   | "philosophy" | "business" | "art" | "nature";
+
+type Tone = "saffron" | "sage" | "plum" | "coral";
 
 const TOPICS: { id: TopicId; icon: string; label: string; tone: Tone }[] = [
   { id: "fiction",     icon: "📖", label: "Fiction",       tone: "saffron" },
@@ -30,8 +39,6 @@ const TOPICS: { id: TopicId; icon: string; label: string; tone: Tone }[] = [
   { id: "nature",      icon: "🌲", label: "Nature",        tone: "saffron" },
 ];
 
-type Tone = "saffron" | "sage" | "plum" | "coral";
-
 const TONE_MAP: Record<Tone, { ring: string; bg: string; iconBg: string; iconColor: string; deep: string }> = {
   saffron: { ring: "#D09040", bg: "linear-gradient(135deg,#FFFBF0,#FBE9C2)", iconBg: "rgba(224,164,80,0.18)", iconColor: "var(--color-saffron-deep)", deep: "var(--color-saffron-deep)" },
   sage:    { ring: "#5A8C5A", bg: "linear-gradient(135deg,#F4F8EC,#DDEAD2)", iconBg: "rgba(123,161,124,0.18)", iconColor: "var(--color-sage-deep)",    deep: "var(--color-sage-deep)"    },
@@ -39,254 +46,28 @@ const TONE_MAP: Record<Tone, { ring: string; bg: string; iconBg: string; iconCol
   coral:   { ring: "#C0604A", bg: "linear-gradient(135deg,#FFF1EE,#F6CCC4)", iconBg: "rgba(226,120,108,0.18)", iconColor: "var(--color-coral-deep)",   deep: "var(--color-coral-deep)"    },
 };
 
-// ─── Sample books ─────────────────────────────────────────────────────────────
-// Every book here is **public domain worldwide** and shipped as an EPUB under
-// apps/web/public/sample-books/. See that folder's README for provenance and
-// Project Gutenberg references. The visitor reads the full text in step 4 —
-// no paywall, no rights problem, no DRM.
-interface SampleBook {
-  id: string;
-  topics: TopicId[];
-  title: string;
-  author: string;
+// ─── Seed-book display metadata ───────────────────────────────────────────────
+// Pairs with the backend by ``seed_slug``. Titles/authors come from /books;
+// covers and topic chips are display-only and live here.
+interface SeedDisplay {
   cover: { bg: string; emoji: string };
-  /** Path under /public — served as a static asset. */
-  epubUrl: string;
-  origLang: string;
-  origExcerpt: string;
-  enExcerpt: string;
-  chatPrompts: string[];
-  cannedChat: { q: string; a: string }[];
-  quiz: { q: string; choices: string[]; correct: number; explain: string }[];
-  /** Short attribution string shown in the reader chrome. */
-  attribution: string;
+  topics: TopicId[];
 }
+const SEED_DISPLAY: Record<string, SeedDisplay> = {
+  "pride-and-prejudice":   { cover: { bg: "linear-gradient(135deg,#6B5B95,#3D2D5C)", emoji: "💃" }, topics: ["fiction"] },
+  "alice-in-wonderland":   { cover: { bg: "linear-gradient(135deg,#94C48A,#3D6B44)", emoji: "🐇" }, topics: ["fiction"] },
+  "meditations":           { cover: { bg: "linear-gradient(135deg,#E2786C,#9B3B2D)", emoji: "🏛️" }, topics: ["philosophy", "self-help"] },
+  "art-of-war":            { cover: { bg: "linear-gradient(135deg,#4A3C1E,#1F1808)", emoji: "⚔️" }, topics: ["business", "history"] },
+  "origin-of-species":     { cover: { bg: "linear-gradient(135deg,#7BA17C,#3F5C40)", emoji: "🐢" }, topics: ["science", "history", "nature"] },
+  "tao-te-ching":          { cover: { bg: "linear-gradient(135deg,#5A8C5A,#2A4530)", emoji: "☯️" }, topics: ["philosophy", "self-help", "art"] },
+  "shakespeares-sonnets":  { cover: { bg: "linear-gradient(135deg,#E0A450,#8E5C18)", emoji: "🪶" }, topics: ["art"] },
+  "walden":                { cover: { bg: "linear-gradient(135deg,#3D6B44,#1E3A24)", emoji: "🌲" }, topics: ["nature", "self-help", "philosophy"] },
+};
 
-const SAMPLE_BOOKS: SampleBook[] = [
-  {
-    id: "pride-and-prejudice",
-    topics: ["fiction"],
-    title: "Pride and Prejudice",
-    author: "Jane Austen",
-    cover: { bg: "linear-gradient(135deg,#6B5B95,#3D2D5C)", emoji: "💃" },
-    epubUrl: "/sample-books/pride-and-prejudice.epub",
-    origLang: "English (1813)",
-    origExcerpt: "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
-    enExcerpt: "It is a truth everyone agrees on: a single man with money is bound to be looking for a wife — or so the neighbourhood will decide for him.",
-    chatPrompts: [
-      "Who is Mr. Darcy, really?",
-      "Why does Elizabeth refuse him at first?",
-      "What's Austen actually satirising?",
-    ],
-    cannedChat: [
-      {
-        q: "Who is Mr. Darcy, really?",
-        a: "Darcy is Austen's most famous study in **first impressions vs. character**. At Netherfield he reads as proud, cold, and snobbish — and on the page, he *is* those things, because of his class anxieties and his social discomfort.\n\nBut as Elizabeth (and the reader) get closer, the picture changes: he's loyal to his sister Georgiana, generous to his tenants, and capable of admitting fault in his letter after his first proposal. The novel's argument is that pride and prejudice cut both ways — Darcy has the pride, Elizabeth has the prejudice, and growth means each meeting the other in the middle.",
-      },
-    ],
-    quiz: [
-      { q: "What does Elizabeth Bennet refuse from Mr. Darcy first?", choices: ["A dance", "His first proposal of marriage", "An invitation to Pemberley", "A letter"], correct: 1, explain: "She turns down his proposal at Hunsford — sparking the letter that changes everything." },
-      { q: "Why does Darcy initially separate Bingley from Jane?", choices: ["He dislikes Jane", "He thinks Jane is indifferent and the match beneath the Bingleys", "He wants Bingley for himself", "Jane is engaged elsewhere"], correct: 1, explain: "Class and a misread of Jane's reserve — he later admits both were errors." },
-      { q: "What does the opening line really mean?", choices: ["Marriage is destiny", "It's a wry satire of neighbourhood gossip about wealthy bachelors", "Austen approves of arranged marriages", "Single men should marry"], correct: 1, explain: "The line is ironic — it's the *neighbours* who think this, not the bachelor." },
-    ],
-    attribution: "Public domain · via Project Gutenberg",
-  },
-  {
-    id: "alice-in-wonderland",
-    topics: ["fiction"],
-    title: "Alice's Adventures in Wonderland",
-    author: "Lewis Carroll",
-    cover: { bg: "linear-gradient(135deg,#94C48A,#3D6B44)", emoji: "🐇" },
-    epubUrl: "/sample-books/alice-in-wonderland.epub",
-    origLang: "English (1865)",
-    origExcerpt: "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do…",
-    enExcerpt: "Alice was getting bored sitting by her sister on the riverbank with nothing to do — until a White Rabbit muttering about being late ran past her, and she followed.",
-    chatPrompts: [
-      "What is Wonderland actually about?",
-      "Why is the Cheshire Cat smiling?",
-      "Quiz me on the riddles",
-    ],
-    cannedChat: [
-      {
-        q: "What is Wonderland actually about?",
-        a: "Carroll wrote it as a children's story, but the deeper joke is **logic mocking itself**. Carroll was a mathematician (Charles Dodgson, Christ Church, Oxford), and Wonderland is a place where Victorian adult logic — court procedure, table manners, arithmetic — keeps colliding with its own absurdity.\n\nThe Mad Hatter's tea party is a stuck clock; the Queen's croquet is rigged law; the Caterpillar's questions are identity philosophy in a hookah. Alice is the only character who keeps asking *why* — which is the whole point of the book.",
-      },
-    ],
-    quiz: [
-      { q: "What is Alice chasing when she falls down the rabbit hole?", choices: ["A cat", "A White Rabbit checking his pocket watch", "A butterfly", "A book"], correct: 1, explain: "The Rabbit mutters about being late — and down she goes." },
-      { q: "Who poses the riddle 'Why is a raven like a writing-desk?'", choices: ["The Caterpillar", "The Mad Hatter", "The Cheshire Cat", "The Queen"], correct: 1, explain: "At the Mad Tea-Party. Famously, Carroll never gave a canonical answer." },
-      { q: "What does the Queen of Hearts shout most often?", choices: ["Curtsey!", "Off with their heads!", "Silence!", "Out!"], correct: 1, explain: "Capital punishment as small talk — Carroll's swipe at arbitrary authority." },
-    ],
-    attribution: "Public domain · via Project Gutenberg",
-  },
-  {
-    id: "meditations",
-    topics: ["philosophy", "self-help"],
-    title: "Meditations",
-    author: "Marcus Aurelius",
-    cover: { bg: "linear-gradient(135deg,#E2786C,#9B3B2D)", emoji: "🏛️" },
-    epubUrl: "/sample-books/meditations.epub",
-    origLang: "Greek → English (tr. George Long, 1862)",
-    origExcerpt: "Begin the morning by saying to thyself, I shall meet with the busy-body, the ungrateful, arrogant, deceitful, envious, unsocial.",
-    enExcerpt: "Start your day by telling yourself: today I'll meet the meddler, the ingrate, the arrogant, the deceitful, the envious, the unsocial. They are this way because they cannot tell good from evil.",
-    chatPrompts: [
-      "Summarise Stoic philosophy in 3 lines",
-      "How do I apply this on a hard day?",
-      "Quiz me on the core ideas",
-    ],
-    cannedChat: [
-      {
-        q: "Summarise Stoic philosophy in 3 lines",
-        a: "1. **What you control vs. what you don't** — your judgements and reactions are yours; everything else (weather, other people, outcomes) is not.\n\n2. **Virtue is the only true good** — wisdom, justice, courage, self-discipline. External things are 'indifferents' that help or hinder but never define a life.\n\n3. **Live according to nature** — both human (we are rational and social) and cosmic (everything changes). Accept what comes, contribute what you can, let go.",
-      },
-    ],
-    quiz: [
-      { q: "Where did Marcus Aurelius write most of this?", choices: ["A palace in Rome", "Military camps on the frontier", "A library in Athens", "A monastery"], correct: 1, explain: "Much of it was written during campaigns against Germanic tribes." },
-      { q: "What is the Stoic 'dichotomy of control'?", choices: ["Mind vs. body", "What you control vs. what you don't", "Past vs. future", "Self vs. society"], correct: 1, explain: "The foundation of Stoic practice — focus only on what's yours to choose." },
-      { q: "Why do Stoics meet difficult people calmly?", choices: ["They suppress emotion", "They believe others act from ignorance, not malice", "They avoid all conflict", "They feel nothing"], correct: 1, explain: "As Marcus writes, they 'cannot distinguish good from evil' — so respond with patience, not anger." },
-    ],
-    attribution: "Public domain · tr. George Long, 1862 · via Project Gutenberg",
-  },
-  {
-    id: "art-of-war",
-    topics: ["business", "history"],
-    title: "The Art of War",
-    author: "Sun Tzu",
-    cover: { bg: "linear-gradient(135deg,#4A3C1E,#1F1808)", emoji: "⚔️" },
-    epubUrl: "/sample-books/art-of-war.epub",
-    origLang: "Classical Chinese → English (tr. Lionel Giles, 1910)",
-    origExcerpt: "The art of war is of vital importance to the State. It is a matter of life and death, a road either to safety or to ruin.",
-    enExcerpt: "War is of vital importance to the State — a matter of life and death, a road to safety or to ruin. It must be studied with the utmost care.",
-    chatPrompts: [
-      "How does this apply to modern business?",
-      "Explain 'know yourself and the enemy'",
-      "What does Sun Tzu say about avoiding battle?",
-    ],
-    cannedChat: [
-      {
-        q: "How does this apply to modern business?",
-        a: "Operators read Sun Tzu as a manual for **competitive strategy under uncertainty**:\n\n- **Win before you fight.** The highest skill is winning without battle. In business: position so well (pricing, distribution, brand) that competitors don't even challenge you on key terrain.\n- **Know yourself and the enemy.** Internally — honest read of team, cash, capabilities. Externally — deep understanding of competitors and customers. Without it, you'll lose half the time.\n- **All warfare is based on deception.** Don't telegraph your moves. Keep optionality. Surprise wins.",
-      },
-    ],
-    quiz: [
-      { q: "What is Sun Tzu's highest form of victory?", choices: ["Annihilating the enemy", "Winning without fighting", "Capturing the capital", "A long siege"], correct: 1, explain: "'To subdue the enemy without fighting is the acme of skill.'" },
-      { q: "Why is knowing yourself important?", choices: ["For confidence", "To know both self and enemy is to win every battle", "To improve morally", "To avoid arrogance"], correct: 1, explain: "Knowing both wins certainly; knowing one means winning half the time." },
-      { q: "How does Sun Tzu view information?", choices: ["A luxury", "Decisive — spies and scouts are essential", "Unreliable", "Less important than courage"], correct: 1, explain: "He devotes an entire chapter to spies: 'foreknowledge cannot be elicited from spirits.'" },
-    ],
-    attribution: "Public domain · tr. Lionel Giles, 1910 · via Project Gutenberg",
-  },
-  {
-    id: "origin-of-species",
-    topics: ["science", "history", "nature"],
-    title: "On the Origin of Species",
-    author: "Charles Darwin",
-    cover: { bg: "linear-gradient(135deg,#7BA17C,#3F5C40)", emoji: "🐢" },
-    epubUrl: "/sample-books/origin-of-species.epub",
-    origLang: "English (1859)",
-    origExcerpt: "It is interesting to contemplate an entangled bank, clothed with many plants of many kinds, with birds singing on the bushes…",
-    enExcerpt: "Imagine a tangled riverbank, dressed in many plants, with birds singing, insects flitting, worms in the damp earth — and reflect that these forms, so different yet so dependent on one another, were all produced by laws acting around us.",
-    chatPrompts: [
-      "What is natural selection — simply?",
-      "Why was this book so controversial?",
-      "Quiz me on the main ideas",
-    ],
-    cannedChat: [
-      {
-        q: "What is natural selection — simply?",
-        a: "**Natural selection** is the slow, blind editor of life. It rests on three observations:\n\n1. Individuals in any population **vary** — beak shapes, fur length, immune responses.\n2. Some of that variation is **heritable** — children resemble parents.\n3. More offspring are born than can survive, so traits that help survival and reproduction **become more common** generation by generation.\n\nDarwin's leap was that this simple loop, run for millions of years, is enough to produce every form of life we see — no designer required.",
-      },
-    ],
-    quiz: [
-      { q: "What did Darwin call his proposed mechanism?", choices: ["Inheritance of acquired traits", "Natural selection", "Spontaneous generation", "Random drift"], correct: 1, explain: "He distinguished it sharply from Lamarck's 'inheritance of acquired characteristics.'" },
-      { q: "Which voyage shaped his thinking?", choices: ["HMS Beagle", "HMS Bounty", "HMS Endeavour", "HMS Victory"], correct: 0, explain: "His five-year voyage on the Beagle gave him the Galápagos data behind the theory." },
-      { q: "Why did the book provoke controversy?", choices: ["It was poorly argued", "It implied humans descended from earlier species", "It denied the existence of fossils", "It claimed Earth was young"], correct: 1, explain: "The implication for human origins (made explicit later in *The Descent of Man*) was the flashpoint." },
-    ],
-    attribution: "Public domain · via Project Gutenberg",
-  },
-  {
-    id: "tao-te-ching",
-    topics: ["philosophy", "self-help", "art"],
-    title: "Tao Te Ching",
-    author: "Lao Tzu",
-    cover: { bg: "linear-gradient(135deg,#5A8C5A,#2A4530)", emoji: "☯️" },
-    epubUrl: "/sample-books/tao-te-ching.epub",
-    origLang: "Classical Chinese → English (tr. James Legge, 1891)",
-    origExcerpt: "The Tao that can be trodden is not the enduring and unchanging Tao. The name that can be named is not the enduring and unchanging name.",
-    enExcerpt: "The Tao that can be put into words is not the eternal Tao. The name that can be named is not the eternal name.",
-    chatPrompts: [
-      "What does 'wu wei' actually mean?",
-      "How is this different from Confucianism?",
-      "Quiz me on the core ideas",
-    ],
-    cannedChat: [
-      {
-        q: "What does 'wu wei' actually mean?",
-        a: "**Wu wei** (無為) is often translated 'non-action,' but a better gloss is **effortless action** — moving with the grain of a situation instead of against it.\n\nThink of how water finds its way around a rock without fighting it, or how a skilled cook's knife slips between joints rather than cleaving through bone. The point isn't passivity; it's that forced effort against the Tao creates friction, while aligned action achieves more with less.\n\nFor leaders, Lao Tzu's prescription is famous: *govern a great state as you would cook a small fish* — don't keep poking at it.",
-      },
-    ],
-    quiz: [
-      { q: "What is 'wu wei' best translated as?", choices: ["Stillness", "Effortless action / non-forcing", "Silence", "Hiding"], correct: 1, explain: "Not doing nothing — doing without strain or coercion." },
-      { q: "Why does Lao Tzu warn against naming the Tao?", choices: ["It's secret", "Naming reduces what is infinite to a label", "It's sacred", "The name is forbidden"], correct: 1, explain: "Language slices reality into pieces; the Tao is the whole." },
-      { q: "Lao Tzu's image for ideal leadership is…", choices: ["A roaring tiger", "A small fish gently cooked", "An eagle", "A river"], correct: 1, explain: "Govern lightly — too much fiddling breaks the fish (and the state)." },
-    ],
-    attribution: "Public domain · tr. James Legge, 1891 · via Project Gutenberg",
-  },
-  {
-    id: "shakespeares-sonnets",
-    topics: ["art"],
-    title: "Shakespeare's Sonnets",
-    author: "William Shakespeare",
-    cover: { bg: "linear-gradient(135deg,#E0A450,#8E5C18)", emoji: "🪶" },
-    epubUrl: "/sample-books/shakespeares-sonnets.epub",
-    origLang: "Early Modern English (1609)",
-    origExcerpt: "Shall I compare thee to a summer's day? Thou art more lovely and more temperate…",
-    enExcerpt: "Shall I compare you to a summer's day? You are more lovely and more even-tempered — rough winds shake May's buds, and summer is always too brief.",
-    chatPrompts: [
-      "Explain the structure of a sonnet",
-      "What makes Sonnet 18 famous?",
-      "Quiz me on Shakespearean form",
-    ],
-    cannedChat: [
-      {
-        q: "Explain the structure of a sonnet",
-        a: "A **Shakespearean sonnet** is a 14-line poem in iambic pentameter, organised as three quatrains and a closing couplet — rhymed **ABAB CDCD EFEF GG**.\n\nThe form is an argument in miniature: each quatrain advances a thought, then the couplet delivers a turn (the *volta*) — a punchline, reversal, or summary. Sonnet 18 follows this exactly: three quatrains praising the beloved by comparison to summer, then a closing couplet promising that the poem itself will outlive the season.",
-      },
-    ],
-    quiz: [
-      { q: "How many lines is a Shakespearean sonnet?", choices: ["12", "14", "16", "20"], correct: 1, explain: "Always 14, in iambic pentameter." },
-      { q: "What is the volta?", choices: ["The opening line", "The turn — usually at line 9 or in the couplet", "The rhyme scheme", "An Italian sonnet only"], correct: 1, explain: "In Shakespearean form, the turn often lands in the final couplet." },
-      { q: "What does the closing couplet of Sonnet 18 promise?", choices: ["Eternal love", "That the poem will preserve the beloved forever", "Reunion in spring", "Forgiveness"], correct: 1, explain: "'So long as men can breathe or eyes can see, / So long lives this, and this gives life to thee.'" },
-    ],
-    attribution: "Public domain · via Project Gutenberg",
-  },
-  {
-    id: "walden",
-    topics: ["nature", "self-help", "philosophy"],
-    title: "Walden",
-    author: "Henry David Thoreau",
-    cover: { bg: "linear-gradient(135deg,#3D6B44,#1E3A24)", emoji: "🌲" },
-    epubUrl: "/sample-books/walden.epub",
-    origLang: "English (1854)",
-    origExcerpt: "I went to the woods because I wished to live deliberately, to front only the essential facts of life…",
-    enExcerpt: "I went to the woods because I wanted to live deliberately — to face only the essential facts of life, and see if I could learn what it had to teach, instead of discovering, when it was time to die, that I had not lived.",
-    chatPrompts: [
-      "Why did Thoreau actually go to Walden Pond?",
-      "What is 'deliberate living'?",
-      "Quiz me on the experiment",
-    ],
-    cannedChat: [
-      {
-        q: "Why did Thoreau actually go to Walden Pond?",
-        a: "Thoreau lived in a small cabin on Walden Pond for **two years, two months, and two days** (July 1845 — September 1847), on land owned by his friend Ralph Waldo Emerson. He wasn't escaping society — Concord village was a 20-minute walk away — he was running an *experiment in essentials*.\n\nThe goal was to strip life down to its raw inputs (food, shelter, time) and see what was actually required. The book is half philosophy, half a meticulous account of how much wood, beans, and rice that took. His punchline: most of what we think we need, we don't.",
-      },
-    ],
-    quiz: [
-      { q: "How long did Thoreau live at Walden Pond?", choices: ["6 months", "About a year", "Just over 2 years", "5 years"], correct: 2, explain: "Two years, two months, and two days — July 1845 to September 1847." },
-      { q: "Whose land was the cabin on?", choices: ["His own", "Ralph Waldo Emerson's", "The town of Concord's", "Squatters' rights"], correct: 1, explain: "Emerson owned the woodlot and let Thoreau build there." },
-      { q: "What does 'living deliberately' mean for Thoreau?", choices: ["Living slowly", "Choosing each day's substance instead of drifting through it", "Avoiding people", "Being a writer full-time"], correct: 1, explain: "Front only the essential facts of life — and refuse what is not yours by choice." },
-    ],
-    attribution: "Public domain · via Project Gutenberg",
-  },
+// Stable order to surface in step 3 — used when no topic intersection.
+const SEED_ORDER: string[] = [
+  "pride-and-prejudice", "meditations", "art-of-war", "alice-in-wonderland",
+  "tao-te-ching", "origin-of-species", "walden", "shakespeares-sonnets",
 ];
 
 // ─── Audio cues ───────────────────────────────────────────────────────────────
@@ -312,115 +93,89 @@ const SFX = {
   tap:     () => playTone(880, 0.06, "sine", 0.10),
   select:  () => { playTone(523, 0.09); setTimeout(() => playTone(659, 0.10), 70); },
   advance: () => { playTone(523, 0.08); setTimeout(() => playTone(659, 0.08), 90); setTimeout(() => playTone(784, 0.15), 180); },
-  correct: () => [659, 880].forEach((f, i) => setTimeout(() => playTone(f, 0.13, "sine", 0.13), i * 90)),
-  wrong:   () => playTone(220, 0.18, "sawtooth", 0.07),
   success: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.18, "sine", 0.14), i * 95)),
   error:   () => playTone(200, 0.2, "sawtooth", 0.08),
 };
 
-// ─── Root component ───────────────────────────────────────────────────────────
+// ─── Root ─────────────────────────────────────────────────────────────────────
 export function JoinClient() {
   const router = useRouter();
 
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [topics, setTopics] = useState<TopicId[]>([]);
-  const [chosenBook, setChosenBook] = useState<SampleBook | null>(null);
-  const [experienceDone, setExperienceDone] = useState(false);
-
-  const [name, setName] = useState("");
-  const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [celebrate, setCelebrate] = useState(false);
 
-  const stepIdx = STEP_ORDER.indexOf(step);
-  const TOTAL = STEP_ORDER.length;
+  // Capture document.referrer once on mount so trackLead carries attribution.
+  const referrerRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (typeof document !== "undefined") referrerRef.current = document.referrer || undefined;
+  }, []);
 
-  const goNext = (next: Step) => { SFX.advance(); setStep(next); };
-  const goBack = (prev: Step) => { SFX.tap(); setStep(prev); };
-
-  // Persist email across reload — helps if user closes app between steps.
+  // Persist email between refreshes inside the flow.
   useEffect(() => {
     try {
       const cached = sessionStorage.getItem("join.email");
       if (cached && !email) setEmail(cached);
     } catch { /* ignore */ }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      if (email) sessionStorage.setItem("join.email", email);
-    } catch { /* ignore */ }
+    try { if (email) sessionStorage.setItem("join.email", email); } catch { /* ignore */ }
   }, [email]);
 
-  // Capture referrer once on mount — needed so trackLead carries attribution
-  // through every step without recomputing.
-  const referrerRef = useRef<string | undefined>(undefined);
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      referrerRef.current = document.referrer || undefined;
-    }
-  }, []);
-
-  // ─── Step handlers ─────────────────────────────────────────────────────────
-  const handleEmail = () => {
+  // ─── Handlers ─────────────────────────────────────────────────────────────
+  const handleEmail = async () => {
     const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-    if (!ok) { setErr("Enter a valid email — we'll send your library link there."); SFX.error(); return; }
-    setErr(null);
-    // Capture the lead the moment we have a valid email — the rest of the
-    // funnel is gravy. If they bounce now we still have an address to follow
-    // up on.
-    trackLead({ email, step: "email", referrer: referrerRef.current });
-    goNext("topics");
+    if (!ok) { setErr("Enter a valid email — we'll send your sign-in link there."); SFX.error(); return; }
+    setErr(null); setBusy(true);
+    try {
+      // Detect locale from the page (set by I18nProvider on document.documentElement.lang).
+      const preferred = typeof document !== "undefined"
+        ? (document.documentElement.lang || undefined)
+        : undefined;
+      const res = await startSession({
+        email,
+        referrer: referrerRef.current,
+        preferred_language: preferred,
+      });
+      trackLead({ email, step: "email", referrer: referrerRef.current });
+      if (res.is_new_user && res.access_token) {
+        SFX.advance();
+        setStep("topics");
+      } else {
+        // Existing email — server sent a magic link, we never get a JWT here.
+        SFX.success();
+        setStep("magic-sent");
+      }
+    } catch (e) {
+      SFX.error();
+      setErr(e instanceof ApiError ? e.message : "Couldn't start a session. Please try again.");
+    } finally { setBusy(false); }
   };
 
   const handleTopicsContinue = () => {
     if (topics.length === 0) { SFX.error(); return; }
     trackLead({ email, step: "topics", topics });
-    goNext("shelf");
+    SFX.advance();
+    setStep("shelf");
   };
 
-  const handleBookChoose = (b: SampleBook) => {
+  const handleBookOpen = (book: Book) => {
     SFX.select();
-    setChosenBook(b);
-    trackLead({ email, step: "shelf", topics, chosen_book_id: b.id });
-    goNext("experience");
+    trackLead({
+      email, step: "experience", topics,
+      chosen_book_id: book.seed_slug ?? null,
+    });
+    // We don't mark "completed" here — that's set when the user upgrades. For
+    // the funnel, opening a book is the "experience" step.
+    router.push(`/read/${book.id}?welcome=1`);
   };
 
-  const handleExperienceDone = () => {
-    setExperienceDone(true);
-    SFX.success();
-    trackLead({ email, step: "experience", topics, chosen_book_id: chosenBook?.id ?? null });
-    setTimeout(() => goNext("signup"), 800);
-  };
-
-  const handleFinish = async () => {
-    if (!pw || pw.length < 8) { setErr("Pick a password — 8 characters or more."); SFX.error(); return; }
-    setErr(null); setBusy(true);
-    // Mark that we reached the signup form (separate from "completed" — they
-    // might still fail at the register call and we want to know they got here).
-    trackLead({ email, step: "signup", topics, chosen_book_id: chosenBook?.id ?? null });
-    try {
-      await register(email, pw, name || undefined);
-      // Final mark — the lead is now a real customer. The backend will stamp
-      // completed_at and (eventually) link user_id.
-      trackLead({ email, step: "completed", topics, chosen_book_id: chosenBook?.id ?? null });
-      SFX.success(); setCelebrate(true);
-      setTimeout(() => router.push("/library?welcome=1"), 1800);
-    } catch (e) {
-      SFX.error();
-      setErr(e instanceof ApiError ? e.message : "Couldn't create your shelf. Try again?");
-    } finally { setBusy(false); }
-  };
-
-  // Recommended books — surface 4-6 across selected topics, then top up.
-  const shelf = useMemo(() => {
-    const selected = SAMPLE_BOOKS.filter((b) => b.topics.some((t) => topics.includes(t)));
-    const rest = SAMPLE_BOOKS.filter((b) => !selected.includes(b));
-    return [...selected, ...rest].slice(0, 5);
-  }, [topics]);
+  // Step index for the progress pill — only visible (non-magic-sent) steps.
+  const stepIdx = Math.max(0, VISIBLE_STEPS.indexOf(step as (typeof VISIBLE_STEPS)[number]));
+  const TOTAL = VISIBLE_STEPS.length;
 
   return (
     <div
@@ -431,16 +186,17 @@ export function JoinClient() {
         backgroundSize: "26px 26px",
       }}
     >
-      {celebrate && <Confetti />}
-
-      {/* Top bar — minimal, mobile-thumb friendly */}
-      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 backdrop-blur-md" style={{ background: "rgba(252,248,238,0.85)", borderBottom: "1px solid rgba(74,60,30,0.06)" }}>
-        {step !== "email" ? (
+      {/* Top bar */}
+      <header
+        className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 backdrop-blur-md"
+        style={{ background: "rgba(252,248,238,0.85)", borderBottom: "1px solid rgba(74,60,30,0.06)" }}
+      >
+        {step === "topics" || step === "shelf" ? (
           <button
             type="button"
             onClick={() => {
-              const prev = STEP_ORDER[Math.max(0, stepIdx - 1)];
-              goBack(prev);
+              SFX.tap();
+              setStep(step === "shelf" ? "topics" : "email");
             }}
             className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90"
             style={{ background: "white", border: "1.5px solid var(--color-border)", boxShadow: "0 2px 0 rgba(74,60,30,0.08)" }}
@@ -453,34 +209,33 @@ export function JoinClient() {
         ) : (
           <Link href="/" className="flex items-center gap-2" style={{ color: "var(--color-ink)" }}>
             <TranslifyIcon size={26} />
-            <span className="font-[family-name:var(--font-display)] text-[1rem] font-semibold tracking-tight">Translify</span>
+            <span className="font-[family-name:var(--font-display)] text-[1rem] font-semibold tracking-tight">
+              Translify
+            </span>
           </Link>
         )}
 
-        {/* Step pill */}
-        <div className="flex items-center gap-1.5">
-          {STEP_ORDER.map((s, i) => (
-            <span
-              key={s}
-              className="h-1.5 rounded-full transition-all duration-500"
-              style={{
-                width: i === stepIdx ? 22 : 6,
-                background: i <= stepIdx ? "var(--color-saffron-deep)" : "rgba(74,60,30,0.15)",
-              }}
-            />
-          ))}
-        </div>
+        {step !== "magic-sent" && (
+          <div className="flex items-center gap-1.5">
+            {VISIBLE_STEPS.map((s, i) => (
+              <span
+                key={s}
+                className="h-1.5 rounded-full transition-all duration-500"
+                style={{
+                  width: i === stepIdx ? 22 : 6,
+                  background: i <= stepIdx ? "var(--color-saffron-deep)" : "rgba(74,60,30,0.15)",
+                }}
+              />
+            ))}
+          </div>
+        )}
 
         {step === "email" ? (
-          <Link
-            href="/login"
-            className="text-[0.82rem] font-semibold"
-            style={{ color: "var(--color-ink-soft)" }}
-          >
+          <Link href="/login" className="text-[0.82rem] font-semibold" style={{ color: "var(--color-ink-soft)" }}>
             Sign in
           </Link>
         ) : (
-          <span className="w-9" /> /* spacer */
+          <span className="w-9" />
         )}
       </header>
 
@@ -489,8 +244,11 @@ export function JoinClient() {
           {step === "email" && (
             <StepEmail
               email={email} setEmail={setEmail}
-              onContinue={handleEmail} err={err}
+              onContinue={handleEmail} err={err} busy={busy}
             />
+          )}
+          {step === "magic-sent" && (
+            <StepMagicSent email={email} />
           )}
           {step === "topics" && (
             <StepTopics
@@ -499,24 +257,10 @@ export function JoinClient() {
             />
           )}
           {step === "shelf" && (
-            <StepShelf books={shelf} onChoose={handleBookChoose} />
-          )}
-          {step === "experience" && chosenBook && (
-            <StepExperience
-              book={chosenBook}
-              onDone={handleExperienceDone}
-            />
-          )}
-          {step === "signup" && (
-            <StepFinish
-              email={email}
-              name={name} setName={setName}
-              pw={pw} setPw={setPw}
-              busy={busy} err={err}
-              celebrate={celebrate}
-              onFinish={handleFinish}
-              experienceDone={experienceDone}
-              chosenBook={chosenBook}
+            <StepShelf
+              topics={topics}
+              onOpen={handleBookOpen}
+              total={TOTAL} idx={stepIdx}
             />
           )}
         </div>
@@ -525,14 +269,15 @@ export function JoinClient() {
   );
 }
 
-// ─── Step 1 — Email only ──────────────────────────────────────────────────────
+// ─── Step 1 — Email ───────────────────────────────────────────────────────────
 function StepEmail({
-  email, setEmail, onContinue, err,
+  email, setEmail, onContinue, err, busy,
 }: {
   email: string;
   setEmail: (v: string) => void;
   onContinue: () => void;
   err: string | null;
+  busy: boolean;
 }) {
   return (
     <div className="flex flex-col">
@@ -552,8 +297,8 @@ function StepEmail({
           <br />
           <span style={{ color: "var(--color-saffron-deep)" }}>In your language.</span>
         </h1>
-        <p className="mx-auto mt-3 max-w-[26ch] text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          Try Translify for free — no card, no commitment. Just start with your email.
+        <p className="mx-auto mt-3 max-w-[28ch] text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+          Just your email — we&apos;ll set up your shelf and email you a sign-in link too.
         </p>
       </div>
 
@@ -577,8 +322,8 @@ function StepEmail({
           </div>
         )}
 
-        <BigButton type="submit" disabled={!email}>
-          Continue →
+        <BigButton type="submit" disabled={!email || busy}>
+          {busy ? "Opening your shelf…" : "Continue →"}
         </BigButton>
       </form>
 
@@ -599,7 +344,37 @@ function StepEmail({
   );
 }
 
-// ─── Step 2 — Pick topics ─────────────────────────────────────────────────────
+// ─── Step 1b — Magic link sent (existing email path) ──────────────────────────
+function StepMagicSent({ email }: { email: string }) {
+  return (
+    <div className="mt-6 flex flex-col items-center text-center">
+      <Lumi state="happy" size={108} animate />
+      <p
+        className="mt-6 text-[0.7rem] font-bold uppercase tracking-[0.22em]"
+        style={{ color: "var(--color-sage-deep)" }}
+      >
+        Welcome back
+      </p>
+      <h1
+        className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.06] tracking-tight"
+        style={{ fontSize: "clamp(1.7rem,6vw,2.2rem)", color: "var(--color-ink)" }}
+      >
+        Check your inbox.
+      </h1>
+      <p className="mx-auto mt-3 max-w-[30ch] text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+        We sent a one-tap sign-in link to <span className="font-semibold" style={{ color: "var(--color-ink)" }}>{email}</span>. The link opens your shelf — no password to remember.
+      </p>
+      <p className="mt-6 text-[0.82rem]" style={{ color: "var(--color-ink-soft)" }}>
+        Didn&apos;t arrive? Check spam or{" "}
+        <Link href="/login" className="font-semibold underline underline-offset-4" style={{ color: "var(--color-ink)" }}>
+          try again
+        </Link>.
+      </p>
+    </div>
+  );
+}
+
+// ─── Step 2 — Topics ──────────────────────────────────────────────────────────
 function StepTopics({
   topics, setTopics, onContinue,
 }: {
@@ -616,7 +391,7 @@ function StepTopics({
     <div>
       <div className="text-center">
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-sage-deep)" }}>
-          Step 2 of 5
+          Your shelf is ready
         </p>
         <h2
           className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
@@ -625,7 +400,7 @@ function StepTopics({
           What do you love reading?
         </h2>
         <p className="mx-auto mt-2 max-w-[28ch] text-[0.92rem]" style={{ color: "var(--color-ink-soft)" }}>
-          Pick one or more — we&apos;ll start your shelf with those.
+          Pick a few — we&apos;ll surface books in those topics first.
         </p>
       </div>
 
@@ -672,562 +447,156 @@ function StepTopics({
   );
 }
 
-// ─── Step 3 — Sample shelf ────────────────────────────────────────────────────
+// ─── Step 3 — Shelf (real seed books from API) ────────────────────────────────
 function StepShelf({
-  books, onChoose,
+  topics, onOpen, total, idx,
 }: {
-  books: SampleBook[];
-  onChoose: (b: SampleBook) => void;
+  topics: TopicId[];
+  onOpen: (book: Book) => void;
+  total: number;
+  idx: number;
 }) {
+  // Fetch the user's library. Seed books are filtered in via the backend's
+  // visibility predicate — they show up alongside any uploaded books.
+  const { data: books, isLoading, error } = useQuery<Book[]>({
+    queryKey: ["library", "join"],
+    queryFn: listBooks,
+    staleTime: 30_000,
+  });
+
+  const ordered = useMemo(() => {
+    const all = books ?? [];
+    const seeds = all.filter((b) => b.is_seed && b.seed_slug && SEED_DISPLAY[b.seed_slug]);
+    // Books that match a chosen topic come first; rest fall to the stable order.
+    const slugScore = (slug: string) => {
+      const d = SEED_DISPLAY[slug];
+      const overlap = d ? d.topics.filter((t) => topics.includes(t)).length : 0;
+      const order = SEED_ORDER.indexOf(slug);
+      return overlap * 100 + (order >= 0 ? 100 - order : 0);
+    };
+    return [...seeds].sort((a, b) => slugScore(b.seed_slug!) - slugScore(a.seed_slug!));
+  }, [books, topics]);
+
   return (
     <div>
       <div className="text-center">
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-plum)" }}>
-          Your starter shelf
+          Step {idx + 1} of {total}
         </p>
         <h2
           className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
           style={{ fontSize: "clamp(1.7rem,5.5vw,2.2rem)", color: "var(--color-ink)" }}
         >
-          Open one to try the magic
+          Pick a book to open
         </h2>
         <p className="mx-auto mt-2 max-w-[30ch] text-[0.92rem]" style={{ color: "var(--color-ink-soft)" }}>
-          Read a passage, chat with the book, take a tiny quiz. No account needed yet.
+          The first 10 pages of any book are free — keep going on a 14-day trial.
         </p>
       </div>
 
-      <ul className="mt-7 flex flex-col gap-3">
-        {books.map((b, i) => (
-          <li key={b.id}>
-            <button
-              type="button"
-              onClick={() => onChoose(b)}
-              className="group flex w-full items-center gap-4 rounded-2xl border-2 p-3.5 text-start transition-all active:scale-[0.99] animate-float-in"
-              style={{
-                animationDelay: `${i * 0.06}s`,
-                borderColor: "var(--color-border-strong)",
-                background: "white",
-                boxShadow: "0 4px 0 rgba(74,60,30,0.10)",
-              }}
-            >
-              {/* Mini cover */}
-              <div
-                className="relative grid h-20 w-14 shrink-0 place-items-center overflow-hidden rounded-md"
-                style={{ background: b.cover.bg, boxShadow: "2px 3px 0 rgba(74,60,30,0.18)" }}
-              >
-                <span className="text-[1.8rem]">{b.cover.emoji}</span>
-                <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: "rgba(0,0,0,0.25)" }} />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <h3 className="font-[family-name:var(--font-display)] text-[1rem] font-semibold leading-tight" style={{ color: "var(--color-ink)" }}>
-                  {b.title}
-                </h3>
-                <p className="mt-0.5 truncate text-[0.82rem]" style={{ color: "var(--color-ink-soft)" }}>{b.author}</p>
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {b.topics.slice(0, 2).map((tid) => {
-                    const t = TOPICS.find((x) => x.id === tid)!;
-                    return (
-                      <span key={tid} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.66rem] font-semibold"
-                            style={{ background: TONE_MAP[t.tone].iconBg, color: TONE_MAP[t.tone].iconColor }}>
-                        {t.icon} {t.label}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <span
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition-transform group-active:translate-x-0.5"
-                style={{ background: "var(--color-saffron-deep)", color: "white", boxShadow: "0 3px 0 rgba(152,96,24,0.50)" }}
-                aria-hidden
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M13 5l7 7-7 7" />
-                </svg>
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      <p className="mt-6 text-center text-[0.78rem]" style={{ color: "var(--color-ink-soft)" }}>
-        You&apos;ll bring your own books after signup — PDFs, EPUBs, anything.
-      </p>
-    </div>
-  );
-}
-
-// ─── Step 4 — Try the magic ───────────────────────────────────────────────────
-type ExpTab = "read" | "chat" | "quiz";
-
-function StepExperience({
-  book, onDone,
-}: {
-  book: SampleBook;
-  onDone: () => void;
-}) {
-  const [tab, setTab] = useState<ExpTab>("read");
-  const [translated, setTranslated] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ role: "user" | "lumi"; text: string }[]>([]);
-  const [chatTyping, setChatTyping] = useState(false);
-
-  const [qi, setQi] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [revealed, setRevealed] = useState(false);
-  const [score, setScore] = useState(0);
-
-  // Track which milestones the user has hit — gate the "Save my progress" CTA
-  const [hits, setHits] = useState({ read: false, chat: false, quiz: false });
-  const allHit = hits.read && hits.chat && hits.quiz;
-
-  useEffect(() => { if (translated) setHits((h) => ({ ...h, read: true })); }, [translated]);
-  useEffect(() => { if (chatMessages.length > 0) setHits((h) => ({ ...h, chat: true })); }, [chatMessages.length]);
-
-  const askPrompt = (prompt: string) => {
-    SFX.tap();
-    setChatMessages((prev) => [...prev, { role: "user", text: prompt }]);
-    setChatTyping(true);
-    // Find a canned reply — fallback to the first canned answer.
-    const canned = book.cannedChat.find((c) => c.q.toLowerCase() === prompt.toLowerCase()) ?? book.cannedChat[0];
-    setTimeout(() => {
-      setChatTyping(false);
-      setChatMessages((prev) => [...prev, { role: "lumi", text: canned.a }]);
-    }, 900);
-  };
-
-  const submitAnswer = (choice: number) => {
-    if (revealed) return;
-    SFX.tap();
-    setSelected(choice);
-    setRevealed(true);
-    const correct = book.quiz[qi].correct;
-    if (choice === correct) { SFX.correct(); setScore((s) => s + 1); }
-    else SFX.wrong();
-  };
-
-  const nextQuiz = () => {
-    if (qi < book.quiz.length - 1) {
-      setQi((i) => i + 1); setSelected(null); setRevealed(false);
-    } else {
-      setHits((h) => ({ ...h, quiz: true }));
-      SFX.success();
-    }
-  };
-
-  const quizDone = qi === book.quiz.length - 1 && revealed;
-
-  return (
-    <div>
-      {/* Book hero — compact card with cover and meta */}
-      <div className="mb-4 flex items-stretch gap-3 rounded-2xl border-2 p-3" style={{ borderColor: "var(--color-border)", background: "white", boxShadow: "0 4px 0 rgba(74,60,30,0.08)" }}>
+      {/* Loading + error states */}
+      {isLoading && (
+        <div className="mt-10 flex justify-center">
+          <Lumi state="thinking" size={68} animate />
+        </div>
+      )}
+      {error && (
         <div
-          className="relative grid h-24 w-16 shrink-0 place-items-center overflow-hidden rounded-md"
-          style={{ background: book.cover.bg, boxShadow: "2px 3px 0 rgba(74,60,30,0.18)" }}
+          className="mt-6 rounded-xl px-4 py-3 text-[0.86rem]"
+          style={{
+            background: "rgba(220,38,38,0.07)", color: "#B91C1C",
+            border: "1.5px solid rgba(220,38,38,0.22)",
+          }}
         >
-          <span className="text-[2rem]">{book.cover.emoji}</span>
-          <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: "rgba(0,0,0,0.25)" }} />
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col justify-center">
-          <p className="text-[0.66rem] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--color-saffron-deep)" }}>
-            Trying a sample
-          </p>
-          <h2 className="font-[family-name:var(--font-display)] text-[1.05rem] font-semibold leading-tight" style={{ color: "var(--color-ink)" }}>
-            {book.title}
-          </h2>
-          <p className="text-[0.78rem]" style={{ color: "var(--color-ink-soft)" }}>{book.author}</p>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="mb-3 grid grid-cols-3 gap-1.5 rounded-full p-1.5" style={{ background: "rgba(74,60,30,0.08)" }}>
-        {(["read", "chat", "quiz"] as const).map((t) => {
-          const active = tab === t;
-          const label = t === "read" ? "📖 Read" : t === "chat" ? "💬 Chat" : "🎯 Quiz";
-          const done = hits[t];
-          return (
-            <button
-              key={t}
-              type="button"
-              onClick={() => { SFX.tap(); setTab(t); }}
-              className="relative flex items-center justify-center gap-1 rounded-full py-2 font-[family-name:var(--font-display)] text-[0.82rem] font-semibold transition-all"
-              style={{
-                background: active ? "white" : "transparent",
-                color: active ? "var(--color-ink)" : "var(--color-ink-soft)",
-                boxShadow: active ? "0 2px 0 rgba(74,60,30,0.12)" : "none",
-              }}
-            >
-              {label}
-              {done && (
-                <span className="grid h-3.5 w-3.5 place-items-center rounded-full text-white" style={{ background: "var(--color-sage-deep)" }}>
-                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab panels */}
-      <div className="rounded-2xl border-2 p-4" style={{ borderColor: "var(--color-border-strong)", background: "white", boxShadow: "0 4px 0 rgba(74,60,30,0.10)" }}>
-        {tab === "read" && (
-          <div>
-            {/* Translation magic — small pre-amble showing what Translify does
-                that the raw EPUB doesn't. Kept compact so the actual reader is
-                what dominates the tab. */}
-            <details
-              className="group mb-3 rounded-xl border-2 p-3"
-              style={{ borderColor: "var(--color-saffron)", background: "rgba(224,164,80,0.07)" }}
-              onToggle={(e) => {
-                if ((e.currentTarget as HTMLDetailsElement).open) {
-                  SFX.advance();
-                  setTranslated(true);
-                }
-              }}
-            >
-              <summary className="flex cursor-pointer items-center gap-2 text-[0.86rem] font-semibold" style={{ color: "var(--color-saffron-deep)" }}>
-                <span className="text-[1rem]">✨</span>
-                {translated ? "Translation preview" : "Tap to see this in your language"}
-                <span className="ms-auto text-[0.74rem] opacity-70 transition-transform group-open:rotate-180">▾</span>
-              </summary>
-              <div className="mt-3 grid gap-2 text-[0.88rem] leading-relaxed" style={{ color: "var(--color-ink)" }}>
-                <div>
-                  <p className="mb-1 text-[0.66rem] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--color-ink-soft)" }}>
-                    {book.origLang}
-                  </p>
-                  <p className="rounded-lg border p-2.5" style={{ borderColor: "var(--color-border)", background: "white" }}>
-                    {book.origExcerpt}
-                  </p>
-                </div>
-                <div>
-                  <p className="mb-1 text-[0.66rem] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--color-saffron-deep)" }}>
-                    In your language
-                  </p>
-                  <p className="rounded-lg border-2 p-2.5" style={{ borderColor: "var(--color-saffron)", background: "rgba(224,164,80,0.08)" }}>
-                    {book.enExcerpt}
-                  </p>
-                </div>
-              </div>
-            </details>
-
-            {/* The actual book — full EPUB, paginated reader. */}
-            <div
-              className="relative overflow-hidden rounded-2xl border-2"
-              style={{
-                borderColor: "var(--color-border-strong)",
-                background: "var(--color-paper)",
-                height: "min(60vh, 520px)",
-                boxShadow: "inset 0 1px 0 rgba(74,60,30,0.08)",
-              }}
-              // Marking "read" hit on first interaction with the reader pane.
-              // (Mounting alone isn't enough — they should feel the book.)
-              onPointerDown={() => setTranslated((v) => v || true)}
-            >
-              <EpubViewer fileUrl={book.epubUrl} />
-            </div>
-
-            <p className="mt-2 text-center text-[0.72rem]" style={{ color: "var(--color-ink-soft)" }}>
-              {book.attribution}
-            </p>
-          </div>
-        )}
-
-        {tab === "chat" && (
-          <div>
-            {chatMessages.length === 0 && !chatTyping ? (
-              <div>
-                <div className="mb-3 flex items-start gap-2">
-                  <Lumi state="happy" size={42} animate />
-                  <div className="rounded-2xl rounded-bl-md border-2 p-3 text-[0.88rem]" style={{ borderColor: "var(--color-border)", background: "var(--color-paper)", color: "var(--color-ink)" }}>
-                    Ask the book anything. Try one of these to start —
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {book.chatPrompts.map((p, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => askPrompt(p)}
-                      className="rounded-xl border-2 px-3.5 py-2.5 text-start text-[0.88rem] transition-all active:scale-[0.99]"
-                      style={{ borderColor: "var(--color-border-strong)", background: "white", color: "var(--color-ink)", boxShadow: "0 3px 0 rgba(74,60,30,0.08)" }}
-                    >
-                      <span className="me-2 opacity-60">›</span>{p}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {chatMessages.map((m, i) => (
-                  <ChatBubble key={i} msg={m} />
-                ))}
-                {chatTyping && (
-                  <div className="flex items-start gap-2 animate-float-in">
-                    <Lumi state="thinking" size={36} animate />
-                    <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border-2 px-3 py-2.5" style={{ borderColor: "var(--color-border)", background: "var(--color-paper)" }}>
-                      {[0, 1, 2].map((i) => (
-                        <span key={i} className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--color-ink-soft)", animation: `dot-pulse 1.1s ease-in-out ${i * 0.18}s infinite` }} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <style>{`@keyframes dot-pulse{0%,80%,100%{opacity:.3;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}`}</style>
-                {chatMessages.length > 0 && !chatTyping && (
-                  <div className="mt-1 flex flex-wrap gap-1.5">
-                    {book.chatPrompts.filter((p) => !chatMessages.some((m) => m.text === p)).map((p, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => askPrompt(p)}
-                        className="rounded-full border px-3 py-1 text-[0.78rem] transition-all active:scale-95"
-                        style={{ borderColor: "var(--color-border)", background: "white", color: "var(--color-ink-soft)" }}
-                      >
-                        {p}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {tab === "quiz" && (
-          <div>
-            {!hits.quiz ? (
-              <>
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--color-coral-deep)" }}>
-                    Question {qi + 1} / {book.quiz.length}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    {book.quiz.map((_, i) => (
-                      <span key={i} className="h-1.5 w-5 rounded-full" style={{ background: i <= qi ? "var(--color-coral-deep)" : "rgba(74,60,30,0.15)" }} />
-                    ))}
-                  </div>
-                </div>
-
-                <h3 className="font-[family-name:var(--font-display)] text-[1.1rem] font-semibold leading-snug" style={{ color: "var(--color-ink)" }}>
-                  {book.quiz[qi].q}
-                </h3>
-
-                <div className="mt-4 flex flex-col gap-2">
-                  {book.quiz[qi].choices.map((c, i) => {
-                    const isPicked = selected === i;
-                    const isCorrect = book.quiz[qi].correct === i;
-                    const bg = !revealed
-                      ? "white"
-                      : isCorrect ? "rgba(123,161,124,0.18)" : isPicked ? "rgba(226,120,108,0.16)" : "white";
-                    const border = !revealed
-                      ? "var(--color-border-strong)"
-                      : isCorrect ? "var(--color-sage-deep)" : isPicked ? "var(--color-coral-deep)" : "var(--color-border)";
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        disabled={revealed}
-                        onClick={() => submitAnswer(i)}
-                        className="flex items-center justify-between gap-3 rounded-xl border-2 px-3.5 py-3 text-start transition-all active:scale-[0.99] disabled:cursor-default"
-                        style={{ borderColor: border, background: bg, boxShadow: revealed ? "none" : "0 3px 0 rgba(74,60,30,0.08)", color: "var(--color-ink)" }}
-                      >
-                        <span className="text-[0.92rem]">{c}</span>
-                        {revealed && isCorrect && (
-                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-white" style={{ background: "var(--color-sage-deep)" }}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                          </span>
-                        )}
-                        {revealed && isPicked && !isCorrect && (
-                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-white" style={{ background: "var(--color-coral-deep)" }}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {revealed && (
-                  <div className="mt-4 animate-float-in rounded-xl border-2 p-3 text-[0.86rem]" style={{ borderColor: selected === book.quiz[qi].correct ? "var(--color-sage-deep)" : "var(--color-saffron-deep)", background: selected === book.quiz[qi].correct ? "rgba(123,161,124,0.08)" : "rgba(224,164,80,0.08)", color: "var(--color-ink)" }}>
-                    <span className="me-1 font-bold" style={{ color: selected === book.quiz[qi].correct ? "var(--color-sage-deep)" : "var(--color-saffron-deep)" }}>
-                      {selected === book.quiz[qi].correct ? "Nice!" : "Close —"}
-                    </span>
-                    {book.quiz[qi].explain}
-                  </div>
-                )}
-
-                {revealed && (
-                  <button
-                    type="button"
-                    onClick={nextQuiz}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 font-[family-name:var(--font-display)] text-[0.95rem] font-bold text-white transition-all active:translate-y-1"
-                    style={{ background: "linear-gradient(to bottom,#EDB86A,#D09040)", boxShadow: "0 4px 0 rgba(152,96,24,0.55)" }}
-                  >
-                    {qi < book.quiz.length - 1 ? "Next question →" : "See my score →"}
-                  </button>
-                )}
-              </>
-            ) : (
-              <div className="text-center animate-float-in">
-                <div className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full text-3xl animate-pop-in" style={{ background: "rgba(224,164,80,0.15)" }}>
-                  🎉
-                </div>
-                <h3 className="font-[family-name:var(--font-display)] text-[1.3rem] font-semibold" style={{ color: "var(--color-ink)" }}>
-                  {score} / {book.quiz.length} right
-                </h3>
-                <p className="mt-1.5 text-[0.88rem]" style={{ color: "var(--color-ink-soft)" }}>
-                  {score === book.quiz.length ? "Perfect run." : score >= book.quiz.length - 1 ? "Almost perfect." : "Not bad for a sneak peek."}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Hint about remaining tabs */}
-      {!allHit && (
-        <div className="mt-4 flex items-start gap-2 rounded-2xl px-4 py-3" style={{ background: "rgba(224,164,80,0.07)", border: "1.5px solid rgba(224,164,80,0.2)" }}>
-          <span className="text-[1.1rem]">💡</span>
-          <p className="text-[0.84rem]" style={{ color: "var(--color-ink-soft)" }}>
-            {(["read", "chat", "quiz"] as const).filter((t) => !hits[t]).length === 1
-              ? "One more tab to try — then save your shelf."
-              : "Try each tab to see what Translify does — then we'll save your shelf."}
-          </p>
+          Couldn&apos;t load your shelf. Refresh to try again.
         </div>
       )}
 
-      <FixedFooter>
-        <BigButton onClick={onDone} disabled={!allHit}>
-          {allHit ? "Save my shelf →" : "Try every tab to continue"}
-        </BigButton>
-      </FixedFooter>
-    </div>
-  );
-}
+      {!isLoading && !error && (
+        <ul className="mt-7 flex flex-col gap-3">
+          {ordered.map((book, i) => {
+            const display = SEED_DISPLAY[book.seed_slug!];
+            const tagTopics = display.topics.slice(0, 2);
+            return (
+              <li key={book.id}>
+                <button
+                  type="button"
+                  onClick={() => onOpen(book)}
+                  className="group flex w-full items-center gap-4 rounded-2xl border-2 p-3.5 text-start transition-all active:scale-[0.99] animate-float-in"
+                  style={{
+                    animationDelay: `${i * 0.06}s`,
+                    borderColor: "var(--color-border-strong)",
+                    background: "white",
+                    boxShadow: "0 4px 0 rgba(74,60,30,0.10)",
+                  }}
+                >
+                  <div
+                    className="relative grid h-20 w-14 shrink-0 place-items-center overflow-hidden rounded-md"
+                    style={{ background: display.cover.bg, boxShadow: "2px 3px 0 rgba(74,60,30,0.18)" }}
+                  >
+                    <span className="text-[1.8rem]">{display.cover.emoji}</span>
+                    <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: "rgba(0,0,0,0.25)" }} />
+                  </div>
 
-function ChatBubble({ msg }: { msg: { role: "user" | "lumi"; text: string } }) {
-  if (msg.role === "user") {
-    return (
-      <div className="flex justify-end animate-float-in">
-        <div className="max-w-[80%] rounded-2xl rounded-br-md px-3.5 py-2.5 text-[0.9rem] leading-relaxed" style={{ background: "var(--color-saffron-deep)", color: "white", boxShadow: "0 3px 0 rgba(152,96,24,0.45)" }}>
-          {msg.text}
-        </div>
-      </div>
-    );
-  }
-  return (
-    <div className="flex items-start gap-2 animate-float-in">
-      <Lumi state="happy" size={38} animate />
-      <div className="max-w-[85%] whitespace-pre-line rounded-2xl rounded-bl-md border-2 px-3.5 py-2.5 text-[0.9rem] leading-relaxed" style={{ borderColor: "var(--color-border)", background: "var(--color-paper)", color: "var(--color-ink)" }}>
-        {/* Lightweight markdown — render **bold** and *italic* */}
-        <MiniMarkdown text={msg.text} />
-      </div>
-    </div>
-  );
-}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-[family-name:var(--font-display)] text-[1rem] font-semibold leading-tight" style={{ color: "var(--color-ink)" }}>
+                      {book.title}
+                    </h3>
+                    <p className="mt-0.5 truncate text-[0.82rem]" style={{ color: "var(--color-ink-soft)" }}>
+                      {book.author ?? ""}
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {tagTopics.map((tid) => {
+                        const t = TOPICS.find((x) => x.id === tid);
+                        if (!t) return null;
+                        return (
+                          <span
+                            key={tid}
+                            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.66rem] font-semibold"
+                            style={{ background: TONE_MAP[t.tone].iconBg, color: TONE_MAP[t.tone].iconColor }}
+                          >
+                            {t.icon} {t.label}
+                          </span>
+                        );
+                      })}
+                      {book.status !== "ready" && (
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.66rem] font-semibold"
+                          style={{ background: "rgba(74,60,30,0.08)", color: "var(--color-ink-soft)" }}
+                          title="Translify is still indexing this book — chat/quiz unlock when it's ready."
+                        >
+                          Preparing
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-function MiniMarkdown({ text }: { text: string }) {
-  // Tiny, safe replacement of **bold** and *italic*. No HTML injection.
-  const parts: React.ReactNode[] = [];
-  const re = /\*\*([^*]+)\*\*|\*([^*]+)\*/g;
-  let last = 0; let m: RegExpExecArray | null; let key = 0;
-  while ((m = re.exec(text)) !== null) {
-    if (m.index > last) parts.push(text.slice(last, m.index));
-    if (m[1]) parts.push(<strong key={key++} style={{ color: "var(--color-ink)" }}>{m[1]}</strong>);
-    else if (m[2]) parts.push(<em key={key++}>{m[2]}</em>);
-    last = m.index + m[0].length;
-  }
-  if (last < text.length) parts.push(text.slice(last));
-  return <>{parts}</>;
-}
+                  <span
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition-transform group-active:translate-x-0.5"
+                    style={{ background: "var(--color-saffron-deep)", color: "white", boxShadow: "0 3px 0 rgba(152,96,24,0.50)" }}
+                    aria-hidden
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M13 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
-// ─── Step 5 — Finish account ──────────────────────────────────────────────────
-function StepFinish({
-  email, name, setName, pw, setPw, busy, err, celebrate, onFinish, experienceDone, chosenBook,
-}: {
-  email: string;
-  name: string; setName: (s: string) => void;
-  pw: string; setPw: (s: string) => void;
-  busy: boolean; err: string | null;
-  celebrate: boolean;
-  onFinish: () => void;
-  experienceDone: boolean;
-  chosenBook: SampleBook | null;
-}) {
-  const ready = pw.length >= 8 && !busy;
-
-  if (celebrate) {
-    return (
-      <div className="mt-10 text-center">
-        <div className="mx-auto mb-4 grid h-24 w-24 animate-pop-in place-items-center rounded-full text-5xl" style={{ background: "rgba(224,164,80,0.16)" }}>
-          🎉
-        </div>
-        <h2 className="font-[family-name:var(--font-display)] text-[1.8rem] font-semibold" style={{ color: "var(--color-ink)" }}>
-          Your shelf is ready!
-        </h2>
-        <p className="mt-2 text-[0.95rem]" style={{ color: "var(--color-ink-soft)" }}>
-          Taking you to your library…
+      {!isLoading && !error && ordered.length === 0 && (
+        <p className="mt-10 rounded-xl border-2 p-4 text-center text-[0.86rem]" style={{ borderColor: "var(--color-border)", background: "white", color: "var(--color-ink-soft)" }}>
+          The seed library hasn&apos;t finished loading on this server yet. Try{" "}
+          <Link href="/library" className="font-bold underline underline-offset-4" style={{ color: "var(--color-ink)" }}>your library</Link>.
         </p>
-        <div className="mt-6 flex justify-center gap-2">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--color-saffron)", animation: `dot-bounce 0.9s ease-in-out ${i * 0.22}s infinite` }} />
-          ))}
-        </div>
-        <style>{`@keyframes dot-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-10px)}}`}</style>
-      </div>
-    );
-  }
+      )}
 
-  return (
-    <div>
-      <div className="text-center">
-        <div className="mx-auto mb-4 flex justify-center">
-          <Lumi state={experienceDone ? "celebrating" : "happy"} size={92} animate />
-        </div>
-        <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-saffron-deep)" }}>
-          Last step
-        </p>
-        <h2
-          className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
-          style={{ fontSize: "clamp(1.6rem,5.2vw,2.1rem)", color: "var(--color-ink)" }}
-        >
-          Save your shelf
-        </h2>
-        <p className="mx-auto mt-2 max-w-[30ch] text-[0.92rem]" style={{ color: "var(--color-ink-soft)" }}>
-          {chosenBook
-            ? `We'll keep ${chosenBook.title} bookmarked, plus everything you upload from here on.`
-            : "Your reading progress, books, chats and quizzes — saved to your account."}
-        </p>
-      </div>
-
-      <form
-        onSubmit={(e) => { e.preventDefault(); onFinish(); }}
-        className="mt-6 flex flex-col gap-3"
-      >
-        <div className="flex items-center gap-3 rounded-2xl border-2 px-4 py-3" style={{ borderColor: "var(--color-border)", background: "rgba(123,161,124,0.07)" }}>
-          <span className="text-[1.1rem]">📧</span>
-          <span className="flex-1 text-[0.92rem] font-medium" style={{ color: "var(--color-ink)" }}>{email}</span>
-          <span className="grid h-5 w-5 place-items-center rounded-full text-[0.6rem] font-bold text-white" style={{ background: "var(--color-sage-deep)" }}>✓</span>
-        </div>
-
-        <GameField icon="👤" type="text"     placeholder="Your name (optional)"     value={name} onChange={setName} autoComplete="name" />
-        <GameField icon="🔒" type="password" placeholder="Choose a password (8+)"   value={pw}   onChange={setPw}   autoComplete="new-password" required minLength={8} autoFocus />
-
-        {err && (
-          <div className="rounded-xl px-3 py-2 text-[0.84rem] font-medium" style={{ background: "rgba(220,38,38,0.07)", color: "#B91C1C", border: "1.5px solid rgba(220,38,38,0.22)" }}>
-            {err}
-          </div>
-        )}
-
-        <BigButton type="submit" disabled={!ready}>
-          {busy ? "Creating your shelf…" : "Save my shelf →"}
-        </BigButton>
-
-        <p className="text-center text-[0.74rem]" style={{ color: "var(--color-ink-soft)" }}>
-          Free 30-day trial · No credit card · Cancel anytime
-        </p>
-      </form>
+      <p className="mt-6 text-center text-[0.78rem]" style={{ color: "var(--color-ink-soft)" }}>
+        You can upload your own books later from your library.
+      </p>
     </div>
   );
 }
@@ -1304,7 +673,6 @@ function BigButton({
 function FixedFooter({ children }: { children: React.ReactNode }) {
   return (
     <>
-      {/* Spacer so content above doesn't sit under the fixed bar */}
       <div className="h-24" />
       <div
         className="fixed inset-x-0 bottom-0 z-20 px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-3 backdrop-blur-md"
@@ -1362,27 +730,5 @@ function GoogleLogo() {
       <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
       <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/>
     </svg>
-  );
-}
-
-// ─── Confetti ─────────────────────────────────────────────────────────────────
-const CONFETTI = Array.from({ length: 48 }, (_, i) => ({
-  id: i,
-  col: ["#E0A450","#7BA17C","#E2786C","#6B5B95","#F8D47A","#94C48A","#F4A6A0","#B5A0CC"][i % 8],
-  left: (i * 2.0833) % 100,
-  delay: (i * 0.032) % 1.4,
-  size: 6 + (i % 5),
-  rot: (i * 41) % 360,
-  dur: 1.5 + (i % 4) * 0.28,
-}));
-
-function Confetti() {
-  return (
-    <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
-      {CONFETTI.map((p) => (
-        <div key={p.id} className="absolute" style={{ left: `${p.left}%`, top: "-12px", width: p.size, height: Math.round(p.size * 0.55), background: p.col, borderRadius: 2, transform: `rotate(${p.rot}deg)`, animationName: "confetti-fall", animationDuration: `${p.dur}s`, animationDelay: `${p.delay}s`, animationTimingFunction: "ease-in", animationFillMode: "both" }} />
-      ))}
-      <style>{`@keyframes confetti-fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(105vh) rotate(740deg);opacity:0}}`}</style>
-    </div>
   );
 }

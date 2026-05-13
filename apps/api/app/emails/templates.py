@@ -307,6 +307,77 @@ Made with patience for readers everywhere.
     return subject, _layout(preheader=preheader, hero=hero, body=body), text
 
 
+# ─────────────────────────────  Magic link  ─────────────────────────────
+
+
+def magic_link(*, name: str | None, login_url: str) -> tuple[str, str, str]:
+    """Returns (subject, html, text) for the one-click login email.
+
+    Sent after silent-signup (the /join email step) and also any time a
+    visitor requests `/auth/magic-link` from another device. The link itself
+    is a short-lived JWT — see ``auth.magic_link`` for token construction.
+    """
+    salutation = (name and name.strip()) or "reader"
+    safe_salutation = html.escape(salutation)
+
+    subject = "Your shelf is one tap away ✦"
+    preheader = "One click to open your library — link expires in 30 minutes."
+
+    hero = _hero(
+        eyebrow="Magic link",
+        headline="Your shelf, one tap away.",
+        accent_word="one tap away",
+    )
+
+    body = f"""
+<p style="margin:24px 0 18px;font-family:{BODY_FONT_STACK};font-size:16px;
+          line-height:1.65;color:{INK}">
+  Hello {safe_salutation} —
+</p>
+<p style="margin:0 0 14px;font-family:{BODY_FONT_STACK};font-size:16px;
+          line-height:1.65;color:{INK}">
+  Your library is waiting at translify.app — eight public-domain classics
+  pre-loaded, ready to read in your language. Tap the button below to open
+  your shelf on this device. No password to type, no account to remember.
+</p>
+<p style="margin:0 0 28px;font-family:{BODY_FONT_STACK};font-size:16px;
+          line-height:1.65;color:{INK}">
+  The link expires in 30 minutes — request a new one any time from the
+  sign-in page.
+</p>
+
+{_button(label="Open my library", href=login_url, tone="ink")}
+
+{_link_fallback(login_url)}
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+       style="margin-top:32px">
+  <tr><td style="border-top:1px dashed {BORDER};padding-top:18px">
+    <p style="margin:0;font-family:{BODY_FONT_STACK};font-size:13px;
+              line-height:1.6;color:{INK_SOFT}">
+      Didn't request this? Ignore the email — the link will quietly expire.
+    </p>
+  </td></tr>
+</table>
+"""
+
+    text = f"""\
+Hello {salutation} —
+
+Your Translify shelf is waiting — eight public-domain classics pre-loaded,
+ready to read in your language. Tap the link below to open it on this
+device. No password to type. The link expires in 30 minutes:
+
+  {login_url}
+
+Didn't request this? You can ignore the email — the link expires quietly.
+
+— Translify · hello@translify.app
+"""
+
+    return subject, _layout(preheader=preheader, hero=hero, body=body), text
+
+
 # ─────────────────────────────  Password reset  ─────────────────────────────
 
 

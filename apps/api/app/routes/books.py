@@ -18,6 +18,7 @@ from app import upload_session
 from app.auth.models import User
 from app.auth.users import current_active_user
 from app.billing.quota import reserve_book_upload
+from app.book_access import visible_to
 from app.config import settings
 from app.db import get_async_session
 from app.models.book import Book, BookFormat, BookStatus
@@ -107,6 +108,24 @@ def _peek_page_count(fmt: BookFormat, file_key: str, expected_size: int) -> int:
 async def _get_owned_book(
     book_id: uuid.UUID, user: User, session: AsyncSession
 ) -> Book:
+    """Fetch a book the user can read — their own upload OR a seed."""
+    result = await session.execute(
+        select(Book).where(Book.id == book_id, visible_to(user))
+    )
+    book = result.scalar_one_or_none()
+    if book is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    return book
+
+
+async def _get_writable_book(
+    book_id: uuid.UUID, user: User, session: AsyncSession
+) -> Book:
+    """Fetch a book the user can mutate (rename, delete, etc.) — owned only.
+
+    Seed books are read-only from the user's perspective: they can chat /
+    quiz / highlight, but not rename or delete from their library.
+    """
     result = await session.execute(
         select(Book).where(Book.id == book_id, Book.user_id == user.id)
     )
@@ -121,8 +140,9 @@ async def list_books(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[Book]:
+    """Library listing — the user's own uploads plus the seed catalogue."""
     result = await session.execute(
-        select(Book).where(Book.user_id == user.id).order_by(Book.created_at.desc())
+        select(Book).where(visible_to(user)).order_by(Book.created_at.desc())
     )
     return list(result.scalars().all())
 
@@ -288,7 +308,8 @@ async def update_book(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> Book:
-    book = await _get_owned_book(book_id, user, session)
+    # Mutations require ownership — seed books are read-only.
+    book = await _get_writable_book(book_id, user, session)
     data = payload.model_dump(exclude_unset=True)
     for k, v in data.items():
         setattr(book, k, v)
@@ -303,7 +324,8 @@ async def delete_book(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> None:
-    book = await _get_owned_book(book_id, user, session)
+    # Mutations require ownership — seed books are read-only.
+    book = await _get_writable_book(book_id, user, session)
     file_key = book.file_key
     await session.delete(book)
     await session.commit()

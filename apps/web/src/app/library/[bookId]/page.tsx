@@ -44,6 +44,8 @@ import type {
   HighlightAction,
   SavedHighlight,
 } from "@/components/pdf-viewer";
+import { PaywallModal } from "@/components/paywall-modal";
+import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
 
 type RightTab = "chat" | "quiz" | "notes";
 type MobilePanel = null | "translate" | "chat" | "notes" | "quiz" | "garden";
@@ -104,17 +106,24 @@ export default function BookDetailPage({
     [],
   );
 
-  const onPageReached = useCallback(
-    (page: number) => {
-      markReached(page);
-      if (page > furthestPageRef.current) {
-        furthestPageRef.current = page;
-        playGardenActivity("water", `+ page ${page}`);
-      }
-    },
-    [markReached, playGardenActivity],
-  );
+  // Plan info — used to gate seed-book pages on Free.
+  const { data: sub } = useQuery<Subscription>({
+    queryKey: ["subscription"],
+    queryFn: getSubscription,
+    staleTime: 60_000,
+    enabled: mounted && !!getToken(),
+  });
 
+  // Paywall state — set by onPageReached when a Free reader crosses the cap.
+  const [paywallPage, setPaywallPage] = useState<number | null>(null);
+
+  // The paywall fires when a Free reader on a seed book crosses
+  // ``sub.quota.seed_book_page_cap``. Paid plans get UNLIMITED and never trip.
+  const seedCap = sub?.quota.seed_book_page_cap ?? Number.POSITIVE_INFINITY;
+  const isCapBound = !!sub && !isUnlimited(seedCap);
+
+  // The Book query has to precede onPageReached because the callback closes
+  // over ``book.is_seed`` for the paywall check.
   const { data: book, isLoading, isError } = useQuery<Book>({
     queryKey: ["book", bookId],
     queryFn: () => getBook(bookId),
@@ -124,6 +133,21 @@ export default function BookDetailPage({
       return s === "uploaded" || s === "processing" ? 3000 : false;
     },
   });
+
+  const onPageReached = useCallback(
+    (page: number) => {
+      markReached(page);
+      if (page > furthestPageRef.current) {
+        furthestPageRef.current = page;
+        playGardenActivity("water", `+ page ${page}`);
+      }
+      // Free + seed book + over cap → paywall. Paid plans pass straight through.
+      if (isCapBound && book?.is_seed && page > seedCap) {
+        setPaywallPage((cur) => cur ?? page);
+      }
+    },
+    [markReached, playGardenActivity, isCapBound, book?.is_seed, seedCap],
+  );
 
   const ready = book?.status === "ready";
 
@@ -316,6 +340,14 @@ export default function BookDetailPage({
   return (
     <main className="flex h-[100dvh] flex-col bg-[color:var(--color-paper)]">
       <TrialBanner />
+
+      <PaywallModal
+        open={paywallPage !== null}
+        page={paywallPage ?? undefined}
+        cap={seedCap}
+        bookTitle={book.title}
+        onClose={() => setPaywallPage(null)}
+      />
 
       <BookHeader book={book} />
 

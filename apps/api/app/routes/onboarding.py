@@ -1,28 +1,53 @@
-"""Onboarding-lead tracking — anonymous email capture before signup.
+"""Onboarding — lead tracking + silent (email-only) account creation.
 
-The /join flow captures email first, then walks visitors through topic-pick,
-shelf, and a sample experience before asking for a password. We persist the
-visitor's progress at every step so the team can re-engage drop-offs with
-targeted offers (e.g. "you stopped at the topic step — here's 20% off").
+The /join flow captures email first and then walks visitors through topic
+selection and a sample experience. There are two persistence concerns:
 
-The endpoint is **public** (no auth) because the visitor has no account yet.
-Abuse is bounded by per-IP rate limits at the edge / reverse proxy layer; the
-upsert itself is idempotent (unique index on email).
+1. **Drop-off tracking** — every step transition upserts an
+   ``OnboardingLead`` so the team can re-engage visitors who stop midway.
+   ``POST /onboarding/lead``.
+2. **Silent sign-up** — once the email is valid we create a real account in
+   the background and hand the browser a session JWT immediately. The user
+   lands in a real /library (with the system seed catalogue already
+   available) without seeing a password screen. ``POST /onboarding/start-session``.
+   A magic-link email is also sent so they can return on another device.
+
+Both endpoints are public — anti-enumeration in ``start-session`` is handled
+by *not* returning a JWT for emails that already have an account; instead a
+magic-link email is sent.
 """
 from __future__ import annotations
 
+import logging
+import secrets
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Header, Request, status
+from fastapi_users.jwt import generate_jwt
+from fastapi_users.password import PasswordHelper
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import magic_link as ml
 from app.auth.models import User
+from app.config import settings
 from app.db import get_async_session
+from app.emails import client as email_client
+from app.emails import templates as email_templates
 from app.models.onboarding import OnboardingLead, OnboardingStep
-from app.schemas.onboarding import OnboardingLeadRead, OnboardingLeadUpsert
+from app.routes.magic_link import magic_link_url
+from app.schemas.onboarding import (
+    OnboardingLeadRead,
+    OnboardingLeadUpsert,
+    StartSessionRequest,
+    StartSessionResponse,
+)
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
+
+_password_helper = PasswordHelper()
 
 
 @router.post(
@@ -117,3 +142,163 @@ _STEP_RANK: dict[OnboardingStep, int] = {
 
 def _step_rank(s: OnboardingStep) -> int:
     return _STEP_RANK.get(s, 0)
+
+
+# ─── Silent-signup ─────────────────────────────────────────────────────────
+
+
+@router.post(
+    "/start-session",
+    response_model=StartSessionResponse,
+)
+async def start_session(
+    payload: StartSessionRequest,
+    request: Request,
+    user_agent: str | None = Header(default=None, alias="User-Agent"),
+    session: AsyncSession = Depends(get_async_session),
+) -> StartSessionResponse:
+    """Email-only account creation. The frontend calls this from step 1 of /join.
+
+    Behaviour by email-status:
+
+    * **New email** → create an active+verified user with an unguessable
+      random password, mint a session JWT, return it. A welcome / magic-link
+      email is also sent for cross-device returns. The visitor is logged in
+      immediately and lands in /library on the next step.
+    * **Existing email** → do NOT return a JWT (someone else could be typing
+      the address). Send a magic-link email instead and return
+      ``magic_link_sent=true`` so the UI can prompt the visitor to check
+      their inbox.
+    """
+    email = payload.email.lower().strip()
+
+    # Look up an existing user.
+    existing_q = await session.execute(select(User).where(User.email == email))
+    user = existing_q.scalar_one_or_none()
+
+    if user is not None:
+        # Existing account — never return a JWT for an email we can't prove
+        # the typer owns. Send a magic link instead.
+        token = ml.issue(user.id)
+        subject, html, text = email_templates.magic_link(
+            name=user.display_name, login_url=magic_link_url(token)
+        )
+        try:
+            await email_client.send(
+                to=user.email,
+                subject=subject,
+                html=html,
+                text=text,
+                tag="magic-link-resume",
+            )
+        except Exception:
+            log.exception("Failed to send magic-link email to %s", user.email)
+        await _record_lead_for_session(
+            email=email,
+            user=user,
+            payload=payload,
+            request=request,
+            user_agent=user_agent,
+            session=session,
+        )
+        await session.commit()
+        return StartSessionResponse(
+            user_id=user.id, is_new_user=False, access_token=None,
+            magic_link_sent=True,
+        )
+
+    # New user — create the account silently.
+    hashed = _password_helper.hash(secrets.token_urlsafe(32))
+    user = User(
+        email=email,
+        hashed_password=hashed,
+        is_active=True,
+        # We trust the email enough to bypass click-to-verify: they'll get
+        # the welcome / magic-link email, and they can't do anything
+        # destructive until they pick a plan anyway.
+        is_verified=True,
+        is_superuser=False,
+        preferred_language=(payload.preferred_language or "en").lower()[:8],
+    )
+    session.add(user)
+    await session.flush()  # populate user.id
+
+    # Fire the welcome / magic-link email so the visitor has a way back if
+    # they switch devices or clear localStorage. Best-effort; the session is
+    # already valid.
+    token = ml.issue(user.id)
+    subject, html, text = email_templates.magic_link(
+        name=user.display_name, login_url=magic_link_url(token)
+    )
+    try:
+        await email_client.send(
+            to=user.email,
+            subject=subject,
+            html=html,
+            text=text,
+            tag="magic-link-welcome",
+        )
+    except Exception:
+        log.exception("Failed to send magic-link welcome to %s", user.email)
+
+    # Hand the browser a normal session JWT — same audience as /auth/jwt/login.
+    access_token = generate_jwt(
+        data={"sub": str(user.id), "aud": ["fastapi-users:auth"]},
+        secret=settings.jwt_secret,
+        lifetime_seconds=settings.jwt_lifetime_seconds,
+    )
+
+    await _record_lead_for_session(
+        email=email,
+        user=user,
+        payload=payload,
+        request=request,
+        user_agent=user_agent,
+        session=session,
+    )
+
+    await session.commit()
+    return StartSessionResponse(
+        user_id=user.id, is_new_user=True, access_token=access_token,
+        magic_link_sent=True,
+    )
+
+
+async def _record_lead_for_session(
+    *,
+    email: str,
+    user: User,
+    payload: StartSessionRequest,
+    request: Request,
+    user_agent: str | None,
+    session: AsyncSession,
+) -> None:
+    """Upsert the onboarding lead so the funnel dashboard stays consistent."""
+    referrer = (
+        payload.referrer or request.headers.get("referer") or ""
+    )[:512] or None
+    ua = (user_agent or "")[:512] or None
+
+    result = await session.execute(
+        select(OnboardingLead).where(OnboardingLead.email == email)
+    )
+    lead = result.scalar_one_or_none()
+    if lead is None:
+        lead = OnboardingLead(
+            email=email,
+            step=OnboardingStep.email,
+            topics=payload.topics or [],
+            preferred_language=payload.preferred_language,
+            referrer=referrer,
+            user_agent=ua,
+            user_id=user.id,
+        )
+        session.add(lead)
+    else:
+        if payload.topics is not None:
+            lead.topics = payload.topics
+        if payload.preferred_language is not None:
+            lead.preferred_language = payload.preferred_language
+        if lead.user_id is None:
+            lead.user_id = user.id
+        lead.last_seen_at = datetime.now(timezone.utc)

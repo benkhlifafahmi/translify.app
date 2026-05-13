@@ -31,6 +31,10 @@ class QuotaRead(BaseModel):
     priority_queue: bool
     family_safe_mode: bool
     literary_translation: bool
+    # Page after which a Free reader is paywalled on seed books. The frontend
+    # reads this from /billing/me to fire the upgrade modal — paid plans get
+    # the UNLIMITED sentinel and never trip the gate. 1-indexed.
+    seed_book_page_cap: int
 
 
 class UsageRead(BaseModel):

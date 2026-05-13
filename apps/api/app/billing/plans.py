@@ -45,24 +45,32 @@ class PlanQuota:
     priority_queue: bool
     family_safe_mode: bool
     literary_translation: bool  # Anthropic engine for translation (vs. DeepL standard)
+    # Hard cap on how far a Free reader can navigate inside a *seed* book
+    # before the paywall fires. Paid plans get UNLIMITED. The number is the
+    # last *allowed* page (1-indexed) — i.e. 10 means pages 1..10 read free,
+    # page 11 triggers the upgrade modal.
+    seed_book_page_cap: int
 
 
 # Limits sized for sustainable unit economics, not for marketing roundness.
 # Free is unsubscribable — new users go through a 14-day Reader trial.
 PLAN_QUOTAS: dict[Plan, PlanQuota] = {
     Plan.free: PlanQuota(
-        # Free is a "try the translation" demo: 2 pages lifetime, then paywall.
-        # Free users have no Stripe subscription period, so the counter never
-        # resets — pages_per_month behaves as a lifetime cap.
+        # Free is the seed-library experience. Users can browse the system's
+        # 8 pre-ingested public-domain books, but only the first 10 pages of
+        # each are readable — page 11 triggers the upgrade modal.
+        # Uploads of their own books stay tightly capped; we want them to
+        # *upgrade*, not abuse the demo as a free service.
         pages_per_month=2,
         max_pages_per_book=2,
-        quizzes_per_book=0,         # quizzes locked behind a real plan
+        quizzes_per_book=3,         # let them taste quizzes on seed books
         profiles=1,
-        chat_with_citations=False,  # chat locked
+        chat_with_citations=True,   # let them taste chat on seed books
         annotated_export=False,
         priority_queue=False,
         family_safe_mode=False,
         literary_translation=False,
+        seed_book_page_cap=10,
     ),
     Plan.reader: PlanQuota(
         pages_per_month=2_000,       # ~8 average novels or one fat textbook
@@ -74,6 +82,7 @@ PLAN_QUOTAS: dict[Plan, PlanQuota] = {
         priority_queue=False,
         family_safe_mode=False,
         literary_translation=False,
+        seed_book_page_cap=UNLIMITED,
     ),
     Plan.scholar: PlanQuota(
         pages_per_month=UNLIMITED,
@@ -85,6 +94,7 @@ PLAN_QUOTAS: dict[Plan, PlanQuota] = {
         priority_queue=True,
         family_safe_mode=False,
         literary_translation=True,
+        seed_book_page_cap=UNLIMITED,
     ),
     Plan.family: PlanQuota(
         pages_per_month=UNLIMITED,
@@ -96,6 +106,7 @@ PLAN_QUOTAS: dict[Plan, PlanQuota] = {
         priority_queue=True,
         family_safe_mode=True,
         literary_translation=True,
+        seed_book_page_cap=UNLIMITED,
     ),
 }
 

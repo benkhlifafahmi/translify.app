@@ -89,6 +89,51 @@ export async function requestVerificationResend(email: string): Promise<void> {
 
 // ─── Google OAuth ──────────────────────────────────────────────────────────────
 
+// ─── Silent-signup + magic-link ────────────────────────────────────────────────
+
+export interface StartSessionResponse {
+  user_id: string;
+  is_new_user: boolean;
+  access_token: string | null;
+  token_type: string;
+  magic_link_sent: boolean;
+}
+
+/** Email-only sign-up. If the email is new, returns a JWT and the caller is
+ * immediately logged in. If the email is taken, ``access_token`` is null and a
+ * magic-link email has been sent — the caller should prompt the visitor to
+ * check their inbox. */
+export async function startSession(input: {
+  email: string;
+  topics?: string[];
+  preferred_language?: string;
+  referrer?: string;
+}): Promise<StartSessionResponse> {
+  const res = await api<StartSessionResponse>("/onboarding/start-session", {
+    method: "POST",
+    body: input,
+  });
+  if (res.access_token) setToken(res.access_token);
+  return res;
+}
+
+/** Idempotent — server returns 202 whether or not the email is registered. */
+export async function requestMagicLink(email: string): Promise<void> {
+  await api("/auth/magic-link/request", {
+    method: "POST",
+    body: { email },
+  });
+}
+
+export async function redeemMagicLink(token: string): Promise<User> {
+  const res = await api<{ access_token: string; token_type: string; user_id: string }>(
+    "/auth/magic-link/redeem",
+    { method: "POST", body: { token } },
+  );
+  setToken(res.access_token);
+  return await me();
+}
+
 /** Returns the Google authorization URL to redirect the user to. */
 export async function getGoogleAuthUrl(callbackUrl: string): Promise<string> {
   const res = await api<{ authorization_url: string }>(

@@ -39,8 +39,10 @@ router = APIRouter(tags=["quizzes"])
 async def _get_owned_book(
     book_id: uuid.UUID, user: User, session: AsyncSession
 ) -> Book:
+    # Seed books are visible to everyone — see app.book_access.visible_to.
+    from app.book_access import visible_to
     result = await session.execute(
-        select(Book).where(Book.id == book_id, Book.user_id == user.id)
+        select(Book).where(Book.id == book_id, visible_to(user))
     )
     book = result.scalar_one_or_none()
     if book is None:

@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -61,6 +61,20 @@ class Book(Base):
     # primary context for quiz generation (vs. random chunk sampling) so
     # quizzes test the book's actual ideas rather than localized passages.
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # True when this book is a system-owned seed visible to every user. Seed
+    # rows are filtered into a user's library alongside their own uploads; per-
+    # user state (chats, quizzes, highlights) still keys on (user_id, book_id)
+    # — only the source content + chunks are shared. Free readers can browse
+    # the first ``Plan.free.seed_book_page_cap`` pages of any seed before the
+    # upgrade modal fires.
+    is_seed: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false", index=True,
+    )
+    # Stable identifier for a seed book across deploys — referenced by the
+    # /join flow when the visitor picks a sample. Matches `slug` in
+    # ``app/seeds/catalog.py``. Unique across seed rows, NULL for user uploads.
+    seed_slug: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
