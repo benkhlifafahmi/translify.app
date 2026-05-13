@@ -200,13 +200,29 @@ export function EpubViewer({
   }, [theme, fontSize, lineHeight, fontStack, ready]);
 
   // ───────────── Selection toolbar wiring ─────────────
+  //
+  // Mirrors the approach the PDF viewer uses (and which works on iOS):
+  // listen to ``selectionchange`` with a ~180ms debounce so we land
+  // *after* the user finishes dragging the selection handles. epubjs's
+  // ``selected`` event alone misses iOS because Safari fires
+  // selectionchange repeatedly with intermediate collapsed states during
+  // the drag, and the event sometimes never makes it back out of the
+  // iframe at all. Listening on each iframe's document — plus the 180ms
+  // settle window — is what makes the toolbar appear reliably.
 
   useEffect(() => {
     const rendition = renditionRef.current;
     if (!rendition) return;
+    const host = containerRef.current;
+    if (!host) return;
 
-    const onSelected = (cfiRange: string, contents: Contents) => {
-      const sel = (contents.window as Window).getSelection?.();
+    // Shared across all rendered sections; only one iframe is visible at
+    // a time so a single timer is enough.
+    let timer: number | null = null;
+
+    const finalize = (contents: Contents, fallbackCfi?: string) => {
+      const win = contents.window as Window;
+      const sel = win.getSelection?.();
       if (!sel || sel.isCollapsed) {
         setSelection(null);
         return;
@@ -216,23 +232,69 @@ export function EpubViewer({
         setSelection(null);
         return;
       }
-      // Position the toolbar relative to the host container, not the iframe —
-      // we read the iframe's offset within our container and add the selection
-      // rect from inside the iframe.
-      const host = containerRef.current;
-      if (!host) return;
       const range = sel.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      const iframe = (contents.window as Window).frameElement as HTMLIFrameElement | null;
+      const iframe = win.frameElement as HTMLIFrameElement | null;
       const ifRect = iframe?.getBoundingClientRect();
       const hostRect = host.getBoundingClientRect();
       const top = (ifRect?.top ?? 0) + rect.top - hostRect.top;
       const left = (ifRect?.left ?? 0) + rect.left - hostRect.left + rect.width / 2;
-      setSelection({ text, cfi: cfiRange, top: Math.max(8, top - 8), left });
+      // CFI: epubjs ``selected`` passes one in; for the manual listener
+      // path we synthesize from the range. The cast quiets TS since the
+      // type def for Contents.cfiFromRange isn't published.
+      let cfi = fallbackCfi ?? "";
+      if (!cfi) {
+        try {
+          const c = contents as unknown as { cfiFromRange?: (r: Range) => string };
+          cfi = c.cfiFromRange?.(range) ?? "";
+        } catch { /* CFI is optional — toolbar still works without one */ }
+      }
+      setSelection({ text, cfi, top: Math.max(8, top - 8), left });
     };
 
+    const scheduleFinalize = (contents: Contents, cfi?: string) => {
+      if (timer !== null) window.clearTimeout(timer);
+      // 180ms matches the PDF viewer's debounce — long enough for iOS to
+      // settle on the final selection, short enough to feel instant on
+      // mouse-up.
+      timer = window.setTimeout(() => finalize(contents, cfi), 180);
+    };
+
+    // Per-iframe listener attachment. Each rendered section gets its own
+    // iframe, so we hook the listener as soon as the section is rendered.
+    const onRendered = (_section: unknown, contents: Contents) => {
+      try {
+        const doc = contents.window.document;
+        const handler = () => scheduleFinalize(contents);
+        doc.addEventListener("selectionchange", handler);
+        // Listener auto-tears-down with the iframe when epubjs unloads
+        // the section; nothing to clean up explicitly.
+      } catch { /* sandbox / cross-origin — fall back to the rendition event */ }
+    };
+
+    // epubjs's built-in event. On desktop it always fires; on iOS it's
+    // flaky, so it acts as a redundant signal when it does arrive.
+    const onSelected = (cfi: string, contents: Contents) => {
+      scheduleFinalize(contents, cfi);
+    };
+
+    rendition.on("rendered", onRendered);
     rendition.on("selected", onSelected);
+
+    // Late-attach for any sections already on screen when this effect
+    // first runs (race-condition guard).
+    try {
+      type View = { contents?: Contents };
+      const r = rendition as unknown as { manager?: { views?: { _views?: View[] } } };
+      const views = r.manager?.views?._views;
+      if (Array.isArray(views)) {
+        for (const v of views) if (v.contents) onRendered(null, v.contents);
+      }
+    } catch { /* best-effort */ }
+
     return () => {
+      if (timer !== null) window.clearTimeout(timer);
+      rendition.off("rendered", onRendered);
       rendition.off("selected", onSelected);
     };
   }, [ready]);
