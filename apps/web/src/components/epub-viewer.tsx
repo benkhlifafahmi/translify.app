@@ -103,12 +103,15 @@ export function EpubViewer({
   const [lineHeight, setLineHeight] = useState<number>(DEFAULT_LINE_HEIGHT);
   const [fontStack, setFontStack] = useState<string>(FONT_CHOICES[0].stack);
 
-  // Selection toolbar state
+  // Selection toolbar state. We used to track {top, left} for a floating
+  // slip; on mobile that math sent the bar off-screen when the user
+  // selected near the top of the page, and the native iOS callout
+  // collided with it anyway. The renderer now uses fixed positioning
+  // (bottom on mobile, top on desktop) so the only thing the handler
+  // needs to compute is "do we have a valid selection?"
   const [selection, setSelection] = useState<{
     text: string;
     cfi: string;
-    top: number;
-    left: number;
   } | null>(null);
 
   // ───────────── Book load + initial render ─────────────
@@ -184,6 +187,15 @@ export function EpubViewer({
 
     rendition.themes.override("body", `background: ${t.bg} !important;`);
     rendition.themes.override("html", `background: ${t.bg} !important;`);
+    // Suppress the native iOS Copy/Look-Up/Share callout that otherwise
+    // sits on top of our highlight/note/ask-AI bar. Selection itself is
+    // still allowed — only the platform menu is muted. Safari is the only
+    // browser that paints this callout; the property is a no-op everywhere
+    // else.
+    rendition.themes.override(
+      "body, p, li, dd, dt, span",
+      "-webkit-touch-callout: none; -webkit-user-select: text; user-select: text;",
+    );
     rendition.themes.override("*", `color: ${t.ink};`);
     rendition.themes.override("a", `color: ${t.accent}; text-decoration-color: ${t.accent}`);
     rendition.themes.override("p, li, dd, dt", `line-height: ${lineHeight}; font-family: ${fontStack};`);
@@ -212,19 +224,7 @@ export function EpubViewer({
         setSelection(null);
         return;
       }
-      // Position the toolbar relative to the host container, not the iframe —
-      // we read the iframe's offset within our container and add the selection
-      // rect from inside the iframe.
-      const host = containerRef.current;
-      if (!host) return;
-      const range = sel.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      const iframe = (contents.window as Window).frameElement as HTMLIFrameElement | null;
-      const ifRect = iframe?.getBoundingClientRect();
-      const hostRect = host.getBoundingClientRect();
-      const top = (ifRect?.top ?? 0) + rect.top - hostRect.top;
-      const left = (ifRect?.left ?? 0) + rect.left - hostRect.left + rect.width / 2;
-      setSelection({ text, cfi: cfiRange, top: Math.max(8, top - 8), left });
+      setSelection({ text, cfi: cfiRange });
     };
 
     rendition.on("selected", onSelected);
@@ -552,11 +552,18 @@ export function EpubViewer({
           </>
         )}
 
-        {/* Selection toolbar — torn-paper slip */}
+        {/* Selection toolbar.
+            Mobile: pinned to the bottom of the viewport (matches Apple
+            Books / Kindle). Reliable on touch — no off-screen positioning,
+            no collision with the iOS native selection menu (which we also
+            suppress via -webkit-touch-callout: none on the iframe body).
+            Desktop: top of the canvas so the user can see both the slip
+            and the selected line without scrolling. */}
         {selection && (
           <div
-            className="absolute z-30 -translate-x-1/2 -translate-y-full"
-            style={{ top: selection.top, left: selection.left }}
+            role="toolbar"
+            aria-label="Selection actions"
+            className="fixed inset-x-0 bottom-0 z-50 flex justify-center pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 px-3 sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-3 sm:-translate-x-1/2 sm:p-0 sm:px-0 sm:pt-0"
             onMouseDown={(e) => e.preventDefault()}
             onTouchStart={(e) => e.preventDefault()}
           >
