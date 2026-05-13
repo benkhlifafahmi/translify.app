@@ -15,6 +15,13 @@ from app.db import Base
 class OAuthAccount(SQLAlchemyBaseOAuthAccountTableUUID, Base):
     __tablename__ = "oauth_accounts"
 
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="cascade"),
+        nullable=False,
+        index=True,
+    )
+
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
     __tablename__ = "users"
