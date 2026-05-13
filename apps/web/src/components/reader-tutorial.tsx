@@ -21,9 +21,10 @@ import { Lumi } from "@/components/lumi/lumi";
 type StepId = "tap-to-turn" | "select-to-act" | "open-chat" | "open-quiz";
 
 type Spotlight =
-  | { kind: "page-edges" }
   | { kind: "canvas-text" }
-  | { kind: "anchor"; selector: string };
+  /** Pulse one or more DOM elements via querySelector. Multiple selectors
+   *  fire in parallel — useful for "the prev *and* next arrow" type tips. */
+  | { kind: "anchor"; selectors: string[] };
 
 interface Step {
   id: StepId;
@@ -41,11 +42,14 @@ const STEPS: Step[] = [
     id: "tap-to-turn",
     showAtPage: 1,
     eyebrow: "How to read",
-    body: "Tap the right edge of the page to flip forward. Tap the left edge to go back.",
+    body: "Tap the arrows in the top bar to flip forward and back. On a computer you can also tap the left or right edge of the page.",
     cta: "Got it",
     lumi: "waving",
-    pointer: "👇 Try the glowing edges",
-    spotlight: { kind: "page-edges" },
+    pointer: "⟵ ⟶ The two glowing arrows",
+    spotlight: {
+      kind: "anchor",
+      selectors: ['[data-tutorial-anchor="topbar-prev"]', '[data-tutorial-anchor="topbar-next"]'],
+    },
   },
   {
     id: "select-to-act",
@@ -65,7 +69,7 @@ const STEPS: Step[] = [
     cta: "Got it",
     lumi: "thinking",
     pointer: "💬 The glowing tab",
-    spotlight: { kind: "anchor", selector: '[data-tutorial-anchor="chat-tab"]' },
+    spotlight: { kind: "anchor", selectors: ['[data-tutorial-anchor="chat-tab"]'] },
   },
   {
     id: "open-quiz",
@@ -75,7 +79,7 @@ const STEPS: Step[] = [
     cta: "Cool",
     lumi: "excited",
     pointer: "★ The glowing tab",
-    spotlight: { kind: "anchor", selector: '[data-tutorial-anchor="quiz-tab"]' },
+    spotlight: { kind: "anchor", selectors: ['[data-tutorial-anchor="quiz-tab"]'] },
   },
 ];
 
@@ -121,19 +125,24 @@ export function ReaderTutorial({ page, disabled }: Props) {
     }
   }, [page, skipped, disabled, activeStep]);
 
-  // For "anchor" spotlights, find the target DOM node and toggle a data
-  // attribute on it that CSS uses to drive a pulse. Cleanup removes the
-  // attribute when the tip dismisses, when the anchor changes, or when
-  // the component unmounts.
+  // For "anchor" spotlights, find each target DOM node and toggle a data
+  // attribute on it that CSS uses to drive a pulse. Multiple selectors
+  // are pulsed in parallel (e.g. step 1 spotlights both top-bar arrows).
+  // Cleanup removes the attribute when the tip dismisses, when the anchor
+  // changes, or when the component unmounts.
   useEffect(() => {
     if (!activeStep || activeStep.spotlight.kind !== "anchor") return;
     if (typeof document === "undefined") return;
-    const selector = activeStep.spotlight.selector;
-    const el = document.querySelector<HTMLElement>(selector);
-    if (!el) return;
-    el.setAttribute("data-tutorial-spotlight", "");
+    const found: HTMLElement[] = [];
+    for (const selector of activeStep.spotlight.selectors) {
+      const el = document.querySelector<HTMLElement>(selector);
+      if (el) {
+        el.setAttribute("data-tutorial-spotlight", "");
+        found.push(el);
+      }
+    }
     return () => {
-      el.removeAttribute("data-tutorial-spotlight");
+      for (const el of found) el.removeAttribute("data-tutorial-spotlight");
     };
   }, [activeStep]);
 
@@ -256,18 +265,6 @@ export function ReaderTutorial({ page, disabled }: Props) {
               0 0 0 12px rgba(208, 144, 64, 0.18);
           }
         }
-        @keyframes tutorial-arrow-pulse {
-          0%, 100% { transform: translateY(-50%) scale(1);   opacity: 0.95; }
-          50%      { transform: translateY(-50%) scale(1.18); opacity: 0.6;  }
-        }
-        @keyframes tutorial-arrow-shift-r {
-          0%, 100% { margin-left: 0px;   }
-          50%      { margin-left: 6px;   }
-        }
-        @keyframes tutorial-arrow-shift-l {
-          0%, 100% { margin-right: 0px;   }
-          50%      { margin-right: 6px;   }
-        }
         @keyframes tutorial-finger-swipe {
           0%   { transform: translate(-50%, -50%) translateX(-40%); opacity: 0; }
           15%  { opacity: 1; }
@@ -289,45 +286,6 @@ function SpotlightLayer({ kind }: { kind: Spotlight["kind"] }) {
     // The pulse is rendered on the actual element via the data-attribute
     // effect — nothing extra to draw here.
     return null;
-  }
-
-  if (kind === "page-edges") {
-    // Big glowing arrows on the left/right edges of the viewport so the
-    // tap-to-turn affordance is visible. The left arrow's tone is
-    // intentionally a touch dimmer than the right since "forward" is the
-    // primary gesture we want the visitor to discover first.
-    return (
-      <div className="pointer-events-none fixed inset-0 z-40">
-        <div
-          aria-hidden
-          className="absolute left-2 top-1/2 grid h-14 w-14 place-items-center rounded-full sm:left-4 sm:h-16 sm:w-16"
-          style={{
-            animation: "tutorial-arrow-pulse 1.4s ease-in-out infinite, tutorial-arrow-shift-l 1.4s ease-in-out infinite",
-            background: "rgba(255, 255, 255, 0.92)",
-            border: "2px solid var(--color-saffron-deep)",
-            boxShadow: "0 6px 18px -4px rgba(20,16,8,0.30)",
-          }}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-saffron-deep)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </div>
-        <div
-          aria-hidden
-          className="absolute right-2 top-1/2 grid h-14 w-14 place-items-center rounded-full sm:right-4 sm:h-16 sm:w-16"
-          style={{
-            animation: "tutorial-arrow-pulse 1.4s ease-in-out infinite, tutorial-arrow-shift-r 1.4s ease-in-out infinite",
-            background: "rgba(255, 255, 255, 0.95)",
-            border: "2px solid var(--color-saffron-deep)",
-            boxShadow: "0 6px 18px -4px rgba(20,16,8,0.30)",
-          }}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-saffron-deep)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m9 6 6 6-6 6" />
-          </svg>
-        </div>
-      </div>
-    );
   }
 
   if (kind === "canvas-text") {

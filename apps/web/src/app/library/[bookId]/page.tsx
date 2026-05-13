@@ -21,7 +21,9 @@ import {
   HighlightsPanel,
   type OpenHighlightState,
 } from "@/components/highlights-panel";
-import { TrialBanner } from "@/components/trial-banner";
+// TrialBanner was removed from the reader — it ate vertical space on
+// mobile and we already prompt the upgrade via the page-10 PaywallModal
+// + the FreePreviewChip countdown.
 import type { Citation } from "@/lib/chats";
 import {
   createHighlight,
@@ -360,8 +362,6 @@ export default function BookDetailPage({
 
   return (
     <main className="flex h-[100dvh] flex-col bg-[color:var(--color-paper)]">
-      <TrialBanner />
-
       <EmailGateModal
         open={emailGate !== null}
         action={emailGate?.action ?? "save"}

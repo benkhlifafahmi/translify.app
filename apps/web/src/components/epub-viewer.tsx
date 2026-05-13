@@ -574,7 +574,7 @@ export function EpubViewer({
       {/* Top bar — minimal; the spine carries most of the navigation hints */}
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/60 px-4 py-2 backdrop-blur">
         <div className="flex items-center gap-1">
-          <PageButton onClick={prev} label="Previous page">
+          <PageButton onClick={prev} label="Previous page" dataAnchor="topbar-prev">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <path d="m15 18-6-6 6-6" />
             </svg>
@@ -592,7 +592,7 @@ export function EpubViewer({
               </>
             )}
           </div>
-          <PageButton onClick={next} label="Next page">
+          <PageButton onClick={next} label="Next page" dataAnchor="topbar-next">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <path d="m9 18 6-6-6-6" />
             </svg>
@@ -636,16 +636,16 @@ export function EpubViewer({
               style={{ paddingRight: "28px" /* room for spine */ }}
             />
 
-            {/* Hover-zones for click-to-page-turn (desktop). Mobile users
-                still get them — they're just transparent buttons covering
-                the left/right edge of the canvas. The ReaderTutorial
-                component teaches the gesture explicitly on first read. */}
+            {/* Click-to-page-turn (desktop only). On mobile these zones
+                intercept long-press before iOS can initiate text-selection
+                on the underlying iframe — so we hide them on touch and
+                rely on the top-bar prev/next arrows for mobile paging. */}
             <button
               type="button"
               onClick={prev}
               aria-label="Previous page"
               data-tutorial-anchor="page-prev"
-              className="absolute inset-y-0 left-0 w-16 md:cursor-w-resize"
+              className="absolute inset-y-0 left-0 hidden w-16 cursor-w-resize md:block"
               style={{ background: "transparent" }}
             />
             <button
@@ -653,7 +653,7 @@ export function EpubViewer({
               onClick={next}
               aria-label="Next page"
               data-tutorial-anchor="page-next"
-              className="absolute inset-y-0 right-7 w-16 md:cursor-e-resize"
+              className="absolute inset-y-0 right-7 hidden w-16 cursor-e-resize md:block"
               style={{ background: "transparent" }}
             />
 
@@ -952,8 +952,8 @@ function StepBtn({
 }
 
 function PageButton({
-  onClick, disabled, label, children,
-}: { onClick: () => void; disabled?: boolean; label: string; children: React.ReactNode }) {
+  onClick, disabled, label, children, dataAnchor,
+}: { onClick: () => void; disabled?: boolean; label: string; children: React.ReactNode; dataAnchor?: string }) {
   return (
     <button
       type="button"
@@ -961,6 +961,7 @@ function PageButton({
       disabled={disabled}
       aria-label={label}
       title={label}
+      data-tutorial-anchor={dataAnchor}
       className="grid h-8 w-8 place-items-center rounded-full border-[1.5px] border-[color:var(--color-border)] bg-white/70 text-[color:var(--color-ink-soft)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-ink-soft)]/40 hover:bg-white hover:text-[color:var(--color-ink)] disabled:pointer-events-none disabled:opacity-40"
     >
       {children}
