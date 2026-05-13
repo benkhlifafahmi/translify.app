@@ -260,14 +260,46 @@ export function EpubViewer({
       timer = window.setTimeout(() => finalize(contents, cfi), 180);
     };
 
-    // Per-iframe listener attachment. Each rendered section gets its own
-    // iframe, so we hook the listener as soon as the section is rendered.
+    // Per-iframe listener attachment + native-callout suppression.
+    //
+    // Native callout suppression: ``-webkit-touch-callout: none`` removes
+    // the Copy/Look-Up/Share menu iOS Safari shows by default on long-
+    // press, and ``-webkit-tap-highlight-color: transparent`` kills the
+    // grey tap flash on Android. Both are injected directly into the
+    // iframe's head as a fresh ``<style>`` tag — going through epubjs's
+    // ``themes.override`` is unreliable on iOS because Safari sometimes
+    // ignores rules injected after the iframe has already painted.
+    //
+    // Selection detection: we attach three listeners. iOS Safari is
+    // inconsistent about which events fire inside iframes on long-press;
+    // whichever one lands first feeds the same debounced ``finalize``
+    // and the others coalesce. ``selectionchange`` covers the desktop
+    // drag-select, ``touchend`` covers iOS finishing a long-press
+    // selection, ``pointerup`` is the cross-platform fallback.
     const onRendered = (_section: unknown, contents: Contents) => {
       try {
         const doc = contents.window.document;
+        try {
+          const styleEl = doc.createElement("style");
+          styleEl.setAttribute("data-translify-no-callout", "");
+          styleEl.textContent = `
+            html, body, * {
+              -webkit-touch-callout: none !important;
+              -webkit-tap-highlight-color: transparent !important;
+            }
+            html, body, p, li, dd, dt, span, em, strong, h1, h2, h3, h4, h5, h6, div, blockquote, a {
+              -webkit-user-select: text !important;
+              user-select: text !important;
+            }
+          `;
+          (doc.head ?? doc.documentElement).appendChild(styleEl);
+        } catch { /* style injection failed — selection still works */ }
+
         const handler = () => scheduleFinalize(contents);
         doc.addEventListener("selectionchange", handler);
-        // Listener auto-tears-down with the iframe when epubjs unloads
+        doc.addEventListener("pointerup", handler);
+        doc.addEventListener("touchend", handler, { passive: true });
+        // Listeners auto-tear-down with the iframe when epubjs unloads
         // the section; nothing to clean up explicitly.
       } catch { /* sandbox / cross-origin — fall back to the rendition event */ }
     };
