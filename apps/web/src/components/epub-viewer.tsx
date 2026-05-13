@@ -123,12 +123,18 @@ export function EpubViewer({
     const book = ePub(fileUrl, { openAs: "epub" });
     bookRef.current = book;
 
+    // Scroll-first reading mode. Users who arrive from social/mobile expect
+    // to flick vertically; the old paginated layout left them stuck staring
+    // at white space with no swipe-up affordance. ``scrolled-continuous``
+    // stacks every chapter into one tall column managed by epubjs's
+    // ``continuous`` manager — keyboard arrows + the prev/next buttons
+    // still work (they scroll a screen-height each), and locations + chapter
+    // tracking continue to fire on every relocated event.
     const rendition = book.renderTo(containerRef.current, {
       width: "100%",
       height: "100%",
-      flow: "paginated",
-      spread: "auto",
-      manager: "default",
+      flow: "scrolled-continuous",
+      manager: "continuous",
       allowScriptedContent: false,
     });
     renditionRef.current = rendition;
@@ -491,7 +497,13 @@ export function EpubViewer({
         </button>
       </div>
 
-      {/* Book canvas */}
+      {/* Book canvas. Two layers:
+          • outer (this div) is the *frame* — stays put. Spine + loading
+            overlay live here so they don't scroll with the content.
+          • inner (the absolute scroller below) is where overflow happens.
+          epubjs's "continuous" manager renders every chapter stacked into
+          the inner container and handles progressive loading + the
+          relocated events that drive our chapter/progress chrome. */}
       <div
         className="relative flex-1 overflow-hidden"
         style={{ background: themeBg }}
@@ -503,28 +515,22 @@ export function EpubViewer({
         ) : (
           <>
             <div
-              ref={containerRef}
-              className="absolute inset-0"
-              style={{ paddingRight: "28px" /* room for spine */ }}
-            />
+              className="absolute inset-0 overflow-y-auto overflow-x-hidden"
+              style={{
+                WebkitOverflowScrolling: "touch",
+                overscrollBehavior: "contain",
+              }}
+            >
+              <div
+                ref={containerRef}
+                className="relative min-h-full w-full"
+                style={{ paddingRight: "28px" /* room for spine */ }}
+              />
+            </div>
 
-            {/* Hover-zones for click-to-page-turn (desktop) */}
-            <button
-              type="button"
-              onClick={prev}
-              aria-label="Previous page"
-              className="absolute inset-y-0 left-0 hidden w-16 cursor-w-resize md:block"
-              style={{ background: "transparent" }}
-            />
-            <button
-              type="button"
-              onClick={next}
-              aria-label="Next page"
-              className="absolute inset-y-0 right-7 hidden w-16 cursor-e-resize md:block"
-              style={{ background: "transparent" }}
-            />
-
-            {/* The paper spine — vertical progress on the right edge */}
+            {/* The paper spine — vertical progress on the right edge.
+                Sits in the outer frame so it stays pinned as the canvas
+                scrolls underneath it. */}
             <Spine progressPct={progressPct} theme={theme} />
 
             {!ready && (
