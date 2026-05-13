@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api";
-import { getGoogleAuthUrl, login, requestMagicLink, startSession } from "@/lib/auth";
+import { getGoogleAuthUrl, startSession } from "@/lib/auth";
 import { cloneSeed, listSeeds, type Seed } from "@/lib/seeds";
 import { trackLead } from "@/lib/onboarding";
 import { Lumi } from "@/components/lumi/lumi";
@@ -14,12 +14,12 @@ import { TranslifyIcon } from "@/components/translify-mark";
 // ─── Steps ────────────────────────────────────────────────────────────────────
 type Step =
   | "email"        // 1. visitor types email; backend decides new-vs-existing
-  | "password"     // 1b. existing email → prompt for password before continuing
+  | "magic-sent"   // 1b. existing email → magic link mailed; "check your inbox"
   | "topics"       // 2. multi-select topic chips
-  | "shelf"        // 3. seed books matching their topics — tap one → /library/<id>
+  | "shelf"        // 3. seed catalogue — tap one → clone + open
   ;
 
-// "password" is a sub-state of step 1 so it doesn't get its own progress dot.
+// "magic-sent" is a terminal branch off step 1, not its own progress dot.
 const VISIBLE_STEPS: Step[] = ["email", "topics", "shelf"];
 
 // ─── Topics ───────────────────────────────────────────────────────────────────
@@ -104,11 +104,9 @@ export function JoinClient() {
 
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [topics, setTopics] = useState<TopicId[]>([]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   // Capture document.referrer once on mount so trackLead carries attribution.
   const referrerRef = useRef<string | undefined>(undefined);
@@ -148,46 +146,17 @@ export function JoinClient() {
         // Fresh account — JWT already stored by startSession().
         SFX.advance();
         setStep("topics");
-      } else if (res.requires_password) {
-        // Returning visitor — ask for their password before we let them in.
-        SFX.tap();
-        setStep("password");
+      } else if (res.magic_link_sent) {
+        // Returning visitor — server mailed a sign-in link. Show the
+        // confirmation screen; the user comes back in via /auth/magic-login.
+        SFX.success();
+        setStep("magic-sent");
       } else {
         throw new Error("Couldn't start a session. Please try again.");
       }
     } catch (e) {
       SFX.error();
       setErr(e instanceof ApiError ? e.message : "Couldn't start a session. Please try again.");
-    } finally { setBusy(false); }
-  };
-
-  const handlePassword = async () => {
-    if (!password) { setErr("Enter your password to sign in."); SFX.error(); return; }
-    setErr(null); setBusy(true);
-    try {
-      await login(email, password);
-      trackLead({ email, step: "email", referrer: referrerRef.current });
-      SFX.advance();
-      setStep("topics");
-    } catch (e) {
-      SFX.error();
-      setErr(
-        e instanceof ApiError
-          ? "That password doesn't match. Try again — or use a sign-in link below."
-          : "Couldn't sign you in. Please try again.",
-      );
-    } finally { setBusy(false); }
-  };
-
-  const handleSendMagicLink = async () => {
-    setErr(null); setBusy(true);
-    try {
-      await requestMagicLink(email);
-      setMagicLinkSent(true);
-      SFX.success();
-    } catch {
-      // requestMagicLink swallows enumeration internally — we always treat it as a success.
-      setMagicLinkSent(true);
     } finally { setBusy(false); }
   };
 
@@ -254,8 +223,8 @@ export function JoinClient() {
             type="button"
             onClick={() => {
               SFX.tap();
-              if (step === "password") {
-                setPassword(""); setErr(null); setMagicLinkSent(false);
+              if (step === "magic-sent") {
+                setErr(null);
                 setStep("email");
               } else if (step === "shelf") {
                 setStep("topics");
@@ -310,15 +279,8 @@ export function JoinClient() {
               onContinue={handleEmail} err={err} busy={busy}
             />
           )}
-          {step === "password" && (
-            <StepPassword
-              email={email}
-              password={password} setPassword={setPassword}
-              onSubmit={handlePassword}
-              onSendMagicLink={handleSendMagicLink}
-              magicLinkSent={magicLinkSent}
-              err={err} busy={busy}
-            />
+          {step === "magic-sent" && (
+            <StepMagicSent email={email} />
           )}
           {step === "topics" && (
             <StepTopics
@@ -415,103 +377,38 @@ function StepEmail({
   );
 }
 
-// ─── Step 1b — Password (returning user) ──────────────────────────────────────
-function StepPassword({
-  email, password, setPassword, onSubmit, onSendMagicLink, magicLinkSent, err, busy,
-}: {
-  email: string;
-  password: string;
-  setPassword: (v: string) => void;
-  onSubmit: () => void;
-  onSendMagicLink: () => void;
-  magicLinkSent: boolean;
-  err: string | null;
-  busy: boolean;
-}) {
+// ─── Step 1b — Magic-link sent (returning user) ──────────────────────────────
+function StepMagicSent({ email }: { email: string }) {
   return (
-    <div className="flex flex-col">
-      <div className="mb-5 flex justify-center">
-        <Lumi state="happy" size={92} animate />
-      </div>
-
-      <div className="text-center">
-        <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-sage-deep)" }}>
-          Welcome back
-        </p>
-        <h1
-          className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
-          style={{ fontSize: "clamp(1.6rem,5.5vw,2.1rem)", color: "var(--color-ink)" }}
-        >
-          Enter your password
-        </h1>
-        <p className="mx-auto mt-2 max-w-[30ch] text-[0.92rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          Signing you back into your shelf.
-        </p>
-      </div>
-
-      <form
-        onSubmit={(e) => { e.preventDefault(); onSubmit(); }}
-        className="mt-6 flex flex-col gap-3"
+    <div className="mt-2 flex flex-col items-center text-center">
+      <Lumi state="happy" size={108} animate />
+      <p
+        className="mt-6 text-[0.7rem] font-bold uppercase tracking-[0.22em]"
+        style={{ color: "var(--color-sage-deep)" }}
       >
-        {/* Email shown as a confirmed chip (read-only). Back button on the
-            top bar lets the user change it. */}
-        <div
-          className="flex items-center gap-3 rounded-2xl border-2 px-4 py-3"
-          style={{ borderColor: "var(--color-border)", background: "rgba(123,161,124,0.07)" }}
-        >
-          <span className="text-[1.1rem]">📧</span>
-          <span className="flex-1 truncate text-[0.92rem] font-medium" style={{ color: "var(--color-ink)" }}>
-            {email}
-          </span>
-          <span className="grid h-5 w-5 place-items-center rounded-full text-[0.6rem] font-bold text-white" style={{ background: "var(--color-sage-deep)" }}>✓</span>
-        </div>
-
-        <GameField
-          icon="🔒"
-          type="password"
-          placeholder="Your password"
-          value={password}
-          onChange={setPassword}
-          autoComplete="current-password"
-          required
-          autoFocus
-        />
-
-        {err && (
-          <div className="rounded-xl px-3 py-2 text-[0.84rem] font-medium" style={{ background: "rgba(220,38,38,0.07)", color: "#B91C1C", border: "1.5px solid rgba(220,38,38,0.22)" }}>
-            {err}
-          </div>
-        )}
-
-        <BigButton type="submit" disabled={!password || busy}>
-          {busy ? "Signing you in…" : "Sign in →"}
-        </BigButton>
-
-        <div className="mt-1 flex items-center justify-between text-[0.84rem]">
-          <Link
-            href="/forgot-password"
-            className="font-semibold underline underline-offset-4"
-            style={{ color: "var(--color-ink-soft)" }}
-          >
-            Forgot password?
-          </Link>
-          {magicLinkSent ? (
-            <span className="font-semibold" style={{ color: "var(--color-sage-deep)" }}>
-              Check your inbox ✓
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={onSendMagicLink}
-              disabled={busy}
-              className="font-semibold underline underline-offset-4 disabled:opacity-50"
-              style={{ color: "var(--color-ink-soft)" }}
-            >
-              Email me a sign-in link
-            </button>
-          )}
-        </div>
-      </form>
+        Welcome back
+      </p>
+      <h1
+        className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.06] tracking-tight"
+        style={{ fontSize: "clamp(1.7rem,6vw,2.2rem)", color: "var(--color-ink)" }}
+      >
+        Check your inbox.
+      </h1>
+      <p className="mx-auto mt-3 max-w-[32ch] text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+        We sent a one-tap sign-in link to{" "}
+        <span className="font-semibold" style={{ color: "var(--color-ink)" }}>{email}</span>.
+        Tap it to open your shelf — no password to remember.
+      </p>
+      <p className="mt-6 text-[0.84rem]" style={{ color: "var(--color-ink-soft)" }}>
+        Got a password instead?{" "}
+        <Link href="/login" className="font-semibold underline underline-offset-4" style={{ color: "var(--color-ink)" }}>
+          Sign in here
+        </Link>
+        .
+      </p>
+      <p className="mt-2 text-[0.78rem]" style={{ color: "var(--color-ink-soft)" }}>
+        Didn&apos;t arrive? Check spam, or change the email above to try again.
+      </p>
     </div>
   );
 }

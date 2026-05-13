@@ -94,7 +94,6 @@ export async function requestVerificationResend(email: string): Promise<void> {
 export interface StartSessionResponse {
   user_id: string | null;
   is_new_user: boolean;
-  requires_password: boolean;
   access_token: string | null;
   token_type: string;
   magic_link_sent: boolean;

@@ -6,35 +6,65 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { login, getGoogleAuthUrl } from "@/lib/auth";
+import { getGoogleAuthUrl, login, requestMagicLink } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 import { AuthShell } from "@/components/auth-shell";
 import { useI18n } from "@/lib/i18n";
 
-
+/**
+ * Magic-link-first sign-in.
+ *
+ * Defaults to "send me a sign-in link" because /join-created accounts have
+ * an unguessable random password the user has never seen — passwords are
+ * an opt-in second method (set via /forgot-password). Users who *do* have
+ * a password can expand "Sign in with password" and use the classic form.
+ */
 export default function LoginPage() {
   const router = useRouter();
   const { t } = useI18n();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const [email, setEmail] = useState("");
+  const [linkSent, setLinkSent] = useState(false);
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [linkErr, setLinkErr] = useState<string | null>(null);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwErr, setPwErr] = useState<string | null>(null);
+
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const onSendLink = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSubmitting(true);
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    if (!ok) { setLinkErr("Enter a valid email so we can send your sign-in link."); return; }
+    setLinkErr(null); setLinkBusy(true);
+    try {
+      await requestMagicLink(email);
+      setLinkSent(true);
+    } catch {
+      // The endpoint always returns 202 to prevent enumeration — surface a
+      // generic "sent" state regardless.
+      setLinkSent(true);
+    } finally { setLinkBusy(false); }
+  };
+
+  const onSignInWithPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) { setPwErr("Enter your email and password."); return; }
+    setPwErr(null); setPwBusy(true);
     try {
       await login(email, password);
       router.push("/library");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Login failed");
-    } finally {
-      setSubmitting(false);
-    }
+      setPwErr(
+        err instanceof ApiError
+          ? "Email or password doesn't match. Try a sign-in link instead?"
+          : "Couldn't sign you in. Please try again.",
+      );
+    } finally { setPwBusy(false); }
   };
-
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
@@ -50,9 +80,9 @@ export default function LoginPage() {
     <AuthShell
       eyebrow={t("auth.login.eyebrow")}
       title={t("auth.login.title")}
-      subtitle={t("auth.login.subtitle")}
+      subtitle="Sign in with a one-tap link or a password — your choice."
     >
-      {/* Google button */}
+      {/* Google */}
       <button
         type="button"
         onClick={handleGoogle}
@@ -73,57 +103,124 @@ export default function LoginPage() {
         {googleLoading ? "Redirecting…" : "Continue with Google"}
       </button>
 
-      {/* Divider */}
       <div className="flex items-center gap-3">
         <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
         <span className="text-[0.72rem] font-semibold text-[color:var(--color-ink-soft)]">or</span>
         <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
       </div>
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-5">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email">{t("auth.login.email")}</Label>
-          <Input
-            id="email"
-            type="email"
-            autoComplete="email"
-            placeholder="you@example.com"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-baseline justify-between">
-            <Label htmlFor="password">{t("auth.login.password")}</Label>
-            <Link
-              href="/forgot-password"
-              className="text-[0.78rem] font-semibold text-[color:var(--color-ink-soft)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4 hover:text-[color:var(--color-ink)]"
-            >
-              Forgot it?
-            </Link>
+      {/* Magic-link form */}
+      {!linkSent ? (
+        <form onSubmit={onSendLink} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+
+          {linkErr && (
+            <div className="rounded-xl border border-[color:var(--color-destructive)]/30 bg-[color:var(--color-destructive)]/8 px-4 py-3 text-sm text-[color:var(--color-destructive)]">
+              {linkErr}
+            </div>
+          )}
+
+          <Button type="submit" variant="accent" size="lg" disabled={linkBusy}>
+            {linkBusy ? "Sending…" : "Send my sign-in link"}
+          </Button>
+        </form>
+      ) : (
+        <div
+          className="flex flex-col items-center gap-2 rounded-2xl border-2 px-5 py-6 text-center"
+          style={{ borderColor: "var(--color-sage-deep)", background: "rgba(123,161,124,0.07)" }}
+        >
+          <span className="grid h-10 w-10 place-items-center rounded-full text-white" style={{ background: "var(--color-sage-deep)" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          </span>
+          <p className="font-[family-name:var(--font-display)] text-[1.05rem] font-semibold" style={{ color: "var(--color-ink)" }}>
+            Check your inbox
+          </p>
+          <p className="max-w-[28ch] text-[0.88rem]" style={{ color: "var(--color-ink-soft)" }}>
+            We sent a one-tap sign-in link to{" "}
+            <span className="font-semibold" style={{ color: "var(--color-ink)" }}>{email}</span>. It expires in 30 minutes.
+          </p>
+          <button
+            type="button"
+            onClick={() => { setLinkSent(false); }}
+            className="mt-1 text-[0.82rem] font-semibold underline underline-offset-4"
+            style={{ color: "var(--color-ink-soft)" }}
+          >
+            Use a different email
+          </button>
         </div>
+      )}
 
-        {error && (
-          <div className="rounded-xl border border-[color:var(--color-destructive)]/30 bg-[color:var(--color-destructive)]/8 px-4 py-3 text-sm text-[color:var(--color-destructive)]">
-            {error}
+      {/* Password fallback — collapsed by default. */}
+      <div className="flex items-center gap-3">
+        <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
+        <button
+          type="button"
+          onClick={() => setShowPassword((s) => !s)}
+          className="text-[0.78rem] font-semibold text-[color:var(--color-ink-soft)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4 hover:text-[color:var(--color-ink)]"
+        >
+          {showPassword ? "Hide password sign-in" : "Sign in with password instead"}
+        </button>
+        <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
+      </div>
+
+      {showPassword && (
+        <form onSubmit={onSignInWithPassword} className="flex flex-col gap-4 animate-float-in">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-baseline justify-between">
+              <Label htmlFor="pw-password">{t("auth.login.password")}</Label>
+              <Link
+                href="/forgot-password"
+                className="text-[0.78rem] font-semibold text-[color:var(--color-ink-soft)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4 hover:text-[color:var(--color-ink)]"
+              >
+                Forgot it?
+              </Link>
+            </div>
+            <Input
+              id="pw-password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <p className="text-[0.74rem]" style={{ color: "var(--color-ink-soft)" }}>
+              No password yet?{" "}
+              <Link
+                href="/forgot-password"
+                className="font-semibold underline underline-offset-4"
+                style={{ color: "var(--color-ink-soft)" }}
+              >
+                Set one here
+              </Link>
+              .
+            </p>
           </div>
-        )}
 
-        <Button type="submit" variant="accent" size="lg" disabled={submitting}>
-          {submitting ? t("auth.login.submitting") : t("auth.login.submit")}
-        </Button>
-      </form>
+          {pwErr && (
+            <div className="rounded-xl border border-[color:var(--color-destructive)]/30 bg-[color:var(--color-destructive)]/8 px-4 py-3 text-sm text-[color:var(--color-destructive)]">
+              {pwErr}
+            </div>
+          )}
+
+          <Button type="submit" variant="accent" size="lg" disabled={pwBusy}>
+            {pwBusy ? t("auth.login.submitting") : t("auth.login.submit")}
+          </Button>
+        </form>
+      )}
 
       <p className="text-center text-sm text-[color:var(--color-ink-soft)]">
         {t("auth.login.new")}{" "}

@@ -52,20 +52,20 @@ class StartSessionRequest(BaseModel):
 class StartSessionResponse(BaseModel):
     """What the browser uses to take action after start-session.
 
-    Three possible terminal states from the same endpoint:
+    Two possible terminal states from the same endpoint:
 
     * **New email** — we create the account and return an ``access_token``;
       the user is logged in instantly and continues to the topic picker.
-    * **Existing email** — we return ``user_id=None`` and
-      ``requires_password=True`` so the UI can prompt for the password
-      (which is then sent to ``/auth/jwt/login``). No JWT is minted and no
-      magic-link email is sent automatically — the UI can offer that as an
-      explicit "email me a sign-in link instead" action via
-      ``/auth/magic-link/request``.
+    * **Existing email** — we return ``user_id=None``, ``access_token=None``,
+      ``magic_link_sent=True``. The UI shows a "check your inbox" message
+      and the visitor signs in by tapping the link in the email. We don't
+      prompt for a password here because /join-created accounts have an
+      unguessable one the user has never seen; users who *did* set a
+      password via /forgot-password can use the password fallback on
+      /login.
     """
     user_id: uuid.UUID | None = None
     is_new_user: bool
-    requires_password: bool = False
     access_token: str | None = None
     token_type: str = "bearer"
     magic_link_sent: bool = False

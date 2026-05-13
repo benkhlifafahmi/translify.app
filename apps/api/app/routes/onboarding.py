@@ -178,16 +178,30 @@ async def start_session(
     user = existing_q.unique().scalar_one_or_none()
 
     if user is not None:
-        # Returning user — don't auto-authenticate (we can't prove the typer
-        # owns the address). Tell the UI to prompt for a password, which it
-        # will POST to /auth/jwt/login.
+        # Returning user — we can't prove the typer owns the address, so we
+        # don't hand out a JWT. We don't ask for a password either, because
+        # /join-created accounts have an unguessable random password the
+        # user has never seen. Instead we mail a magic-link sign-in URL;
+        # anyone who can read the inbox can complete sign-in.
         #
-        # We deliberately do NOT include the user_id in the response so a
-        # caller can't enumerate which emails exist by inspecting it. The
-        # ``requires_password`` signal is intentionally identical for any
-        # known account, including those without a real password (we treat
-        # passwordless-only accounts the same way — they can fall back to
-        # /forgot-password to set one, or use the magic-link button).
+        # Users who *did* set a password via /forgot-password still have the
+        # password path available on /login (see the collapsible "Sign in
+        # with password" panel).
+        token = ml.issue(user.id)
+        subject, html, text = email_templates.magic_link(
+            name=user.display_name, login_url=magic_link_url(token)
+        )
+        try:
+            await email_client.send(
+                to=user.email,
+                subject=subject,
+                html=html,
+                text=text,
+                tag="magic-link-resume",
+            )
+        except Exception:
+            log.exception("Failed to send magic-link email to %s", user.email)
+
         await _record_lead_for_session(
             email=email,
             user=user,
@@ -200,9 +214,8 @@ async def start_session(
         return StartSessionResponse(
             user_id=None,
             is_new_user=False,
-            requires_password=True,
             access_token=None,
-            magic_link_sent=False,
+            magic_link_sent=True,
         )
 
     # New user — create the account silently.
