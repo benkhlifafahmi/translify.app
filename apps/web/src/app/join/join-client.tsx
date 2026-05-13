@@ -8,6 +8,7 @@ import { register, getGoogleAuthUrl } from "@/lib/auth";
 import { trackLead } from "@/lib/onboarding";
 import { Lumi, type LumiState } from "@/components/lumi/lumi";
 import { TranslifyIcon } from "@/components/translify-mark";
+import { EpubViewer } from "@/components/epub-viewer-lazy";
 
 // ─── Steps & state ────────────────────────────────────────────────────────────
 type Step = "email" | "topics" | "shelf" | "experience" | "signup";
@@ -16,7 +17,7 @@ const STEP_ORDER: Step[] = ["email", "topics", "shelf", "experience", "signup"];
 
 type TopicId =
   | "fiction" | "self-help" | "history" | "science"
-  | "philosophy" | "business" | "art" | "tech";
+  | "philosophy" | "business" | "art" | "nature";
 
 const TOPICS: { id: TopicId; icon: string; label: string; tone: Tone }[] = [
   { id: "fiction",     icon: "📖", label: "Fiction",       tone: "saffron" },
@@ -24,9 +25,9 @@ const TOPICS: { id: TopicId; icon: string; label: string; tone: Tone }[] = [
   { id: "philosophy",  icon: "🌿", label: "Philosophy",    tone: "sage"    },
   { id: "history",     icon: "🏛️", label: "History",       tone: "plum"    },
   { id: "science",     icon: "🔬", label: "Science",       tone: "coral"   },
-  { id: "business",    icon: "💼", label: "Business",      tone: "plum"    },
+  { id: "business",    icon: "💼", label: "Strategy",      tone: "plum"    },
   { id: "art",         icon: "🎨", label: "Art & Poetry",  tone: "coral"   },
-  { id: "tech",        icon: "💻", label: "Tech",          tone: "saffron" },
+  { id: "nature",      icon: "🌲", label: "Nature",        tone: "saffron" },
 ];
 
 type Tone = "saffron" | "sage" | "plum" | "coral";
@@ -39,46 +40,84 @@ const TONE_MAP: Record<Tone, { ring: string; bg: string; iconBg: string; iconCol
 };
 
 // ─── Sample books ─────────────────────────────────────────────────────────────
+// Every book here is **public domain worldwide** and shipped as an EPUB under
+// apps/web/public/sample-books/. See that folder's README for provenance and
+// Project Gutenberg references. The visitor reads the full text in step 4 —
+// no paywall, no rights problem, no DRM.
 interface SampleBook {
   id: string;
   topics: TopicId[];
   title: string;
   author: string;
   cover: { bg: string; emoji: string };
+  /** Path under /public — served as a static asset. */
+  epubUrl: string;
   origLang: string;
   origExcerpt: string;
   enExcerpt: string;
   chatPrompts: string[];
   cannedChat: { q: string; a: string }[];
   quiz: { q: string; choices: string[]; correct: number; explain: string }[];
+  /** Short attribution string shown in the reader chrome. */
+  attribution: string;
 }
 
 const SAMPLE_BOOKS: SampleBook[] = [
   {
-    id: "little-prince",
-    topics: ["fiction", "philosophy"],
-    title: "Le Petit Prince",
-    author: "Antoine de Saint-Exupéry",
-    cover: { bg: "linear-gradient(135deg,#6B5B95,#3D2D5C)", emoji: "🌹" },
-    origLang: "French",
-    origExcerpt: "Voici mon secret. Il est très simple : on ne voit bien qu'avec le cœur. L'essentiel est invisible pour les yeux.",
-    enExcerpt: "Here is my secret. It is very simple: one sees clearly only with the heart. What is essential is invisible to the eye.",
+    id: "pride-and-prejudice",
+    topics: ["fiction"],
+    title: "Pride and Prejudice",
+    author: "Jane Austen",
+    cover: { bg: "linear-gradient(135deg,#6B5B95,#3D2D5C)", emoji: "💃" },
+    epubUrl: "/sample-books/pride-and-prejudice.epub",
+    origLang: "English (1813)",
+    origExcerpt: "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
+    enExcerpt: "It is a truth everyone agrees on: a single man with money is bound to be looking for a wife — or so the neighbourhood will decide for him.",
     chatPrompts: [
-      "What's the main lesson of the book?",
-      "Why is the rose so important to the Prince?",
-      "Quiz me on chapter 1",
+      "Who is Mr. Darcy, really?",
+      "Why does Elizabeth refuse him at first?",
+      "What's Austen actually satirising?",
     ],
     cannedChat: [
       {
-        q: "What's the main lesson of the book?",
-        a: "At its heart, *The Little Prince* is about learning to **see**. The narrator argues that adults forget how — they get lost in numbers, status, and routine. The Prince's tour of the asteroids satirises grown-up obsessions: a King who rules nothing, a Businessman counting stars he doesn't own, a Geographer who never leaves his desk.\n\nThe famous takeaway: **what is essential is invisible to the eye.** Meaning lives in time spent and in the responsibility we accept for what we love — symbolised by the rose he tamed back on his planet.",
+        q: "Who is Mr. Darcy, really?",
+        a: "Darcy is Austen's most famous study in **first impressions vs. character**. At Netherfield he reads as proud, cold, and snobbish — and on the page, he *is* those things, because of his class anxieties and his social discomfort.\n\nBut as Elizabeth (and the reader) get closer, the picture changes: he's loyal to his sister Georgiana, generous to his tenants, and capable of admitting fault in his letter after his first proposal. The novel's argument is that pride and prejudice cut both ways — Darcy has the pride, Elizabeth has the prejudice, and growth means each meeting the other in the middle.",
       },
     ],
     quiz: [
-      { q: "What does the fox teach the Little Prince?", choices: ["Speed matters most", "Taming creates responsibility", "Numbers prove value", "Stars own themselves"], correct: 1, explain: "The fox says: 'You become responsible, forever, for what you have tamed.'" },
-      { q: "Why does the Prince consider his rose unique?", choices: ["She is rare", "He cared for her, watered her, listened", "She is the most beautiful", "She talks to him"], correct: 1, explain: "Although there are thousands of roses, his is unique because of the time he gave her." },
-      { q: "What is the book's most famous line about?", choices: ["Money", "Speed", "Seeing with the heart", "Counting stars"], correct: 2, explain: "'What is essential is invisible to the eye' — a meditation on what truly matters." },
+      { q: "What does Elizabeth Bennet refuse from Mr. Darcy first?", choices: ["A dance", "His first proposal of marriage", "An invitation to Pemberley", "A letter"], correct: 1, explain: "She turns down his proposal at Hunsford — sparking the letter that changes everything." },
+      { q: "Why does Darcy initially separate Bingley from Jane?", choices: ["He dislikes Jane", "He thinks Jane is indifferent and the match beneath the Bingleys", "He wants Bingley for himself", "Jane is engaged elsewhere"], correct: 1, explain: "Class and a misread of Jane's reserve — he later admits both were errors." },
+      { q: "What does the opening line really mean?", choices: ["Marriage is destiny", "It's a wry satire of neighbourhood gossip about wealthy bachelors", "Austen approves of arranged marriages", "Single men should marry"], correct: 1, explain: "The line is ironic — it's the *neighbours* who think this, not the bachelor." },
     ],
+    attribution: "Public domain · via Project Gutenberg",
+  },
+  {
+    id: "alice-in-wonderland",
+    topics: ["fiction"],
+    title: "Alice's Adventures in Wonderland",
+    author: "Lewis Carroll",
+    cover: { bg: "linear-gradient(135deg,#94C48A,#3D6B44)", emoji: "🐇" },
+    epubUrl: "/sample-books/alice-in-wonderland.epub",
+    origLang: "English (1865)",
+    origExcerpt: "Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do…",
+    enExcerpt: "Alice was getting bored sitting by her sister on the riverbank with nothing to do — until a White Rabbit muttering about being late ran past her, and she followed.",
+    chatPrompts: [
+      "What is Wonderland actually about?",
+      "Why is the Cheshire Cat smiling?",
+      "Quiz me on the riddles",
+    ],
+    cannedChat: [
+      {
+        q: "What is Wonderland actually about?",
+        a: "Carroll wrote it as a children's story, but the deeper joke is **logic mocking itself**. Carroll was a mathematician (Charles Dodgson, Christ Church, Oxford), and Wonderland is a place where Victorian adult logic — court procedure, table manners, arithmetic — keeps colliding with its own absurdity.\n\nThe Mad Hatter's tea party is a stuck clock; the Queen's croquet is rigged law; the Caterpillar's questions are identity philosophy in a hookah. Alice is the only character who keeps asking *why* — which is the whole point of the book.",
+      },
+    ],
+    quiz: [
+      { q: "What is Alice chasing when she falls down the rabbit hole?", choices: ["A cat", "A White Rabbit checking his pocket watch", "A butterfly", "A book"], correct: 1, explain: "The Rabbit mutters about being late — and down she goes." },
+      { q: "Who poses the riddle 'Why is a raven like a writing-desk?'", choices: ["The Caterpillar", "The Mad Hatter", "The Cheshire Cat", "The Queen"], correct: 1, explain: "At the Mad Tea-Party. Famously, Carroll never gave a canonical answer." },
+      { q: "What does the Queen of Hearts shout most often?", choices: ["Curtsey!", "Off with their heads!", "Silence!", "Out!"], correct: 1, explain: "Capital punishment as small talk — Carroll's swipe at arbitrary authority." },
+    ],
+    attribution: "Public domain · via Project Gutenberg",
   },
   {
     id: "meditations",
@@ -86,9 +125,10 @@ const SAMPLE_BOOKS: SampleBook[] = [
     title: "Meditations",
     author: "Marcus Aurelius",
     cover: { bg: "linear-gradient(135deg,#E2786C,#9B3B2D)", emoji: "🏛️" },
-    origLang: "Greek",
-    origExcerpt: "Ἕωθεν προλέγειν ἑαυτῷ· συντεύξομαι περιέργῳ, ἀχαρίστῳ, ὑβριστῇ…",
-    enExcerpt: "Begin each day by telling yourself: today I shall meet the meddling, the ungrateful, the arrogant, the deceitful, the envious, the unsociable. They are this way because they cannot tell good from evil.",
+    epubUrl: "/sample-books/meditations.epub",
+    origLang: "Greek → English (tr. George Long, 1862)",
+    origExcerpt: "Begin the morning by saying to thyself, I shall meet with the busy-body, the ungrateful, arrogant, deceitful, envious, unsocial.",
+    enExcerpt: "Start your day by telling yourself: today I'll meet the meddler, the ingrate, the arrogant, the deceitful, the envious, the unsocial. They are this way because they cannot tell good from evil.",
     chatPrompts: [
       "Summarise Stoic philosophy in 3 lines",
       "How do I apply this on a hard day?",
@@ -105,15 +145,17 @@ const SAMPLE_BOOKS: SampleBook[] = [
       { q: "What is the Stoic 'dichotomy of control'?", choices: ["Mind vs. body", "What you control vs. what you don't", "Past vs. future", "Self vs. society"], correct: 1, explain: "The foundation of Stoic practice — focus only on what's yours to choose." },
       { q: "Why do Stoics meet difficult people calmly?", choices: ["They suppress emotion", "They believe others act from ignorance, not malice", "They avoid all conflict", "They feel nothing"], correct: 1, explain: "As Marcus writes, they 'cannot distinguish good from evil' — so respond with patience, not anger." },
     ],
+    attribution: "Public domain · tr. George Long, 1862 · via Project Gutenberg",
   },
   {
     id: "art-of-war",
     topics: ["business", "history"],
-    title: "孫子兵法",
-    author: "Sun Tzu — The Art of War",
+    title: "The Art of War",
+    author: "Sun Tzu",
     cover: { bg: "linear-gradient(135deg,#4A3C1E,#1F1808)", emoji: "⚔️" },
-    origLang: "Classical Chinese",
-    origExcerpt: "兵者，國之大事，死生之地，存亡之道，不可不察也。",
+    epubUrl: "/sample-books/art-of-war.epub",
+    origLang: "Classical Chinese → English (tr. Lionel Giles, 1910)",
+    origExcerpt: "The art of war is of vital importance to the State. It is a matter of life and death, a road either to safety or to ruin.",
     enExcerpt: "War is of vital importance to the State — a matter of life and death, a road to safety or to ruin. It must be studied with the utmost care.",
     chatPrompts: [
       "How does this apply to modern business?",
@@ -131,16 +173,18 @@ const SAMPLE_BOOKS: SampleBook[] = [
       { q: "Why is knowing yourself important?", choices: ["For confidence", "To know both self and enemy is to win every battle", "To improve morally", "To avoid arrogance"], correct: 1, explain: "Knowing both wins certainly; knowing one means winning half the time." },
       { q: "How does Sun Tzu view information?", choices: ["A luxury", "Decisive — spies and scouts are essential", "Unreliable", "Less important than courage"], correct: 1, explain: "He devotes an entire chapter to spies: 'foreknowledge cannot be elicited from spirits.'" },
     ],
+    attribution: "Public domain · tr. Lionel Giles, 1910 · via Project Gutenberg",
   },
   {
-    id: "origin",
-    topics: ["science", "history"],
+    id: "origin-of-species",
+    topics: ["science", "history", "nature"],
     title: "On the Origin of Species",
     author: "Charles Darwin",
     cover: { bg: "linear-gradient(135deg,#7BA17C,#3F5C40)", emoji: "🐢" },
-    origLang: "English",
-    origExcerpt: "It is interesting to contemplate a tangled bank, clothed with many plants of many kinds, with birds singing on the bushes…",
-    enExcerpt: "It is interesting to contemplate a tangled bank, clothed with many plants of many kinds, with birds singing on the bushes, insects flitting about, worms crawling through the damp earth — and to reflect that these forms, so different yet so dependent on one another, have all been produced by laws acting around us.",
+    epubUrl: "/sample-books/origin-of-species.epub",
+    origLang: "English (1859)",
+    origExcerpt: "It is interesting to contemplate an entangled bank, clothed with many plants of many kinds, with birds singing on the bushes…",
+    enExcerpt: "Imagine a tangled riverbank, dressed in many plants, with birds singing, insects flitting, worms in the damp earth — and reflect that these forms, so different yet so dependent on one another, were all produced by laws acting around us.",
     chatPrompts: [
       "What is natural selection — simply?",
       "Why was this book so controversial?",
@@ -157,16 +201,18 @@ const SAMPLE_BOOKS: SampleBook[] = [
       { q: "Which voyage shaped his thinking?", choices: ["HMS Beagle", "HMS Bounty", "HMS Endeavour", "HMS Victory"], correct: 0, explain: "His five-year voyage on the Beagle gave him the Galápagos data behind the theory." },
       { q: "Why did the book provoke controversy?", choices: ["It was poorly argued", "It implied humans descended from earlier species", "It denied the existence of fossils", "It claimed Earth was young"], correct: 1, explain: "The implication for human origins (made explicit later in *The Descent of Man*) was the flashpoint." },
     ],
+    attribution: "Public domain · via Project Gutenberg",
   },
   {
-    id: "tao",
+    id: "tao-te-ching",
     topics: ["philosophy", "self-help", "art"],
-    title: "道德經",
-    author: "Lao Tzu — Tao Te Ching",
-    cover: { bg: "linear-gradient(135deg,#94C48A,#3D6B44)", emoji: "☯️" },
-    origLang: "Classical Chinese",
-    origExcerpt: "道可道，非常道。名可名，非常名。",
-    enExcerpt: "The Tao that can be spoken is not the eternal Tao. The name that can be named is not the eternal name.",
+    title: "Tao Te Ching",
+    author: "Lao Tzu",
+    cover: { bg: "linear-gradient(135deg,#5A8C5A,#2A4530)", emoji: "☯️" },
+    epubUrl: "/sample-books/tao-te-ching.epub",
+    origLang: "Classical Chinese → English (tr. James Legge, 1891)",
+    origExcerpt: "The Tao that can be trodden is not the enduring and unchanging Tao. The name that can be named is not the enduring and unchanging name.",
+    enExcerpt: "The Tao that can be put into words is not the eternal Tao. The name that can be named is not the eternal name.",
     chatPrompts: [
       "What does 'wu wei' actually mean?",
       "How is this different from Confucianism?",
@@ -183,14 +229,16 @@ const SAMPLE_BOOKS: SampleBook[] = [
       { q: "Why does Lao Tzu warn against naming the Tao?", choices: ["It's secret", "Naming reduces what is infinite to a label", "It's sacred", "The name is forbidden"], correct: 1, explain: "Language slices reality into pieces; the Tao is the whole." },
       { q: "Lao Tzu's image for ideal leadership is…", choices: ["A roaring tiger", "A small fish gently cooked", "An eagle", "A river"], correct: 1, explain: "Govern lightly — too much fiddling breaks the fish (and the state)." },
     ],
+    attribution: "Public domain · tr. James Legge, 1891 · via Project Gutenberg",
   },
   {
-    id: "sonnets",
-    topics: ["art", "fiction"],
+    id: "shakespeares-sonnets",
+    topics: ["art"],
     title: "Shakespeare's Sonnets",
     author: "William Shakespeare",
     cover: { bg: "linear-gradient(135deg,#E0A450,#8E5C18)", emoji: "🪶" },
-    origLang: "Early Modern English",
+    epubUrl: "/sample-books/shakespeares-sonnets.epub",
+    origLang: "Early Modern English (1609)",
     origExcerpt: "Shall I compare thee to a summer's day? Thou art more lovely and more temperate…",
     enExcerpt: "Shall I compare you to a summer's day? You are more lovely and more even-tempered — rough winds shake May's buds, and summer is always too brief.",
     chatPrompts: [
@@ -209,32 +257,35 @@ const SAMPLE_BOOKS: SampleBook[] = [
       { q: "What is the volta?", choices: ["The opening line", "The turn — usually at line 9 or in the couplet", "The rhyme scheme", "An Italian sonnet only"], correct: 1, explain: "In Shakespearean form, the turn often lands in the final couplet." },
       { q: "What does the closing couplet of Sonnet 18 promise?", choices: ["Eternal love", "That the poem will preserve the beloved forever", "Reunion in spring", "Forgiveness"], correct: 1, explain: "'So long as men can breathe or eyes can see, / So long lives this, and this gives life to thee.'" },
     ],
+    attribution: "Public domain · via Project Gutenberg",
   },
   {
-    id: "thinking-fast",
-    topics: ["self-help", "tech", "business"],
-    title: "Thinking, Fast and Slow",
-    author: "Daniel Kahneman",
-    cover: { bg: "linear-gradient(135deg,#3D2D5C,#1A1230)", emoji: "🧠" },
-    origLang: "English",
-    origExcerpt: "System 1 operates automatically and quickly, with little or no effort and no sense of voluntary control…",
-    enExcerpt: "System 1 operates automatically and quickly, with little or no effort and no sense of voluntary control. System 2 allocates attention to the effortful mental activities that demand it, including complex computations.",
+    id: "walden",
+    topics: ["nature", "self-help", "philosophy"],
+    title: "Walden",
+    author: "Henry David Thoreau",
+    cover: { bg: "linear-gradient(135deg,#3D6B44,#1E3A24)", emoji: "🌲" },
+    epubUrl: "/sample-books/walden.epub",
+    origLang: "English (1854)",
+    origExcerpt: "I went to the woods because I wished to live deliberately, to front only the essential facts of life…",
+    enExcerpt: "I went to the woods because I wanted to live deliberately — to face only the essential facts of life, and see if I could learn what it had to teach, instead of discovering, when it was time to die, that I had not lived.",
     chatPrompts: [
-      "What's the difference between System 1 and System 2?",
-      "Give me an example of an anchoring effect",
-      "Quiz me on cognitive biases",
+      "Why did Thoreau actually go to Walden Pond?",
+      "What is 'deliberate living'?",
+      "Quiz me on the experiment",
     ],
     cannedChat: [
       {
-        q: "What's the difference between System 1 and System 2?",
-        a: "**System 1** is fast, automatic, and intuitive. It reads facial expressions, completes the phrase 'bread and ___,' and notices when a sentence is grammatically off. It runs constantly, costs almost no effort, and is the source of most of our impressions and feelings.\n\n**System 2** is slow, effortful, and analytical. It multiplies 17 × 24, checks the validity of an argument, and resists temptations. It's where we feel like we 'think' — but Kahneman's punchline is that System 2 is **lazy**: it usually accepts System 1's answers without checking them. Most of life's errors live in that handoff.",
+        q: "Why did Thoreau actually go to Walden Pond?",
+        a: "Thoreau lived in a small cabin on Walden Pond for **two years, two months, and two days** (July 1845 — September 1847), on land owned by his friend Ralph Waldo Emerson. He wasn't escaping society — Concord village was a 20-minute walk away — he was running an *experiment in essentials*.\n\nThe goal was to strip life down to its raw inputs (food, shelter, time) and see what was actually required. The book is half philosophy, half a meticulous account of how much wood, beans, and rice that took. His punchline: most of what we think we need, we don't.",
       },
     ],
     quiz: [
-      { q: "Which system is fast and intuitive?", choices: ["System 1", "System 2", "Both", "Neither"], correct: 0, explain: "System 1 — fast, automatic, almost effortless." },
-      { q: "What is anchoring?", choices: ["A memory trick", "Letting an irrelevant number bias a later judgement", "A decision rule", "A meditation practice"], correct: 1, explain: "Even random numbers shown to you can shift estimates that follow." },
-      { q: "What does Kahneman say about System 2?", choices: ["It's always vigilant", "It is lazy and often accepts System 1's answers", "It overrides System 1 by default", "It only runs during sleep"], correct: 1, explain: "Most cognitive bias arises because System 2 doesn't bother to check." },
+      { q: "How long did Thoreau live at Walden Pond?", choices: ["6 months", "About a year", "Just over 2 years", "5 years"], correct: 2, explain: "Two years, two months, and two days — July 1845 to September 1847." },
+      { q: "Whose land was the cabin on?", choices: ["His own", "Ralph Waldo Emerson's", "The town of Concord's", "Squatters' rights"], correct: 1, explain: "Emerson owned the woodlot and let Thoreau build there." },
+      { q: "What does 'living deliberately' mean for Thoreau?", choices: ["Living slowly", "Choosing each day's substance instead of drifting through it", "Avoiding people", "Being a writer full-time"], correct: 1, explain: "Front only the essential facts of life — and refuse what is not yours by choice." },
     ],
+    attribution: "Public domain · via Project Gutenberg",
   },
 ];
 
@@ -823,39 +874,63 @@ function StepExperience({
       <div className="rounded-2xl border-2 p-4" style={{ borderColor: "var(--color-border-strong)", background: "white", boxShadow: "0 4px 0 rgba(74,60,30,0.10)" }}>
         {tab === "read" && (
           <div>
-            <p className="mb-2 text-[0.7rem] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--color-ink-soft)" }}>
-              Original ({book.origLang})
-            </p>
-            <p className="rounded-xl border p-3 text-[0.94rem] leading-relaxed" style={{ borderColor: "var(--color-border)", background: "var(--color-paper)", color: "var(--color-ink)" }}>
-              {book.origExcerpt}
-            </p>
-
-            {!translated ? (
-              <button
-                type="button"
-                onClick={() => { SFX.advance(); setTranslated(true); }}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 font-[family-name:var(--font-display)] text-[0.94rem] font-bold text-white transition-all active:translate-y-1"
-                style={{ background: "linear-gradient(to bottom,#EDB86A,#D09040)", boxShadow: "0 4px 0 rgba(152,96,24,0.55)" }}
-              >
-                <span className="text-[1.05rem]">✨</span> Translate for me
-              </button>
-            ) : (
-              <div className="animate-float-in">
-                <div className="mt-4 flex items-center gap-2">
-                  <span className="h-px flex-1" style={{ background: "var(--color-saffron)" }} />
-                  <span className="text-[0.7rem] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--color-saffron-deep)" }}>
-                    In your language
-                  </span>
-                  <span className="h-px flex-1" style={{ background: "var(--color-saffron)" }} />
+            {/* Translation magic — small pre-amble showing what Translify does
+                that the raw EPUB doesn't. Kept compact so the actual reader is
+                what dominates the tab. */}
+            <details
+              className="group mb-3 rounded-xl border-2 p-3"
+              style={{ borderColor: "var(--color-saffron)", background: "rgba(224,164,80,0.07)" }}
+              onToggle={(e) => {
+                if ((e.currentTarget as HTMLDetailsElement).open) {
+                  SFX.advance();
+                  setTranslated(true);
+                }
+              }}
+            >
+              <summary className="flex cursor-pointer items-center gap-2 text-[0.86rem] font-semibold" style={{ color: "var(--color-saffron-deep)" }}>
+                <span className="text-[1rem]">✨</span>
+                {translated ? "Translation preview" : "Tap to see this in your language"}
+                <span className="ms-auto text-[0.74rem] opacity-70 transition-transform group-open:rotate-180">▾</span>
+              </summary>
+              <div className="mt-3 grid gap-2 text-[0.88rem] leading-relaxed" style={{ color: "var(--color-ink)" }}>
+                <div>
+                  <p className="mb-1 text-[0.66rem] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--color-ink-soft)" }}>
+                    {book.origLang}
+                  </p>
+                  <p className="rounded-lg border p-2.5" style={{ borderColor: "var(--color-border)", background: "white" }}>
+                    {book.origExcerpt}
+                  </p>
                 </div>
-                <p className="mt-3 rounded-xl border-2 p-3 text-[0.96rem] leading-relaxed" style={{ borderColor: "var(--color-saffron)", background: "rgba(224,164,80,0.06)", color: "var(--color-ink)" }}>
-                  {book.enExcerpt}
-                </p>
-                <p className="mt-3 text-center text-[0.78rem]" style={{ color: "var(--color-ink-soft)" }}>
-                  Same passage, same layout — Translify keeps every book&apos;s shape intact.
-                </p>
+                <div>
+                  <p className="mb-1 text-[0.66rem] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--color-saffron-deep)" }}>
+                    In your language
+                  </p>
+                  <p className="rounded-lg border-2 p-2.5" style={{ borderColor: "var(--color-saffron)", background: "rgba(224,164,80,0.08)" }}>
+                    {book.enExcerpt}
+                  </p>
+                </div>
               </div>
-            )}
+            </details>
+
+            {/* The actual book — full EPUB, paginated reader. */}
+            <div
+              className="relative overflow-hidden rounded-2xl border-2"
+              style={{
+                borderColor: "var(--color-border-strong)",
+                background: "var(--color-paper)",
+                height: "min(60vh, 520px)",
+                boxShadow: "inset 0 1px 0 rgba(74,60,30,0.08)",
+              }}
+              // Marking "read" hit on first interaction with the reader pane.
+              // (Mounting alone isn't enough — they should feel the book.)
+              onPointerDown={() => setTranslated((v) => v || true)}
+            >
+              <EpubViewer fileUrl={book.epubUrl} />
+            </div>
+
+            <p className="mt-2 text-center text-[0.72rem]" style={{ color: "var(--color-ink-soft)" }}>
+              {book.attribution}
+            </p>
           </div>
         )}
 
