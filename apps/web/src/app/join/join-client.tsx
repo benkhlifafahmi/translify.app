@@ -244,9 +244,29 @@ function StepTopics({
   setTopics: (fn: (prev: TopicId[]) => TopicId[]) => void;
   onContinue: () => void;
 }) {
+  // Auto-advance after a short pause so the Continue button isn't required —
+  // important on small phones where the fixed footer can hide under the
+  // browser UI. A 700ms debounce still lets fast multi-tappers stack a
+  // second topic before we move on.
+  const advanceTimer = useRef<number | null>(null);
+  useEffect(() => {
+    return () => {
+      if (advanceTimer.current !== null) window.clearTimeout(advanceTimer.current);
+    };
+  }, []);
+
   const toggle = (id: TopicId) => {
     SFX.tap();
-    setTopics((prev) => prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]);
+    let nextLen = 0;
+    setTopics((prev) => {
+      const next = prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id];
+      nextLen = next.length;
+      return next;
+    });
+    if (advanceTimer.current !== null) window.clearTimeout(advanceTimer.current);
+    if (nextLen > 0) {
+      advanceTimer.current = window.setTimeout(() => onContinue(), 700);
+    }
   };
 
   return (

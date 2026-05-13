@@ -5,14 +5,16 @@ import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Path, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.gate import EmailRequired
 from app.auth.models import User
 from app.auth.users import current_active_user
 from app.billing.active_profile import resolve_active_profile
 from app.billing.family_safe import is_family_safe_active
 from app.billing.quota import require_active_plan
+from app.models.subscription import Subscription
 from app.db import get_async_session
 from app.models.book import Book, BookStatus
 from app.models.chat import Chat, ChatScope, Message, MessageRole
@@ -28,6 +30,11 @@ from app.services.chat import answer_question
 log = logging.getLogger(__name__)
 
 router = APIRouter(tags=["chats"])
+
+# How many chat prompts an anonymous (no-email) user can send before the
+# email-gate modal fires. Tuned to give the visitor a real taste of the
+# chat magic — 1-2 questions isn't enough to feel the wow moment.
+ANON_FREE_MESSAGES = 5
 
 
 async def _get_owned_book(
@@ -87,8 +94,12 @@ async def create_book_chat(
             status_code=status.HTTP_409_CONFLICT,
             detail="Book is not ready yet.",
         )
-    # Reader-and-up only — raises 402 if the user has no active plan.
-    await require_active_plan(user, session)
+    # Creating a chat is free (no LLM call). Real users still need an active
+    # plan; anonymous users skip the check so the panel can mount and the
+    # 5-message preview works. The message-send gate further down is what
+    # actually charges.
+    if not user.is_anonymous:
+        await require_active_plan(user, session)
     chat = Chat(
         user_id=user.id,
         book_id=book.id,
@@ -134,12 +145,27 @@ async def send_message(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> SendMessageResponse:
-    # Anonymous users see an email-gate modal in the UI before a real plan
-    # paywall — the action tag drives the modal's copy.
-    from app.auth.gate import require_non_anonymous
-    require_non_anonymous(user, action="chat")
-    # Gate the live-cost path (LLM call) on having an active plan.
-    sub = await require_active_plan(user, session)
+    # Two-tier chat gating:
+    #
+    #   • Anonymous user — let them feel the chat magic (TikTok visitors
+    #     decide based on the demo). The first ``ANON_FREE_MESSAGES`` user
+    #     prompts go through unchecked; on the next one we raise the
+    #     ``email_required`` 402 the frontend traps to open the email modal.
+    #   • Real user — the existing ``require_active_plan`` gate applies as
+    #     before. Anonymous accounts skip it because they have no
+    #     subscription row.
+    sub: Subscription | None = None
+    if user.is_anonymous:
+        sent_so_far = await session.scalar(
+            select(func.count(Message.id))
+            .join(Chat, Chat.id == Message.chat_id)
+            .where(Chat.user_id == user.id, Message.role == MessageRole.user)
+        ) or 0
+        if int(sent_so_far) >= ANON_FREE_MESSAGES:
+            raise EmailRequired(action="chat")
+    else:
+        sub = await require_active_plan(user, session)
+
     active_profile = await resolve_active_profile(user, session)
     family_safe = is_family_safe_active(user, sub, active_profile)
     chat = await _get_owned_chat(chat_id, user, session)
