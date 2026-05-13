@@ -418,6 +418,7 @@ export default function BookDetailPage({
                   tone="sage"
                   icon="💬"
                   label={t("app.tab.chat")}
+                  dataAnchor="chat-tab"
                 />
                 <TabPill
                   active={rightTab === "notes"}
@@ -425,6 +426,7 @@ export default function BookDetailPage({
                   tone="saffron"
                   icon="✎"
                   label={highlights.length > 0 ? `${t("app.tab.notes")} (${highlights.length})` : t("app.tab.notes")}
+                  dataAnchor="notes-tab"
                 />
                 <TabPill
                   active={rightTab === "quiz"}
@@ -432,6 +434,7 @@ export default function BookDetailPage({
                   tone="coral"
                   icon="★"
                   label={t("app.tab.quiz")}
+                  dataAnchor="quiz-tab"
                 />
               </div>
               <div className="flex-1 overflow-hidden">
@@ -571,12 +574,15 @@ function TabPill({
   tone,
   icon,
   label,
+  dataAnchor,
 }: {
   active: boolean;
   onClick: () => void;
   tone: "sage" | "coral" | "saffron";
   icon: string;
   label: string;
+  /** Stable handle for the tutorial spotlight selector. */
+  dataAnchor?: string;
 }) {
   const activeClass =
     tone === "sage"
@@ -588,6 +594,7 @@ function TabPill({
     <button
       type="button"
       onClick={onClick}
+      data-tutorial-anchor={dataAnchor}
       className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
         active
           ? activeClass
@@ -653,6 +660,7 @@ function PaperTabBar({
           }
           label={t("app.tab.chat")}
           onClick={() => onOpen("chat")}
+          dataAnchor="chat-tab"
         />
         <PaperTabBtn
           tone="saffron"
@@ -665,6 +673,7 @@ function PaperTabBar({
           label={t("app.tab.notes")}
           badge={counts.notes > 0 ? counts.notes : undefined}
           onClick={() => onOpen("notes")}
+          dataAnchor="notes-tab"
         />
         <PaperTabBtn
           tone="coral"
@@ -675,6 +684,7 @@ function PaperTabBar({
           }
           label={t("app.tab.quiz")}
           onClick={() => onOpen("quiz")}
+          dataAnchor="quiz-tab"
         />
         {gardenSlot}
       </div>
@@ -688,12 +698,14 @@ function PaperTabBtn({
   tone,
   badge,
   onClick,
+  dataAnchor,
 }: {
   icon: React.ReactNode;
   label: string;
   tone: "sage" | "saffron" | "coral" | "plum";
   badge?: number;
   onClick: () => void;
+  dataAnchor?: string;
 }) {
   const toneClasses = {
     sage:    { bg: "bg-[color:var(--color-sage)]/12",    text: "text-[color:var(--color-sage-deep)]" },
@@ -706,6 +718,7 @@ function PaperTabBtn({
       type="button"
       onClick={onClick}
       aria-label={label}
+      data-tutorial-anchor={dataAnchor}
       className="relative flex flex-col items-center gap-0.5 rounded-2xl px-2 py-2 text-[color:var(--color-ink-soft)] transition-all active:scale-[0.97]"
     >
       <span className={`grid h-9 w-9 place-items-center rounded-xl ${toneClasses.bg} ${toneClasses.text}`}>

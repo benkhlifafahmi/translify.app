@@ -4,37 +4,36 @@ import { useEffect, useState } from "react";
 import { Lumi } from "@/components/lumi/lumi";
 
 /**
- * In-reader tutorial — contextual coach-marks that unfold as the user reads.
+ * In-reader tutorial — contextual coach-marks with a *visible* spotlight
+ * for the element the tip is talking about.
  *
- * The tips fire one at a time, gated on what the user has actually done so
- * it never feels like a wall of upfront tooltips. Sequence:
+ * Each step has a `spotlight` mode:
+ *   - "page-edges"  → pulsing arrows on the left + right page edges
+ *   - "canvas-text" → an animated "select me" hand swiping the canvas
+ *   - { anchor }    → pulses a real DOM element via querySelector
  *
- *   1. on first open                → "Tap the right edge to flip, left to go back"
- *   2. after the first page turn    → "Select any sentence to highlight, note, or ask AI"
- *   3. after two more page turns    → "Open Chat to ask the book a question"
- *   4. after another two            → "Generate a Quiz to test what you've read"
- *
- * Each tip persists a "seen" flag in localStorage so reopens don't re-fire.
- * "Skip tour" suppresses every subsequent tip.
+ * The tip card itself stays bottom-anchored on every step so the spotlight
+ * always sits in the visual centre while the explanation reads at the
+ * bottom. State is persisted per-step in localStorage; "Skip tour"
+ * suppresses every remaining tip.
  */
 
 type StepId = "tap-to-turn" | "select-to-act" | "open-chat" | "open-quiz";
 
+type Spotlight =
+  | { kind: "page-edges" }
+  | { kind: "canvas-text" }
+  | { kind: "anchor"; selector: string };
+
 interface Step {
   id: StepId;
-  /** Page at or above which the tip becomes eligible to show. */
   showAtPage: number;
-  /** Top-line — small caps eyebrow. */
   eyebrow: string;
-  /** Body copy — keep under ~140 chars for the mobile sheet. */
   body: string;
-  /** CTA button text. */
   cta: string;
-  /** Optional Lumi mood. */
   lumi?: "waving" | "happy" | "excited" | "thinking" | "reading";
-  /** Small chip indicating where the feature lives — drops a hint without
-   *  needing an arrow / spotlight on a moving target. */
   pointer?: string;
+  spotlight: Spotlight;
 }
 
 const STEPS: Step[] = [
@@ -42,37 +41,41 @@ const STEPS: Step[] = [
     id: "tap-to-turn",
     showAtPage: 1,
     eyebrow: "How to read",
-    body: "Tap the right edge of the page to flip forward. Tap the left edge to go back. Keyboard arrows work too.",
+    body: "Tap the right edge of the page to flip forward. Tap the left edge to go back.",
     cta: "Got it",
     lumi: "waving",
-    pointer: "👉 Right edge → next   ·   👈 Left edge → back",
+    pointer: "👇 Try the glowing edges",
+    spotlight: { kind: "page-edges" },
   },
   {
     id: "select-to-act",
     showAtPage: 2,
     eyebrow: "Try this",
-    body: "Select any sentence to highlight it, take a note, or ask the AI to explain.",
+    body: "Long-press any sentence — a toolbar pops up to highlight, take a note, or ask AI to explain.",
     cta: "Nice",
     lumi: "happy",
-    pointer: "✎ A toolbar pops up over your selection",
+    pointer: "✎ Press and hold a word, then drag",
+    spotlight: { kind: "canvas-text" },
   },
   {
     id: "open-chat",
     showAtPage: 4,
     eyebrow: "Chat with the book",
-    body: "Open the Chat tab to ask anything — Lumi answers with cited passages.",
+    body: "Open Chat to ask anything — Lumi answers with cited passages from this book.",
     cta: "Got it",
     lumi: "thinking",
-    pointer: "💬 Chat tab — top of the right pane",
+    pointer: "💬 The glowing tab",
+    spotlight: { kind: "anchor", selector: '[data-tutorial-anchor="chat-tab"]' },
   },
   {
     id: "open-quiz",
     showAtPage: 6,
     eyebrow: "Make it stick",
-    body: "Generate a quick Quiz to test what you've read — it remembers what stuck and what didn't.",
+    body: "Generate a quick Quiz to test what you've read.",
     cta: "Cool",
     lumi: "excited",
-    pointer: "🎯 Quiz tab — next to Chat",
+    pointer: "★ The glowing tab",
+    spotlight: { kind: "anchor", selector: '[data-tutorial-anchor="quiz-tab"]' },
   },
 ];
 
@@ -82,8 +85,8 @@ const SEEN_KEY = (id: StepId) => `translify.tutorial.seen.${id}`;
 interface Props {
   /** Current 1-indexed page the reader has reached. */
   page: number;
-  /** Suppress the tutorial entirely (used when the paywall modal is open
-   *  so we don't stack popovers). */
+  /** Suppress the tutorial entirely (used when the paywall or email-gate
+   *  modal is open so we don't stack popovers). */
   disabled?: boolean;
 }
 
@@ -118,6 +121,22 @@ export function ReaderTutorial({ page, disabled }: Props) {
     }
   }, [page, skipped, disabled, activeStep]);
 
+  // For "anchor" spotlights, find the target DOM node and toggle a data
+  // attribute on it that CSS uses to drive a pulse. Cleanup removes the
+  // attribute when the tip dismisses, when the anchor changes, or when
+  // the component unmounts.
+  useEffect(() => {
+    if (!activeStep || activeStep.spotlight.kind !== "anchor") return;
+    if (typeof document === "undefined") return;
+    const selector = activeStep.spotlight.selector;
+    const el = document.querySelector<HTMLElement>(selector);
+    if (!el) return;
+    el.setAttribute("data-tutorial-spotlight", "");
+    return () => {
+      el.removeAttribute("data-tutorial-spotlight");
+    };
+  }, [activeStep]);
+
   if (!activeStep || skipped || disabled) return null;
 
   const markSeen = (id: StepId) => {
@@ -131,80 +150,221 @@ export function ReaderTutorial({ page, disabled }: Props) {
 
   const onSkipAll = () => {
     try { window.localStorage.setItem(SKIP_KEY, "1"); } catch { /* ignore */ }
-    // Also stamp all remaining steps so a future "reset skip" doesn't
-    // re-fire ones the user already saw.
     for (const s of STEPS) markSeen(s.id);
     setSkipped(true);
     setActiveStep(null);
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="false"
-      aria-label={activeStep.eyebrow}
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] sm:px-6"
-    >
+    <>
+      {/* Spotlight layer — sits behind the tip card so the user looks at
+          the highlighted element first. Click-through (pointer-events:
+          none on the wrapper) so the user can still hit the underlying
+          control while the spotlight is up. */}
+      <SpotlightLayer kind={activeStep.spotlight.kind} />
+
+      {/* The tip card */}
       <div
-        className="pointer-events-auto w-full max-w-md animate-float-in overflow-hidden rounded-2xl"
-        style={{
-          background: "white",
-          border: "2px solid var(--color-border-strong)",
-          boxShadow: "0 16px 40px -12px rgba(20,16,8,0.35), 0 6px 0 rgba(74,60,30,0.10)",
-        }}
+        role="dialog"
+        aria-modal="false"
+        aria-label={activeStep.eyebrow}
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] sm:px-6"
       >
         <div
-          className="h-1"
-          style={{ background: "linear-gradient(90deg,#EDB86A,#D09040)" }}
-        />
-        <div className="flex items-start gap-3 px-4 py-3.5">
-          <div className="shrink-0">
-            <Lumi state={activeStep.lumi ?? "happy"} size={48} animate />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p
-              className="text-[0.66rem] font-bold uppercase tracking-[0.18em]"
-              style={{ color: "var(--color-saffron-deep)" }}
-            >
-              {activeStep.eyebrow}
-            </p>
-            <p
-              className="mt-0.5 text-[0.92rem] leading-snug"
-              style={{ color: "var(--color-ink)" }}
-            >
-              {activeStep.body}
-            </p>
-            {activeStep.pointer && (
+          className="pointer-events-auto w-full max-w-md animate-float-in overflow-hidden rounded-2xl"
+          style={{
+            background: "white",
+            border: "2px solid var(--color-border-strong)",
+            boxShadow: "0 16px 40px -12px rgba(20,16,8,0.35), 0 6px 0 rgba(74,60,30,0.10)",
+          }}
+        >
+          <div
+            className="h-1"
+            style={{ background: "linear-gradient(90deg,#EDB86A,#D09040)" }}
+          />
+          <div className="flex items-start gap-3 px-4 py-3.5">
+            <div className="shrink-0">
+              <Lumi state={activeStep.lumi ?? "happy"} size={48} animate />
+            </div>
+            <div className="min-w-0 flex-1">
               <p
-                className="mt-1.5 text-[0.74rem] font-medium"
-                style={{ color: "var(--color-ink-soft)" }}
+                className="text-[0.66rem] font-bold uppercase tracking-[0.18em]"
+                style={{ color: "var(--color-saffron-deep)" }}
               >
-                {activeStep.pointer}
+                {activeStep.eyebrow}
               </p>
-            )}
+              <p
+                className="mt-0.5 text-[0.92rem] leading-snug"
+                style={{ color: "var(--color-ink)" }}
+              >
+                {activeStep.body}
+              </p>
+              {activeStep.pointer && (
+                <p
+                  className="mt-1.5 text-[0.74rem] font-medium"
+                  style={{ color: "var(--color-ink-soft)" }}
+                >
+                  {activeStep.pointer}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={onDismiss}
+              aria-label={activeStep.cta}
+              className="ms-1 grid h-9 shrink-0 place-items-center self-center rounded-xl px-3.5 font-[family-name:var(--font-display)] text-[0.84rem] font-bold text-white transition-all active:translate-y-1"
+              style={{
+                background: "linear-gradient(to bottom,#EDB86A,#D09040)",
+                boxShadow: "0 3px 0 rgba(152,96,24,0.50)",
+              }}
+            >
+              {activeStep.cta}
+            </button>
           </div>
           <button
             type="button"
-            onClick={onDismiss}
-            aria-label={activeStep.cta}
-            className="ms-1 grid h-9 shrink-0 place-items-center self-center rounded-xl px-3.5 font-[family-name:var(--font-display)] text-[0.84rem] font-bold text-white transition-all active:translate-y-1"
-            style={{
-              background: "linear-gradient(to bottom,#EDB86A,#D09040)",
-              boxShadow: "0 3px 0 rgba(152,96,24,0.50)",
-            }}
+            onClick={onSkipAll}
+            className="block w-full border-t border-dashed py-2 text-[0.74rem] font-semibold transition-colors hover:bg-[color:var(--color-paper-3)]"
+            style={{ borderColor: "var(--color-border)", color: "var(--color-ink-soft)" }}
           >
-            {activeStep.cta}
+            Skip tour
           </button>
         </div>
-        <button
-          type="button"
-          onClick={onSkipAll}
-          className="block w-full border-t border-dashed py-2 text-[0.74rem] font-semibold transition-colors hover:bg-[color:var(--color-paper-3)]"
-          style={{ borderColor: "var(--color-border)", color: "var(--color-ink-soft)" }}
-        >
-          Skip tour
-        </button>
       </div>
-    </div>
+
+      {/* Spotlight CSS. Kept inline (next to the component) rather than
+          globals so adding/removing a step doesn't leave dead styles in
+          the global sheet. */}
+      <style jsx global>{`
+        /* Pulsing ring for any element flagged via querySelector. The
+           data-attribute is set/cleared by the effect above. */
+        [data-tutorial-spotlight] {
+          position: relative;
+          z-index: 51;
+          animation: tutorial-pulse-ring 1.6s ease-in-out infinite;
+          border-radius: 12px;
+        }
+        @keyframes tutorial-pulse-ring {
+          0%, 100% {
+            box-shadow:
+              0 0 0 0 rgba(208, 144, 64, 0.55),
+              0 0 0 4px rgba(208, 144, 64, 0.10);
+          }
+          50% {
+            box-shadow:
+              0 0 0 8px rgba(208, 144, 64, 0.00),
+              0 0 0 12px rgba(208, 144, 64, 0.18);
+          }
+        }
+        @keyframes tutorial-arrow-pulse {
+          0%, 100% { transform: translateY(-50%) scale(1);   opacity: 0.95; }
+          50%      { transform: translateY(-50%) scale(1.18); opacity: 0.6;  }
+        }
+        @keyframes tutorial-arrow-shift-r {
+          0%, 100% { margin-left: 0px;   }
+          50%      { margin-left: 6px;   }
+        }
+        @keyframes tutorial-arrow-shift-l {
+          0%, 100% { margin-right: 0px;   }
+          50%      { margin-right: 6px;   }
+        }
+        @keyframes tutorial-finger-swipe {
+          0%   { transform: translate(-50%, -50%) translateX(-40%); opacity: 0; }
+          15%  { opacity: 1; }
+          85%  { opacity: 1; }
+          100% { transform: translate(-50%, -50%) translateX(40%);  opacity: 0; }
+        }
+        @keyframes tutorial-underline-grow {
+          0%   { transform: scaleX(0); opacity: 0; }
+          15%  { opacity: 1; }
+          100% { transform: scaleX(1); opacity: 0.85; }
+        }
+      `}</style>
+    </>
   );
+}
+
+function SpotlightLayer({ kind }: { kind: Spotlight["kind"] }) {
+  if (kind === "anchor") {
+    // The pulse is rendered on the actual element via the data-attribute
+    // effect — nothing extra to draw here.
+    return null;
+  }
+
+  if (kind === "page-edges") {
+    // Big glowing arrows on the left/right edges of the viewport so the
+    // tap-to-turn affordance is visible. The left arrow's tone is
+    // intentionally a touch dimmer than the right since "forward" is the
+    // primary gesture we want the visitor to discover first.
+    return (
+      <div className="pointer-events-none fixed inset-0 z-40">
+        <div
+          aria-hidden
+          className="absolute left-2 top-1/2 grid h-14 w-14 place-items-center rounded-full sm:left-4 sm:h-16 sm:w-16"
+          style={{
+            animation: "tutorial-arrow-pulse 1.4s ease-in-out infinite, tutorial-arrow-shift-l 1.4s ease-in-out infinite",
+            background: "rgba(255, 255, 255, 0.92)",
+            border: "2px solid var(--color-saffron-deep)",
+            boxShadow: "0 6px 18px -4px rgba(20,16,8,0.30)",
+          }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-saffron-deep)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </div>
+        <div
+          aria-hidden
+          className="absolute right-2 top-1/2 grid h-14 w-14 place-items-center rounded-full sm:right-4 sm:h-16 sm:w-16"
+          style={{
+            animation: "tutorial-arrow-pulse 1.4s ease-in-out infinite, tutorial-arrow-shift-r 1.4s ease-in-out infinite",
+            background: "rgba(255, 255, 255, 0.95)",
+            border: "2px solid var(--color-saffron-deep)",
+            boxShadow: "0 6px 18px -4px rgba(20,16,8,0.30)",
+          }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-saffron-deep)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m9 6 6 6-6 6" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === "canvas-text") {
+    // Animated finger swiping across the centre of the canvas + a
+    // growing underline. Together they read as "press and hold here, drag
+    // across to select." Click-through (pointer-events: none) so the user
+    // can actually do the gesture while the demo plays.
+    return (
+      <div className="pointer-events-none fixed inset-0 z-40 grid place-items-center">
+        <div
+          aria-hidden
+          className="relative"
+          style={{ width: "min(72vw, 320px)", height: "44px" }}
+        >
+          {/* Underline that grows L→R, mimicking a drag-select */}
+          <span
+            className="absolute bottom-0 left-0 right-0 block h-1 origin-left rounded-full"
+            style={{
+              background: "rgba(208, 144, 64, 0.55)",
+              boxShadow: "0 0 0 2px rgba(208,144,64,0.18)",
+              animation: "tutorial-underline-grow 1.6s ease-out infinite",
+            }}
+          />
+          {/* Finger emoji that swipes across */}
+          <span
+            className="absolute top-1/2 left-1/2 text-3xl"
+            style={{
+              animation: "tutorial-finger-swipe 1.6s ease-out infinite",
+              filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.18))",
+            }}
+          >
+            👆
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
