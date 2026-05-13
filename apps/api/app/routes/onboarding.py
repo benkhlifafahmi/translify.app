@@ -32,6 +32,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import magic_link as ml
 from app.auth.models import User
+from app.auth.rate_limit import rate_limit_ip
 from app.auth.users import current_active_user
 from app.config import settings
 from app.db import get_async_session
@@ -333,6 +334,11 @@ def _is_anonymous_email(email: str) -> bool:
 @router.post(
     "/anonymous-session",
     response_model=AnonymousSessionResponse,
+    # 10 anonymous accounts per hour per IP is plenty for any legitimate
+    # visitor (refresh, multiple tabs, family on the same Wi-Fi) and
+    # capped tight enough that a bot can't quietly fill ``users`` with
+    # ghost rows. Tighten the bucket if abuse becomes visible.
+    dependencies=[Depends(rate_limit_ip("anon-session", limit=10, window_seconds=3600))],
 )
 async def create_anonymous_session(
     session: AsyncSession = Depends(get_async_session),
