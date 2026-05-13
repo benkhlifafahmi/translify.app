@@ -314,35 +314,39 @@ function StepEmail({
 }) {
   return (
     <div className="flex flex-col">
-      <div className="mb-6 flex justify-center">
-        <Lumi state="waving" size={108} animate />
+      {/* Smaller Lumi on mobile so the headline sits closer to the top of
+          the viewport — TikTok visitors decide in 2-3 seconds and we want
+          the value prop above the fold on a 375px phone. */}
+      <div className="mb-3 flex justify-center sm:mb-5">
+        <Lumi state="waving" size={76} animate />
       </div>
 
       <div className="text-center">
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-saffron-deep)" }}>
-          Welcome
+          Tonight, on the house
         </p>
         <h1
-          className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.04] tracking-tight"
-          style={{ fontSize: "clamp(2rem,7vw,2.6rem)", color: "var(--color-ink)" }}
+          className="mt-1.5 font-[family-name:var(--font-display)] font-semibold leading-[1.03] tracking-tight"
+          style={{ fontSize: "clamp(1.85rem,7vw,2.5rem)", color: "var(--color-ink)" }}
         >
-          Read any book.
+          What do you want
           <br />
-          <span style={{ color: "var(--color-saffron-deep)" }}>In your language.</span>
+          to read{" "}
+          <span style={{ color: "var(--color-saffron-deep)" }}>tonight?</span>
         </h1>
-        <p className="mx-auto mt-3 max-w-[28ch] text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          Just your email — we&apos;ll set up your shelf and email you a sign-in link too.
+        <p className="mx-auto mt-3 max-w-[28ch] text-[0.94rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+          8 classics. First <span className="font-semibold" style={{ color: "var(--color-ink)" }}>10 pages free</span>, in your language. No card.
         </p>
       </div>
 
       <form
         onSubmit={(e) => { e.preventDefault(); onContinue(); }}
-        className="mt-7 flex flex-col gap-3"
+        className="mt-5 flex flex-col gap-3 sm:mt-7"
       >
         <GameField
           icon="📧"
           type="email"
-          placeholder="you@example.com"
+          placeholder="your email"
           value={email}
           onChange={setEmail}
           autoComplete="email"
@@ -356,11 +360,32 @@ function StepEmail({
         )}
 
         <BigButton type="submit" disabled={!email || busy}>
-          {busy ? "Opening your shelf…" : "Continue →"}
+          {busy ? "Opening your library…" : "Open my library →"}
         </BigButton>
+
+        {/* Trust strip — defuses the three things people worry about when
+            handing over an email: setup friction, marketing spam, and
+            payment commitment. Placed immediately under the CTA so it
+            answers objections in the same eyeline as the button. */}
+        <div className="mt-1 grid grid-cols-3 gap-2 text-center">
+          {[
+            { icon: "🔓", label: "No password" },
+            { icon: "📭", label: "No marketing" },
+            { icon: "💳", label: "No card" },
+          ].map((t) => (
+            <div
+              key={t.label}
+              className="flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2"
+              style={{ borderColor: "var(--color-border)", background: "white", color: "var(--color-ink-soft)" }}
+            >
+              <span className="text-[1rem] leading-none">{t.icon}</span>
+              <span className="text-[0.7rem] font-semibold">{t.label}</span>
+            </div>
+          ))}
+        </div>
       </form>
 
-      <div className="my-5 flex items-center gap-3">
+      <div className="my-4 flex items-center gap-3">
         <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
         <span className="text-[0.7rem] font-semibold uppercase tracking-wider" style={{ color: "var(--color-ink-soft)" }}>or</span>
         <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
@@ -368,8 +393,8 @@ function StepEmail({
 
       <GoogleButton />
 
-      <p className="mt-6 text-center text-[0.78rem]" style={{ color: "var(--color-ink-soft)" }}>
-        By continuing you agree to our{" "}
+      <p className="mt-4 text-center text-[0.72rem]" style={{ color: "var(--color-ink-soft)" }}>
+        We&apos;ll only email a sign-in link.{" "}
         <Link href="/terms" className="underline underline-offset-4">Terms</Link> &{" "}
         <Link href="/privacy" className="underline underline-offset-4">Privacy</Link>.
       </p>
