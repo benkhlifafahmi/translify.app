@@ -37,6 +37,14 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     family_safe_mode: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False, server_default="false"
     )
+    # Anonymous "ghost" account created when a TikTok visitor taps a book on
+    # /join without giving an email. They get a real JWT and can read, but
+    # cost-bearing writes (chat send, quiz create, upload, translation) are
+    # gated until they "claim" the account with an email. See
+    # ``app.routes.onboarding:claim_session`` and ``require_non_anonymous``.
+    is_anonymous: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, server_default="false", index=True,
+    )
     # Currently-selected reader profile. Nullable: NULL means "use the default
     # profile" (every user has one, backfilled at migration time). We avoid a
     # NOT NULL + FK loop by leaving this nullable and resolving server-side.

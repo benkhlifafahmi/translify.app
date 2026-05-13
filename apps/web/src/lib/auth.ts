@@ -9,6 +9,10 @@ export interface User {
   preferred_language: string;
   family_safe_mode: boolean;
   active_profile_id: string | null;
+  /** True for ghost accounts created via `startAnonymousSession`. Hidden
+   * actions (chat, quiz, upload, translate) reject these users with a 402
+   * `email_required` detail until they call `claimSession`. */
+  is_anonymous: boolean;
 }
 
 export async function login(email: string, password: string): Promise<User> {
@@ -113,6 +117,50 @@ export async function startSession(input: {
     method: "POST",
     body: input,
   });
+  if (res.access_token) setToken(res.access_token);
+  return res;
+}
+
+// ─── Anonymous sessions (no-email try-before-you-give-us-your-email) ──────────
+
+export interface AnonymousSessionResponse {
+  user_id: string;
+  access_token: string;
+  token_type: string;
+  is_anonymous: boolean;
+}
+
+/** Mint a ghost-account JWT so the visitor can clone seed books and read
+ *  without any friction. Stores the token via setToken() before returning so
+ *  subsequent api() calls authenticate automatically. */
+export async function startAnonymousSession(): Promise<AnonymousSessionResponse> {
+  const res = await api<AnonymousSessionResponse>("/onboarding/anonymous-session", {
+    method: "POST",
+  });
+  if (res.access_token) setToken(res.access_token);
+  return res;
+}
+
+export interface ClaimSessionResponse {
+  claimed: boolean;
+  magic_link_sent: boolean;
+  user_id: string | null;
+  access_token: string | null;
+  token_type: string;
+}
+
+/** Convert the current anonymous session to a real account. If the email
+ *  already belongs to another user, `claimed=false, magic_link_sent=true` —
+ *  show the visitor "check your inbox" but let them keep reading. */
+export async function claimSession(input: {
+  email: string;
+  preferred_language?: string;
+}): Promise<ClaimSessionResponse> {
+  const res = await api<ClaimSessionResponse>("/onboarding/claim-session", {
+    method: "POST",
+    body: input,
+  });
+  // Re-issue the JWT so the cached `me` payload reloads with is_anonymous=false.
   if (res.access_token) setToken(res.access_token);
   return res;
 }

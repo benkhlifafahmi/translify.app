@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ApiError } from "@/lib/api";
-import { getGoogleAuthUrl, startSession } from "@/lib/auth";
+import { ApiError, getToken } from "@/lib/api";
+import { getGoogleAuthUrl, startAnonymousSession } from "@/lib/auth";
 import { cloneSeed, listSeeds, type Seed } from "@/lib/seeds";
 import { trackLead } from "@/lib/onboarding";
 import { Lumi } from "@/components/lumi/lumi";
@@ -13,14 +13,11 @@ import { TranslifyIcon } from "@/components/translify-mark";
 
 // ─── Steps ────────────────────────────────────────────────────────────────────
 type Step =
-  | "email"        // 1. visitor types email; backend decides new-vs-existing
-  | "magic-sent"   // 1b. existing email → magic link mailed; "check your inbox"
-  | "topics"       // 2. multi-select topic chips
-  | "shelf"        // 3. seed catalogue — tap one → clone + open
+  | "topics"       // 1. multi-select topic chips — no auth required
+  | "shelf"        // 2. seed catalogue — tap one → silently mint anon JWT + clone
   ;
 
-// "magic-sent" is a terminal branch off step 1, not its own progress dot.
-const VISIBLE_STEPS: Step[] = ["email", "topics", "shelf"];
+const VISIBLE_STEPS: Step[] = ["topics", "shelf"];
 
 // ─── Topics ───────────────────────────────────────────────────────────────────
 type TopicId =
@@ -102,67 +99,20 @@ const SFX = {
 export function JoinClient() {
   const router = useRouter();
 
-  const [step, setStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
+  const [step, setStep] = useState<Step>("topics");
   const [topics, setTopics] = useState<TopicId[]>([]);
-  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // Capture document.referrer once on mount so trackLead carries attribution.
+  // Capture document.referrer once on mount — used for analytics if the
+  // visitor later claims their session with an email.
   const referrerRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (typeof document !== "undefined") referrerRef.current = document.referrer || undefined;
   }, []);
 
-  // Persist email between refreshes inside the flow.
-  useEffect(() => {
-    try {
-      const cached = sessionStorage.getItem("join.email");
-      if (cached && !email) setEmail(cached);
-    } catch { /* ignore */ }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try { if (email) sessionStorage.setItem("join.email", email); } catch { /* ignore */ }
-  }, [email]);
-
   // ─── Handlers ─────────────────────────────────────────────────────────────
-  const handleEmail = async () => {
-    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-    if (!ok) { setErr("Enter a valid email so we can set up your shelf."); SFX.error(); return; }
-    setErr(null); setBusy(true);
-    try {
-      const preferred = typeof document !== "undefined"
-        ? (document.documentElement.lang || undefined)
-        : undefined;
-      const res = await startSession({
-        email,
-        referrer: referrerRef.current,
-        preferred_language: preferred,
-      });
-      trackLead({ email, step: "email", referrer: referrerRef.current });
-
-      if (res.is_new_user && res.access_token) {
-        // Fresh account — JWT already stored by startSession().
-        SFX.advance();
-        setStep("topics");
-      } else if (res.magic_link_sent) {
-        // Returning visitor — server mailed a sign-in link. Show the
-        // confirmation screen; the user comes back in via /auth/magic-login.
-        SFX.success();
-        setStep("magic-sent");
-      } else {
-        throw new Error("Couldn't start a session. Please try again.");
-      }
-    } catch (e) {
-      SFX.error();
-      setErr(e instanceof ApiError ? e.message : "Couldn't start a session. Please try again.");
-    } finally { setBusy(false); }
-  };
-
   const handleTopicsContinue = () => {
     if (topics.length === 0) { SFX.error(); return; }
-    trackLead({ email, step: "topics", topics });
     SFX.advance();
     setStep("shelf");
   };
@@ -174,12 +124,8 @@ export function JoinClient() {
   const handleSeedOpen = async (seed: Seed) => {
     if (cloningSlug) return; // double-tap guard
     SFX.select();
-    trackLead({
-      email, step: "experience", topics,
-      chosen_book_id: seed.slug,
-    });
 
-    // Fast path — the user already opened this seed; deep-link straight in.
+    // Fast path — the visitor already opened this seed before; deep-link in.
     if (seed.clone_id) {
       router.push(`/library/${seed.clone_id}?welcome=1`);
       return;
@@ -187,7 +133,17 @@ export function JoinClient() {
 
     setCloningSlug(seed.slug);
     try {
+      // No JWT yet → mint a ghost-account JWT silently so the clone-on-seed
+      // endpoint (which requires auth) succeeds. The user never sees this
+      // step — it's invisible friction-free auth for TikTok visitors.
+      if (!getToken()) {
+        await startAnonymousSession();
+      }
       const book = await cloneSeed(seed.slug);
+      // Best-effort lead-track — useful even before they claim with an email
+      // because the lead model carries chosen_book_id for funnel analysis.
+      // We don't have an email yet, so we skip the call entirely; the
+      // session-level analytics live on user_id once claim happens.
       router.push(`/library/${book.id}?welcome=1`);
     } catch (e) {
       SFX.error();
@@ -218,20 +174,10 @@ export function JoinClient() {
         className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 backdrop-blur-md"
         style={{ background: "rgba(252,248,238,0.85)", borderBottom: "1px solid rgba(74,60,30,0.06)" }}
       >
-        {step !== "email" ? (
+        {step === "shelf" ? (
           <button
             type="button"
-            onClick={() => {
-              SFX.tap();
-              if (step === "magic-sent") {
-                setErr(null);
-                setStep("email");
-              } else if (step === "shelf") {
-                setStep("topics");
-              } else if (step === "topics") {
-                setStep("email");
-              }
-            }}
+            onClick={() => { SFX.tap(); setStep("topics"); }}
             className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90"
             style={{ background: "white", border: "1.5px solid var(--color-border)", boxShadow: "0 2px 0 rgba(74,60,30,0.08)" }}
             aria-label="Back"
@@ -262,26 +208,13 @@ export function JoinClient() {
           ))}
         </div>
 
-        {step === "email" ? (
-          <Link href="/login" className="text-[0.82rem] font-semibold" style={{ color: "var(--color-ink-soft)" }}>
-            Sign in
-          </Link>
-        ) : (
-          <span className="w-9" />
-        )}
+        <Link href="/login" className="text-[0.82rem] font-semibold" style={{ color: "var(--color-ink-soft)" }}>
+          Sign in
+        </Link>
       </header>
 
       <main className="relative z-10 mx-auto w-full max-w-md px-4 pb-32 pt-4 sm:max-w-lg sm:pt-8">
         <div key={step} className="ob-enter-forward">
-          {step === "email" && (
-            <StepEmail
-              email={email} setEmail={setEmail}
-              onContinue={handleEmail} err={err} busy={busy}
-            />
-          )}
-          {step === "magic-sent" && (
-            <StepMagicSent email={email} />
-          )}
           {step === "topics" && (
             <StepTopics
               topics={topics} setTopics={setTopics}
@@ -302,141 +235,6 @@ export function JoinClient() {
   );
 }
 
-// ─── Step 1 — Email ───────────────────────────────────────────────────────────
-function StepEmail({
-  email, setEmail, onContinue, err, busy,
-}: {
-  email: string;
-  setEmail: (v: string) => void;
-  onContinue: () => void;
-  err: string | null;
-  busy: boolean;
-}) {
-  return (
-    <div className="flex flex-col">
-      {/* Smaller Lumi on mobile so the headline sits closer to the top of
-          the viewport — TikTok visitors decide in 2-3 seconds and we want
-          the value prop above the fold on a 375px phone. */}
-      <div className="mb-3 flex justify-center sm:mb-5">
-        <Lumi state="waving" size={76} animate />
-      </div>
-
-      <div className="text-center">
-        <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-saffron-deep)" }}>
-          Tonight, on the house
-        </p>
-        <h1
-          className="mt-1.5 font-[family-name:var(--font-display)] font-semibold leading-[1.03] tracking-tight"
-          style={{ fontSize: "clamp(1.85rem,7vw,2.5rem)", color: "var(--color-ink)" }}
-        >
-          What do you want
-          <br />
-          to read{" "}
-          <span style={{ color: "var(--color-saffron-deep)" }}>tonight?</span>
-        </h1>
-        <p className="mx-auto mt-3 max-w-[28ch] text-[0.94rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          8 classics. First <span className="font-semibold" style={{ color: "var(--color-ink)" }}>10 pages free</span>, in your language. No card.
-        </p>
-      </div>
-
-      <form
-        onSubmit={(e) => { e.preventDefault(); onContinue(); }}
-        className="mt-5 flex flex-col gap-3 sm:mt-7"
-      >
-        <GameField
-          icon="📧"
-          type="email"
-          placeholder="your email"
-          value={email}
-          onChange={setEmail}
-          autoComplete="email"
-          required
-          autoFocus
-        />
-        {err && (
-          <div className="rounded-xl px-3 py-2 text-[0.84rem] font-medium" style={{ background: "rgba(220,38,38,0.07)", color: "#B91C1C", border: "1.5px solid rgba(220,38,38,0.22)" }}>
-            {err}
-          </div>
-        )}
-
-        <BigButton type="submit" disabled={!email || busy}>
-          {busy ? "Opening your library…" : "Open my library →"}
-        </BigButton>
-
-        {/* Trust strip — defuses the three things people worry about when
-            handing over an email: setup friction, marketing spam, and
-            payment commitment. Placed immediately under the CTA so it
-            answers objections in the same eyeline as the button. */}
-        <div className="mt-1 grid grid-cols-3 gap-2 text-center">
-          {[
-            { icon: "🔓", label: "No password" },
-            { icon: "📭", label: "No marketing" },
-            { icon: "💳", label: "No card" },
-          ].map((t) => (
-            <div
-              key={t.label}
-              className="flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2"
-              style={{ borderColor: "var(--color-border)", background: "white", color: "var(--color-ink-soft)" }}
-            >
-              <span className="text-[1rem] leading-none">{t.icon}</span>
-              <span className="text-[0.7rem] font-semibold">{t.label}</span>
-            </div>
-          ))}
-        </div>
-      </form>
-
-      <div className="my-4 flex items-center gap-3">
-        <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
-        <span className="text-[0.7rem] font-semibold uppercase tracking-wider" style={{ color: "var(--color-ink-soft)" }}>or</span>
-        <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
-      </div>
-
-      <GoogleButton />
-
-      <p className="mt-4 text-center text-[0.72rem]" style={{ color: "var(--color-ink-soft)" }}>
-        We&apos;ll only email a sign-in link.{" "}
-        <Link href="/terms" className="underline underline-offset-4">Terms</Link> &{" "}
-        <Link href="/privacy" className="underline underline-offset-4">Privacy</Link>.
-      </p>
-    </div>
-  );
-}
-
-// ─── Step 1b — Magic-link sent (returning user) ──────────────────────────────
-function StepMagicSent({ email }: { email: string }) {
-  return (
-    <div className="mt-2 flex flex-col items-center text-center">
-      <Lumi state="happy" size={108} animate />
-      <p
-        className="mt-6 text-[0.7rem] font-bold uppercase tracking-[0.22em]"
-        style={{ color: "var(--color-sage-deep)" }}
-      >
-        Welcome back
-      </p>
-      <h1
-        className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.06] tracking-tight"
-        style={{ fontSize: "clamp(1.7rem,6vw,2.2rem)", color: "var(--color-ink)" }}
-      >
-        Check your inbox.
-      </h1>
-      <p className="mx-auto mt-3 max-w-[32ch] text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-        We sent a one-tap sign-in link to{" "}
-        <span className="font-semibold" style={{ color: "var(--color-ink)" }}>{email}</span>.
-        Tap it to open your shelf — no password to remember.
-      </p>
-      <p className="mt-6 text-[0.84rem]" style={{ color: "var(--color-ink-soft)" }}>
-        Got a password instead?{" "}
-        <Link href="/login" className="font-semibold underline underline-offset-4" style={{ color: "var(--color-ink)" }}>
-          Sign in here
-        </Link>
-        .
-      </p>
-      <p className="mt-2 text-[0.78rem]" style={{ color: "var(--color-ink-soft)" }}>
-        Didn&apos;t arrive? Check spam, or change the email above to try again.
-      </p>
-    </div>
-  );
-}
 
 // ─── Step 2 — Topics ──────────────────────────────────────────────────────────
 function StepTopics({

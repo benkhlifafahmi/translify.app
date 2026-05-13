@@ -22,7 +22,9 @@ import logging
 import secrets
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Header, Request, status
+import uuid
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi_users.jwt import generate_jwt
 from fastapi_users.password import PasswordHelper
 from sqlalchemy import select
@@ -30,6 +32,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import magic_link as ml
 from app.auth.models import User
+from app.auth.users import current_active_user
 from app.config import settings
 from app.db import get_async_session
 from app.emails import client as email_client
@@ -37,6 +40,9 @@ from app.emails import templates as email_templates
 from app.models.onboarding import OnboardingLead, OnboardingStep
 from app.routes.magic_link import magic_link_url
 from app.schemas.onboarding import (
+    AnonymousSessionResponse,
+    ClaimSessionRequest,
+    ClaimSessionResponse,
     OnboardingLeadRead,
     OnboardingLeadUpsert,
     StartSessionRequest,
@@ -313,3 +319,169 @@ async def _record_lead_for_session(
         if lead.user_id is None:
             lead.user_id = user.id
         lead.last_seen_at = datetime.now(timezone.utc)
+
+
+# ─── Anonymous sessions ────────────────────────────────────────────────────
+
+ANON_EMAIL_DOMAIN = "anon.translify.app"
+
+
+def _is_anonymous_email(email: str) -> bool:
+    return email.endswith(f"@{ANON_EMAIL_DOMAIN}")
+
+
+@router.post(
+    "/anonymous-session",
+    response_model=AnonymousSessionResponse,
+)
+async def create_anonymous_session(
+    session: AsyncSession = Depends(get_async_session),
+) -> AnonymousSessionResponse:
+    """Mint a JWT for a ghost account so the visitor can clone seeds + read
+    without giving an email up front.
+
+    The user row is real (so every FK in the schema keeps working) but
+    carries ``is_anonymous=True`` and a synthetic email under
+    ``anon.translify.app`` that nothing else can collide with. Cost-bearing
+    routes (chat send, quiz create, upload, translation) reject the user
+    via ``require_non_anonymous`` until they ``claim_session`` with a real
+    email.
+
+    No abuse limits here yet — add per-IP throttling at the edge before
+    opening this to broad public traffic.
+    """
+    uid = uuid.uuid4()
+    placeholder = f"anon-{uid}@{ANON_EMAIL_DOMAIN}"
+
+    hashed = _password_helper.hash(secrets.token_urlsafe(32))
+    user = User(
+        id=uid,
+        email=placeholder,
+        hashed_password=hashed,
+        is_active=True,
+        # We never email anonymous accounts, so "verified" is a no-op label
+        # here but keeps invariants happy elsewhere.
+        is_verified=True,
+        is_superuser=False,
+        is_anonymous=True,
+        preferred_language="en",
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    access_token = generate_jwt(
+        data={"sub": str(user.id), "aud": ["fastapi-users:auth"]},
+        secret=settings.jwt_secret,
+        lifetime_seconds=settings.jwt_lifetime_seconds,
+    )
+    return AnonymousSessionResponse(
+        user_id=user.id, access_token=access_token, is_anonymous=True,
+    )
+
+
+@router.post(
+    "/claim-session",
+    response_model=ClaimSessionResponse,
+)
+async def claim_session(
+    payload: ClaimSessionRequest,
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> ClaimSessionResponse:
+    """Turn an anonymous account into a real one — keyed by the email the
+    visitor just gave us.
+
+    Three terminal outcomes:
+
+    1. Caller is already a real user → 409, this endpoint is meaningless.
+    2. Email is brand new → adopt it on the current row, drop the
+       ``is_anonymous`` flag, send a magic-link welcome, return the same JWT.
+       All books/chat/reading state stay attached.
+    3. Email already belongs to *another* account → don't merge (too easy to
+       weaponise). Send a magic link to the established account; keep the
+       anonymous session alive on this device.
+    """
+    if not user.is_anonymous:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This session is already a real account.",
+        )
+
+    email = payload.email.lower().strip()
+    if _is_anonymous_email(email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="That looks like a placeholder address — use your real email.",
+        )
+
+    # Does the email already belong to someone else?
+    existing_q = await session.execute(select(User).where(User.email == email))
+    existing = existing_q.unique().scalar_one_or_none()
+    if existing is not None and existing.id != user.id:
+        # Branch 3 — established account. Mail them a sign-in link, keep
+        # the anon JWT live on this device so the visitor can either click
+        # the link or carry on as anonymous.
+        token = ml.issue(existing.id)
+        subject, html, text = email_templates.magic_link(
+            name=existing.display_name, login_url=magic_link_url(token),
+        )
+        try:
+            await email_client.send(
+                to=existing.email, subject=subject, html=html, text=text,
+                tag="claim-existing-account",
+            )
+        except Exception:
+            log.exception("magic-link mail failed during claim for %s", email)
+        return ClaimSessionResponse(
+            claimed=False, magic_link_sent=True,
+            user_id=None, access_token=None,
+        )
+
+    # Branch 2 — adopt the email on this anonymous row.
+    user.email = email
+    user.is_anonymous = False
+    if payload.preferred_language:
+        user.preferred_language = payload.preferred_language.lower()[:8]
+    # Welcome / magic-link email so they have a cross-device recovery path.
+    token = ml.issue(user.id)
+    subject, html, text = email_templates.magic_link(
+        name=user.display_name, login_url=magic_link_url(token),
+    )
+    try:
+        await email_client.send(
+            to=email, subject=subject, html=html, text=text,
+            tag="magic-link-claim-welcome",
+        )
+    except Exception:
+        log.exception("Welcome mail failed during claim for %s", email)
+
+    # Also upsert the onboarding lead for this newly-real user so the funnel
+    # dashboard sees them.
+    lead_q = await session.execute(
+        select(OnboardingLead).where(OnboardingLead.email == email)
+    )
+    lead = lead_q.scalar_one_or_none()
+    if lead is None:
+        session.add(OnboardingLead(
+            email=email,
+            step=OnboardingStep.experience,
+            user_id=user.id,
+        ))
+    elif lead.user_id is None:
+        lead.user_id = user.id
+
+    await session.commit()
+    await session.refresh(user)
+
+    # Re-issue the JWT (same sub) so the token isn't tied to the old
+    # is_anonymous claim if anything caches the user attributes.
+    access_token = generate_jwt(
+        data={"sub": str(user.id), "aud": ["fastapi-users:auth"]},
+        secret=settings.jwt_secret,
+        lifetime_seconds=settings.jwt_lifetime_seconds,
+    )
+    return ClaimSessionResponse(
+        claimed=True, magic_link_sent=True,
+        user_id=user.id, access_token=access_token,
+    )

@@ -115,6 +115,8 @@ async def create_quiz(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> QuizRead:
+    from app.auth.gate import require_non_anonymous
+    require_non_anonymous(user, action="quiz")
     book = await _get_owned_book(book_id, user, session)
     if book.status != BookStatus.ready:
         raise HTTPException(

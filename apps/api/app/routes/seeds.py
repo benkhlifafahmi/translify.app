@@ -30,7 +30,7 @@ from sqlalchemy import and_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
-from app.auth.users import current_active_user
+from app.auth.users import current_active_user, current_optional_user
 from app.db import get_async_session
 from app.models.book import Book, BookStatus
 from app.schemas.book import BookRead
@@ -45,25 +45,27 @@ router = APIRouter(prefix="/seeds", tags=["seeds"])
 
 @router.get("", response_model=list[SeedRead])
 async def list_seeds(
-    user: User = Depends(current_active_user),
+    user: User | None = Depends(current_optional_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> list[SeedRead]:
     """Return the catalogue with per-user clone state.
 
-    Order matches ``SEED_BOOKS``. ``clone_id`` is populated for books the
-    user has already opened so the frontend can deep-link rather than
-    re-clone.
+    **Public** — works without a session so /join can render the shelf
+    before the visitor has done anything. When a session *is* present,
+    ``clone_id`` is populated for books they've already opened so the
+    frontend can deep-link rather than re-clone.
     """
-    # Pull this user's clones (if any) in one query — keyed by seed_slug.
-    clones_q = await session.execute(
-        select(Book.seed_slug, Book.id, Book.status).where(
-            Book.user_id == user.id,
-            Book.seed_slug.is_not(None),
+    clones_by_slug: dict[str, tuple[uuid.UUID, BookStatus]] = {}
+    if user is not None:
+        clones_q = await session.execute(
+            select(Book.seed_slug, Book.id, Book.status).where(
+                Book.user_id == user.id,
+                Book.seed_slug.is_not(None),
+            )
         )
-    )
-    clones_by_slug: dict[str, tuple[uuid.UUID, BookStatus]] = {
-        slug: (bid, st) for slug, bid, st in clones_q.all() if slug
-    }
+        clones_by_slug = {
+            slug: (bid, st) for slug, bid, st in clones_q.all() if slug
+        }
 
     return [
         SeedRead(

@@ -69,3 +69,42 @@ class StartSessionResponse(BaseModel):
     access_token: str | None = None
     token_type: str = "bearer"
     magic_link_sent: bool = False
+
+
+# ─── Anonymous sessions (TikTok-frictionless flow) ──────────────────────────
+
+
+class AnonymousSessionResponse(BaseModel):
+    """Returned by ``POST /onboarding/anonymous-session``. The frontend stores
+    the JWT exactly like any other login. The synthetic email exists so
+    every per-user FK in the rest of the schema keeps working."""
+    user_id: uuid.UUID
+    access_token: str
+    token_type: str = "bearer"
+    is_anonymous: bool = True
+
+
+class ClaimSessionRequest(BaseModel):
+    """Body for ``POST /onboarding/claim-session`` — converts an anonymous
+    user into a real one, or sends a magic link if the email already
+    belongs to someone else."""
+    email: EmailStr
+    preferred_language: str | None = Field(default=None, min_length=2, max_length=8)
+
+
+class ClaimSessionResponse(BaseModel):
+    """How the browser interprets the claim outcome.
+
+    * ``claimed=true`` — this anonymous account became a real one. The
+      ``access_token`` is the SAME JWT (same ``user_id``) — just keep it.
+      All books/state stay attached.
+    * ``claimed=false`` and ``magic_link_sent=true`` — the email already
+      belongs to a different account. The anonymous session continues, but
+      a sign-in link was mailed to the existing account. UI should explain
+      "you already have an account — we sent you a link."
+    """
+    claimed: bool
+    magic_link_sent: bool = False
+    user_id: uuid.UUID | None = None
+    access_token: str | None = None
+    token_type: str = "bearer"

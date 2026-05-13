@@ -16,7 +16,7 @@ import {
   type Citation,
 } from "@/lib/chats";
 import { ApiError } from "@/lib/api";
-import { parseQuotaError } from "@/lib/quota";
+import { parseEmailRequired, parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
 import { Lumi } from "@/components/lumi/lumi";
 
@@ -24,6 +24,9 @@ interface Props {
   bookId: string;
   selectedTranslationId: string | null;
   onCitationClick?: (citation: Citation) => void;
+  /** Anonymous-user gate. Returns true if the callback opened a modal
+   *  (caller should suppress the regular error display). */
+  onEmailRequired?: (action: string) => boolean;
 }
 
 const STARTERS = [
@@ -33,7 +36,7 @@ const STARTERS = [
   "Explain page 12 like I'm 10",
 ];
 
-export function ChatPanel({ bookId, selectedTranslationId, onCitationClick }: Props) {
+export function ChatPanel({ bookId, selectedTranslationId, onCitationClick, onEmailRequired }: Props) {
   const qc = useQueryClient();
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -87,6 +90,12 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick }: Pr
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["chat-messages", activeChatId] });
+    },
+    onError: (e) => {
+      // Anonymous user trying to chat — hand off to the page-level modal so
+      // the visitor can claim their session in one step.
+      const gate = parseEmailRequired(e);
+      if (gate) onEmailRequired?.(gate.action);
     },
   });
 

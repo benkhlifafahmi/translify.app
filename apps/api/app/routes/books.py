@@ -198,6 +198,8 @@ async def create_upload_url(
     payload: UploadUrlRequest,
     user: User = Depends(current_active_user),
 ) -> UploadUrlResponse:
+    from app.auth.gate import require_non_anonymous
+    require_non_anonymous(user, action="upload")
     fmt = _detect_format(payload.content_type, payload.filename)
     upload_id, file_key = upload_session.reserve(
         user_id=str(user.id),
@@ -222,6 +224,8 @@ async def finalize_upload(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> Book:
+    from app.auth.gate import require_non_anonymous
+    require_non_anonymous(user, action="upload")
     pending = upload_session.get(payload.upload_id)
     if pending is None or pending["user_id"] != str(user.id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found")

@@ -134,6 +134,10 @@ async def send_message(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> SendMessageResponse:
+    # Anonymous users see an email-gate modal in the UI before a real plan
+    # paywall — the action tag drives the modal's copy.
+    from app.auth.gate import require_non_anonymous
+    require_non_anonymous(user, action="chat")
     # Gate the live-cost path (LLM call) on having an active plan.
     sub = await require_active_plan(user, session)
     active_profile = await resolve_active_profile(user, session)

@@ -45,6 +45,7 @@ import type {
   SavedHighlight,
 } from "@/components/pdf-viewer";
 import { PaywallModal } from "@/components/paywall-modal";
+import { EmailGateModal } from "@/components/email-gate-modal";
 import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
 
 type RightTab = "chat" | "quiz" | "notes";
@@ -116,6 +117,15 @@ export default function BookDetailPage({
 
   // Paywall state — set by onPageReached when a Free reader crosses the cap.
   const [paywallPage, setPaywallPage] = useState<number | null>(null);
+
+  // Anonymous-user gate state. Action drives the headline copy in the modal
+  // ("Chat with the book?" vs "Quiz me?" vs "Translate?"). Open via the
+  // onEmailRequired callback that ChatPanel/QuizPanel surface on a 402.
+  const [emailGate, setEmailGate] = useState<{ action: string } | null>(null);
+  const openEmailGate = useCallback((action: string) => {
+    setEmailGate({ action });
+    return true;
+  }, []);
 
   // The paywall fires when a Free reader on a seed book crosses
   // ``sub.quota.seed_book_page_cap``. Paid plans get UNLIMITED and never trip.
@@ -310,6 +320,7 @@ export default function BookDetailPage({
       bookId={bookId}
       selectedTranslationId={selectedTranslationId}
       onCitationClick={onCitationClick}
+      onEmailRequired={openEmailGate}
     />
   );
 
@@ -334,12 +345,19 @@ export default function BookDetailPage({
     <QuizPanel
       bookId={bookId}
       selectedTranslationId={selectedTranslationId}
+      onEmailRequired={openEmailGate}
     />
   );
 
   return (
     <main className="flex h-[100dvh] flex-col bg-[color:var(--color-paper)]">
       <TrialBanner />
+
+      <EmailGateModal
+        open={emailGate !== null}
+        action={emailGate?.action ?? "save"}
+        onClose={() => setEmailGate(null)}
+      />
 
       <PaywallModal
         open={paywallPage !== null}

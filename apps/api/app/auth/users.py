@@ -143,3 +143,8 @@ fastapi_users = FastAPIUsers[User, uuid.UUID](get_user_manager, [auth_backend])
 
 current_active_user = fastapi_users.current_user(active=True)
 current_verified_user = fastapi_users.current_user(active=True, verified=True)
+# Optional auth — returns the User if a valid JWT is present, else None.
+# Used by endpoints that can render for anonymous visitors but enrich their
+# response when a session exists (e.g. /seeds returns clone_id only for
+# authenticated callers).
+current_optional_user = fastapi_users.current_user(active=True, optional=True)

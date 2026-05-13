@@ -14,7 +14,7 @@ import {
 } from "@/lib/quizzes";
 import { ApiError } from "@/lib/api";
 import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
-import { parseQuotaError } from "@/lib/quota";
+import { parseEmailRequired, parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
 import { useI18n } from "@/lib/i18n";
 import { useLumi } from "@/components/lumi/lumi-context";
@@ -23,9 +23,12 @@ import { Lumi, type LumiState } from "@/components/lumi/lumi";
 interface Props {
   bookId: string;
   selectedTranslationId: string | null;
+  /** Anonymous-user gate. Returns true if the caller opened a modal so the
+   *  in-panel error UI can stay quiet. */
+  onEmailRequired?: (action: string) => boolean;
 }
 
-export function QuizPanel({ bookId, selectedTranslationId }: Props) {
+export function QuizPanel({ bookId, selectedTranslationId, onEmailRequired }: Props) {
   const qc = useQueryClient();
   const { t } = useI18n();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -63,6 +66,11 @@ export function QuizPanel({ bookId, selectedTranslationId }: Props) {
       setAnswers({});
       setAttempt(null);
       qc.invalidateQueries({ queryKey: ["quizzes", bookId] });
+    },
+    onError: (e) => {
+      // Anonymous user — hand off to the page-level email-gate modal.
+      const gate = parseEmailRequired(e);
+      if (gate) onEmailRequired?.(gate.action);
     },
   });
 
