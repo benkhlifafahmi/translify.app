@@ -26,6 +26,7 @@ from app.emails import templates as email_templates
 google_oauth_client = GoogleOAuth2(
     client_id=settings.google_client_id,
     client_secret=settings.google_client_secret,
+    scopes=["openid", "email", "profile"],
 )
 
 log = logging.getLogger(__name__)

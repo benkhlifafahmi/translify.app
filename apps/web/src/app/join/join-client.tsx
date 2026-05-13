@@ -5,8 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api";
 import { register, getGoogleAuthUrl } from "@/lib/auth";
-import { startCheckout } from "@/lib/billing";
-import { LOCALES, type Locale } from "@/lib/i18n";
 import { Lumi, type LumiState } from "@/components/lumi/lumi";
 import { TranslifyIcon } from "@/components/translify-mark";
 
@@ -47,35 +45,14 @@ const CONFETTI = Array.from({ length: 64 }, (_, i) => ({
   dur: 1.5 + (i % 4) * 0.28,
 }));
 
-// Deterministic book-stack bar heights (avoids Math.random at render)
-const BAR_HEIGHTS = Array.from({ length: 20 }, (_, i) => 30 + ((i * 17 + 7) % 40));
-const BAR_COLORS  = ["#E0A458", "#7BA17C", "#E2786C", "#6B5B95"];
-
-// ─── Types & data ─────────────────────────────────────────────────────────────
+// ─── Persona data ─────────────────────────────────────────────────────────────
 type Persona = "student" | "curious" | "pro" | "family";
 
-interface PlanRec {
-  id: "reader" | "scholar" | "family";
-  name: string;
-  monthly: number;
-  yearly: number;
-  tone: "saffron" | "sage" | "coral" | "plum";
-  emoji: string;
-  tagline: string;
-}
-
-const PERSONA_PLANS: Record<Persona, PlanRec> = {
-  student: { id: "scholar", name: "Scholar", monthly: 18.99, yearly: 14.99, tone: "saffron", emoji: "✦", tagline: "Unlimited reading for serious learners" },
-  curious: { id: "reader",  name: "Reader",  monthly: 9.99,  yearly: 7.99,  tone: "sage",    emoji: "✿", tagline: "Perfect for curious explorers" },
-  pro:     { id: "scholar", name: "Scholar", monthly: 18.99, yearly: 14.99, tone: "plum",    emoji: "◆", tagline: "Professional-grade reading tools" },
-  family:  { id: "family",  name: "Family",  monthly: 27.99, yearly: 22,    tone: "coral",   emoji: "❀", tagline: "Up to 5 readers on one plan" },
-};
-
 const PERSONA_CARDS: { id: Persona; emoji: string; label: string; body: string; tone: "saffron" | "sage" | "plum" | "coral" }[] = [
-  { id: "student", emoji: "✦", label: "Student / Learner",  body: "I'm studying a language or learning through books",                tone: "saffron" },
-  { id: "curious", emoji: "✿", label: "Curious Reader",     body: "I want to explore books in languages I don't speak yet",           tone: "sage"    },
-  { id: "pro",     emoji: "◆", label: "Professional",       body: "I read technical or business content in a foreign language",       tone: "plum"    },
-  { id: "family",  emoji: "❀", label: "Family",             body: "We want everyone at home to read in our native languages",         tone: "coral"   },
+  { id: "student", emoji: "✦", label: "Student / Learner",  body: "I'm studying a language or learning through books",            tone: "saffron" },
+  { id: "curious", emoji: "✿", label: "Curious Reader",     body: "I want to explore books in languages I don't speak yet",       tone: "sage"    },
+  { id: "pro",     emoji: "◆", label: "Professional",       body: "I read technical or business content in a foreign language",   tone: "plum"    },
+  { id: "family",  emoji: "❀", label: "Family",             body: "We want everyone at home to read in our native languages",     tone: "coral"   },
 ];
 
 const FEATURES = [
@@ -84,13 +61,6 @@ const FEATURES = [
   { icon: "🎯", label: "Smart quizzes",       badge: "var(--color-coral-deep)"   },
   { icon: "✨", label: "AI-preserved layout", badge: "var(--color-plum)"         },
 ] as const;
-
-const COUNTDOWN_SECS = 15 * 60;
-
-function fmtPrice(n: number): string {
-  const r = Math.round(n * 100) / 100;
-  return r % 1 === 0 ? String(r) : r.toFixed(2);
-}
 
 // ─── Web Audio SFX (no external files, no loading delay) ─────────────────────
 function playTone(freq: number, dur: number, type: OscillatorType = "sine", gain = 0.14) {
@@ -133,25 +103,20 @@ const SFX = {
 
 // ─── Lumi speech per step ─────────────────────────────────────────────────────
 function lumiSpeech(
-  step: number, persona: Persona | null,
+  step: number,
   name: string, email: string, pw: string,
   busy: boolean, done: boolean, err: string | null,
 ): { state: LumiState; text: string } {
   if (done) return { state: "celebrating", text: "Your shelf is ready! Welcome to Translify 🎉" };
   if (busy) return { state: "thinking",    text: "Setting up your library… almost there!" };
   if (err)  return { state: "sad",         text: "Hmm, something went wrong. Let's try again?" };
-  if (step === 4) {
-    if (email && pw) return { state: "excited",  text: "You're all set — just one tap! ✨" };
-    if (pw)          return { state: "happy",     text: "Great password! You're almost in 💪" };
-    if (email)       return { state: "happy",     text: "Love it! Now add a password." };
-    if (name)        return { state: "happy",     text: `Nice to meet you, ${name}! 📖` };
-    return                  { state: "waving",    text: "Almost there! Just create your account." };
-  }
-  if (step === 3) return { state: "celebrating", text: "I found your perfect plan! Let's go 🎉" };
-  if (step === 2) return { state: "reading",     text: "How hungry is your reading appetite?" };
-  if (step === 1) return { state: "happy",       text: "Which language are you learning?" };
-  if (persona)    return { state: "celebrating", text: "Great choice! Let's keep going 🚀" };
-  return                 { state: "waving",      text: "Hi! I'm Lumi. Tell me about yourself." };
+  if (step === 1) return { state: "waving", text: "Tell me a little about yourself!" };
+  // step 0 — account creation
+  if (email && pw) return { state: "excited",  text: "You're all set — just one tap! ✨" };
+  if (pw)          return { state: "happy",     text: "Great password! Almost in 💪" };
+  if (email)       return { state: "happy",     text: "Love it! Now add a password." };
+  if (name)        return { state: "happy",     text: `Nice to meet you, ${name}! 📖` };
+  return                  { state: "waving",    text: "Create your free account to start reading." };
 }
 
 // ─── Root component ───────────────────────────────────────────────────────────
@@ -161,8 +126,6 @@ export function JoinClient() {
   const [step,      setStep]      = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [persona,   setPersona]   = useState<Persona | null>(null);
-  const [lang,      setLang]      = useState<Locale>("en");
-  const [books,     setBooks]     = useState(4);
 
   const [name,  setName]  = useState("");
   const [email, setEmail] = useState("");
@@ -171,73 +134,31 @@ export function JoinClient() {
   const [err,   setErr]   = useState<string | null>(null);
   const [done,  setDone]  = useState(false);
 
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const planRec = persona ? PERSONA_PLANS[persona] : null;
-
-  const clearAdvance = () => {
-    if (advanceTimer.current) { clearTimeout(advanceTimer.current); advanceTimer.current = null; }
-  };
-
-  const go = (n: number, dir: 1 | -1 = 1) => {
-    setDirection(dir);
-    setStep(n);
-  };
+  const go = (n: number, dir: 1 | -1 = 1) => { setDirection(dir); setStep(n); };
 
   const handlePersonaSelect = (p: Persona) => {
     setPersona(p);
     SFX.select();
-    clearAdvance();
-    advanceTimer.current = setTimeout(() => { SFX.advance(); go(1); }, 420);
+    setTimeout(() => { SFX.success(); setDone(true); }, 320);
+    setTimeout(() => router.push("/library?welcome=1"), 2200);
   };
-
-  const handleLangSelect = (l: Locale) => {
-    setLang(l);
-    SFX.select();
-    clearAdvance();
-    advanceTimer.current = setTimeout(() => { SFX.advance(); go(2); }, 320);
-  };
-
-  const handleNext  = () => { SFX.advance(); go(step + 1); };
-  const handleBack  = () => { clearAdvance(); SFX.tap(); go(step - 1, -1); };
 
   const handleTryFree = async () => {
     if (!email || !pw) { setErr("Please enter your email and password."); SFX.error(); return; }
     setErr(null); setBusy(true);
     try {
       await register(email, pw, name || undefined);
-      setDone(true);
-      SFX.success();
-      setTimeout(() => router.push("/library?welcome=1"), 2400);
+      SFX.advance();
+      go(1);
     } catch (e) {
       SFX.error();
       setErr(e instanceof ApiError ? e.message : "Something went wrong. Please try again.");
     } finally { setBusy(false); }
   };
 
-  const handleSubscribe = async () => {
-    if (!email || !pw) { setErr("Please enter your email and password."); SFX.error(); return; }
-    setErr(null); setBusy(true);
-    try {
-      await register(email, pw, name || undefined);
-      if (planRec) {
-        try {
-          const { url } = await startCheckout({ plan: planRec.id, cycle: "yearly", applyFirstMonthDiscount: true });
-          window.location.href = url;
-          return;
-        } catch { /* Stripe not configured — fall through */ }
-      }
-      setDone(true);
-      SFX.success();
-      setTimeout(() => router.push("/library?welcome=1"), 2400);
-    } catch (e) {
-      SFX.error();
-      setErr(e instanceof ApiError ? e.message : "Something went wrong. Please try again.");
-    } finally { setBusy(false); }
-  };
-
-  const { state: lumiState, text: lumiText } = lumiSpeech(step, persona, name, email, pw, busy, done, err);
+  const { state: lumiState, text: lumiText } = lumiSpeech(step, name, email, pw, busy, done, err);
   const animClass = direction > 0 ? "ob-enter-forward" : "ob-enter-back";
-  const TOTAL = 5;
+  const TOTAL = 2;
 
   return (
     <div
@@ -281,68 +202,26 @@ export function JoinClient() {
 
       {/* Main content */}
       <main className="relative z-20 mx-auto max-w-5xl px-4 pb-24 pt-6 lg:px-8">
-        {/* Lumi speech panel — shown on steps 0–3 */}
-        {step < 4 && !done && <LumiPanel state={lumiState} text={lumiText} />}
+        {/* Lumi speech panel — shown on persona step */}
+        {step === 1 && !done && <LumiPanel state={lumiState} text={lumiText} />}
+        {done && <LumiPanel state="celebrating" text="Your shelf is ready! Welcome to Translify 🎉" />}
 
         {/* Step content */}
         <div key={step} className={animClass}>
           {step === 0 && (
-            <StepPersona persona={persona} onSelect={handlePersonaSelect} />
-          )}
-          {step === 1 && (
-            <StepLanguage lang={lang} onSelect={handleLangSelect} />
-          )}
-          {step === 2 && (
-            <StepBooks books={books} setBooks={setBooks} />
-          )}
-          {step === 3 && planRec && (
-            <StepReveal planRec={planRec} lang={lang} books={books} />
-          )}
-          {step === 4 && (
             <StepAccount
-              lumiState={lumiState} lumiText={lumiText} done={done}
-              planRec={planRec}
+              lumiState={lumiState} lumiText={lumiText} done={false}
               name={name}   setName={setName}
               email={email} setEmail={setEmail}
               pw={pw}       setPw={setPw}
               err={err} busy={busy}
               onTryFree={handleTryFree}
-              onSubscribe={handleSubscribe}
             />
           )}
+          {step === 1 && !done && (
+            <StepPersona persona={persona} onSelect={handlePersonaSelect} />
+          )}
         </div>
-
-        {/* Navigation: explicit Continue button for steps 2–3 */}
-        {step >= 2 && step <= 3 && !done && (
-          <div className="mt-10 flex items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={handleBack}
-              className="inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors hover:text-[color:var(--color-ink)]"
-              style={{ color: "var(--color-ink-soft)" }}
-            >
-              ← Back
-            </button>
-            <DuoButton
-              onClick={handleNext}
-              label={step === 3 ? "Create my account →" : "Continue →"}
-            />
-          </div>
-        )}
-
-        {/* Back button for auto-advance step 1 */}
-        {step === 1 && (
-          <div className="mt-8">
-            <button
-              type="button"
-              onClick={handleBack}
-              className="inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors"
-              style={{ color: "var(--color-ink-soft)" }}
-            >
-              ← Back
-            </button>
-          </div>
-        )}
       </main>
     </div>
   );
@@ -388,19 +267,19 @@ function LumiPanel({ state, text }: { state: LumiState; text: string }) {
   );
 }
 
-// ─── Step 0: Persona ──────────────────────────────────────────────────────────
+// ─── Step 1: Persona picker ───────────────────────────────────────────────────
 function StepPersona({ persona, onSelect }: { persona: Persona | null; onSelect: (p: Persona) => void }) {
   const toneMap = {
     saffron: { ring: "#D09040", bg: "linear-gradient(135deg,#FFFBF0,#FBE9C2)", iconBg: "rgba(224,164,80,0.18)", iconColor: "var(--color-saffron-deep)" },
     sage:    { ring: "#5A8C5A", bg: "linear-gradient(135deg,#F4F8EC,#DDEAD2)", iconBg: "rgba(123,161,124,0.18)", iconColor: "var(--color-sage-deep)"    },
     plum:    { ring: "#6B5B95", bg: "linear-gradient(135deg,#F4EEF7,#E0D2EA)", iconBg: "rgba(107,91,149,0.18)", iconColor: "var(--color-plum)"          },
-    coral:   { ring: "#C0604A", bg: "linear-gradient(135deg,#FFF1EE,#F6CCC4)", iconBg: "rgba(226,120,108,0.18)", iconColor: "var(--color-coral-deep)"  },
+    coral:   { ring: "#C0604A", bg: "linear-gradient(135deg,#FFF1EE,#F6CCC4)", iconBg: "rgba(226,120,108,0.18)", iconColor: "var(--color-coral-deep)"   },
   };
 
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-8 text-center">
-        <p className="text-[0.74rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-saffron-deep)" }}>Nice to meet you</p>
+        <p className="text-[0.74rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-saffron-deep)" }}>One last thing</p>
         <h1
           className="mt-3 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
           style={{ fontSize: "clamp(1.9rem,5vw,3rem)", color: "var(--color-ink)" }}
@@ -408,7 +287,7 @@ function StepPersona({ persona, onSelect }: { persona: Persona | null; onSelect:
           What brings you to Translify?
         </h1>
         <p className="mx-auto mt-3 max-w-md text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          We&apos;ll build your reading shelf around your answer.
+          We&apos;ll personalise your reading shelf around your answer.
         </p>
       </div>
 
@@ -426,9 +305,7 @@ function StepPersona({ persona, onSelect }: { persona: Persona | null; onSelect:
                 animationDelay: `${i * 0.07}s`,
                 borderColor: selected ? s.ring : "var(--color-border-strong)",
                 background: selected ? s.bg : "white",
-                boxShadow: selected
-                  ? `0 6px 0 ${s.ring}55`
-                  : "0 4px 0 rgba(74,60,30,0.09)",
+                boxShadow: selected ? `0 6px 0 ${s.ring}55` : "0 4px 0 rgba(74,60,30,0.09)",
                 transform: selected ? "scale(1.025) translateY(-2px)" : "scale(1)",
               }}
             >
@@ -459,311 +336,18 @@ function StepPersona({ persona, onSelect }: { persona: Persona | null; onSelect:
   );
 }
 
-// ─── Step 1: Language picker ──────────────────────────────────────────────────
-function StepLanguage({ lang, onSelect }: { lang: Locale; onSelect: (l: Locale) => void }) {
-  return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-8 text-center">
-        <p className="text-[0.74rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-saffron-deep)" }}>Great choice!</p>
-        <h1
-          className="mt-3 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
-          style={{ fontSize: "clamp(1.9rem,5vw,3rem)", color: "var(--color-ink)" }}
-        >
-          Pick your reading language
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          This is the language your books will be translated <em>into</em>.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {LOCALES.map((l, i) => {
-          const selected = lang === l.code;
-          return (
-            <button
-              key={l.code}
-              type="button"
-              onClick={() => onSelect(l.code)}
-              dir={l.dir}
-              className="flex items-center justify-between gap-2 rounded-2xl border-2 px-4 py-3.5 transition-all duration-300 animate-float-in"
-              style={{
-                animationDelay: `${i * 0.05}s`,
-                borderColor: selected ? "var(--color-saffron-deep)" : "var(--color-border-strong)",
-                background: selected ? "linear-gradient(135deg,#FFFBF0,#FBE9C2)" : "white",
-                boxShadow: selected ? "0 5px 0 rgba(208,144,64,0.40)" : "0 3px 0 rgba(74,60,30,0.08)",
-                transform: selected ? "translateY(-2px)" : "translateY(0)",
-              }}
-            >
-              <span className="flex items-center gap-2.5">
-                <span className="text-2xl leading-none">{l.flag}</span>
-                <span className="font-[family-name:var(--font-display)] text-[0.98rem] font-semibold" style={{ color: "var(--color-ink)" }}>{l.label}</span>
-              </span>
-              {selected && (
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-white animate-pop-in" style={{ background: "var(--color-ink)" }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      <div
-        className="mt-5 rounded-2xl border border-dashed px-5 py-3 text-center text-[0.84rem]"
-        style={{ borderColor: "var(--color-border-strong)", color: "var(--color-ink-soft)" }}
-      >
-        More languages coming — Japanese, German, Arabic & more are already supported
-      </div>
-    </div>
-  );
-}
-
-// ─── Step 2: Books slider ─────────────────────────────────────────────────────
-function StepBooks({ books, setBooks }: { books: number; setBooks: (n: number) => void }) {
-  const max = 20;
-  const pct = (books / max) * 100;
-
-  return (
-    <div className="mx-auto max-w-xl">
-      <div className="mb-8 text-center">
-        <p className="text-[0.74rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-saffron-deep)" }}>One more thing</p>
-        <h1
-          className="mt-3 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
-          style={{ fontSize: "clamp(1.9rem,5vw,3rem)", color: "var(--color-ink)" }}
-        >
-          How many books a month?
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          Roughly — we&apos;ll suggest the right plan for you.
-        </p>
-      </div>
-
-      <div
-        className="rounded-[1.6rem] border-2 p-8"
-        style={{
-          borderColor: "var(--color-border-strong)",
-          background: "linear-gradient(135deg,#FFFCF3,#F5E9CD)",
-          boxShadow: "0 8px 0 rgba(74,60,30,0.10)",
-        }}
-      >
-        <div className="text-center">
-          <div
-            className="font-[family-name:var(--font-display)] font-semibold leading-none tracking-tight"
-            style={{ fontSize: "clamp(4rem,12vw,7rem)", color: "var(--color-ink)" }}
-          >
-            {books}{books === max && <span style={{ color: "var(--color-saffron-deep)" }}>+</span>}
-          </div>
-          <p className="mt-2 text-sm font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-ink-soft)" }}>
-            books / month
-          </p>
-        </div>
-
-        {/* Visual book stack */}
-        <div className="mt-8 flex h-16 items-end justify-center gap-1 overflow-hidden">
-          {BAR_HEIGHTS.map((h, i) => (
-            <span
-              key={i}
-              className="rounded-t-md transition-all duration-500"
-              style={{
-                width: "clamp(8px,1.6vw,14px)",
-                height: i < books ? `${h}px` : "8px",
-                background: i < books ? BAR_COLORS[i % BAR_COLORS.length] : "rgba(74,60,30,0.08)",
-                transitionDelay: `${i * 22}ms`,
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Slider */}
-        <div className="mt-8 px-2">
-          <div className="relative">
-            <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full" style={{ background: "rgba(74,60,30,0.10)" }} />
-            <div
-              className="absolute top-1/2 h-2 -translate-y-1/2 rounded-full transition-all"
-              style={{ width: `${pct}%`, background: "linear-gradient(to right,var(--color-saffron),var(--color-coral),var(--color-plum))" }}
-            />
-            <input
-              type="range" min={1} max={max} value={books}
-              onChange={(e) => setBooks(Number(e.target.value))}
-              className="join-slider relative h-6 w-full cursor-pointer appearance-none bg-transparent"
-              aria-label="Books per month"
-            />
-          </div>
-          <div className="mt-3 flex justify-between text-[0.7rem] font-bold uppercase tracking-[0.16em]" style={{ color: "var(--color-ink-soft)" }}>
-            <span>1</span><span>5</span><span>10</span><span>15</span><span>20+</span>
-          </div>
-        </div>
-      </div>
-
-      <style>{`
-        .join-slider::-webkit-slider-thumb {
-          -webkit-appearance: none; appearance: none;
-          width: 30px; height: 30px; border-radius: 50%;
-          background: var(--color-ink); border: 3px solid var(--color-paper);
-          box-shadow: 0 4px 14px rgba(20,16,8,0.35); cursor: grab; transition: transform 0.15s;
-        }
-        .join-slider::-webkit-slider-thumb:active { transform: scale(1.15); cursor: grabbing; }
-        .join-slider::-moz-range-thumb {
-          width: 30px; height: 30px; border-radius: 50%;
-          background: var(--color-ink); border: 3px solid var(--color-paper);
-          box-shadow: 0 4px 14px rgba(20,16,8,0.35); cursor: grab;
-        }
-      `}</style>
-    </div>
-  );
-}
-
-// ─── Step 3: Plan reveal ──────────────────────────────────────────────────────
-function StepReveal({ planRec, lang, books }: { planRec: PlanRec; lang: Locale; books: number }) {
-  const [secs, setSecs] = useState(COUNTDOWN_SECS);
-
-  useEffect(() => {
-    const id = setInterval(() => setSecs((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const mm = String(Math.floor(secs / 60)).padStart(2, "0");
-  const ss = String(secs % 60).padStart(2, "0");
-  const langInfo = LOCALES.find((l) => l.code === lang);
-  const discounted = fmtPrice(planRec.monthly * 0.6);
-
-  const toneMap = {
-    saffron: { bg: "linear-gradient(135deg,#FFFBF0,#F8E1B0,#F0CC85)", border: "#D09040", chip: "#D09040", accent: "var(--color-saffron-deep)" },
-    sage:    { bg: "linear-gradient(135deg,#F4F8EC,#CCDDC0,#A9C5A8)",  border: "#5A8C5A", chip: "#5A8C5A", accent: "var(--color-sage-deep)"    },
-    coral:   { bg: "linear-gradient(135deg,#FFF1EE,#F4BBB1,#E59C8F)",  border: "#C0604A", chip: "#C0604A", accent: "var(--color-coral-deep)"   },
-    plum:    { bg: "linear-gradient(135deg,#F4EEF7,#D2BFE0,#B5A0CC)",  border: "#6B5B95", chip: "#6B5B95", accent: "var(--color-plum)"         },
-  }[planRec.tone];
-
-  return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-6 text-center">
-        <p className="text-[0.74rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-saffron-deep)" }}>Your perfect match</p>
-        <h1
-          className="mt-3 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
-          style={{ fontSize: "clamp(1.8rem,5vw,2.8rem)", color: "var(--color-ink)" }}
-        >
-          We found your plan 🎯
-        </h1>
-      </div>
-
-      {/* Plan card */}
-      <div
-        className="relative overflow-hidden rounded-[1.8rem] border-2 p-8"
-        style={{
-          borderColor: toneMap.border,
-          background: toneMap.bg,
-          boxShadow: `0 10px 0 ${toneMap.border}44`,
-        }}
-      >
-        {/* Recommended chip */}
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.2em] text-white"
-            style={{ background: toneMap.chip, boxShadow: "0 6px 16px -4px rgba(20,16,8,0.4)" }}
-          >
-            ★ Recommended for you
-          </span>
-        </div>
-
-        <div className="grid gap-6 sm:grid-cols-[auto_1fr]">
-          {/* Plan icon */}
-          <div
-            className="mx-auto grid h-20 w-20 place-items-center rounded-[1.2rem] font-[family-name:var(--font-display)] text-[2.8rem] sm:mx-0"
-            style={{ background: "rgba(255,255,255,0.55)", backdropFilter: "blur(4px)", color: toneMap.accent, boxShadow: "0 6px 18px -6px rgba(20,16,8,0.2)" }}
-          >
-            {planRec.emoji}
-          </div>
-
-          <div>
-            <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-ink-soft)" }}>Your plan</p>
-            <h3
-              className="mt-1 font-[family-name:var(--font-display)] text-[2rem] font-semibold leading-tight tracking-tight"
-              style={{ color: "var(--color-ink)" }}
-            >
-              Translify {planRec.name}
-            </h3>
-            <p className="mt-1 text-[0.9rem]" style={{ color: "var(--color-ink-soft)" }}>{planRec.tagline}</p>
-
-            {/* Pricing */}
-            <div className="mt-4 flex items-end gap-3">
-              <span
-                className="font-[family-name:var(--font-display)] font-semibold leading-none tracking-tight"
-                style={{ fontSize: "clamp(2.8rem,8vw,3.4rem)", color: "var(--color-ink)" }}
-              >
-                €{discounted}
-              </span>
-              <div className="pb-1.5">
-                <span className="block text-sm line-through" style={{ color: "var(--color-ink-soft)" }}>€{planRec.monthly}</span>
-                <span className="block text-xs" style={{ color: "var(--color-ink-soft)" }}>first month</span>
-              </div>
-              <span
-                className="mb-1 ms-auto inline-flex h-9 items-center rounded-full px-3 text-sm font-bold text-white"
-                style={{ background: toneMap.chip, boxShadow: "0 4px 10px -2px rgba(20,16,8,0.3)" }}
-              >
-                –40%
-              </span>
-            </div>
-            <p className="mt-1 text-[0.84rem]" style={{ color: "var(--color-ink-soft)" }}>
-              then €{planRec.monthly}/mo · cancel anytime
-            </p>
-
-            {/* Match bullets */}
-            <ul className="mt-5 space-y-1.5 text-[0.9rem]" style={{ color: "var(--color-ink)" }}>
-              <li className="flex items-center gap-2.5"><span>📚</span> {books === 20 ? "20+" : books} books/month — you&apos;re covered</li>
-              <li className="flex items-center gap-2.5"><span>{langInfo?.flag ?? "🌐"}</span> Full {langInfo?.label ?? lang} translation</li>
-              <li className="flex items-center gap-2.5"><span>✨</span> AI layout preservation + chat</li>
-              <li className="flex items-center gap-2.5"><span>✓</span> 30-day money-back guarantee</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Countdown */}
-        <div
-          className="mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border px-5 py-4 sm:flex-row"
-          style={{ borderColor: "rgba(20,16,8,0.12)", background: "rgba(255,255,255,0.55)", backdropFilter: "blur(4px)" }}
-        >
-          <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-full text-white" style={{ background: "var(--color-ink)" }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
-              </svg>
-            </span>
-            <div>
-              <p className="text-[0.66rem] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--color-ink-soft)" }}>Offer expires</p>
-              <p className="font-[family-name:var(--font-display)] text-[1.4rem] font-semibold leading-tight tabular-nums" style={{ color: "var(--color-ink)" }}>
-                {mm}:{ss}
-              </p>
-            </div>
-          </div>
-          <p className="text-end text-[0.78rem] leading-snug sm:max-w-[180px]" style={{ color: "var(--color-ink-soft)" }}>
-            Lock in your <strong style={{ color: "var(--color-ink)" }}>–40% first month</strong> discount before it expires
-          </p>
-        </div>
-      </div>
-
-      <p className="mt-5 text-center text-[0.84rem]" style={{ color: "var(--color-ink-soft)" }}>
-        Or start with our <strong style={{ color: "var(--color-ink)" }}>free plan</strong> — no card needed, upgrade anytime.
-      </p>
-    </div>
-  );
-}
-
-// ─── Step 4: Account creation ─────────────────────────────────────────────────
+// ─── Step 0: Account creation ─────────────────────────────────────────────────
 function StepAccount({
-  lumiState, lumiText, done, planRec,
+  lumiState, lumiText, done,
   name, setName, email, setEmail, pw, setPw,
-  err, busy, onTryFree, onSubscribe,
+  err, busy, onTryFree,
 }: {
   lumiState: LumiState; lumiText: string; done: boolean;
-  planRec: PlanRec | null;
   name: string;  setName:  (s: string) => void;
   email: string; setEmail: (s: string) => void;
   pw: string;    setPw:    (s: string) => void;
   err: string | null; busy: boolean;
-  onTryFree:   () => void;
-  onSubscribe: () => void;
+  onTryFree: () => void;
 }) {
   const [pressed, setPressed] = useState(false);
   const formReady = !!email && !!pw;
@@ -814,11 +398,9 @@ function StepAccount({
           >
             Create your account
           </h2>
-          {planRec && (
-            <p className="mt-1 text-[0.88rem]" style={{ color: "var(--color-ink-soft)" }}>
-              Recommended: <strong style={{ color: "var(--color-ink)" }}>Translify {planRec.name}</strong> — or start free below.
-            </p>
-          )}
+          <p className="mt-1 text-[0.88rem]" style={{ color: "var(--color-ink-soft)" }}>
+            Start free — upgrade to a paid plan anytime.
+          </p>
         </div>
 
         {/* Google sign-in */}
@@ -870,17 +452,6 @@ function StepAccount({
             No credit card · Cancel anytime · 30-day money-back
           </p>
 
-          {planRec && (
-            <button
-              type="button"
-              disabled={busy || !formReady}
-              onClick={onSubscribe}
-              className="self-center text-[0.85rem] font-medium underline decoration-dotted underline-offset-4 transition-colors disabled:cursor-not-allowed disabled:opacity-40 hover:text-[color:var(--color-ink)]"
-              style={{ color: "var(--color-ink-soft)", textDecorationColor: "rgba(74,60,30,0.30)" }}
-            >
-              Or subscribe to {planRec.name} · €{fmtPrice(planRec.monthly * 0.6)} first month
-            </button>
-          )}
         </div>
 
         {/* Divider */}
