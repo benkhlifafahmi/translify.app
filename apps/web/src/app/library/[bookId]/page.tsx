@@ -46,6 +46,8 @@ import type {
 } from "@/components/pdf-viewer";
 import { PaywallModal } from "@/components/paywall-modal";
 import { EmailGateModal } from "@/components/email-gate-modal";
+import { ReaderTutorial } from "@/components/reader-tutorial";
+import { FreePreviewChip } from "@/components/free-preview-chip";
 import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
 
 type RightTab = "chat" | "quiz" | "notes";
@@ -118,6 +120,10 @@ export default function BookDetailPage({
   // Paywall state — set by onPageReached when a Free reader crosses the cap.
   const [paywallPage, setPaywallPage] = useState<number | null>(null);
 
+  // Furthest 1-indexed page the user has reached this session — drives both
+  // the ReaderTutorial sequence and the free-preview countdown chip.
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
   // Anonymous-user gate state. Action drives the headline copy in the modal
   // ("Chat with the book?" vs "Quiz me?" vs "Translate?"). Open via the
   // onEmailRequired callback that ChatPanel/QuizPanel surface on a 402.
@@ -147,6 +153,9 @@ export default function BookDetailPage({
   const onPageReached = useCallback(
     (page: number) => {
       markReached(page);
+      // Expose to React state so the tutorial + free-preview chip can react
+      // to it without each component listening to the reader directly.
+      setCurrentPage((prev) => (page > prev ? page : prev));
       if (page > furthestPageRef.current) {
         furthestPageRef.current = page;
         playGardenActivity("water", `+ page ${page}`);
@@ -358,6 +367,24 @@ export default function BookDetailPage({
         action={emailGate?.action ?? "save"}
         onClose={() => setEmailGate(null)}
       />
+
+      {/* Suppress the contextual tutorial when either modal is open so we
+          never stack popovers on top of each other. */}
+      <ReaderTutorial
+        page={currentPage}
+        disabled={paywallPage !== null || emailGate !== null}
+      />
+
+      {/* Heads-up countdown for Free readers on seed books — only renders
+          when within 3 pages of the cap. Hides itself once the paywall
+          fires so we never show two upgrade prompts at once. */}
+      {isCapBound && book.is_seed && (
+        <FreePreviewChip
+          page={currentPage}
+          cap={seedCap}
+          hidden={paywallPage !== null}
+        />
+      )}
 
       <PaywallModal
         open={paywallPage !== null}

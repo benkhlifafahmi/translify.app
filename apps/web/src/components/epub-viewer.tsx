@@ -123,18 +123,17 @@ export function EpubViewer({
     const book = ePub(fileUrl, { openAs: "epub" });
     bookRef.current = book;
 
-    // Scroll-first reading mode. Users who arrive from social/mobile expect
-    // to flick vertically; the old paginated layout left them stuck staring
-    // at white space with no swipe-up affordance. ``scrolled-continuous``
-    // stacks every chapter into one tall column managed by epubjs's
-    // ``continuous`` manager — keyboard arrows + the prev/next buttons
-    // still work (they scroll a screen-height each), and locations + chapter
-    // tracking continue to fire on every relocated event.
+    // Paginated rendering. ``scrolled-continuous`` was attempted but
+    // (a) tripped a load-stall bug on long books and (b) hurt perf on low-
+    // end Android. We make scroll-discoverability a UX problem instead of
+    // a layout problem: the ReaderTutorial component teaches tap-to-turn
+    // explicitly on the first read.
     const rendition = book.renderTo(containerRef.current, {
       width: "100%",
       height: "100%",
-      flow: "scrolled-continuous",
-      manager: "continuous",
+      flow: "paginated",
+      spread: "auto",
+      manager: "default",
       allowScriptedContent: false,
     });
     renditionRef.current = rendition;
@@ -497,13 +496,7 @@ export function EpubViewer({
         </button>
       </div>
 
-      {/* Book canvas. Two layers:
-          • outer (this div) is the *frame* — stays put. Spine + loading
-            overlay live here so they don't scroll with the content.
-          • inner (the absolute scroller below) is where overflow happens.
-          epubjs's "continuous" manager renders every chapter stacked into
-          the inner container and handles progressive loading + the
-          relocated events that drive our chapter/progress chrome. */}
+      {/* Book canvas */}
       <div
         className="relative flex-1 overflow-hidden"
         style={{ background: themeBg }}
@@ -515,22 +508,33 @@ export function EpubViewer({
         ) : (
           <>
             <div
-              className="absolute inset-0 overflow-y-auto overflow-x-hidden"
-              style={{
-                WebkitOverflowScrolling: "touch",
-                overscrollBehavior: "contain",
-              }}
-            >
-              <div
-                ref={containerRef}
-                className="relative min-h-full w-full"
-                style={{ paddingRight: "28px" /* room for spine */ }}
-              />
-            </div>
+              ref={containerRef}
+              className="absolute inset-0"
+              style={{ paddingRight: "28px" /* room for spine */ }}
+            />
 
-            {/* The paper spine — vertical progress on the right edge.
-                Sits in the outer frame so it stays pinned as the canvas
-                scrolls underneath it. */}
+            {/* Hover-zones for click-to-page-turn (desktop). Mobile users
+                still get them — they're just transparent buttons covering
+                the left/right edge of the canvas. The ReaderTutorial
+                component teaches the gesture explicitly on first read. */}
+            <button
+              type="button"
+              onClick={prev}
+              aria-label="Previous page"
+              data-tutorial-anchor="page-prev"
+              className="absolute inset-y-0 left-0 w-16 md:cursor-w-resize"
+              style={{ background: "transparent" }}
+            />
+            <button
+              type="button"
+              onClick={next}
+              aria-label="Next page"
+              data-tutorial-anchor="page-next"
+              className="absolute inset-y-0 right-7 w-16 md:cursor-e-resize"
+              style={{ background: "transparent" }}
+            />
+
+            {/* The paper spine — vertical progress on the right edge */}
             <Spine progressPct={progressPct} theme={theme} />
 
             {!ready && (
