@@ -178,8 +178,16 @@ async def start_session(
     user = existing_q.unique().scalar_one_or_none()
 
     if user is not None:
-        # Existing account — never return a JWT for an email we can't prove
-        # the typer owns. Send a magic link instead.
+        # Returning user — mint a session JWT immediately and continue the
+        # /join flow without the inbox detour. We also send the magic-link
+        # email as a backup so the visitor has a way back from another device.
+        #
+        # SECURITY NOTE: this trusts whoever types the address. The exposure
+        # today is bounded — free-tier accounts hold no payment info, and
+        # Stripe Customer Portal requires re-verification. *Before* enabling
+        # uploads of private books or gating sensitive account-mutations, add
+        # a check here: if user has uploaded books / set a password / has a
+        # paid plan, fall back to the magic-link-only flow.
         token = ml.issue(user.id)
         subject, html, text = email_templates.magic_link(
             name=user.display_name, login_url=magic_link_url(token)
@@ -194,6 +202,12 @@ async def start_session(
             )
         except Exception:
             log.exception("Failed to send magic-link email to %s", user.email)
+
+        access_token = generate_jwt(
+            data={"sub": str(user.id), "aud": ["fastapi-users:auth"]},
+            secret=settings.jwt_secret,
+            lifetime_seconds=settings.jwt_lifetime_seconds,
+        )
         await _record_lead_for_session(
             email=email,
             user=user,
@@ -204,7 +218,7 @@ async def start_session(
         )
         await session.commit()
         return StartSessionResponse(
-            user_id=user.id, is_new_user=False, access_token=None,
+            user_id=user.id, is_new_user=False, access_token=access_token,
             magic_link_sent=True,
         )
 

@@ -13,8 +13,7 @@ import { TranslifyIcon } from "@/components/translify-mark";
 
 // ─── Steps ────────────────────────────────────────────────────────────────────
 type Step =
-  | "email"        // 1. visitor types email → silent backend signup
-  | "magic-sent"   // 1b. (existing email) — show "check your inbox"
+  | "email"        // 1. visitor types email → silent backend signup (always returns JWT)
   | "topics"       // 2. multi-select topic chips
   | "shelf"        // 3. seed books matching their topics — tap one → /read/<id>
   ;
@@ -141,14 +140,14 @@ export function JoinClient() {
         preferred_language: preferred,
       });
       trackLead({ email, step: "email", referrer: referrerRef.current });
-      if (res.is_new_user && res.access_token) {
-        SFX.advance();
-        setStep("topics");
-      } else {
-        // Existing email — server sent a magic link, we never get a JWT here.
-        SFX.success();
-        setStep("magic-sent");
+      if (!res.access_token) {
+        // Defensive — server is expected to always return a JWT now, but if a
+        // future hardening reverses that we don't want to silently advance
+        // without a session.
+        throw new Error("No session was created. Please try again.");
       }
+      SFX.advance();
+      setStep("topics");
     } catch (e) {
       SFX.error();
       setErr(e instanceof ApiError ? e.message : "Couldn't start a session. Please try again.");
@@ -215,20 +214,18 @@ export function JoinClient() {
           </Link>
         )}
 
-        {step !== "magic-sent" && (
-          <div className="flex items-center gap-1.5">
-            {VISIBLE_STEPS.map((s, i) => (
-              <span
-                key={s}
-                className="h-1.5 rounded-full transition-all duration-500"
-                style={{
-                  width: i === stepIdx ? 22 : 6,
-                  background: i <= stepIdx ? "var(--color-saffron-deep)" : "rgba(74,60,30,0.15)",
-                }}
-              />
-            ))}
-          </div>
-        )}
+        <div className="flex items-center gap-1.5">
+          {VISIBLE_STEPS.map((s, i) => (
+            <span
+              key={s}
+              className="h-1.5 rounded-full transition-all duration-500"
+              style={{
+                width: i === stepIdx ? 22 : 6,
+                background: i <= stepIdx ? "var(--color-saffron-deep)" : "rgba(74,60,30,0.15)",
+              }}
+            />
+          ))}
+        </div>
 
         {step === "email" ? (
           <Link href="/login" className="text-[0.82rem] font-semibold" style={{ color: "var(--color-ink-soft)" }}>
@@ -246,9 +243,6 @@ export function JoinClient() {
               email={email} setEmail={setEmail}
               onContinue={handleEmail} err={err} busy={busy}
             />
-          )}
-          {step === "magic-sent" && (
-            <StepMagicSent email={email} />
           )}
           {step === "topics" && (
             <StepTopics
@@ -339,36 +333,6 @@ function StepEmail({
         By continuing you agree to our{" "}
         <Link href="/terms" className="underline underline-offset-4">Terms</Link> &{" "}
         <Link href="/privacy" className="underline underline-offset-4">Privacy</Link>.
-      </p>
-    </div>
-  );
-}
-
-// ─── Step 1b — Magic link sent (existing email path) ──────────────────────────
-function StepMagicSent({ email }: { email: string }) {
-  return (
-    <div className="mt-6 flex flex-col items-center text-center">
-      <Lumi state="happy" size={108} animate />
-      <p
-        className="mt-6 text-[0.7rem] font-bold uppercase tracking-[0.22em]"
-        style={{ color: "var(--color-sage-deep)" }}
-      >
-        Welcome back
-      </p>
-      <h1
-        className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.06] tracking-tight"
-        style={{ fontSize: "clamp(1.7rem,6vw,2.2rem)", color: "var(--color-ink)" }}
-      >
-        Check your inbox.
-      </h1>
-      <p className="mx-auto mt-3 max-w-[30ch] text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-        We sent a one-tap sign-in link to <span className="font-semibold" style={{ color: "var(--color-ink)" }}>{email}</span>. The link opens your shelf — no password to remember.
-      </p>
-      <p className="mt-6 text-[0.82rem]" style={{ color: "var(--color-ink-soft)" }}>
-        Didn&apos;t arrive? Check spam or{" "}
-        <Link href="/login" className="font-semibold underline underline-offset-4" style={{ color: "var(--color-ink)" }}>
-          try again
-        </Link>.
       </p>
     </div>
   );
