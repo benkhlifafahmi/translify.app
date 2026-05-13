@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { BookCard } from "@/components/book-card";
 import { UploadButton } from "@/components/upload-button";
 import { TrialBanner } from "@/components/trial-banner";
 import { ConversionModal } from "@/components/conversion-modal";
+import { FolderShelf } from "@/components/folder-shelf";
+import { FolderEditor } from "@/components/folder-editor";
 import { me, logout, type User } from "@/lib/auth";
-import { listBooks, type Book } from "@/lib/books";
+import { listBooks, moveBookToFolder, type Book } from "@/lib/books";
+import { listFolders, type Folder } from "@/lib/folders";
 import {
   listAllHighlights,
   HIGHLIGHT_COLOR_CLASS,
@@ -24,6 +26,7 @@ import { useLumi } from "@/components/lumi/lumi-context";
 
 export default function LibraryPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
@@ -53,23 +56,63 @@ export default function LibraryPage() {
     },
   });
 
+  const { data: folders } = useQuery<Folder[]>({
+    queryKey: ["folders"],
+    queryFn: listFolders,
+    enabled,
+  });
+
   const { data: highlights } = useQuery<Highlight[]>({
     queryKey: ["highlights", "all"],
     queryFn: listAllHighlights,
     enabled,
   });
 
-  const countsByBook = (highlights ?? []).reduce<Record<string, number>>(
-    (acc, h) => {
+  const noteCountsByBook = useMemo(() => (
+    (highlights ?? []).reduce<Record<string, number>>((acc, h) => {
       acc[h.book_id] = (acc[h.book_id] ?? 0) + 1;
       return acc;
-    },
-    {},
-  );
+    }, {})
+  ), [highlights]);
+
   const recentHighlights = (highlights ?? []).slice(0, 6);
-  const bookTitleById = Object.fromEntries(
-    (books ?? []).map((b) => [b.id, b.title] as const),
+  const bookTitleById = useMemo(
+    () => Object.fromEntries((books ?? []).map((b) => [b.id, b.title] as const)),
+    [books],
   );
+
+  // Group books by their folder. NULL → "unsorted" key.
+  const booksByFolder = useMemo(() => {
+    const m: Record<string, Book[]> = { unsorted: [] };
+    for (const b of books ?? []) {
+      const k = b.folder_id ?? "unsorted";
+      (m[k] ??= []).push(b);
+    }
+    return m;
+  }, [books]);
+
+  // Move-book mutation — used by both DnD drops and the "..." menu. We patch
+  // the cache optimistically so the card jumps shelves immediately.
+  const moveBook = useMutation({
+    mutationFn: ({ bookId, folderId }: { bookId: string; folderId: string | null }) =>
+      moveBookToFolder(bookId, folderId),
+    onMutate: async ({ bookId, folderId }) => {
+      await queryClient.cancelQueries({ queryKey: ["books"] });
+      const prev = queryClient.getQueryData<Book[]>(["books"]);
+      queryClient.setQueryData<Book[]>(["books"], (old) =>
+        old?.map((b) => b.id === bookId ? { ...b, folder_id: folderId } : b),
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      // Roll back on failure so the UI doesn't show the wrong shelf.
+      if (ctx?.prev) queryClient.setQueryData(["books"], ctx.prev);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["books"] });
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
+    },
+  });
 
   useEffect(() => {
     if (userError) router.replace("/login");
@@ -94,6 +137,12 @@ export default function LibraryPage() {
     router.replace("/login");
   };
 
+  // Folder editor state — null target == "create new".
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
+  const openCreate = () => { setEditingFolder(null); setEditorOpen(true); };
+  const openEdit = (f: Folder) => { setEditingFolder(f); setEditorOpen(true); };
+
   if (!mounted || userLoading) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10">
@@ -104,6 +153,7 @@ export default function LibraryPage() {
 
   const greeting = pickGreeting();
   const name = user?.display_name || (user?.email ? user.email.split("@")[0] : "reader");
+  const orderedFolders = (folders ?? []).slice().sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
 
   return (
     <main className="relative min-h-screen pb-24">
@@ -159,17 +209,35 @@ export default function LibraryPage() {
               {greeting}
             </p>
             <h1 className="mt-3 font-[family-name:var(--font-display)] text-[2.6rem] font-semibold leading-[1.05] tracking-tight sm:text-[3rem]">
-              Your shelf,{" "}
+              Your library,{" "}
               <em className="text-[color:var(--color-saffron-deep)]">{name}</em>.
             </h1>
             <p className="mt-2 max-w-xl text-[0.95rem] leading-relaxed text-[color:var(--color-ink-soft)]">
               {books && books.length > 0
-                ? "Pick a book to keep going, or drop in a new one — we'll do the heavy lifting."
+                ? "Drag a book onto a folder to file it away. Tap any folder to redesign it."
                 : "Start by adding a book. PDF or EPUB — whatever you've got."}
             </p>
           </div>
 
-          <UploadButton />
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex h-11 items-center gap-2 rounded-2xl border-2 px-4 text-sm font-semibold transition-all active:translate-y-1"
+              style={{
+                borderColor: "var(--color-border-strong)",
+                background: "white",
+                color: "var(--color-ink)",
+                boxShadow: "0 3px 0 rgba(74,60,30,0.10)",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              New folder
+            </button>
+            <UploadButton />
+          </div>
         </div>
 
         {recentHighlights.length > 0 && (
@@ -179,25 +247,71 @@ export default function LibraryPage() {
           />
         )}
 
-        <div className="mt-10">
+        <div className="mt-10 flex flex-col gap-6">
           {booksLoading ? (
-            <BooksSkeleton />
+            <ShelfSkeleton />
           ) : !books || books.length === 0 ? (
-            <EmptyShelf />
+            <EmptyLibrary />
           ) : (
-            <div className="grid grid-cols-1 gap-5 stagger sm:grid-cols-2 lg:grid-cols-3">
-              {books.map((book, i) => (
-                <BookCard
-                  key={book.id}
-                  book={book}
-                  index={i}
-                  noteCount={countsByBook[book.id] ?? 0}
+            <>
+              {/* Unsorted always at the top so new uploads are visible first.
+                  We only render it if there's something in it OR there are
+                  no folders yet (the user needs *something* to look at). */}
+              {(booksByFolder.unsorted?.length ?? 0) > 0 || orderedFolders.length === 0 ? (
+                <FolderShelf
+                  folder={null}
+                  books={booksByFolder.unsorted ?? []}
+                  noteCountsByBook={noteCountsByBook}
+                  otherFolders={orderedFolders}
+                  onDropBook={(bookId) => moveBook.mutate({ bookId, folderId: null })}
+                  onMoveBook={(bookId, fid) => moveBook.mutate({ bookId, folderId: fid })}
+                />
+              ) : null}
+
+              {orderedFolders.map((f) => (
+                <FolderShelf
+                  key={f.id}
+                  folder={f}
+                  books={booksByFolder[f.id] ?? []}
+                  noteCountsByBook={noteCountsByBook}
+                  onEditFolder={openEdit}
+                  otherFolders={orderedFolders}
+                  onDropBook={(bookId) => moveBook.mutate({ bookId, folderId: f.id })}
+                  onMoveBook={(bookId, fid) => moveBook.mutate({ bookId, folderId: fid })}
                 />
               ))}
-            </div>
+
+              {/* New-folder CTA at the bottom of the stack. */}
+              <button
+                type="button"
+                onClick={openCreate}
+                className="group flex items-center justify-center gap-3 rounded-3xl border-2 border-dashed py-6 text-[0.95rem] font-semibold transition-all hover:-translate-y-[2px]"
+                style={{
+                  borderColor: "var(--color-border-strong)",
+                  background: "var(--color-paper)",
+                  color: "var(--color-ink-soft)",
+                }}
+              >
+                <span
+                  className="grid h-9 w-9 place-items-center rounded-full transition-colors group-hover:bg-[color:var(--color-saffron-deep)] group-hover:text-white"
+                  style={{ background: "var(--color-paper-3)", color: "var(--color-ink)" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </span>
+                Add a new folder
+              </button>
+            </>
           )}
         </div>
       </section>
+
+      <FolderEditor
+        folder={editingFolder}
+        open={editorOpen}
+        onClose={() => setEditorOpen(false)}
+      />
     </main>
   );
 }
@@ -210,13 +324,13 @@ function pickGreeting() {
   return "Good evening";
 }
 
-function BooksSkeleton() {
+function ShelfSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {[0, 1, 2].map((i) => (
+    <div className="flex flex-col gap-6">
+      {[0, 1].map((i) => (
         <div
           key={i}
-          className="card-paper h-48 animate-pulse"
+          className="card-paper h-40 animate-pulse"
           style={{ animationDelay: `${i * 80}ms` }}
         />
       ))}
@@ -278,7 +392,7 @@ function RecentNotesStrip({
   );
 }
 
-function EmptyShelf() {
+function EmptyLibrary() {
   return (
     <div className="card-paper-lifted relative mx-auto max-w-3xl overflow-hidden p-8 sm:p-12">
       <div

@@ -76,6 +76,17 @@ class Book(Base):
     # ``app/seeds/catalog.py``. Unique across seed rows, NULL for user uploads.
     seed_slug: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
+    # Optional folder this book is filed under (NULL = "Unsorted" shelf at
+    # the top of the library). Per-user — the FK target's CASCADE on user
+    # delete already covers cleanup; folder delete sets this to NULL so the
+    # books drop back to the unsorted shelf instead of disappearing.
+    folder_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("folders.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

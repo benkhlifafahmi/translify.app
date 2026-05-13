@@ -2,6 +2,7 @@
 from app.models.book import Book, BookStatus
 from app.models.chat import Chat, ChatScope, Message, MessageRole
 from app.models.chunk import Chunk
+from app.models.folder import Folder
 from app.models.garden import (
     Garden,
     GardenEvent,
@@ -28,6 +29,7 @@ __all__ = [
     "Chat",
     "ChatScope",
     "Chunk",
+    "Folder",
     "Garden",
     "GardenEvent",
     "GardenEventKind",

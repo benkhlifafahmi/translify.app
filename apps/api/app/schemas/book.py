@@ -23,6 +23,7 @@ class BookRead(BaseModel):
     error_message: str | None
     is_seed: bool = False
     seed_slug: str | None = None
+    folder_id: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
 

@@ -29,6 +29,7 @@ from app.schemas.book import (
     UploadUrlRequest,
     UploadUrlResponse,
 )
+from app.schemas.folder import BookFolderAssign
 from app.schemas.translation import FileUrlResponse
 from app.storage import get_s3_client, presigned_get_url, presigned_put_url
 from app.billing.plans import Plan, quota_for
@@ -298,6 +299,44 @@ async def update_book(
     data = payload.model_dump(exclude_unset=True)
     for k, v in data.items():
         setattr(book, k, v)
+    await session.commit()
+    await session.refresh(book)
+    return book
+
+
+@router.patch("/{book_id}/folder", response_model=BookRead)
+async def move_book_to_folder(
+    payload: BookFolderAssign,
+    book_id: uuid.UUID = Path(...),
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> Book:
+    """Drag-and-drop endpoint. ``folder_id=null`` returns the book to the
+    Unsorted shelf; any other value must be one of the user's folders.
+
+    We validate folder ownership in the same SQL roundtrip rather than
+    trusting the FK alone so we can return a clean 404 instead of a 500
+    when a user tries to drop a book onto someone else's folder id.
+    """
+    from app.models.folder import Folder  # local import — avoid cycles
+
+    book = await _get_owned_book(book_id, user, session)
+
+    if payload.folder_id is None:
+        book.folder_id = None
+    else:
+        owns = await session.scalar(
+            select(Folder.id).where(
+                Folder.id == payload.folder_id, Folder.user_id == user.id
+            )
+        )
+        if owns is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Folder not found.",
+            )
+        book.folder_id = payload.folder_id
+
     await session.commit()
     await session.refresh(book)
     return book

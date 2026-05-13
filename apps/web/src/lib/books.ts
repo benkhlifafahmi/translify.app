@@ -17,6 +17,8 @@ export interface Book {
   is_seed: boolean;
   /** Stable identifier for the seed catalogue entry (NULL for user uploads). */
   seed_slug: string | null;
+  /** Folder this book is filed under, or null if it's on the Unsorted shelf. */
+  folder_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -39,6 +41,18 @@ export async function getBook(id: string): Promise<Book> {
 
 export async function deleteBook(id: string): Promise<void> {
   await api(`/books/${id}`, { method: "DELETE" });
+}
+
+/** Drag-and-drop / "Move to folder" endpoint. ``folderId=null`` returns the
+ *  book to the Unsorted shelf. */
+export async function moveBookToFolder(
+  bookId: string,
+  folderId: string | null,
+): Promise<Book> {
+  return api<Book>(`/books/${bookId}/folder`, {
+    method: "PATCH",
+    body: { folder_id: folderId },
+  });
 }
 
 export async function requestUploadUrl(file: File): Promise<UploadUrlResponse> {
