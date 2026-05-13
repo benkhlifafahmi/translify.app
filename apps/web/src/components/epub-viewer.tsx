@@ -103,15 +103,15 @@ export function EpubViewer({
   const [lineHeight, setLineHeight] = useState<number>(DEFAULT_LINE_HEIGHT);
   const [fontStack, setFontStack] = useState<string>(FONT_CHOICES[0].stack);
 
-  // Selection toolbar state. We used to track {top, left} for a floating
-  // slip; on mobile that math sent the bar off-screen when the user
-  // selected near the top of the page, and the native iOS callout
-  // collided with it anyway. The renderer now uses fixed positioning
-  // (bottom on mobile, top on desktop) so the only thing the handler
-  // needs to compute is "do we have a valid selection?"
+  // Selection toolbar state. ``pos`` decides whether the slip floats above
+  // or below the selection — flipping to below saves us when the user
+  // selects near the top of the page (especially on mobile).
   const [selection, setSelection] = useState<{
     text: string;
     cfi: string;
+    top: number;
+    left: number;
+    pos: "above" | "below";
   } | null>(null);
 
   // ───────────── Book load + initial render ─────────────
@@ -224,7 +224,35 @@ export function EpubViewer({
         setSelection(null);
         return;
       }
-      setSelection({ text, cfi: cfiRange });
+      // Position the toolbar relative to the host container, not the iframe —
+      // we read the iframe's offset within our container and add the selection
+      // rect from inside the iframe.
+      const host = containerRef.current;
+      if (!host) return;
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const iframe = (contents.window as Window).frameElement as HTMLIFrameElement | null;
+      const ifRect = iframe?.getBoundingClientRect();
+      const hostRect = host.getBoundingClientRect();
+      const rawTop = (ifRect?.top ?? 0) + rect.top - hostRect.top;
+      const TOOLBAR_HEIGHT = 56;
+      // Default to floating *above* the selection. When there isn't enough
+      // room (selection near the top of the page — common on mobile),
+      // flip to *below* and drop the translate-y trick in the renderer.
+      const enoughRoomAbove = rawTop >= TOOLBAR_HEIGHT + 12;
+      const pos: "above" | "below" = enoughRoomAbove ? "above" : "below";
+      const top = pos === "above"
+        ? Math.max(8, rawTop - 8)
+        : rawTop + rect.height + 8;
+      const rawLeft =
+        (ifRect?.left ?? 0) + rect.left - hostRect.left + rect.width / 2;
+      // Clamp horizontally so the -translate-x-1/2 transform doesn't push
+      // half the slip past the canvas edge on narrow viewports.
+      const left = Math.max(
+        80,
+        Math.min(rawLeft, hostRect.width - 80),
+      );
+      setSelection({ text, cfi: cfiRange, top, left, pos });
     };
 
     rendition.on("selected", onSelected);
@@ -552,18 +580,17 @@ export function EpubViewer({
           </>
         )}
 
-        {/* Selection toolbar.
-            Mobile: pinned to the bottom of the viewport (matches Apple
-            Books / Kindle). Reliable on touch — no off-screen positioning,
-            no collision with the iOS native selection menu (which we also
-            suppress via -webkit-touch-callout: none on the iframe body).
-            Desktop: top of the canvas so the user can see both the slip
-            and the selected line without scrolling. */}
+        {/* Selection toolbar — torn-paper slip, floats near the selection.
+            `selection.pos` flips the slip below the selection when there
+            isn't enough room above; `left` is already clamped to the
+            canvas width so the -translate-x-1/2 transform stays visible
+            on narrow viewports. */}
         {selection && (
           <div
-            role="toolbar"
-            aria-label="Selection actions"
-            className="fixed inset-x-0 bottom-0 z-50 flex justify-center pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 px-3 sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-3 sm:-translate-x-1/2 sm:p-0 sm:px-0 sm:pt-0"
+            className={`absolute z-30 -translate-x-1/2 ${
+              selection.pos === "above" ? "-translate-y-full" : ""
+            }`}
+            style={{ top: selection.top, left: selection.left }}
             onMouseDown={(e) => e.preventDefault()}
             onTouchStart={(e) => e.preventDefault()}
           >
