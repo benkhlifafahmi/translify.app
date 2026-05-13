@@ -29,7 +29,10 @@ async def get_or_create_system_user(session: AsyncSession) -> User:
     result = await session.execute(
         select(User).where(User.email == SYSTEM_USER_EMAIL)
     )
-    user = result.scalar_one_or_none()
+    # User has a lazy="joined" relationship to oauth_accounts (fastapi-users
+    # convention) which produces duplicate rows — collapse them before
+    # extracting the single instance.
+    user = result.unique().scalar_one_or_none()
     if user is not None:
         return user
 

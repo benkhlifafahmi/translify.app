@@ -174,7 +174,8 @@ async def start_session(
 
     # Look up an existing user.
     existing_q = await session.execute(select(User).where(User.email == email))
-    user = existing_q.scalar_one_or_none()
+    # User has lazy="joined" oauth_accounts → must collapse duplicates.
+    user = existing_q.unique().scalar_one_or_none()
 
     if user is not None:
         # Existing account — never return a JWT for an email we can't prove

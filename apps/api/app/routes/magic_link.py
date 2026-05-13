@@ -87,7 +87,8 @@ async def request_magic_link(
     """Always returns 202 — never reveals whether the email is registered."""
     email = payload.email.lower().strip()
     result = await session.execute(select(User).where(User.email == email))
-    user = result.scalar_one_or_none()
+    # User has lazy="joined" oauth_accounts → must collapse duplicates.
+    user = result.unique().scalar_one_or_none()
     if user is not None:
         await send_magic_link(user)
     return {"status": "accepted"}
