@@ -17,6 +17,7 @@ from app.routes.books import router as books_router
 from app.routes.chats import router as chats_router
 from app.routes.garden import router as garden_router
 from app.routes.highlights import router as highlights_router
+from app.routes.onboarding import router as onboarding_router
 from app.routes.profiles import router as profiles_router
 from app.routes.quizzes import router as quizzes_router
 from app.routes.translations import router as translations_router
@@ -122,3 +123,4 @@ app.include_router(profiles_router)
 app.include_router(quizzes_router)
 app.include_router(garden_router)
 app.include_router(billing_router)
+app.include_router(onboarding_router)

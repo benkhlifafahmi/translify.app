@@ -953,6 +953,18 @@ wheels = [
 ]
 
 [[package]]
+name = "httpx-oauth"
+version = "0.16.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2f/07/db4ad128da3926be22eec586aa87dafd8840c9eb03fe88505fbed016b5c6/httpx_oauth-0.16.1.tar.gz", hash = "sha256:7402f061f860abc092ea4f5c90acfc576a40bbb79633c1d2920f1ca282c296ee", size = 44148, upload-time = "2024-12-20T07:23:02.589Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/45/4b/2b81e876abf77b4af3372aff731f4f6722840ebc7dcfd85778eaba271733/httpx_oauth-0.16.1-py3-none-any.whl", hash = "sha256:2fcad82f80f28d0473a0fc4b4eda223dc952050af7e3a8c8781342d850f09fb5", size = 38056, upload-time = "2024-12-20T07:23:00.394Z" },
+]
+
+[[package]]
 name = "huggingface-hub"
 version = "1.13.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2725,6 +2737,7 @@ dependencies = [
     { name = "fastapi-users", extra = ["sqlalchemy"] },
     { name = "google-genai" },
     { name = "httpx" },
+    { name = "httpx-oauth" },
     { name = "langdetect" },
     { name = "lxml" },
     { name = "passlib", extra = ["bcrypt"] },
@@ -2772,6 +2785,7 @@ requires-dist = [
     { name = "fastapi-users", extras = ["sqlalchemy"], specifier = ">=14.0.0" },
     { name = "google-genai", specifier = ">=0.8.0" },
     { name = "httpx", specifier = ">=0.28.0" },
+    { name = "httpx-oauth", extras = ["httpx"], specifier = ">=0.15.0" },
     { name = "langdetect", specifier = ">=1.0.9" },
     { name = "lxml", specifier = ">=5.0.0" },
     { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4" },
