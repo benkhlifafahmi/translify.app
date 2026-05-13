@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime
 
 from fastapi_users.db import SQLAlchemyBaseOAuthAccountTableUUID, SQLAlchemyBaseUserTableUUID
+from fastapi_users_db_sqlalchemy.generics import GUID
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -15,8 +16,10 @@ from app.db import Base
 class OAuthAccount(SQLAlchemyBaseOAuthAccountTableUUID, Base):
     __tablename__ = "oauth_accounts"
 
+    # Override the parent's declared_attr which points to "user.id" (wrong table name).
+    # Our User table is "users", so we redefine the FK explicitly.
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID,
         ForeignKey("users.id", ondelete="cascade"),
         nullable=False,
         index=True,
@@ -49,6 +52,10 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
-    oauth_accounts: Mapped[list[OAuthAccount]] = relationship("OAuthAccount", lazy="joined")
+    oauth_accounts: Mapped[list[OAuthAccount]] = relationship(
+        "OAuthAccount",
+        foreign_keys="[OAuthAccount.user_id]",
+        lazy="joined",
+    )
 
     # Inherits: id (UUID), email, hashed_password, is_active, is_superuser, is_verified
