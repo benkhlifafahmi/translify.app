@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api";
 import { getGoogleAuthUrl, login, requestMagicLink, startSession } from "@/lib/auth";
-import { listBooks, type Book } from "@/lib/books";
+import { cloneSeed, listSeeds, type Seed } from "@/lib/seeds";
 import { trackLead } from "@/lib/onboarding";
 import { Lumi } from "@/components/lumi/lumi";
 import { TranslifyIcon } from "@/components/translify-mark";
@@ -198,15 +198,37 @@ export function JoinClient() {
     setStep("shelf");
   };
 
-  const handleBookOpen = (book: Book) => {
+  // Track which seed is currently being cloned so the row can show a spinner
+  // and we can guard against double-taps creating racing requests.
+  const [cloningSlug, setCloningSlug] = useState<string | null>(null);
+
+  const handleSeedOpen = async (seed: Seed) => {
+    if (cloningSlug) return; // double-tap guard
     SFX.select();
     trackLead({
       email, step: "experience", topics,
-      chosen_book_id: book.seed_slug ?? null,
+      chosen_book_id: seed.slug,
     });
-    // We don't mark "completed" here — that's set when the user upgrades. For
-    // the funnel, opening a book is the "experience" step.
-    router.push(`/library/${book.id}?welcome=1`);
+
+    // Fast path — the user already opened this seed; deep-link straight in.
+    if (seed.clone_id) {
+      router.push(`/library/${seed.clone_id}?welcome=1`);
+      return;
+    }
+
+    setCloningSlug(seed.slug);
+    try {
+      const book = await cloneSeed(seed.slug);
+      router.push(`/library/${book.id}?welcome=1`);
+    } catch (e) {
+      SFX.error();
+      setErr(
+        e instanceof ApiError
+          ? e.message
+          : "Couldn't open that book. Please try again.",
+      );
+      setCloningSlug(null);
+    }
   };
 
   // Step index for the progress pill — only visible (non-magic-sent) steps.
@@ -307,7 +329,8 @@ export function JoinClient() {
           {step === "shelf" && (
             <StepShelf
               topics={topics}
-              onOpen={handleBookOpen}
+              onOpen={handleSeedOpen}
+              cloningSlug={cloningSlug}
               total={TOTAL} idx={stepIdx}
             />
           )}
@@ -566,35 +589,34 @@ function StepTopics({
   );
 }
 
-// ─── Step 3 — Shelf (real seed books from API) ────────────────────────────────
+// ─── Step 3 — Shelf (seed catalogue, clone-on-tap) ────────────────────────────
 function StepShelf({
-  topics, onOpen, total, idx,
+  topics, onOpen, cloningSlug, total, idx,
 }: {
   topics: TopicId[];
-  onOpen: (book: Book) => void;
+  onOpen: (seed: Seed) => void;
+  cloningSlug: string | null;
   total: number;
   idx: number;
 }) {
-  // Fetch the user's library. Seed books are filtered in via the backend's
-  // visibility predicate — they show up alongside any uploaded books.
-  const { data: books, isLoading, error } = useQuery<Book[]>({
-    queryKey: ["library", "join"],
-    queryFn: listBooks,
+  // Catalogue lives server-side — `clone_id` is populated for seeds the user
+  // has already opened so re-taps are instant rather than re-cloning.
+  const { data: seeds, isLoading, error } = useQuery<Seed[]>({
+    queryKey: ["seeds"],
+    queryFn: listSeeds,
     staleTime: 30_000,
   });
 
   const ordered = useMemo(() => {
-    const all = books ?? [];
-    const seeds = all.filter((b) => b.is_seed && b.seed_slug && SEED_DISPLAY[b.seed_slug]);
-    // Books that match a chosen topic come first; rest fall to the stable order.
+    const all = (seeds ?? []).filter((s) => SEED_DISPLAY[s.slug]);
     const slugScore = (slug: string) => {
       const d = SEED_DISPLAY[slug];
       const overlap = d ? d.topics.filter((t) => topics.includes(t)).length : 0;
       const order = SEED_ORDER.indexOf(slug);
       return overlap * 100 + (order >= 0 ? 100 - order : 0);
     };
-    return [...seeds].sort((a, b) => slugScore(b.seed_slug!) - slugScore(a.seed_slug!));
-  }, [books, topics]);
+    return [...all].sort((a, b) => slugScore(b.slug) - slugScore(a.slug));
+  }, [seeds, topics]);
 
   return (
     <div>
@@ -613,7 +635,6 @@ function StepShelf({
         </p>
       </div>
 
-      {/* Loading + error states */}
       {isLoading && (
         <div className="mt-10 flex justify-center">
           <Lumi state="thinking" size={68} animate />
@@ -627,21 +648,24 @@ function StepShelf({
             border: "1.5px solid rgba(220,38,38,0.22)",
           }}
         >
-          Couldn&apos;t load your shelf. Refresh to try again.
+          Couldn&apos;t load the starter shelf. Refresh to try again.
         </div>
       )}
 
       {!isLoading && !error && (
         <ul className="mt-7 flex flex-col gap-3">
-          {ordered.map((book, i) => {
-            const display = SEED_DISPLAY[book.seed_slug!];
+          {ordered.map((seed, i) => {
+            const display = SEED_DISPLAY[seed.slug];
             const tagTopics = display.topics.slice(0, 2);
+            const isCloning = cloningSlug === seed.slug;
+            const alreadyOpened = !!seed.clone_id;
             return (
-              <li key={book.id}>
+              <li key={seed.slug}>
                 <button
                   type="button"
-                  onClick={() => onOpen(book)}
-                  className="group flex w-full items-center gap-4 rounded-2xl border-2 p-3.5 text-start transition-all active:scale-[0.99] animate-float-in"
+                  disabled={!!cloningSlug && !isCloning}
+                  onClick={() => onOpen(seed)}
+                  className="group flex w-full items-center gap-4 rounded-2xl border-2 p-3.5 text-start transition-all active:scale-[0.99] animate-float-in disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
                     animationDelay: `${i * 0.06}s`,
                     borderColor: "var(--color-border-strong)",
@@ -659,10 +683,10 @@ function StepShelf({
 
                   <div className="min-w-0 flex-1">
                     <h3 className="font-[family-name:var(--font-display)] text-[1rem] font-semibold leading-tight" style={{ color: "var(--color-ink)" }}>
-                      {book.title}
+                      {seed.title}
                     </h3>
                     <p className="mt-0.5 truncate text-[0.82rem]" style={{ color: "var(--color-ink-soft)" }}>
-                      {book.author ?? ""}
+                      {seed.author}
                     </p>
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {tagTopics.map((tid) => {
@@ -678,13 +702,12 @@ function StepShelf({
                           </span>
                         );
                       })}
-                      {book.status !== "ready" && (
+                      {alreadyOpened && (
                         <span
                           className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.66rem] font-semibold"
-                          style={{ background: "rgba(74,60,30,0.08)", color: "var(--color-ink-soft)" }}
-                          title="Translify is still indexing this book — chat/quiz unlock when it's ready."
+                          style={{ background: "rgba(123,161,124,0.18)", color: "var(--color-sage-deep)" }}
                         >
-                          Preparing
+                          ✓ In your library
                         </span>
                       )}
                     </div>
@@ -695,9 +718,13 @@ function StepShelf({
                     style={{ background: "var(--color-saffron-deep)", color: "white", boxShadow: "0 3px 0 rgba(152,96,24,0.50)" }}
                     aria-hidden
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14M13 5l7 7-7 7" />
-                    </svg>
+                    {isCloning ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M13 5l7 7-7 7" />
+                      </svg>
+                    )}
                   </span>
                 </button>
               </li>
@@ -708,8 +735,8 @@ function StepShelf({
 
       {!isLoading && !error && ordered.length === 0 && (
         <p className="mt-10 rounded-xl border-2 p-4 text-center text-[0.86rem]" style={{ borderColor: "var(--color-border)", background: "white", color: "var(--color-ink-soft)" }}>
-          The seed library hasn&apos;t finished loading on this server yet. Try{" "}
-          <Link href="/library" className="font-bold underline underline-offset-4" style={{ color: "var(--color-ink)" }}>your library</Link>.
+          The seed catalogue isn&apos;t loaded on this server yet. Ask the admin to run{" "}
+          <code className="rounded px-1.5 py-0.5 text-[0.82em]" style={{ background: "rgba(74,60,30,0.08)" }}>app.scripts.seed_books</code>.
         </p>
       )}
 

@@ -21,6 +21,7 @@ from app.routes.magic_link import router as magic_link_router
 from app.routes.onboarding import router as onboarding_router
 from app.routes.profiles import router as profiles_router
 from app.routes.quizzes import router as quizzes_router
+from app.routes.seeds import router as seeds_router
 from app.routes.translations import router as translations_router
 
 
@@ -126,3 +127,4 @@ app.include_router(garden_router)
 app.include_router(billing_router)
 app.include_router(onboarding_router)
 app.include_router(magic_link_router)
+app.include_router(seeds_router)
