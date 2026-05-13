@@ -15,8 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+# Install uv via PyPI. Was previously `COPY --from=ghcr.io/astral-sh/uv:latest`,
+# but GHCR rate-limits and occasionally fails metadata lookups during builds.
+# PyPI is more reliable from CI/server environments.
+RUN pip install --no-cache-dir uv
 
 WORKDIR /app
 
