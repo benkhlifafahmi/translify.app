@@ -29,9 +29,16 @@ services:
     environment:
       REDIS_URL: redis://redis:6379/0
       HF_HOME: /models
+      # Tell app.scripts.seed_books where to find the EPUBs. The path below is
+      # mounted in the volumes block. Container-internal path is stable across
+      # rebuilds; the host-side path mirrors the repo layout.
+      SEED_BOOKS_DIR: /seed-books
     volumes:
       # Persist BGE-M3 weights (~2.3GB) across rebuilds/restarts.
       - hf_cache:/models
+      # Bind the public-domain seed catalogue into the container so the one-time
+      # ingest CLI (`python -m app.scripts.seed_books`) can read it. Read-only.
+      - ./apps/web/public/sample-books:/seed-books:ro
     ports:
       - "127.0.0.1:8000:8000"
     extra_hosts:
@@ -51,8 +58,10 @@ services:
     environment:
       REDIS_URL: redis://redis:6379/0
       HF_HOME: /models
+      SEED_BOOKS_DIR: /seed-books
     volumes:
       - hf_cache:/models
+      - ./apps/web/public/sample-books:/seed-books:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
