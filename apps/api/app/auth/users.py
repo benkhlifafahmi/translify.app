@@ -15,6 +15,7 @@ from fastapi_users.authentication import (
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
 from httpx_oauth.clients.google import GoogleOAuth2
+from httpx_oauth.exceptions import GetIdEmailError, GetProfileError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import OAuthAccount, User
@@ -23,13 +24,42 @@ from app.db import get_async_session
 from app.emails import client as email_client
 from app.emails import templates as email_templates
 
-google_oauth_client = GoogleOAuth2(
+log = logging.getLogger(__name__)
+
+
+class _GoogleOAuth2(GoogleOAuth2):
+    """GoogleOAuth2 with OIDC userinfo endpoint + error logging."""
+
+    async def get_profile(self, token: str) -> dict:
+        async with self.get_httpx_client() as client:
+            response = await client.get(
+                "https://openidconnect.googleapis.com/v1/userinfo",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+        if response.status_code != 200:
+            log.error(
+                "Google OIDC userinfo HTTP %d: %s",
+                response.status_code,
+                response.text[:500],
+            )
+            raise GetProfileError(response=response)
+        return response.json()
+
+    async def get_id_email(self, token: str) -> tuple[str, str | None]:
+        try:
+            profile = await self.get_profile(token)
+        except GetProfileError as exc:
+            raise GetIdEmailError(response=exc.response) from exc
+        # OIDC userinfo returns "sub" (not "id" as in v2 endpoint)
+        user_id = profile.get("sub") or profile.get("id")
+        return str(user_id), profile.get("email")
+
+
+google_oauth_client = _GoogleOAuth2(
     client_id=settings.google_client_id,
     client_secret=settings.google_client_secret,
     scopes=["openid", "email", "profile"],
 )
-
-log = logging.getLogger(__name__)
 
 
 async def get_user_db(
