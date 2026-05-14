@@ -116,7 +116,26 @@ def _parse_epub(data: bytes) -> list[Page]:
     return pages
 
 
+_CONTROL_CHARS = "".join(
+    chr(c) for c in range(0x20) if c not in (0x09, 0x0A, 0x0D)
+)
+_CONTROL_TRANS = str.maketrans({c: None for c in _CONTROL_CHARS})
+
+
+def _strip_controls(text: str) -> str:
+    """Remove NUL and other C0 control characters.
+
+    Postgres TEXT cannot store ``0x00`` (asyncpg raises
+    ``CharacterNotInRepertoireError``). The other C0 controls have no
+    meaning in extracted document text and can leak in from PDFs with
+    non-standard font encodings (mathematical notation, CJK, etc.). Keep
+    only tab / newline / carriage return.
+    """
+    return text.translate(_CONTROL_TRANS)
+
+
 def _normalize(text: str) -> str:
+    text = _strip_controls(text)
     # Collapse runs of whitespace inside a line; preserve paragraph breaks.
     out_lines: list[str] = []
     for line in text.splitlines():
