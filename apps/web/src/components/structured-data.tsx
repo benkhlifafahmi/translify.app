@@ -31,7 +31,7 @@ const ORGANIZATION = {
   description:
     "Translify is an AI reading companion for foreign-language books. Upload any PDF or EPUB, get it translated with the layout preserved, then chat with the book, highlight passages for AI explanations, and quiz yourself to remember what you read.",
   foundingDate: "2026",
-  knowsLanguage: ["en", "fr", "es", "de", "ja", "ar", "id", "ms"],
+  knowsLanguage: ["en", "fr", "es", "de", "ja", "zh", "ar", "id", "ms"],
 };
 
 const SOFTWARE_APP = {
@@ -44,7 +44,7 @@ const SOFTWARE_APP = {
   description:
     "Read any book in any language. Upload a PDF or EPUB, translate it with the original layout preserved, chat with the whole book to get cited answers, highlight passages for AI explanations, and quiz yourself.",
   url: SITE,
-  inLanguage: ["en", "fr", "es", "de", "ja", "ar", "id", "ms"],
+  inLanguage: ["en", "fr", "es", "de", "ja", "zh", "ar", "id", "ms"],
   // Prices match the actual pricing component on the homepage.
   offers: [
     {
@@ -116,7 +116,7 @@ const WEBSITE = {
   "@type": "WebSite",
   name: "Translify",
   url: SITE,
-  inLanguage: ["en", "fr", "es", "de", "ja", "ar", "id", "ms"],
+  inLanguage: ["en", "fr", "es", "de", "ja", "zh", "ar", "id", "ms"],
   potentialAction: {
     "@type": "SearchAction",
     target: {

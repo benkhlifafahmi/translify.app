@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { getSubscription, type Subscription } from "@/lib/billing";
 import { getToken } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 
 /**
  * Loud, persistent trial nudge for Free users.
@@ -12,6 +13,7 @@ import { getToken } from "@/lib/api";
  * Scholar, Family) and for users who haven't loaded a subscription yet.
  */
 export function TrialBanner() {
+  const { t } = useI18n();
   const enabled = typeof window !== "undefined" && !!getToken();
 
   const { data: sub } = useQuery<Subscription>({
@@ -44,17 +46,16 @@ export function TrialBanner() {
         <p className="flex-1 leading-snug">
           {exhausted ? (
             <>
-              <strong className="font-semibold">Free trial used up.</strong>{" "}
-              You translated {used} of {limit} free pages — pick a plan to keep
-              uploading, chatting, and quizzing.
+              <strong className="font-semibold">{t("trial.exhaustedBold")}</strong>{" "}
+              {t("trial.exhaustedRest", { used, limit })}
             </>
           ) : (
             <>
-              <strong className="font-semibold">Free trial</strong> ·{" "}
+              <strong className="font-semibold">{t("trial.activeBold")}</strong> ·{" "}
               <span className="tabular-nums">
                 {used} / {limit}
               </span>{" "}
-              free pages used. Upgrade any time for chat, quizzes, and full books.
+              {t("trial.activeRest")}
             </>
           )}
         </p>
@@ -66,7 +67,7 @@ export function TrialBanner() {
               : "bg-[color:var(--color-ink)] text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)]"
           }`}
         >
-          {exhausted ? "Pick a plan →" : "Upgrade →"}
+          {exhausted ? t("trial.pickPlan") : t("trial.upgrade")}
         </Link>
       </div>
     </div>

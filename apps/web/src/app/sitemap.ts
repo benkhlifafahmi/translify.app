@@ -2,14 +2,14 @@
 //
 // Adds the 56 language-pair pages + the 4 competitor-alternative pages to
 // the sitemap. Goes from 4 indexed URLs → 64. Every page has proper
-// hreflang alternates for all 8 UI locales.
+// hreflang alternates for all 9 UI locales.
 
 import type { MetadataRoute } from "next";
 import { BLOG_POSTS } from "./blog/_posts";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
 
-const LOCALES = ["en", "fr", "es", "de", "ja", "ar", "id", "ms"] as const;
+const LOCALES = ["en", "fr", "es", "de", "ja", "zh", "ar", "id", "ms"] as const;
 
 const LANG_SLUGS = [
   "english", "spanish", "french", "german",

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -66,6 +67,17 @@ class _ReadPanelState extends State<ReadPanel> {
   String? _resolvedKey;
   ReadingTracker? _tracker;
 
+  // Resume-progress wiring. Loaded once on open; flushed (debounced) on every
+  // page/chapter change and again on dispose / fullscreen-return. The "live"
+  // page is reported by both the inline viewer and the fullscreen reader's
+  // callbacks, so progress keeps saving even while the user is in fullscreen.
+  bool _progressLoaded = false;
+  int? _restoreToPage;
+  String? _restoreToCfi;
+  int? _livePage;
+  Timer? _progressSaveTimer;
+  String _lastSavedProgressSig = '';
+
   final GlobalKey _viewerStackKey = GlobalKey();
 
   static const double _minZoom = 1.0;
@@ -108,6 +120,9 @@ class _ReadPanelState extends State<ReadPanel> {
 
   @override
   void dispose() {
+    _progressSaveTimer?.cancel();
+    // Best-effort final flush — don't await; dispose can't be async.
+    _flushProgress();
     final t = _tracker;
     if (t != null) {
       () async {
@@ -122,6 +137,41 @@ class _ReadPanelState extends State<ReadPanel> {
     super.dispose();
   }
 
+  // ──────────────────────────── Progress save/restore ────────────────
+
+  void _scheduleSaveProgress() {
+    _progressSaveTimer?.cancel();
+    _progressSaveTimer = Timer(const Duration(milliseconds: 1500), _flushProgress);
+  }
+
+  void _flushProgress() {
+    if (!_progressLoaded) return;
+    final fallback = widget.format == BookFormat.epub ? _chapter : _page;
+    final page = _livePage ?? fallback;
+    final cfi = _restoreToCfi; // preserve web-saved CFI; we don't generate one
+    final sig = '$page|${cfi ?? ''}';
+    if (sig == _lastSavedProgressSig) return;
+    _lastSavedProgressSig = sig;
+    final session = context.read<Session>();
+    session.progress
+        .put(widget.bookId, currentPage: page, currentCfi: cfi)
+        .catchError((_) {
+      // Best-effort — let the next change retry. Clear the sig so a transient
+      // failure doesn't permanently skip a save.
+      _lastSavedProgressSig = '';
+      return BookProgress();
+    });
+  }
+
+  void _reportLivePage(int page) {
+    _livePage = page;
+    // Skip the noisy initial save when the user is still on page 1 of a
+    // brand-new open (no prior saved row). Once they've advanced once, any
+    // future move — including back to page 1 — saves normally.
+    if (page <= 1 && _lastSavedProgressSig.isEmpty) return;
+    _scheduleSaveProgress();
+  }
+
   Future<void> _open() async {
     final session = context.read<Session>();
     final key = '${widget.bookId}/${widget.translationId ?? ''}';
@@ -133,14 +183,29 @@ class _ReadPanelState extends State<ReadPanel> {
       _pdfSelectionRect = null;
       _epubSelected = null;
       _savedHighlights = const [];
+      _progressLoaded = false;
+      _restoreToPage = null;
+      _restoreToCfi = null;
+      _lastSavedProgressSig = '';
     });
     try {
+      // Kick the progress fetch in parallel with the file URL request —
+      // they're independent and the panel can render either order.
+      final progressFuture = session.progress.get(widget.bookId);
       final url = widget.translationId != null
           ? (await session.translations.fileUrl(widget.translationId!)).url
           : (await session.books.fileUrl(widget.bookId)).url;
       if (!mounted) return;
       final bytes = await _downloadBytes(url);
       if (!mounted) return;
+      try {
+        final p = await progressFuture;
+        _restoreToPage = p.currentPage;
+        _restoreToCfi = p.currentCfi;
+      } catch (_) {
+        // First-time read — no saved position.
+      }
+      _progressLoaded = true;
 
       if (widget.format == BookFormat.epub) {
         _epubInline?.currentValueListenable.removeListener(_onEpubChapter);
@@ -216,6 +281,17 @@ class _ReadPanelState extends State<ReadPanel> {
         _chapterTotal = newTotal;
       });
       _tracker?.markReached(n);
+      // Apply the saved chapter once we have a real TOC count — first
+      // listener fire is usually for chapter 1 and we'd save over the
+      // restore value before the user moves.
+      final restore = _restoreToPage;
+      if (restore != null && restore > 1 && restore <= newTotal && n == 1) {
+        // Already on chapter 1 — jump to the saved chapter.
+        c.scrollTo(index: restore - 1);
+        _lastSavedProgressSig = '$restore|${_restoreToCfi ?? ''}';
+        return;
+      }
+      _reportLivePage(n);
     }
   }
 
@@ -270,7 +346,10 @@ class _ReadPanelState extends State<ReadPanel> {
             bookId: widget.bookId,
             bytes: bytes,
             initialChapter: _chapter,
-            onChapterReached: (c) => _tracker?.markReached(c),
+            onChapterReached: (c) {
+              _tracker?.markReached(c);
+              _reportLivePage(c);
+            },
           ),
         ),
       );
@@ -279,6 +358,7 @@ class _ReadPanelState extends State<ReadPanel> {
         _epubInline!.scrollTo(index: (returned - 1).clamp(0, _chapterTotal));
         setState(() => _chapter = returned);
         _tracker?.markReached(returned);
+        _reportLivePage(returned);
       }
       _refreshSavedHighlights();
       return;
@@ -292,7 +372,10 @@ class _ReadPanelState extends State<ReadPanel> {
           bytes: bytes,
           totalPages: _total,
           initialPage: _page,
-          onPageReached: (p) => _tracker?.markReached(p),
+          onPageReached: (p) {
+            _tracker?.markReached(p);
+            _reportLivePage(p);
+          },
         ),
       ),
     );
@@ -301,6 +384,7 @@ class _ReadPanelState extends State<ReadPanel> {
       _pdf?.jumpToPage(returnPage);
       setState(() => _page = returnPage);
       _tracker?.markReached(returnPage);
+      _reportLivePage(returnPage);
     }
     _refreshSavedHighlights();
   }
@@ -642,6 +726,15 @@ class _ReadPanelState extends State<ReadPanel> {
                 _pdfDocument = d.document;
                 final n = d.document.pages.count;
                 if (n != _total) setState(() => _total = n);
+                // Restore-from-progress — jump to the saved page once the
+                // doc count is known. Skip on page 1 (or no saved value)
+                // so first-time opens land on the cover.
+                final restore = _restoreToPage;
+                if (restore != null && restore > 1 && restore <= n) {
+                  controller.jumpToPage(restore);
+                  if (mounted) setState(() => _page = restore);
+                  _lastSavedProgressSig = '$restore|${_restoreToCfi ?? ''}';
+                }
                 await _refreshSavedHighlights();
               },
               onPageChanged: (d) {
@@ -649,6 +742,7 @@ class _ReadPanelState extends State<ReadPanel> {
                 if (p == _page) return;
                 setState(() => _page = p);
                 _tracker?.markReached(p);
+                _reportLivePage(p);
               },
               onTextSelectionChanged: _onPdfSelectionChanged,
               onAnnotationSelected: _onPdfAnnotationSelected,

@@ -16,7 +16,8 @@ class Session extends ChangeNotifier {
         gardens = GardenService(api),
         profiles = ProfileService(api),
         billing = BillingService(api),
-        highlights = HighlightService(api);
+        highlights = HighlightService(api),
+        progress = ProgressService(api);
 
   final ApiClient api;
   final AuthService auth;
@@ -28,6 +29,7 @@ class Session extends ChangeNotifier {
   final ProfileService profiles;
   final BillingService billing;
   final HighlightService highlights;
+  final ProgressService progress;
 
   SessionPhase phase = SessionPhase.unknown;
   User? user;

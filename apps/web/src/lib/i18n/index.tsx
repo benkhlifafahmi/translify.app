@@ -10,8 +10,9 @@ import { ja, jaTestimonials, jaFaq } from "./locales/ja";
 import { ar, arTestimonials, arFaq } from "./locales/ar";
 import { id as idDict, idTestimonials, idFaq } from "./locales/id";
 import { ms, msTestimonials, msFaq } from "./locales/ms";
+import { zh, zhTestimonials, zhFaq } from "./locales/zh";
 
-export type Locale = "en" | "fr" | "es" | "de" | "ja" | "ar" | "id" | "ms";
+export type Locale = "en" | "fr" | "es" | "de" | "ja" | "ar" | "id" | "ms" | "zh";
 
 export const LOCALES: { code: Locale; label: string; flag: string; dir: "ltr" | "rtl" }[] = [
   { code: "en", label: "English",           flag: "🇬🇧", dir: "ltr" },
@@ -19,13 +20,14 @@ export const LOCALES: { code: Locale; label: string; flag: string; dir: "ltr" | 
   { code: "es", label: "Español",           flag: "🇪🇸", dir: "ltr" },
   { code: "de", label: "Deutsch",           flag: "🇩🇪", dir: "ltr" },
   { code: "ja", label: "日本語",              flag: "🇯🇵", dir: "ltr" },
+  { code: "zh", label: "中文",                flag: "🇨🇳", dir: "ltr" },
   { code: "ar", label: "العربية",            flag: "🇸🇦", dir: "rtl" },
   { code: "id", label: "Bahasa Indonesia",  flag: "🇮🇩", dir: "ltr" },
   { code: "ms", label: "Bahasa Malaysia",   flag: "🇲🇾", dir: "ltr" },
 ];
 
 const DICTS: Record<Locale, Dict> = {
-  en, fr, es, de, ja, ar, id: idDict, ms,
+  en, fr, es, de, ja, ar, id: idDict, ms, zh,
 };
 
 const TESTIMONIALS: Record<Locale, Testimonial[]> = {
@@ -37,6 +39,7 @@ const TESTIMONIALS: Record<Locale, Testimonial[]> = {
   ar: arTestimonials,
   id: idTestimonials,
   ms: msTestimonials,
+  zh: zhTestimonials,
 };
 
 const FAQS: Record<Locale, FaqItem[]> = {
@@ -48,6 +51,7 @@ const FAQS: Record<Locale, FaqItem[]> = {
   ar: arFaq,
   id: idFaq,
   ms: msFaq,
+  zh: zhFaq,
 };
 
 interface I18nValue {

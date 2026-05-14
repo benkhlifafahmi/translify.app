@@ -32,6 +32,11 @@ import {
 } from "@/lib/highlights";
 import { useReadingTracker } from "@/lib/reading-tracker";
 import {
+  getBookProgress,
+  putBookProgress,
+  type BookProgress,
+} from "@/lib/progress";
+import {
   ReaderGardenVignette,
   type ReaderGardenVignetteHandle,
 } from "@/components/garden/reader-garden-vignette";
@@ -190,6 +195,86 @@ export default function BookDetailPage({
     enabled: ready,
   });
 
+  // ───────────── Resume-from-last-position ─────────────
+  //
+  // 1) Fetch the user's saved progress for this book before the viewer
+  //    mounts — the file URL query is gated on this resolving so the
+  //    viewer's initial display() call gets the right CFI / page.
+  // 2) Save on every location change, debounced 1.5s.
+  // 3) Save on tab-hide / unmount so we never lose the final position.
+
+  const { data: savedProgress, isFetched: progressLoaded } = useQuery<BookProgress>({
+    queryKey: ["book-progress", bookId],
+    queryFn: () => getBookProgress(bookId),
+    enabled: ready,
+    staleTime: Infinity,        // restore once; further updates flow via PUT
+    refetchOnWindowFocus: false,
+  });
+
+  // Latest position seen from the viewer — held in a ref so the save flush
+  // can read it without re-subscribing on every page turn.
+  const livePositionRef = useRef<{ page: number; cfi?: string } | null>(null);
+  const lastSavedRef = useRef<string>("");
+  const saveTimerRef = useRef<number | null>(null);
+
+  const flushProgress = useCallback(() => {
+    const pos = livePositionRef.current;
+    if (!pos) return;
+    // Stringified signature so we don't fire identical PUTs.
+    const sig = `${pos.page}|${pos.cfi ?? ""}`;
+    if (sig === lastSavedRef.current) return;
+    lastSavedRef.current = sig;
+    putBookProgress(bookId, {
+      current_page: pos.page,
+      current_cfi: pos.cfi ?? null,
+    }).catch(() => {
+      // Best-effort — let the next change retry. Don't clobber lastSavedRef
+      // on failure so a transient blip doesn't permanently skip a save.
+      lastSavedRef.current = "";
+    });
+  }, [bookId]);
+
+  const onLocationChange = useCallback(
+    (loc: { page: number; cfi?: string }) => {
+      livePositionRef.current = loc;
+      if (saveTimerRef.current !== null) {
+        window.clearTimeout(saveTimerRef.current);
+      }
+      saveTimerRef.current = window.setTimeout(flushProgress, 1500);
+    },
+    [flushProgress],
+  );
+
+  // Final save on tab close / route leave. Pagehide is the right event for
+  // mobile Safari (visibilitychange + beforeunload both fire unreliably on
+  // iOS); we listen to all three and let the lastSavedRef dedupe.
+  useEffect(() => {
+    const onLeave = () => {
+      if (saveTimerRef.current !== null) {
+        window.clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+      flushProgress();
+    };
+    const onVis = () => {
+      if (document.visibilityState === "hidden") onLeave();
+    };
+    window.addEventListener("pagehide", onLeave);
+    window.addEventListener("beforeunload", onLeave);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("pagehide", onLeave);
+      window.removeEventListener("beforeunload", onLeave);
+      document.removeEventListener("visibilitychange", onVis);
+      // Flush any pending debounced save on unmount (e.g. navigating
+      // to /library via Next.js client routing).
+      onLeave();
+    };
+  }, [flushProgress]);
+
+  const initialPage = savedProgress?.current_page ?? null;
+  const initialCfi = savedProgress?.current_cfi ?? null;
+
   useEffect(() => {
     const target = searchParams.get("highlight");
     if (!target || !ready || !highlights.length) return;
@@ -275,12 +360,18 @@ export default function BookDetailPage({
     );
   }
 
+  // Gate the file URL on the progress query having resolved so the viewer's
+  // first display() call gets the right resume position. The progress
+  // request is fast — the brief extra wait is invisible — and avoids the
+  // race where the EPUB renders the cover, then re-displays the saved CFI.
+  const viewerFileUrl = progressLoaded ? (fileUrlQuery.data ?? null) : null;
+
   // The viewer surface (PDF or EPUB) — shared across desktop + mobile.
   const viewerNode = book.format === "pdf" ? (
     <PdfViewer
-      fileUrl={fileUrlQuery.data ?? null}
+      fileUrl={viewerFileUrl}
       emptyMessage={
-        fileUrlQuery.isLoading ? "Preparing your book…" : "No file URL"
+        !progressLoaded || fileUrlQuery.isLoading ? "Preparing your book…" : "No file URL"
       }
       highlight={highlight}
       savedHighlights={savedHighlightsForViewer}
@@ -291,13 +382,15 @@ export default function BookDetailPage({
         setMobilePanel("notes");
       }}
       goToPage={goToPage}
+      initialPage={initialPage}
       onPageReached={onPageReached}
+      onLocationChange={onLocationChange}
     />
   ) : (
     <EpubViewer
-      fileUrl={fileUrlQuery.data ?? null}
+      fileUrl={viewerFileUrl}
       emptyMessage={
-        fileUrlQuery.isLoading ? "Preparing your book…" : "No file URL"
+        !progressLoaded || fileUrlQuery.isLoading ? "Preparing your book…" : "No file URL"
       }
       highlight={highlight}
       savedHighlights={savedHighlightsForViewer}
@@ -308,7 +401,9 @@ export default function BookDetailPage({
         setMobilePanel("notes");
       }}
       goToPage={goToPage}
+      initialCfi={initialCfi}
       onPageReached={onPageReached}
+      onLocationChange={onLocationChange}
     />
   );
 

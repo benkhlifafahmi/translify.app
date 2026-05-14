@@ -38,7 +38,7 @@ export default function LoginPage() {
   const onSendLink = async (e: React.FormEvent) => {
     e.preventDefault();
     const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-    if (!ok) { setLinkErr("Enter a valid email so we can send your sign-in link."); return; }
+    if (!ok) { setLinkErr(t("login.errLink")); return; }
     setLinkErr(null); setLinkBusy(true);
     try {
       await requestMagicLink(email);
@@ -52,7 +52,7 @@ export default function LoginPage() {
 
   const onSignInWithPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) { setPwErr("Enter your email and password."); return; }
+    if (!email || !password) { setPwErr(t("login.errBoth")); return; }
     setPwErr(null); setPwBusy(true);
     try {
       await login(email, password);
@@ -60,8 +60,8 @@ export default function LoginPage() {
     } catch (err) {
       setPwErr(
         err instanceof ApiError
-          ? "Email or password doesn't match. Try a sign-in link instead?"
-          : "Couldn't sign you in. Please try again.",
+          ? t("login.errMismatch")
+          : t("login.errFallback"),
       );
     } finally { setPwBusy(false); }
   };
@@ -80,7 +80,7 @@ export default function LoginPage() {
     <AuthShell
       eyebrow={t("auth.login.eyebrow")}
       title={t("auth.login.title")}
-      subtitle="Sign in with a one-tap link or a password — your choice."
+      subtitle={t("login.subtitle")}
     >
       {/* Google */}
       <button
@@ -100,12 +100,12 @@ export default function LoginPage() {
             <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/>
           </svg>
         )}
-        {googleLoading ? "Redirecting…" : "Continue with Google"}
+        {googleLoading ? t("login.googleRedirecting") : t("login.google")}
       </button>
 
       <div className="flex items-center gap-3">
         <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
-        <span className="text-[0.72rem] font-semibold text-[color:var(--color-ink-soft)]">or</span>
+        <span className="text-[0.72rem] font-semibold text-[color:var(--color-ink-soft)]">{t("login.or")}</span>
         <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
       </div>
 
@@ -113,12 +113,12 @@ export default function LoginPage() {
       {!linkSent ? (
         <form onSubmit={onSendLink} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("auth.login.email")}</Label>
             <Input
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder={t("login.emailPlaceholder")}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -132,7 +132,7 @@ export default function LoginPage() {
           )}
 
           <Button type="submit" variant="accent" size="lg" disabled={linkBusy}>
-            {linkBusy ? "Sending…" : "Send my sign-in link"}
+            {linkBusy ? t("login.sending") : t("login.sendLink")}
           </Button>
         </form>
       ) : (
@@ -146,11 +146,12 @@ export default function LoginPage() {
             </svg>
           </span>
           <p className="font-[family-name:var(--font-display)] text-[1.05rem] font-semibold" style={{ color: "var(--color-ink)" }}>
-            Check your inbox
+            {t("login.checkInbox")}
           </p>
           <p className="max-w-[28ch] text-[0.88rem]" style={{ color: "var(--color-ink-soft)" }}>
-            We sent a one-tap sign-in link to{" "}
-            <span className="font-semibold" style={{ color: "var(--color-ink)" }}>{email}</span>. It expires in 30 minutes.
+            {t("login.sentTo.pre")}
+            <span className="font-semibold" style={{ color: "var(--color-ink)" }}>{email}</span>
+            {t("login.sentTo.post")}
           </p>
           <button
             type="button"
@@ -158,7 +159,7 @@ export default function LoginPage() {
             className="mt-1 text-[0.82rem] font-semibold underline underline-offset-4"
             style={{ color: "var(--color-ink-soft)" }}
           >
-            Use a different email
+            {t("login.differentEmail")}
           </button>
         </div>
       )}
@@ -171,7 +172,7 @@ export default function LoginPage() {
           onClick={() => setShowPassword((s) => !s)}
           className="text-[0.78rem] font-semibold text-[color:var(--color-ink-soft)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4 hover:text-[color:var(--color-ink)]"
         >
-          {showPassword ? "Hide password sign-in" : "Sign in with password instead"}
+          {showPassword ? t("login.hidePassword") : t("login.usePassword")}
         </button>
         <div className="h-px flex-1" style={{ background: "var(--color-border)" }} />
       </div>
@@ -185,7 +186,7 @@ export default function LoginPage() {
                 href="/forgot-password"
                 className="text-[0.78rem] font-semibold text-[color:var(--color-ink-soft)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4 hover:text-[color:var(--color-ink)]"
               >
-                Forgot it?
+                {t("login.forgotIt")}
               </Link>
             </div>
             <Input
@@ -198,13 +199,13 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
             <p className="text-[0.74rem]" style={{ color: "var(--color-ink-soft)" }}>
-              No password yet?{" "}
+              {t("login.noPassword")}{" "}
               <Link
                 href="/forgot-password"
                 className="font-semibold underline underline-offset-4"
                 style={{ color: "var(--color-ink-soft)" }}
               >
-                Set one here
+                {t("login.setHere")}
               </Link>
               .
             </p>

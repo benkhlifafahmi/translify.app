@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteBook, formatBytes, type Book } from "@/lib/books";
+import { useI18n } from "@/lib/i18n";
 
 const STATUS_DOT: Record<Book["status"], string> = {
   uploaded: "bg-[color:var(--color-ink-soft)]/40",
@@ -12,11 +13,11 @@ const STATUS_DOT: Record<Book["status"], string> = {
   failed: "bg-[color:var(--color-destructive)]",
 };
 
-const STATUS_LABEL: Record<Book["status"], string> = {
-  uploaded: "Queued",
-  processing: "Reading…",
-  ready: "Ready",
-  failed: "Hit a snag",
+const STATUS_KEY: Record<Book["status"], string> = {
+  uploaded: "bookCard.status.uploaded",
+  processing: "bookCard.status.processing",
+  ready: "bookCard.status.ready",
+  failed: "bookCard.status.failed",
 };
 
 const SPINE_TONES = [
@@ -37,6 +38,7 @@ export function BookCard({
 }) {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { t } = useI18n();
   const del = useMutation({
     mutationFn: () => deleteBook(book.id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["books"] }),
@@ -45,7 +47,7 @@ export function BookCard({
   const onDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm(`Remove "${book.title}" from your shelf?`)) return;
+    if (!confirm(t("bookCard.deleteConfirm", { title: book.title }))) return;
     del.mutate();
   };
 
@@ -103,7 +105,7 @@ export function BookCard({
           <div className="mt-3 flex items-center gap-2 text-xs text-[color:var(--color-ink-soft)]">
             <span className="badge-pill bg-[color:var(--color-paper-3)]/70 text-[color:var(--color-ink-soft)]">
               <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[book.status]}`} />
-              {STATUS_LABEL[book.status]}
+              {t(STATUS_KEY[book.status])}
             </span>
             {book.page_count != null && (
               <span className="text-[0.7rem]">{book.page_count}p</span>
@@ -133,7 +135,7 @@ export function BookCard({
 
       <div className="mt-auto flex items-center justify-between border-t border-dashed border-[color:var(--color-border)] pt-3 text-xs">
         <span className={`font-semibold ${ready ? "text-[color:var(--color-saffron-deep)]" : "text-[color:var(--color-ink-soft)]"}`}>
-          {ready ? "Open →" : "Almost ready"}
+          {ready ? t("bookCard.open") : t("bookCard.almostReady")}
         </span>
         <div className="flex items-center gap-1">
           <button
@@ -144,7 +146,7 @@ export function BookCard({
             title="Open this book's garden"
           >
             <span aria-hidden>🌿</span>
-            <span className="hidden sm:inline">Garden</span>
+            <span className="hidden sm:inline">{t("bookCard.garden")}</span>
           </button>
           <button
             type="button"
@@ -153,7 +155,7 @@ export function BookCard({
             className="rounded-full px-2 py-1 text-[color:var(--color-ink-soft)] opacity-0 transition-opacity hover:bg-[color:var(--color-destructive)]/10 hover:text-[color:var(--color-destructive)] focus:opacity-100 group-hover:opacity-100 disabled:opacity-50"
             aria-label="Delete book"
           >
-            {del.isPending ? "…" : "Remove"}
+            {del.isPending ? "…" : t("bookCard.remove")}
           </button>
         </div>
       </div>

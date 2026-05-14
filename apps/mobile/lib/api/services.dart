@@ -476,3 +476,40 @@ class HighlightService {
     return Highlight.fromJson(res);
   }
 }
+
+class ProgressService {
+  ProgressService(this._api);
+  final ApiClient _api;
+
+  Future<BookProgress> get(String bookId) async {
+    final res = await _api.get<Map<String, dynamic>>('/books/$bookId/progress');
+    return BookProgress.fromJson(res);
+  }
+
+  /// Upsert the user's reading position. Null fields are not modified server-
+  /// side; the server stamps last_read_at on every write.
+  Future<BookProgress> put(
+    String bookId, {
+    int? currentPage,
+    String? currentCfi,
+    int readingTimeDeltaSeconds = 0,
+  }) async {
+    final body = <String, dynamic>{
+      'current_page': currentPage,
+      'current_cfi': currentCfi,
+      'reading_time_delta_seconds': readingTimeDeltaSeconds,
+    };
+    final res = await _api.put<Map<String, dynamic>>(
+      '/books/$bookId/progress',
+      body: body,
+    );
+    return BookProgress.fromJson(res);
+  }
+
+  Future<List<BookProgressListItem>> list() async {
+    final res = await _api.get<List<dynamic>>('/books/progress');
+    return res
+        .map((e) => BookProgressListItem.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+}

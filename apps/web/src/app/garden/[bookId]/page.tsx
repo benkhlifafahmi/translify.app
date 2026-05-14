@@ -23,6 +23,7 @@ import {
   type Garden,
   type GardenSummary,
 } from "@/lib/garden";
+import { useI18n } from "@/lib/i18n";
 
 export default function GardenDetailPage({
   params,
@@ -31,6 +32,7 @@ export default function GardenDetailPage({
 }) {
   const { bookId } = use(params);
   const router = useRouter();
+  const { t, locale } = useI18n();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
@@ -55,12 +57,12 @@ export default function GardenDetailPage({
   if (!mounted || gardenLoading || !garden) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10">
-        <p className="text-[color:var(--color-ink-soft)]">Drawing the specimen…</p>
+        <p className="text-[color:var(--color-ink-soft)]">{t("garden.specimen.loading")}</p>
       </main>
     );
   }
 
-  const startedAt = new Date(garden.startedAt).toLocaleDateString("en", {
+  const startedAt = new Date(garden.startedAt).toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -82,18 +84,18 @@ export default function GardenDetailPage({
         <TranslifyMark href="/library" size={36} wordmarkClassName="text-xl" />
 
         <nav className="hidden gap-7 text-[12px] uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)] md:flex">
-          <Link href="/library" className="transition-colors hover:text-[color:var(--color-ink)]">Shelf</Link>
+          <Link href="/library" className="transition-colors hover:text-[color:var(--color-ink)]">{t("library.title")}</Link>
           <Link href="/garden" className="relative text-[color:var(--color-ink)]">
-            Garden
+            {t("bookCard.garden")}
             <span aria-hidden className="absolute -bottom-1.5 left-0 right-0 h-[2px] bg-[color:var(--color-coral)]" />
           </Link>
-          <Link href="/account" className="transition-colors hover:text-[color:var(--color-ink)]">Account</Link>
+          <Link href="/account" className="transition-colors hover:text-[color:var(--color-ink)]">{t("garden.account")}</Link>
         </nav>
 
         <div className="flex items-center gap-2">
           <span className="hidden text-xs text-[color:var(--color-ink-soft)] sm:inline">{user?.email}</span>
           <Button variant="ghost" size="sm" onClick={async () => { await logout(); router.replace("/login"); }}>
-            Log out
+            {t("garden.logOut")}
           </Button>
         </div>
       </header>

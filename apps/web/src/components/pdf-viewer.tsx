@@ -41,8 +41,14 @@ interface Props {
   onClickSavedHighlight?: (id: string) => void;
   /** Controlled current page (e.g. driven by "jump to highlight" from sidebar). */
   goToPage?: { page: number; nonce: number } | null;
+  /** Restore-from-progress page — applied once after the doc loads, then ignored. */
+  initialPage?: number | null;
   /** Fires whenever the visible page advances to a new high-water mark. */
   onPageReached?: (page: number) => void;
+  /** Fires on every page change (forward or backward) — used by the
+   *  resume-progress saver. Cheaper than re-deriving from onPageReached
+   *  since it doesn't filter by high-water mark. */
+  onLocationChange?: (loc: { page: number }) => void;
 }
 
 const COLOR_TO_CLASS: Record<SavedHighlightColor, string> = {
@@ -60,7 +66,9 @@ export function PdfViewer({
   onSelectionAction,
   onClickSavedHighlight,
   goToPage,
+  initialPage,
   onPageReached,
+  onLocationChange,
 }: Props) {
   const { t } = useI18n();
   const [numPages, setNumPages] = useState<number | null>(null);
@@ -86,6 +94,27 @@ export function PdfViewer({
   useEffect(() => {
     if (page > 0) onPageReached?.(page);
   }, [page, onPageReached]);
+
+  // Location-change signal — fires on every page change (forward and
+  // backward). Used by the resume-progress saver in the reader page.
+  useEffect(() => {
+    if (page > 0) onLocationChange?.({ page });
+  }, [page, onLocationChange]);
+
+  // One-shot restore of saved progress: applied once we know numPages and
+  // only if the user hasn't already navigated (page is still 1 from the
+  // mount). After that, ignore — further changes flow through onPageChange.
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current) return;
+    if (numPages == null) return;
+    if (!initialPage || initialPage <= 1) {
+      restoredRef.current = true;
+      return;
+    }
+    restoredRef.current = true;
+    setPage(Math.max(1, Math.min(numPages, initialPage)));
+  }, [initialPage, numPages]);
 
   useEffect(() => {
     if (!containerRef.current) return;

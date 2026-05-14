@@ -22,6 +22,7 @@ from app.book_access import visible_to
 from app.config import settings
 from app.db import get_async_session
 from app.models.book import Book, BookFormat, BookStatus
+from app.models.progress import BookProgress
 from app.schemas.book import (
     BookRead,
     BookUpdate,
@@ -30,6 +31,7 @@ from app.schemas.book import (
     UploadUrlResponse,
 )
 from app.schemas.folder import BookFolderAssign
+from app.schemas.progress import BookProgressListItem, BookProgressRead, BookProgressUpdate
 from app.schemas.translation import FileUrlResponse
 from app.storage import get_s3_client, presigned_get_url, presigned_put_url
 from app.billing.plans import Plan, quota_for
@@ -134,6 +136,25 @@ async def list_books(
     return list(result.scalars().all())
 
 
+@router.get("/progress", response_model=list[BookProgressListItem])
+async def list_book_progress(
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> list[BookProgress]:
+    """All progress rows for the user, newest activity first.
+
+    Used to render the "Continue reading" surface on the library shelf.
+    Declared before ``/{book_id}`` so FastAPI doesn't try to parse
+    "progress" as a UUID.
+    """
+    result = await session.execute(
+        select(BookProgress)
+        .where(BookProgress.user_id == user.id)
+        .order_by(BookProgress.last_read_at.desc())
+    )
+    return list(result.scalars().all())
+
+
 @router.get("/{book_id}", response_model=BookRead)
 async def get_book(
     book_id: uuid.UUID = Path(...),
@@ -154,6 +175,85 @@ async def get_book_file_url(
     return FileUrlResponse(
         url=url, expires_in_seconds=int(FILE_URL_EXPIRY.total_seconds())
     )
+
+
+@router.get("/{book_id}/progress", response_model=BookProgressRead)
+async def get_book_progress(
+    book_id: uuid.UUID = Path(...),
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> BookProgressRead:
+    """Return the user's saved reading position for this book.
+
+    Falls back to page 1 / no CFI when no row exists yet — the client just
+    starts from the top, no special-casing needed.
+    """
+    await _get_owned_book(book_id, user, session)
+    row = await session.scalar(
+        select(BookProgress).where(
+            BookProgress.user_id == user.id,
+            BookProgress.book_id == book_id,
+        )
+    )
+    if row is None:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        return BookProgressRead(
+            current_page=None,
+            current_cfi=None,
+            reading_time_seconds=0,
+            last_read_at=now,
+            updated_at=now,
+        )
+    return BookProgressRead.model_validate(row)
+
+
+@router.put("/{book_id}/progress", response_model=BookProgressRead)
+async def upsert_book_progress(
+    payload: BookProgressUpdate,
+    book_id: uuid.UUID = Path(...),
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> BookProgressRead:
+    """Save the user's current reading position. Upsert on (user, book).
+
+    Called on page change (debounced) and on tab close / app background.
+    Position fields update only when the client sends a non-null value, so a
+    save that only reports reading-time doesn't clobber the saved CFI.
+    """
+    await _get_owned_book(book_id, user, session)
+
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+
+    row = await session.scalar(
+        select(BookProgress).where(
+            BookProgress.user_id == user.id,
+            BookProgress.book_id == book_id,
+        )
+    )
+    if row is None:
+        row = BookProgress(
+            user_id=user.id,
+            book_id=book_id,
+            current_page=payload.current_page,
+            current_cfi=payload.current_cfi,
+            reading_time_seconds=payload.reading_time_delta_seconds,
+            last_read_at=now,
+        )
+        session.add(row)
+    else:
+        if payload.current_page is not None:
+            row.current_page = payload.current_page
+        if payload.current_cfi is not None:
+            row.current_cfi = payload.current_cfi
+        if payload.reading_time_delta_seconds:
+            row.reading_time_seconds += payload.reading_time_delta_seconds
+        row.last_read_at = now
+
+    await session.commit()
+    await session.refresh(row)
+    return BookProgressRead.model_validate(row)
 
 
 @router.get("/{book_id}/annotations.md")

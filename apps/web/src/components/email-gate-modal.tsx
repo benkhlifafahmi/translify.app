@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@/lib/api";
 import { claimSession } from "@/lib/auth";
 import { Lumi } from "@/components/lumi/lumi";
+import { useI18n } from "@/lib/i18n";
 
 /**
  * Modal asked of an anonymous reader the first time they try a feature that
@@ -27,42 +28,16 @@ interface Props {
   onClaimed?: () => void;
 }
 
-const ACTION_COPY: Record<string, { eyebrow: string; headline: string; sub: string; cta: string }> = {
-  chat: {
-    eyebrow: "One quick step",
-    headline: "Chat with the book?",
-    sub: "Drop your email so we can save the conversation — and your library.",
-    cta: "Start chatting →",
-  },
-  quiz: {
-    eyebrow: "Almost there",
-    headline: "Ready for a quiz?",
-    sub: "Drop your email so we can save your scores and your library.",
-    cta: "Quiz me →",
-  },
-  translate: {
-    eyebrow: "Unlock translation",
-    headline: "Translate this book?",
-    sub: "Drop your email so we can save the translation and your library.",
-    cta: "Translate it →",
-  },
-  upload: {
-    eyebrow: "Almost there",
-    headline: "Add your own book?",
-    sub: "Drop your email so we can save your upload and reading progress.",
-    cta: "Save my library →",
-  },
-  save: {
-    eyebrow: "Save your spot",
-    headline: "Keep reading on any device?",
-    sub: "Drop your email — we'll save your library and send you a sign-in link.",
-    cta: "Save my library →",
-  },
+const ACTION_KEYS: Record<string, string> = {
+  chat: "gate.chat",
+  quiz: "gate.quiz",
+  translate: "gate.translate",
+  upload: "gate.upload",
+  save: "gate.save",
 };
 
-const DEFAULT_COPY = ACTION_COPY.save;
-
 export function EmailGateModal({ open, action, onClose, onClaimed }: Props) {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
@@ -81,12 +56,18 @@ export function EmailGateModal({ open, action, onClose, onClaimed }: Props) {
 
   if (!open) return null;
 
-  const copy = ACTION_COPY[action] ?? DEFAULT_COPY;
+  const keyBase = ACTION_KEYS[action] ?? "gate.save";
+  const copy = {
+    eyebrow: t(`${keyBase}.eyebrow`),
+    headline: t(`${keyBase}.headline`),
+    sub: t(`${keyBase}.sub`),
+    cta: t(`${keyBase}.cta`),
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-    if (!valid) { setErr("Type a valid email to keep going."); return; }
+    if (!valid) { setErr(t("gate.error.email")); return; }
     setErr(null); setBusy(true);
     try {
       const preferred = typeof document !== "undefined"
@@ -110,7 +91,7 @@ export function EmailGateModal({ open, action, onClose, onClaimed }: Props) {
       setErr(
         e instanceof ApiError
           ? e.message
-          : "Couldn't save your library. Try again?",
+          : t("gate.error.fallback"),
       );
     } finally { setBusy(false); }
   };
@@ -160,20 +141,30 @@ export function EmailGateModal({ open, action, onClose, onClaimed }: Props) {
             className="mt-4 text-center text-[0.72rem] font-bold uppercase tracking-[0.22em]"
             style={{ color: "var(--color-saffron-deep)" }}
           >
-            {linkSentTo ? "Welcome back" : copy.eyebrow}
+            {linkSentTo ? t("gate.welcome") : copy.eyebrow}
           </p>
           <h2
             className="mt-1.5 text-balance text-center font-[family-name:var(--font-display)] font-semibold leading-[1.1] tracking-tight"
             style={{ fontSize: "clamp(1.45rem,5vw,1.8rem)", color: "var(--color-ink)" }}
           >
-            {linkSentTo ? "Check your inbox." : copy.headline}
+            {linkSentTo ? t("gate.linkSent.title") : copy.headline}
           </h2>
           <p
             className="mx-auto mt-3 max-w-[32ch] text-balance text-center text-[0.92rem] leading-relaxed"
             style={{ color: "var(--color-ink-soft)" }}
           >
             {linkSentTo
-              ? <>That email already has a Translify account. We sent a one-tap sign-in link to <span className="font-semibold" style={{ color: "var(--color-ink)" }}>{linkSentTo}</span>.</>
+              ? (() => {
+                  const tpl = t("gate.linkSent.body", { email: "@@EMAIL@@" });
+                  const [before, after] = tpl.split("@@EMAIL@@");
+                  return (
+                    <>
+                      {before}
+                      <span className="font-semibold" style={{ color: "var(--color-ink)" }}>{linkSentTo}</span>
+                      {after}
+                    </>
+                  );
+                })()
               : copy.sub}
           </p>
 
@@ -186,7 +177,7 @@ export function EmailGateModal({ open, action, onClose, onClaimed }: Props) {
                 <span className="text-[1.2rem] leading-none">📧</span>
                 <input
                   type="email"
-                  placeholder="your email"
+                  placeholder={t("gate.placeholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
@@ -211,7 +202,7 @@ export function EmailGateModal({ open, action, onClose, onClaimed }: Props) {
                   boxShadow: "0 5px 0 rgba(152,96,24,0.50)",
                 }}
               >
-                {busy ? "Saving your library…" : copy.cta}
+                {busy ? t("gate.busy") : copy.cta}
               </button>
 
               {/* Same three-pill trust strip the /join page uses — answers
@@ -219,17 +210,17 @@ export function EmailGateModal({ open, action, onClose, onClaimed }: Props) {
                   spam, money. */}
               <div className="mt-1 grid grid-cols-3 gap-2 text-center">
                 {[
-                  { icon: "🔓", label: "No password" },
-                  { icon: "📭", label: "No marketing" },
-                  { icon: "💳", label: "No card" },
-                ].map((t) => (
+                  { icon: "🔓", label: t("gate.trust.password") },
+                  { icon: "📭", label: t("gate.trust.marketing") },
+                  { icon: "💳", label: t("gate.trust.card") },
+                ].map((item) => (
                   <div
-                    key={t.label}
+                    key={item.label}
                     className="flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2"
                     style={{ borderColor: "var(--color-border)", background: "var(--color-paper)", color: "var(--color-ink-soft)" }}
                   >
-                    <span className="text-[1rem] leading-none">{t.icon}</span>
-                    <span className="text-[0.68rem] font-semibold">{t.label}</span>
+                    <span className="text-[1rem] leading-none">{item.icon}</span>
+                    <span className="text-[0.68rem] font-semibold">{item.label}</span>
                   </div>
                 ))}
               </div>
@@ -246,7 +237,7 @@ export function EmailGateModal({ open, action, onClose, onClaimed }: Props) {
                 boxShadow: "0 3px 0 rgba(74,60,30,0.10)",
               }}
             >
-              Keep reading here
+              {t("gate.keepReading")}
             </button>
           )}
         </div>

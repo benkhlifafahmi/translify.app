@@ -10,6 +10,7 @@ import { cloneSeed, listSeeds, type Seed } from "@/lib/seeds";
 import { trackLead } from "@/lib/onboarding";
 import { Lumi } from "@/components/lumi/lumi";
 import { TranslifyIcon } from "@/components/translify-mark";
+import { useI18n } from "@/lib/i18n";
 
 // ─── Steps ────────────────────────────────────────────────────────────────────
 type Step =
@@ -26,15 +27,15 @@ type TopicId =
 
 type Tone = "saffron" | "sage" | "plum" | "coral";
 
-const TOPICS: { id: TopicId; icon: string; label: string; tone: Tone }[] = [
-  { id: "fiction",     icon: "📖", label: "Fiction",       tone: "saffron" },
-  { id: "self-help",   icon: "✨", label: "Self-help",     tone: "sage"    },
-  { id: "philosophy",  icon: "🌿", label: "Philosophy",    tone: "sage"    },
-  { id: "history",     icon: "🏛️", label: "History",       tone: "plum"    },
-  { id: "science",     icon: "🔬", label: "Science",       tone: "coral"   },
-  { id: "business",    icon: "💼", label: "Strategy",      tone: "plum"    },
-  { id: "art",         icon: "🎨", label: "Art & Poetry",  tone: "coral"   },
-  { id: "nature",      icon: "🌲", label: "Nature",        tone: "saffron" },
+const TOPICS: { id: TopicId; icon: string; labelKey: string; tone: Tone }[] = [
+  { id: "fiction",     icon: "📖", labelKey: "topic.fiction",    tone: "saffron" },
+  { id: "self-help",   icon: "✨", labelKey: "topic.selfHelp",   tone: "sage"    },
+  { id: "philosophy",  icon: "🌿", labelKey: "topic.philosophy", tone: "sage"    },
+  { id: "history",     icon: "🏛️", labelKey: "topic.history",    tone: "plum"    },
+  { id: "science",     icon: "🔬", labelKey: "topic.science",    tone: "coral"   },
+  { id: "business",    icon: "💼", labelKey: "topic.business",   tone: "plum"    },
+  { id: "art",         icon: "🎨", labelKey: "topic.art",        tone: "coral"   },
+  { id: "nature",      icon: "🌲", labelKey: "topic.nature",     tone: "saffron" },
 ];
 
 const TONE_MAP: Record<Tone, { ring: string; bg: string; iconBg: string; iconColor: string; deep: string }> = {
@@ -98,6 +99,7 @@ const SFX = {
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export function JoinClient() {
   const router = useRouter();
+  const { t } = useI18n();
 
   const [step, setStep] = useState<Step>("topics");
   const [topics, setTopics] = useState<TopicId[]>([]);
@@ -150,7 +152,7 @@ export function JoinClient() {
       setErr(
         e instanceof ApiError
           ? e.message
-          : "Couldn't open that book. Please try again.",
+          : t("join.s.openError"),
       );
       setCloningSlug(null);
     }
@@ -180,7 +182,7 @@ export function JoinClient() {
             onClick={() => { SFX.tap(); setStep("topics"); }}
             className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90"
             style={{ background: "white", border: "1.5px solid var(--color-border)", boxShadow: "0 2px 0 rgba(74,60,30,0.08)" }}
-            aria-label="Back"
+            aria-label={t("join.back")}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-ink)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 18l-6-6 6-6" />
@@ -209,7 +211,7 @@ export function JoinClient() {
         </div>
 
         <Link href="/login" className="text-[0.82rem] font-semibold" style={{ color: "var(--color-ink-soft)" }}>
-          Sign in
+          {t("join.signIn")}
         </Link>
       </header>
 
@@ -244,6 +246,7 @@ function StepTopics({
   setTopics: (fn: (prev: TopicId[]) => TopicId[]) => void;
   onContinue: () => void;
 }) {
+  const { t } = useI18n();
   // Auto-advance after a short pause so the Continue button isn't required —
   // important on small phones where the fixed footer can hide under the
   // browser UI. A 700ms debounce still lets fast multi-tappers stack a
@@ -273,28 +276,28 @@ function StepTopics({
     <div>
       <div className="text-center">
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-sage-deep)" }}>
-          Your shelf is ready
+          {t("join.t.eyebrow")}
         </p>
         <h2
           className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
           style={{ fontSize: "clamp(1.7rem,5.5vw,2.2rem)", color: "var(--color-ink)" }}
         >
-          What do you love reading?
+          {t("join.t.title")}
         </h2>
         <p className="mx-auto mt-2 max-w-[28ch] text-[0.92rem]" style={{ color: "var(--color-ink-soft)" }}>
-          Pick a few — we&apos;ll surface books in those topics first.
+          {t("join.t.subtitle")}
         </p>
       </div>
 
       <div className="mt-7 grid grid-cols-2 gap-3">
-        {TOPICS.map((t, i) => {
-          const selected = topics.includes(t.id);
-          const tone = TONE_MAP[t.tone];
+        {TOPICS.map((topic, i) => {
+          const selected = topics.includes(topic.id);
+          const tone = TONE_MAP[topic.tone];
           return (
             <button
-              key={t.id}
+              key={topic.id}
               type="button"
-              onClick={() => toggle(t.id)}
+              onClick={() => toggle(topic.id)}
               className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 px-3 py-5 text-center transition-all duration-200 active:scale-[0.97] animate-float-in"
               style={{
                 animationDelay: `${i * 0.04}s`,
@@ -304,9 +307,9 @@ function StepTopics({
                 transform: selected ? "translateY(-2px)" : "translateY(0)",
               }}
             >
-              <span className="text-[1.7rem] leading-none">{t.icon}</span>
+              <span className="text-[1.7rem] leading-none">{topic.icon}</span>
               <span className="font-[family-name:var(--font-display)] text-[0.9rem] font-semibold" style={{ color: "var(--color-ink)" }}>
-                {t.label}
+                {t(topic.labelKey)}
               </span>
               {selected && (
                 <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full text-white animate-pop-in" style={{ background: tone.deep }}>
@@ -322,7 +325,7 @@ function StepTopics({
 
       <FixedFooter>
         <BigButton onClick={onContinue} disabled={topics.length === 0}>
-          {topics.length === 0 ? "Pick at least one" : `Continue (${topics.length}) →`}
+          {topics.length === 0 ? t("join.t.cta.empty") : t("join.t.cta.continue", { n: topics.length })}
         </BigButton>
       </FixedFooter>
     </div>
@@ -339,6 +342,7 @@ function StepShelf({
   total: number;
   idx: number;
 }) {
+  const { t } = useI18n();
   // Catalogue lives server-side — `clone_id` is populated for seeds the user
   // has already opened so re-taps are instant rather than re-cloning.
   const { data: seeds, isLoading, error } = useQuery<Seed[]>({
@@ -362,16 +366,16 @@ function StepShelf({
     <div>
       <div className="text-center">
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-plum)" }}>
-          Step {idx + 1} of {total}
+          {t("join.s.eyebrow", { idx: idx + 1, total })}
         </p>
         <h2
           className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
           style={{ fontSize: "clamp(1.7rem,5.5vw,2.2rem)", color: "var(--color-ink)" }}
         >
-          Pick a book to open
+          {t("join.s.title")}
         </h2>
         <p className="mx-auto mt-2 max-w-[30ch] text-[0.92rem]" style={{ color: "var(--color-ink-soft)" }}>
-          The first 10 pages of any book are free — keep going on a 14-day trial.
+          {t("join.s.subtitle")}
         </p>
       </div>
 
@@ -388,7 +392,7 @@ function StepShelf({
             border: "1.5px solid rgba(220,38,38,0.22)",
           }}
         >
-          Couldn&apos;t load the starter shelf. Refresh to try again.
+          {t("join.s.loadError")}
         </div>
       )}
 
@@ -430,15 +434,15 @@ function StepShelf({
                     </p>
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {tagTopics.map((tid) => {
-                        const t = TOPICS.find((x) => x.id === tid);
-                        if (!t) return null;
+                        const topic = TOPICS.find((x) => x.id === tid);
+                        if (!topic) return null;
                         return (
                           <span
                             key={tid}
                             className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.66rem] font-semibold"
-                            style={{ background: TONE_MAP[t.tone].iconBg, color: TONE_MAP[t.tone].iconColor }}
+                            style={{ background: TONE_MAP[topic.tone].iconBg, color: TONE_MAP[topic.tone].iconColor }}
                           >
-                            {t.icon} {t.label}
+                            {topic.icon} {t(topic.labelKey)}
                           </span>
                         );
                       })}
@@ -447,7 +451,7 @@ function StepShelf({
                           className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.66rem] font-semibold"
                           style={{ background: "rgba(123,161,124,0.18)", color: "var(--color-sage-deep)" }}
                         >
-                          ✓ In your library
+                          {t("join.s.inLibrary")}
                         </span>
                       )}
                     </div>
@@ -475,13 +479,12 @@ function StepShelf({
 
       {!isLoading && !error && ordered.length === 0 && (
         <p className="mt-10 rounded-xl border-2 p-4 text-center text-[0.86rem]" style={{ borderColor: "var(--color-border)", background: "white", color: "var(--color-ink-soft)" }}>
-          The seed catalogue isn&apos;t loaded on this server yet. Ask the admin to run{" "}
-          <code className="rounded px-1.5 py-0.5 text-[0.82em]" style={{ background: "rgba(74,60,30,0.08)" }}>app.scripts.seed_books</code>.
+          {t("join.s.emptyCatalog")}
         </p>
       )}
 
       <p className="mt-6 text-center text-[0.78rem]" style={{ color: "var(--color-ink-soft)" }}>
-        You can upload your own books later from your library.
+        {t("join.s.foot")}
       </p>
     </div>
   );

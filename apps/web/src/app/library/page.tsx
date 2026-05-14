@@ -18,15 +18,18 @@ import {
   HIGHLIGHT_COLOR_CLASS,
   type Highlight,
 } from "@/lib/highlights";
+import { listBookProgress, type BookProgressListItem } from "@/lib/progress";
 import { TranslifyMark } from "@/components/translify-mark";
 import { getToken } from "@/lib/api";
 import { LumiHud } from "@/components/lumi/lumi-hud";
 import { LumiGuide } from "@/components/lumi/lumi-guide";
 import { useLumi } from "@/components/lumi/lumi-context";
+import { useI18n } from "@/lib/i18n";
 
 export default function LibraryPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
@@ -68,6 +71,12 @@ export default function LibraryPage() {
     enabled,
   });
 
+  const { data: progress } = useQuery<BookProgressListItem[]>({
+    queryKey: ["book-progress", "all"],
+    queryFn: listBookProgress,
+    enabled,
+  });
+
   const noteCountsByBook = useMemo(() => (
     (highlights ?? []).reduce<Record<string, number>>((acc, h) => {
       acc[h.book_id] = (acc[h.book_id] ?? 0) + 1;
@@ -80,6 +89,23 @@ export default function LibraryPage() {
     () => Object.fromEntries((books ?? []).map((b) => [b.id, b.title] as const)),
     [books],
   );
+  const bookById = useMemo(
+    () => Object.fromEntries((books ?? []).map((b) => [b.id, b] as const)),
+    [books],
+  );
+
+  // Continue-reading: progress rows joined with their Book, freshest first,
+  // skipping orphans (book deleted, progress kept). Capped at 6 to keep the
+  // strip glanceable; the rest are still reachable via the shelves below.
+  const continueItems = useMemo(() => {
+    if (!progress || !books) return [];
+    return progress
+      .map((p) => ({ progress: p, book: bookById[p.book_id] }))
+      .filter((x): x is { progress: BookProgressListItem; book: Book } =>
+        !!x.book && x.book.status === "ready",
+      )
+      .slice(0, 6);
+  }, [progress, books, bookById]);
 
   // Group books by their folder. NULL → "unsorted" key.
   const booksByFolder = useMemo(() => {
@@ -146,13 +172,13 @@ export default function LibraryPage() {
   if (!mounted || userLoading) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10">
-        <p className="text-[color:var(--color-ink-soft)]">Opening your shelf…</p>
+        <p className="text-[color:var(--color-ink-soft)]">{t("library.loading")}</p>
       </main>
     );
   }
 
-  const greeting = pickGreeting();
-  const name = user?.display_name || (user?.email ? user.email.split("@")[0] : "reader");
+  const greeting = pickGreeting(t);
+  const name = user?.display_name || (user?.email ? user.email.split("@")[0] : t("library.unnamedReader"));
   const orderedFolders = (folders ?? []).slice().sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
 
   return (
@@ -187,16 +213,16 @@ export default function LibraryPage() {
             href="/garden"
             className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3.5 text-xs font-semibold text-[color:var(--color-ink)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-sage)]"
           >
-            <span aria-hidden>🌿</span> Garden
+            <span aria-hidden>🌿</span> {t("bookCard.garden")}
           </Link>
           <Link
             href="/account"
             className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3.5 text-xs font-semibold text-[color:var(--color-ink)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-border-strong)]"
           >
-            <span aria-hidden>✦</span> Account
+            <span aria-hidden>✦</span> {t("library.account")}
           </Link>
           <Button variant="ghost" size="sm" onClick={onLogout}>
-            Log out
+            {t("library.logOut")}
           </Button>
         </div>
       </header>
@@ -209,13 +235,22 @@ export default function LibraryPage() {
               {greeting}
             </p>
             <h1 className="mt-3 font-[family-name:var(--font-display)] text-[2.6rem] font-semibold leading-[1.05] tracking-tight sm:text-[3rem]">
-              Your library,{" "}
-              <em className="text-[color:var(--color-saffron-deep)]">{name}</em>.
+              {(() => {
+                const tpl = t("library.titleNamed", { name: "@@NAME@@" });
+                const [before, after] = tpl.split("@@NAME@@");
+                return (
+                  <>
+                    {before}
+                    <em className="text-[color:var(--color-saffron-deep)]">{name}</em>
+                    {after}
+                  </>
+                );
+              })()}
             </h1>
             <p className="mt-2 max-w-xl text-[0.95rem] leading-relaxed text-[color:var(--color-ink-soft)]">
               {books && books.length > 0
-                ? "Drag a book onto a folder to file it away. Tap any folder to redesign it."
-                : "Start by adding a book. PDF or EPUB — whatever you've got."}
+                ? t("library.subtitleWithBooks")
+                : t("library.subtitleEmpty")}
             </p>
           </div>
 
@@ -234,11 +269,15 @@ export default function LibraryPage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              New folder
+              {t("library.newFolder")}
             </button>
             <UploadButton />
           </div>
         </div>
+
+        {continueItems.length > 0 && (
+          <ContinueReadingStrip items={continueItems} />
+        )}
 
         {recentHighlights.length > 0 && (
           <RecentNotesStrip
@@ -300,7 +339,7 @@ export default function LibraryPage() {
                     <path d="M12 5v14M5 12h14" />
                   </svg>
                 </span>
-                Add a new folder
+                {t("library.addFolder")}
               </button>
             </>
           )}
@@ -316,12 +355,12 @@ export default function LibraryPage() {
   );
 }
 
-function pickGreeting() {
+function pickGreeting(t: (key: string) => string) {
   const hour = new Date().getHours();
-  if (hour < 5) return "Reading late tonight";
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
+  if (hour < 5) return t("library.greet.late");
+  if (hour < 12) return t("library.greet.morning");
+  if (hour < 18) return t("library.greet.afternoon");
+  return t("library.greet.evening");
 }
 
 function ShelfSkeleton() {
@@ -338,6 +377,72 @@ function ShelfSkeleton() {
   );
 }
 
+function ContinueReadingStrip({
+  items,
+}: {
+  items: Array<{ progress: BookProgressListItem; book: Book }>;
+}) {
+  const { t } = useI18n();
+  return (
+    <section className="mt-10">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
+          {t("library.continueReading") || "Continue reading"}
+        </h2>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:thin]">
+        {items.map(({ progress, book }) => {
+          const pct = pageCountPct(progress.current_page, book.page_count);
+          return (
+            <Link
+              key={book.id}
+              href={`/library/${book.id}`}
+              className="group relative flex w-72 shrink-0 flex-col gap-3 rounded-2xl border-[1.5px] border-[color:var(--color-border)] bg-white/80 p-4 transition-all hover:-translate-y-[2px] hover:border-[color:var(--color-sage)] hover:shadow-[var(--shadow-paper-lg)]"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="line-clamp-2 font-[family-name:var(--font-display)] text-sm font-semibold leading-snug tracking-tight">
+                  {book.title}
+                </h3>
+                <span aria-hidden className="text-base">📖</span>
+              </div>
+              {book.author && (
+                <p className="-mt-2 line-clamp-1 text-xs text-[color:var(--color-ink-soft)]">
+                  {book.author}
+                </p>
+              )}
+              {pct != null && (
+                <div className="mt-auto flex flex-col gap-1">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
+                    <div
+                      className="h-full rounded-full bg-[color:var(--color-sage)] transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[0.7rem] font-semibold text-[color:var(--color-ink-soft)]">
+                    <span>
+                      {progress.current_page != null && book.page_count != null
+                        ? `p. ${progress.current_page} / ${book.page_count}`
+                        : progress.current_page != null
+                          ? `p. ${progress.current_page}`
+                          : ""}
+                    </span>
+                    <span>{pct}%</span>
+                  </div>
+                </div>
+              )}
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function pageCountPct(current: number | null, total: number | null): number | null {
+  if (!current || !total || total <= 0) return null;
+  return Math.max(1, Math.min(100, Math.round((current / total) * 100)));
+}
+
 function RecentNotesStrip({
   highlights,
   bookTitleById,
@@ -345,14 +450,15 @@ function RecentNotesStrip({
   highlights: Highlight[];
   bookTitleById: Record<string, string>;
 }) {
+  const { t } = useI18n();
   return (
     <section className="mt-10">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-          Recent notes
+          {t("library.recentNotes")}
         </h2>
         <span className="text-xs text-[color:var(--color-ink-soft)]">
-          {highlights.length} latest
+          {t("library.latest", { n: highlights.length })}
         </span>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:thin]">
@@ -364,7 +470,7 @@ function RecentNotesStrip({
           >
             <div className="flex items-center justify-between gap-2">
               <span className="line-clamp-1 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-ink-soft)]">
-                {bookTitleById[h.book_id] ?? "Book"}
+                {bookTitleById[h.book_id] ?? t("library.unnamedBook")}
               </span>
               <span className="shrink-0 rounded-full bg-[color:var(--color-paper-3)]/70 px-2 py-0.5 text-[0.65rem] font-semibold text-[color:var(--color-ink-soft)]">
                 p. {h.page}
@@ -382,7 +488,7 @@ function RecentNotesStrip({
             )}
             {h.ai_answer && (
               <p className="line-clamp-1 text-[0.7rem] font-semibold text-[color:var(--color-coral-deep)]">
-                ✦ AI explained this
+                {t("library.aiExplained")}
               </p>
             )}
           </Link>
@@ -393,6 +499,7 @@ function RecentNotesStrip({
 }
 
 function EmptyLibrary() {
+  const { t } = useI18n();
   return (
     <div className="card-paper-lifted relative mx-auto max-w-3xl overflow-hidden p-8 sm:p-12">
       <div
@@ -409,9 +516,9 @@ function EmptyLibrary() {
           state="waving"
           size={160}
           lines={[
-            "Hi! I'm Lumi — your reading companion. Drop your first book and I'll get to work.",
-            "PDF or EPUB, any language. Once you upload, I'll read it, translate it, and we can chat about it together.",
-            "Bonus: every book you finish earns XP and helps your garden grow 🌱",
+            t("library.lumi.1"),
+            t("library.lumi.2"),
+            t("library.lumi.3"),
           ]}
           bubblePosition="right"
         />
@@ -419,7 +526,7 @@ function EmptyLibrary() {
 
       <div className="relative mt-8 border-t border-dashed border-[color:var(--color-border-strong)] pt-6 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--color-ink-soft)]">
-          Drag a file anywhere on this page, or use the upload button above.
+          {t("library.dragHere")}
         </p>
       </div>
     </div>

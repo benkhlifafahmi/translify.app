@@ -9,6 +9,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { Lumi } from "@/components/lumi/lumi";
+import { useI18n } from "@/lib/i18n";
 
 export default function ErrorBoundary({
   error,
@@ -17,6 +18,7 @@ export default function ErrorBoundary({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useI18n();
   useEffect(() => {
     // Send to console so it lands in browser devtools / Sentry replay if wired.
     // eslint-disable-next-line no-console
@@ -40,16 +42,15 @@ export default function ErrorBoundary({
         </div>
 
         <p className="text-[0.72rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-coral-deep)]">
-          Something hooted wrong
+          {t("error.eyebrow")}
         </p>
 
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-[clamp(1.8rem,4vw,2.6rem)] font-semibold leading-[1.05] tracking-tight">
-          Lumi dropped a page.
+          {t("error.title")}
         </h1>
 
         <p className="mx-auto mt-4 max-w-md text-[0.95rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-          An unexpected error stopped this page from loading. Most of the time
-          this is a hiccup — try again and we'll pick up where we left off.
+          {t("error.body")}
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -57,13 +58,13 @@ export default function ErrorBoundary({
             onClick={() => reset()}
             className="inline-flex h-11 items-center gap-2 rounded-full bg-[color:var(--color-saffron)] px-5 font-semibold text-[color:var(--color-accent-foreground)] shadow-[0_2px_0_rgba(140,90,30,0.5),0_10px_22px_-8px_rgba(200,137,62,0.6)] transition-transform hover:-translate-y-[2px]"
           >
-            Try again
+            {t("error.retry")}
           </button>
           <Link
             href="/"
             className="inline-flex h-11 items-center rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)]/60 px-5 font-semibold text-[color:var(--color-ink)] hover:bg-[color:var(--color-paper-2)]"
           >
-            Back to home
+            {t("error.home")}
           </Link>
         </div>
 

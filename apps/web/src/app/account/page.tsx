@@ -44,6 +44,11 @@ const PLAN_PRICES: Record<Exclude<Plan, "free">, { monthly: number; yearly: numb
   family:  { monthly: 27.99, yearly: 22    },
 };
 
+function AccountLoadingText() {
+  const { t } = useI18n();
+  return <>{t("account.loading")}</>;
+}
+
 export default function AccountPage() {
   return (
     <Suspense
@@ -52,7 +57,7 @@ export default function AccountPage() {
           <ParchmentBackdrop />
           <div className="grid h-screen place-items-center">
             <span className="font-[family-name:var(--font-display)] italic text-[color:var(--color-ink-soft)]">
-              Opening your shelf…
+              <AccountLoadingText />
             </span>
           </div>
         </main>
@@ -92,7 +97,7 @@ function AccountInner() {
           return;
         }
         if (!cancelled) {
-          setFlash({ tone: "error", text: "Couldn't load your account. Refresh to retry." });
+          setFlash({ tone: "error", text: t("account.errLoad") });
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -184,6 +189,7 @@ function AccountInner() {
 /* ─────────────────────── Top bar ─────────────────────── */
 
 function TopBar({ onLogout }: { onLogout: () => void }) {
+  const { t } = useI18n();
   return (
     <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-6 pt-6 lg:px-10 lg:pt-8">
       <TranslifyMark href="/library" size={36} wordmarkClassName="text-xl" />
@@ -194,14 +200,14 @@ function TopBar({ onLogout }: { onLogout: () => void }) {
           href="/library"
           className="hidden rounded-full px-4 py-2 text-sm font-semibold text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)] sm:inline"
         >
-          ← The shelf
+          {t("book.backToLibrary")}
         </Link>
         <button
           type="button"
           onClick={onLogout}
           className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-4 py-2 text-sm font-semibold text-[color:var(--color-ink)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-border-strong)]"
         >
-          Sign out
+          {t("account.logOut")}
         </button>
       </div>
     </header>
@@ -294,7 +300,7 @@ function ProfileSection({
   setUser: (u: User) => void;
   setFlash: (f: { tone: "success" | "error" | "info"; text: string } | null) => void;
 }) {
-  const { setLocale } = useI18n();
+  const { t, setLocale } = useI18n();
   const [name, setName] = useState(user.display_name ?? "");
   const [email, setEmail] = useState(user.email);
   const [language, setLanguage] = useState(user.preferred_language ?? "en");
@@ -316,16 +322,16 @@ function ProfileSection({
       setUser(updated);
       // Sync the i18n provider if the preferred language changed.
       if (
-        ["en", "fr", "es", "de", "ja", "ar", "id", "ms"].includes(language) &&
+        ["en", "fr", "es", "de", "ja", "zh", "ar", "id", "ms"].includes(language) &&
         language !== user.preferred_language
       ) {
         setLocale(language as Parameters<typeof setLocale>[0]);
       }
-      setFlash({ tone: "success", text: "Saved. Looking good." });
+      setFlash({ tone: "success", text: t("account.saved") });
     } catch (err) {
       setFlash({
         tone: "error",
-        text: err instanceof ApiError ? err.message : "Couldn't save your changes.",
+        text: err instanceof ApiError ? err.message : t("account.errSave"),
       });
     } finally {
       setSubmitting(false);

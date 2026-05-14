@@ -39,8 +39,12 @@ export interface EpubViewerProps {
   onClickSavedHighlight?: (id: string) => void;
   /** Imperative jump from outside (e.g. clicking a citation). */
   goToPage?: { page: number; nonce: number } | null;
+  /** Restore-from-progress CFI — applied once after first display. */
+  initialCfi?: string | null;
   /** Fires when the reader reaches a new high-water mark (1-indexed location). */
   onPageReached?: (page: number) => void;
+  /** Fires on every relocation — used by the resume-progress saver. */
+  onLocationChange?: (loc: { page: number; cfi: string }) => void;
 }
 
 type Theme = "paper" | "sepia" | "night";
@@ -81,7 +85,9 @@ export function EpubViewer({
   onSelectionAction,
   onClickSavedHighlight,
   goToPage,
+  initialCfi,
   onPageReached,
+  onLocationChange,
 }: EpubViewerProps) {
   const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -142,9 +148,13 @@ export function EpubViewer({
     });
     renditionRef.current = rendition;
 
-    // Display the cover / first locatable section.
+    // Display the saved CFI when we have one, else the cover. We capture
+    // ``initialCfi`` at mount time so a later parent re-render with a
+    // different value doesn't re-snap the reader to the resume point
+    // mid-session.
+    const restoreTarget = initialCfi || undefined;
     rendition
-      .display()
+      .display(restoreTarget)
       .then(() => {
         setReady(true);
       })
@@ -466,6 +476,12 @@ export function EpubViewer({
           // Page-reached signal — treat each epubjs location as a "page".
           // 1024 chars per location is roughly one paperback-sized page.
           if (currentLoc > 0) onPageReached?.(currentLoc + 1);
+          // Resume-progress signal — fires on every relocation so the
+          // saver upstream can debounce + persist the user's position.
+          onLocationChange?.({
+            page: Math.max(1, currentLoc + 1),
+            cfi: location.start.cfi,
+          });
         }
       } catch {
         /* noop */

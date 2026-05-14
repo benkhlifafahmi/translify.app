@@ -19,6 +19,7 @@ import { ApiError } from "@/lib/api";
 import { parseEmailRequired, parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
 import { Lumi } from "@/components/lumi/lumi";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   bookId: string;
@@ -29,14 +30,15 @@ interface Props {
   onEmailRequired?: (action: string) => boolean;
 }
 
-const STARTERS = [
-  "Summarize this book in 3 sentences",
-  "What's the main idea so far?",
-  "Quiz me on this chapter",
-  "Explain page 12 like I'm 10",
+const STARTER_KEYS = [
+  "chat.starter1",
+  "chat.starter2",
+  "chat.starter3",
+  "chat.starter4",
 ];
 
 export function ChatPanel({ bookId, selectedTranslationId, onCitationClick, onEmailRequired }: Props) {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -115,8 +117,8 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick, onEm
 
   const onDeleteActive = () => {
     if (!activeChat) return;
-    const label = activeChat.title || "this chat";
-    if (!confirm(`Delete "${label}"? This can't be undone.`)) return;
+    const label = activeChat.title || t("chat.thisChat");
+    if (!confirm(t("chat.deleteConfirm", { label }))) return;
     removeChat.mutate(activeChat.id);
   };
 
@@ -130,10 +132,10 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick, onEm
             disabled={sortedChats.length === 0}
             className="w-full appearance-none truncate rounded-full border-[1.5px] border-[color:var(--color-border)] bg-white/70 py-1.5 pl-3.5 pr-8 text-xs font-semibold text-[color:var(--color-ink)] focus:border-[color:var(--color-saffron)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-saffron)]/30"
           >
-            {sortedChats.length === 0 && <option value="">No chats yet</option>}
+            {sortedChats.length === 0 && <option value="">{t("chat.noChats")}</option>}
             {sortedChats.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.title || "New chat"}
+                {c.title || t("chat.newChat")}
               </option>
             ))}
           </select>
@@ -188,7 +190,7 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick, onEm
           ) : null;
         })()}
         {messages.length === 0 && !send.isPending && !newChat.isError ? (
-          <EmptyChatState onPick={(text) => onSend(text)} />
+          <EmptyChatState onPick={(text) => onSend(text)} t={t} />
         ) : (
           <div className="flex flex-col gap-3">
             {messages.map((m) => (
@@ -198,7 +200,7 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick, onEm
                 onCitationClick={onCitationClick}
               />
             ))}
-            {send.isPending && <ThinkingBubble />}
+            {send.isPending && <ThinkingBubble label={t("chat.thinking")} />}
             {send.isError &&
               (() => {
                 const quota = parseQuotaError(send.error);
@@ -209,7 +211,7 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick, onEm
                   <p className="rounded-lg bg-[color:var(--color-destructive)]/10 px-3 py-2 text-xs text-[color:var(--color-destructive)]">
                     {send.error instanceof ApiError
                       ? send.error.message
-                      : (send.error as Error).message || "Send failed"}
+                      : (send.error as Error).message || t("chat.sendError")}
                   </p>
                 );
               })()}
@@ -230,7 +232,7 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick, onEm
               }
             }}
             rows={2}
-            placeholder="Ask anything about the book…"
+            placeholder={t("chat.placeholder")}
             className="flex-1 resize-none bg-transparent px-2 py-1 text-sm focus:outline-none disabled:opacity-50"
             disabled={!activeChatId || send.isPending}
           />
@@ -241,47 +243,55 @@ export function ChatPanel({ bookId, selectedTranslationId, onCitationClick, onEm
             disabled={!activeChatId || send.isPending || !draft.trim()}
             className="rounded-full"
           >
-            Ask →
+            {t("chat.ask")}
           </Button>
         </div>
         <p className="mt-1.5 px-1 text-[0.65rem] text-[color:var(--color-ink-soft)]">
-          ⏎ to send · ⇧⏎ for a new line
+          {t("chat.kbHint")}
         </p>
       </div>
     </div>
   );
 }
 
-function EmptyChatState({ onPick }: { onPick: (s: string) => void }) {
+function EmptyChatState({
+  onPick,
+  t,
+}: {
+  onPick: (s: string) => void;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+}) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-2 text-center">
       <div className="mb-1">
         <Lumi state="happy" size={140} animate />
       </div>
       <h4 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-        Ask Lumi anything about the book.
+        {t("chat.empty.title")}
       </h4>
       <p className="mb-5 mt-1.5 max-w-xs text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
-        Every answer points back to the exact passage — click the page chip to
-        see it in the book.
+        {t("chat.empty.body")}
       </p>
       <div className="flex flex-wrap justify-center gap-2">
-        {STARTERS.map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => onPick(s)}
-            className="rounded-full border-[1.5px] border-[color:var(--color-border)] bg-white/60 px-3 py-1.5 text-xs font-medium text-[color:var(--color-ink-soft)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-sage)] hover:bg-[color:var(--color-sage)]/10 hover:text-[color:var(--color-sage-deep)]"
-          >
-            {s}
-          </button>
-        ))}
+        {STARTER_KEYS.map((key) => {
+          const label = t(key);
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onPick(label)}
+              className="rounded-full border-[1.5px] border-[color:var(--color-border)] bg-white/60 px-3 py-1.5 text-xs font-medium text-[color:var(--color-ink-soft)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-sage)] hover:bg-[color:var(--color-sage)]/10 hover:text-[color:var(--color-sage-deep)]"
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function ThinkingBubble() {
+function ThinkingBubble({ label }: { label: string }) {
   // Lumi takes over the "AI is thinking" moment — bigger and more characterful
   // than the old dot-bouncer. Sits left-aligned like an assistant message.
   return (
@@ -290,7 +300,7 @@ function ThinkingBubble() {
         <Lumi state="thinking" size={84} animate />
       </div>
       <div className="rounded-2xl rounded-bl-md bg-[color:var(--color-paper-3)]/70 px-4 py-3 text-sm italic text-[color:var(--color-ink-soft)]">
-        flipping pages…
+        {label}
       </div>
     </div>
   );
@@ -385,6 +395,7 @@ function MessageBubble({
   message: ChatMessage;
   onCitationClick?: (citation: Citation) => void;
 }) {
+  const { t } = useI18n();
   const isUser = message.role === "user";
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} animate-float-in`}>
@@ -416,7 +427,7 @@ function MessageBubble({
               >
                 <path d="m9 18 6-6-6-6" />
               </svg>
-              {message.citations.length} {message.citations.length === 1 ? "source" : "sources"}
+              {message.citations.length} {message.citations.length === 1 ? t("chat.source") : t("chat.sources")}
             </summary>
             <ol className="mt-2 flex flex-col gap-1.5 px-1">
               {message.citations.map((c, i) => (
@@ -433,11 +444,11 @@ function MessageBubble({
                     <span className="flex-1 min-w-0">
                       {c.page_start != null && (
                         <span className="block text-[0.7rem] font-semibold uppercase tracking-wide text-[color:var(--color-ink-soft)] group-hover:text-[color:var(--color-saffron-deep)]">
-                          page {c.page_start}
+                          {t("chat.pagePrefix")} {c.page_start}
                           {c.page_end && c.page_end !== c.page_start
                             ? `–${c.page_end}`
                             : ""}{" "}
-                          → tap to find
+                          {t("chat.tapToFind")}
                         </span>
                       )}
                       <span className="mt-1 block text-xs italic leading-relaxed text-[color:var(--color-ink-soft)]">

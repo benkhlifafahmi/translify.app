@@ -540,6 +540,61 @@ class FileUrl {
       FileUrl(url: j['url'] as String);
 }
 
+class BookProgress {
+  BookProgress({
+    this.currentPage,
+    this.currentCfi,
+    this.readingTimeSeconds = 0,
+    this.lastReadAt,
+  });
+
+  /// 1-indexed page (PDF) or chapter index (EPUB).
+  final int? currentPage;
+
+  /// EPUB CFI (web-only today). Mobile readers ignore on read but pass
+  /// through unchanged on write so a CFI saved from the web survives.
+  final String? currentCfi;
+
+  final int readingTimeSeconds;
+  final DateTime? lastReadAt;
+
+  factory BookProgress.fromJson(Map<String, dynamic> j) => BookProgress(
+        currentPage: j['current_page'] as int?,
+        currentCfi: j['current_cfi'] as String?,
+        readingTimeSeconds: (j['reading_time_seconds'] as int?) ?? 0,
+        lastReadAt: j['last_read_at'] != null
+            ? DateTime.tryParse(j['last_read_at'] as String)
+            : null,
+      );
+}
+
+class BookProgressListItem {
+  BookProgressListItem({
+    required this.bookId,
+    this.currentPage,
+    this.currentCfi,
+    this.readingTimeSeconds = 0,
+    this.lastReadAt,
+  });
+
+  final String bookId;
+  final int? currentPage;
+  final String? currentCfi;
+  final int readingTimeSeconds;
+  final DateTime? lastReadAt;
+
+  factory BookProgressListItem.fromJson(Map<String, dynamic> j) =>
+      BookProgressListItem(
+        bookId: j['book_id'] as String,
+        currentPage: j['current_page'] as int?,
+        currentCfi: j['current_cfi'] as String?,
+        readingTimeSeconds: (j['reading_time_seconds'] as int?) ?? 0,
+        lastReadAt: j['last_read_at'] != null
+            ? DateTime.tryParse(j['last_read_at'] as String)
+            : null,
+      );
+}
+
 // ───────────────────────────── Garden ─────────────────────────────
 // Wire format is camelCase per apps/api/app/schemas/garden.py.
 
