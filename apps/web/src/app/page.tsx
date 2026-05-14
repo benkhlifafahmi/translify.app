@@ -36,7 +36,7 @@ export default function Home() {
 function SiteNav() {
   const { t } = useI18n();
   return (
-    <nav className="relative z-20 flex items-center justify-between px-8 py-6 lg:px-14">
+    <nav className="relative z-20 flex items-center justify-between gap-2 px-5 py-4 sm:px-8 sm:py-6 lg:px-14">
       <Logo />
       <div className="hidden items-center gap-7 text-sm font-medium text-[color:var(--color-ink-soft)] md:flex">
         <a href="#how" className="transition-colors hover:text-[color:var(--color-ink)]">{t("nav.how")}</a>
@@ -44,17 +44,17 @@ function SiteNav() {
         <a href="#pricing" className="transition-colors hover:text-[color:var(--color-ink)]">{t("nav.pricing")}</a>
         <a href="#faq" className="transition-colors hover:text-[color:var(--color-ink)]">{t("nav.faq")}</a>
       </div>
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex shrink-0 items-center gap-1 text-sm sm:gap-2">
         <LanguageSwitcher />
         <Link
           href="/login"
-          className="rounded-full px-4 py-2 font-medium text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)]"
+          className="hidden rounded-full px-3 py-2 font-medium text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)] sm:inline-block sm:px-4"
         >
           {t("nav.login")}
         </Link>
         <Link
           href="/onboarding"
-          className="rounded-full bg-[color:var(--color-ink)] px-5 py-2 font-semibold text-[color:var(--color-primary-foreground)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_8px_18px_-8px_rgba(20,16,8,0.5)] transition-transform hover:-translate-y-[1px]"
+          className="rounded-full bg-[color:var(--color-ink)] px-3.5 py-2 text-[0.85rem] font-semibold text-[color:var(--color-primary-foreground)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_8px_18px_-8px_rgba(20,16,8,0.5)] transition-transform hover:-translate-y-[1px] sm:px-5 sm:text-sm"
         >
           {t("nav.cta")}
         </Link>
@@ -64,7 +64,14 @@ function SiteNav() {
 }
 
 function Logo() {
-  return <TranslifyMark size={36} wordmarkClassName="text-2xl" />;
+  // Hide the wordmark on tiny phones — at 360px the icon + wordmark + nav
+  // cluster crowds out the right-side CTA. The icon alone still reads.
+  return (
+    <TranslifyMark
+      size={36}
+      wordmarkClassName="hidden text-2xl sm:inline"
+    />
+  );
 }
 
 /* ───────────────────────────── HERO ───────────────────────────── */
@@ -72,7 +79,7 @@ function Logo() {
 function Hero() {
   const { t } = useI18n();
   return (
-    <section className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-8 pb-16 pt-10 lg:grid-cols-12 lg:gap-10 lg:px-14 lg:pt-20">
+    <section className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-5 pb-16 pt-10 sm:px-8 lg:grid-cols-12 lg:gap-10 lg:px-14 lg:pt-20">
       <div className="lg:col-span-7 stagger">
         <span className="badge-pill bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
@@ -158,7 +165,7 @@ function TrustStrip() {
   const { t } = useI18n();
   return (
     <section className="relative z-10 border-y border-dashed border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40 py-7">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-around gap-y-5 px-8 lg:px-14">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-around gap-y-5 px-5 sm:px-8 lg:px-14">
         <Stat number={t("trust.stat1.n")} label={t("trust.stat1.l")} />
         <Divider />
         <Stat number={t("trust.stat2.n")} label={t("trust.stat2.l")} />
@@ -193,7 +200,7 @@ function Divider() {
 function HowItWorks() {
   const { t } = useI18n();
   return (
-    <section id="how" className="relative z-10 mx-auto max-w-6xl px-8 pb-24 pt-20 lg:px-14">
+    <section id="how" className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-24 pt-20 lg:px-14">
       <div className="grid items-end gap-6 md:grid-cols-2 md:gap-10">
         <div>
           <span className="badge-pill bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]">
@@ -318,7 +325,7 @@ function MockChat() {
 function FeatureShowcase() {
   const { t } = useI18n();
   return (
-    <section id="features" className="relative z-10 mx-auto max-w-6xl px-8 pb-12 lg:px-14">
+    <section id="features" className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-12 lg:px-14">
       <div className="text-center">
         <span className="badge-pill bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-coral)]" />
@@ -543,7 +550,7 @@ function QuizMockBig() {
 function ForEveryone() {
   const { t } = useI18n();
   return (
-    <section className="relative z-10 mx-auto max-w-6xl px-8 pb-24 pt-12 lg:px-14">
+    <section className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-24 pt-12 lg:px-14">
       <div className="text-center">
         <span className="badge-pill bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-plum)]" />
@@ -626,7 +633,7 @@ const LANGUAGES = [
 function LanguagesStrip() {
   const { t } = useI18n();
   return (
-    <section className="relative z-10 mx-auto max-w-6xl px-8 pb-24 lg:px-14">
+    <section className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-24 lg:px-14">
       <div className="card-paper-lifted overflow-hidden p-8 lg:p-10">
         <div className="grid items-center gap-8 lg:grid-cols-[2fr_3fr]">
           <div>
@@ -669,7 +676,7 @@ function Testimonials() {
   const rotates = ["-rotate-[1.2deg]", "rotate-[1.4deg]", "-rotate-[0.6deg]"];
 
   return (
-    <section className="relative z-10 mx-auto max-w-6xl px-8 pb-24 lg:px-14">
+    <section className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-24 lg:px-14">
       <div className="text-center">
         <span className="badge-pill bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-coral)]" />
@@ -734,7 +741,7 @@ function Quote({
 function FinalCTA() {
   const { t } = useI18n();
   return (
-    <section className="relative z-10 mx-auto max-w-6xl px-8 pb-24 lg:px-14">
+    <section className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-24 lg:px-14">
       <div className="relative overflow-hidden rounded-[1.6rem] border border-[color:var(--color-border-strong)] bg-gradient-to-br from-[#FFFBF0] via-[#FBE9C2] to-[#F2D292] p-10 shadow-[var(--shadow-paper-lg)] lg:p-14">
         <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[color:var(--color-saffron)]/30 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -bottom-20 left-10 h-72 w-72 rounded-full bg-[color:var(--color-coral)]/20 blur-3xl" />
@@ -782,7 +789,7 @@ function FinalCTA() {
 function SiteFooter() {
   const { t } = useI18n();
   return (
-    <footer className="relative z-10 border-t border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/60 px-8 py-12 lg:px-14">
+    <footer className="relative z-10 border-t border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/60 px-5 sm:px-8 py-12 lg:px-14">
       <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <Logo />

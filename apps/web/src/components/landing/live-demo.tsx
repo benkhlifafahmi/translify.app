@@ -40,7 +40,7 @@ export function LiveDemo() {
   return (
     <section
       aria-label="Translify in action"
-      className="relative z-10 mx-auto max-w-6xl px-8 pb-12 pt-16 lg:px-14 lg:pt-24"
+      className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-12 pt-16 lg:px-14 lg:pt-24"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >

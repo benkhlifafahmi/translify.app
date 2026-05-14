@@ -26,7 +26,7 @@ export function Pricing() {
   const { t } = useI18n();
 
   return (
-    <section id="pricing" className="relative z-10 mx-auto max-w-7xl px-8 pb-24 pt-12 lg:px-14 lg:pt-20">
+    <section id="pricing" className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8 pb-24 pt-12 lg:px-14 lg:pt-20">
       <div className="text-center">
         <span className="badge-pill bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-saffron)]" />

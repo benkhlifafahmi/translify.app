@@ -63,8 +63,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Catch decorative -right-* blurred blobs that overflow the viewport on
+       narrow screens. ``clip`` (vs ``hidden``) stops painting overflow
+       without creating a scroll container, so descendant
+       ``position: sticky`` keeps working. */
+    overflow-x: clip;
   }
   body {
+    overflow-x: clip;
     background: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-body);

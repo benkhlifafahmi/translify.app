@@ -6,7 +6,7 @@ export function FAQ() {
   const { t, faq } = useI18n();
 
   return (
-    <section id="faq" className="relative z-10 mx-auto max-w-4xl px-8 pb-24 pt-12 lg:px-14">
+    <section id="faq" className="relative z-10 mx-auto max-w-4xl px-5 sm:px-8 pb-24 pt-12 lg:px-14">
       <div className="text-center">
         <span className="badge-pill bg-[color:var(--color-sage)]/15 text-[color:var(--color-sage-deep)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
