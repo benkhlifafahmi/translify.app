@@ -40,6 +40,19 @@ You do **not** need separate `api.*` or `files.*` sub-servers for this layout.
 
 ## 3. Apache vhost config
 
+### 3a. HTTP → HTTPS redirect (port 80 vhost)
+
+In Virtualmin, find the **non-SSL** (port 80) vhost for `translify.app` and make its entire body just:
+
+```apache
+RewriteEngine On
+RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+```
+
+This fixes Google indexing `http://` URLs — without it, Google treats `http://translify.app/page` and `https://translify.app/page` as separate pages.
+
+### 3b. SSL vhost (port 443)
+
 Edit the **SSL** vhost for `translify.app` (Webmin → Apache → Edit Directives)
 and add **inside** the `<VirtualHost ... :443>` block.
 

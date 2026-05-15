@@ -42,9 +42,17 @@ async def process_book_async(book_id: str) -> None:
                 await _run(session, book)
             except Exception as exc:
                 log.exception("process_book failed for %s", book_id)
-                book.status = BookStatus.failed
-                book.error_message = str(exc)[:1000]
-                await session.commit()
+                # If _run failed inside a commit, the session is in a
+                # ``PendingRollbackError`` state and the next commit would
+                # raise too — leaving the book stuck in ``processing``.
+                # Roll back, then re-fetch the row in a clean state before
+                # marking it failed so the user actually sees the error.
+                await session.rollback()
+                stale = await session.get(Book, bid)
+                if stale is not None:
+                    stale.status = BookStatus.failed
+                    stale.error_message = str(exc)[:1000]
+                    await session.commit()
                 raise
     finally:
         await engine.dispose()

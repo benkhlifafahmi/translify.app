@@ -35,7 +35,8 @@
       "WebFetch(domain:checkthat.ai)",
       "Bash(pnpm --filter web typecheck)",
       "Bash(xargs ls)",
-      "Bash(python3 -c \"import httpx_oauth\")"
+      "Bash(python3 -c \"import httpx_oauth\")",
+      "Skill(seo)"
     ]
   }
 }
