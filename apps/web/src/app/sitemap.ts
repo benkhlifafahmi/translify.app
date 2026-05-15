@@ -1,15 +1,7 @@
-// Replaces: apps/web/src/app/sitemap.ts
-//
-// Adds the 56 language-pair pages + the 4 competitor-alternative pages to
-// the sitemap. Goes from 4 indexed URLs → 64. Every page has proper
-// hreflang alternates for all 9 UI locales.
-
 import type { MetadataRoute } from "next";
 import { BLOG_POSTS } from "./blog/_posts";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
-
-const LOCALES = ["en", "fr", "es", "de", "ja", "zh", "ar", "id", "ms"] as const;
 
 const LANG_SLUGS = [
   "english", "spanish", "french", "german",
@@ -38,57 +30,39 @@ const STATIC_PATHS = [
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
-  const langAlternates = (path: string) =>
-    Object.fromEntries(LOCALES.map((l) => [l, `${SITE}${path}?lang=${l}`]));
-
-  // Static landing pages
   const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map((p) => ({
     url: `${SITE}${p.path}`,
     lastModified: now,
     changeFrequency: p.changeFrequency,
     priority: p.priority,
-    alternates: { languages: langAlternates(p.path) },
   }));
 
-  // 56 programmatic language-pair pages
   const langPairEntries: MetadataRoute.Sitemap = [];
   for (const source of LANG_SLUGS) {
     for (const target of LANG_SLUGS) {
       if (source === target) continue;
-      const path = `/read/${source}/in/${target}`;
       langPairEntries.push({
-        url: `${SITE}${path}`,
+        url: `${SITE}/read/${source}/in/${target}`,
         lastModified: now,
         changeFrequency: "monthly",
         priority: 0.7,
-        alternates: { languages: langAlternates(path) },
       });
     }
   }
 
-  // Competitor alternative pages
-  const competitorEntries: MetadataRoute.Sitemap = COMPETITORS.map((slug) => {
-    const path = `/alternative/${slug}`;
-    return {
-      url: `${SITE}${path}`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.75,
-      alternates: { languages: langAlternates(path) },
-    };
-  });
+  const competitorEntries: MetadataRoute.Sitemap = COMPETITORS.map((slug) => ({
+    url: `${SITE}/alternative/${slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.75,
+  }));
 
-  // Blog posts
-  const blogEntries: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => {
-    const path = `/blog/${post.slug}`;
-    return {
-      url: `${SITE}${path}`,
-      lastModified: new Date(post.modifiedAt ?? post.publishedAt),
-      changeFrequency: "monthly" as const,
-      priority: 0.75,
-      alternates: { languages: langAlternates(path) },
-    };
-  });
+  const blogEntries: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({
+    url: `${SITE}/blog/${post.slug}`,
+    lastModified: new Date(post.modifiedAt ?? post.publishedAt),
+    changeFrequency: "monthly" as const,
+    priority: 0.75,
+  }));
 
   return [...staticEntries, ...blogEntries, ...langPairEntries, ...competitorEntries];
 }

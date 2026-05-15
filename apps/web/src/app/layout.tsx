@@ -124,16 +124,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${fraunces.variable} ${hanken.variable}`}
     >
       <head>
-        <link rel="alternate" hrefLang="x-default" href={`${SITE}/`} />
-        <link rel="alternate" hrefLang="en" href={`${SITE}/?lang=en`} />
-        <link rel="alternate" hrefLang="fr" href={`${SITE}/?lang=fr`} />
-        <link rel="alternate" hrefLang="es" href={`${SITE}/?lang=es`} />
-        <link rel="alternate" hrefLang="de" href={`${SITE}/?lang=de`} />
-        <link rel="alternate" hrefLang="ja" href={`${SITE}/?lang=ja`} />
-        <link rel="alternate" hrefLang="zh" href={`${SITE}/?lang=zh`} />
-        <link rel="alternate" hrefLang="ar" href={`${SITE}/?lang=ar`} />
-        <link rel="alternate" hrefLang="id" href={`${SITE}/?lang=id`} />
-        <link rel="alternate" hrefLang="ms" href={`${SITE}/?lang=ms`} />
         <StructuredData />
         {/* Plausible — cookieless, privacy-friendly analytics. Loads only
             when NEXT_PUBLIC_PLAUSIBLE_DOMAIN is set (production), so

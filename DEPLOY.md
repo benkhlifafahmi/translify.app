@@ -40,16 +40,29 @@ You do **not** need separate `api.*` or `files.*` sub-servers for this layout.
 
 ## 3. Apache vhost config
 
-### 3a. HTTP → HTTPS redirect (port 80 vhost)
+### 3a. www → apex + HTTP → HTTPS (port 80 vhosts)
 
-In Virtualmin, find the **non-SSL** (port 80) vhost for `translify.app` and make its entire body just:
+You need **two** port-80 VirtualHosts: one for the bare domain and one for `www`.
+
+In Virtualmin, find (or create) the **non-SSL vhost for `translify.app`** and make its body:
 
 ```apache
 RewriteEngine On
-RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+RewriteRule ^(.*)$ https://translify.app$1 [R=301,L]
 ```
 
-This fixes Google indexing `http://` URLs — without it, Google treats `http://translify.app/page` and `https://translify.app/page` as separate pages.
+Then create a **separate non-SSL vhost for `www.translify.app`** (Virtualmin → Create Virtual Server → Sub-server or Alias) with this body:
+
+```apache
+ServerName www.translify.app
+RewriteEngine On
+RewriteRule ^(.*)$ https://translify.app$1 [R=301,L]
+```
+
+Also add `www.translify.app` to your DNS as an A record pointing at the same server IP.
+
+Without these, Google indexes `http://translify.app/` and `http://www.translify.app/` as
+separate pages from `https://translify.app/`, splitting your crawl budget and PageRank.
 
 ### 3b. SSL vhost (port 443)
 
