@@ -1,20 +1,23 @@
-"use client";
-
 import Link from "next/link";
 import { FAQ } from "@/components/landing/faq";
 import { LiveDemo } from "@/components/landing/live-demo";
 import { Pricing } from "@/components/landing/pricing";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { TranslifyMark } from "@/components/translify-mark";
 import { Lumi } from "@/components/lumi/lumi";
-import { useI18n } from "@/lib/i18n";
+import { en } from "@/lib/i18n/locales/en";
+import { SiteNavClient } from "./_home/nav-client";
+import { TestimonialsClient } from "./_home/testimonials-client";
+
+// Server-side translation helper — always English for initial HTML served to crawlers.
+// The interactive sections (nav, FAQ, pricing, testimonials) hydrate and switch locale client-side.
+const t = (key: string) => (en as Record<string, string>)[key] ?? key;
 
 export default function Home() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       <DecorBackdrop />
 
-      <SiteNav />
+      <SiteNavClient />
       <Hero />
       <TrustStrip />
       <LiveDemo />
@@ -22,7 +25,7 @@ export default function Home() {
       <FeatureShowcase />
       <ForEveryone />
       <LanguagesStrip />
-      <Testimonials />
+      <TestimonialsClient />
       <Pricing />
       <FAQ />
       <FinalCTA />
@@ -33,39 +36,7 @@ export default function Home() {
 
 /* ───────────────────────────── NAV ───────────────────────────── */
 
-function SiteNav() {
-  const { t } = useI18n();
-  return (
-    <nav className="relative z-20 flex items-center justify-between gap-2 px-5 py-4 sm:px-8 sm:py-6 lg:px-14">
-      <Logo />
-      <div className="hidden items-center gap-7 text-sm font-medium text-[color:var(--color-ink-soft)] md:flex">
-        <a href="#how" className="transition-colors hover:text-[color:var(--color-ink)]">{t("nav.how")}</a>
-        <a href="#features" className="transition-colors hover:text-[color:var(--color-ink)]">{t("nav.features")}</a>
-        <a href="#pricing" className="transition-colors hover:text-[color:var(--color-ink)]">{t("nav.pricing")}</a>
-        <a href="#faq" className="transition-colors hover:text-[color:var(--color-ink)]">{t("nav.faq")}</a>
-      </div>
-      <div className="flex shrink-0 items-center gap-1 text-sm sm:gap-2">
-        <LanguageSwitcher />
-        <Link
-          href="/login"
-          className="hidden rounded-full px-3 py-2 font-medium text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)] sm:inline-block sm:px-4"
-        >
-          {t("nav.login")}
-        </Link>
-        <Link
-          href="/onboarding"
-          className="rounded-full bg-[color:var(--color-ink)] px-3.5 py-2 text-[0.85rem] font-semibold text-[color:var(--color-primary-foreground)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_8px_18px_-8px_rgba(20,16,8,0.5)] transition-transform hover:-translate-y-[1px] sm:px-5 sm:text-sm"
-        >
-          {t("nav.cta")}
-        </Link>
-      </div>
-    </nav>
-  );
-}
-
 function Logo() {
-  // Hide the wordmark on tiny phones — at 360px the icon + wordmark + nav
-  // cluster crowds out the right-side CTA. The icon alone still reads.
   return (
     <TranslifyMark
       size={36}
@@ -77,7 +48,6 @@ function Logo() {
 /* ───────────────────────────── HERO ───────────────────────────── */
 
 function Hero() {
-  const { t } = useI18n();
   return (
     <section className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-5 pb-16 pt-10 sm:px-8 lg:grid-cols-12 lg:gap-10 lg:px-14 lg:pt-20">
       <div className="lg:col-span-7 stagger">
@@ -129,7 +99,6 @@ function Hero() {
 
       <div className="relative lg:col-span-5">
         <BookStack />
-        {/* Lumi peeks in — small, waving, introducing herself */}
         <div className="pointer-events-none absolute -bottom-6 -left-6 hidden lg:block">
           <HeroLumiPeek />
         </div>
@@ -151,7 +120,7 @@ function HeroLumiPeek() {
             className="absolute -left-1.5 bottom-3 h-3 w-3 rotate-45 border-b-[1.5px] border-l-[1.5px] border-[color:var(--color-saffron)]/40 bg-[#FFF7E5]"
           />
           <p className="font-[family-name:var(--font-display)] text-[13px] font-medium leading-snug text-[color:var(--color-ink)]">
-            Hi, I'm Lumi!
+            Hi, I&apos;m Lumi!
           </p>
         </div>
       </div>
@@ -162,7 +131,6 @@ function HeroLumiPeek() {
 /* ───────────────────────── TRUST STRIP ───────────────────────── */
 
 function TrustStrip() {
-  const { t } = useI18n();
   return (
     <section className="relative z-10 border-y border-dashed border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40 py-7">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-around gap-y-5 px-5 sm:px-8 lg:px-14">
@@ -198,7 +166,6 @@ function Divider() {
 /* ───────────────────────── HOW IT WORKS ───────────────────────── */
 
 function HowItWorks() {
-  const { t } = useI18n();
   return (
     <section id="how" className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-24 pt-20 lg:px-14">
       <div className="grid items-end gap-6 md:grid-cols-2 md:gap-10">
@@ -239,10 +206,10 @@ function Step({
     sage:    { numBg: "bg-[color:var(--color-sage)]/18",    numText: "text-[color:var(--color-sage-deep)]",    ring: "ring-[color:var(--color-sage)]/30" },
     coral:   { numBg: "bg-[color:var(--color-coral)]/15",   numText: "text-[color:var(--color-coral-deep)]",   ring: "ring-[color:var(--color-coral)]/30" },
   };
-  const t = tones[tone];
+  const s = tones[tone];
   return (
     <div className="card-paper-lifted relative overflow-hidden p-6">
-      <div className={`mb-5 inline-flex h-10 w-10 items-center justify-center rounded-xl ${t.numBg} ${t.numText} ring-1 ${t.ring} font-[family-name:var(--font-display)] text-sm font-semibold`}>
+      <div className={`mb-5 inline-flex h-10 w-10 items-center justify-center rounded-xl ${s.numBg} ${s.numText} ring-1 ${s.ring} font-[family-name:var(--font-display)] text-sm font-semibold`}>
         {n}
       </div>
       <h3 className="font-[family-name:var(--font-display)] text-[1.5rem] font-semibold leading-tight tracking-tight">
@@ -323,7 +290,6 @@ function MockChat() {
 /* ─────────────────────── FEATURE SHOWCASE ─────────────────────── */
 
 function FeatureShowcase() {
-  const { t } = useI18n();
   return (
     <section id="features" className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-12 lg:px-14">
       <div className="text-center">
@@ -486,9 +452,9 @@ function ChatMockBig() {
           Who are the ABC?
         </div>
         <div className="flex gap-1.5">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-[color:var(--color-saffron)]" />
-          <span className="h-2 w-2 animate-pulse rounded-full bg-[color:var(--color-saffron)] [animation-delay:0.15s]" />
-          <span className="h-2 w-2 animate-pulse rounded-full bg-[color:var(--color-saffron)] [animation-delay:0.3s]" />
+          <span className="h-2 w-2 rounded-full bg-[color:var(--color-saffron)]" />
+          <span className="h-2 w-2 rounded-full bg-[color:var(--color-saffron)]" />
+          <span className="h-2 w-2 rounded-full bg-[color:var(--color-saffron)]" />
           <span className="text-[0.7rem] text-[color:var(--color-ink-soft)]">flipping pages…</span>
         </div>
       </div>
@@ -548,7 +514,6 @@ function QuizMockBig() {
 /* ───────────────────────── FOR EVERYONE ───────────────────────── */
 
 function ForEveryone() {
-  const { t } = useI18n();
   return (
     <section className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-24 pt-12 lg:px-14">
       <div className="text-center">
@@ -603,8 +568,8 @@ function AudienceCard({
       </h3>
       <p className="mt-3 text-[0.95rem] leading-relaxed text-[color:var(--color-ink-soft)]">{line}</p>
       <div className="mt-5 flex flex-wrap gap-1.5">
-        {tags.map((t) => (
-          <span key={t} className={`badge-pill ${colors.chip} ${colors.chipText}`}>{t}</span>
+        {tags.map((tag) => (
+          <span key={tag} className={`badge-pill ${colors.chip} ${colors.chipText}`}>{tag}</span>
         ))}
       </div>
     </div>
@@ -631,7 +596,6 @@ const LANGUAGES = [
 ];
 
 function LanguagesStrip() {
-  const { t } = useI18n();
   return (
     <section className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-24 lg:px-14">
       <div className="card-paper-lifted overflow-hidden p-8 lg:p-10">
@@ -666,80 +630,9 @@ function LanguagesStrip() {
   );
 }
 
-/* ───────────────────────── TESTIMONIALS ───────────────────────── */
-
-function Testimonials() {
-  const { t, testimonials, locale } = useI18n();
-
-  // Tones rotate visually; native testimonials drive content.
-  const tones: ("paper" | "saffron")[] = ["paper", "saffron", "paper"];
-  const rotates = ["-rotate-[1.2deg]", "rotate-[1.4deg]", "-rotate-[0.6deg]"];
-
-  return (
-    <section className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-24 lg:px-14">
-      <div className="text-center">
-        <span className="badge-pill bg-[color:var(--color-coral)]/15 text-[color:var(--color-coral-deep)]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-coral)]" />
-          {t("testimonials.badge")}
-        </span>
-        <h2 className="mt-4 font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight tracking-tight">
-          {t("testimonials.title")}
-        </h2>
-      </div>
-
-      <div className="mt-12 grid gap-6 md:grid-cols-3" key={locale}>
-        {testimonials.map((q, i) => (
-          <Quote
-            key={`${locale}-${i}`}
-            rotate={rotates[i] ?? ""}
-            tone={tones[i] ?? "paper"}
-            quote={q.quote}
-            name={q.name}
-            role={q.role}
-            highlight={q.highlight}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function Quote({
-  rotate, tone, quote, name, role, highlight = false,
-}: { rotate: string; tone: "paper" | "saffron"; quote: string; name: string; role: string; highlight?: boolean }) {
-  const bg = tone === "saffron" ? "bg-gradient-to-br from-[#FFFBF0] to-[#FBE9C2]" : "bg-[color:var(--color-paper)]";
-  return (
-    <figure className={`relative ${rotate} rounded-[1.3rem] border border-[color:var(--color-border)] ${bg} p-7 shadow-[var(--shadow-paper)] transition-transform duration-300 hover:rotate-0 hover:-translate-y-1`}>
-      <div aria-hidden className="absolute -top-4 left-6 font-[family-name:var(--font-display)] text-[3.5rem] leading-none text-[color:var(--color-saffron-deep)]/40">
-        “
-      </div>
-      <blockquote className="relative font-[family-name:var(--font-display)] text-[1.05rem] italic leading-snug text-[color:var(--color-ink)]">
-        {quote}
-      </blockquote>
-      {highlight && (
-        <div className="mt-3 flex items-center gap-1 text-[0.85rem] text-[color:var(--color-saffron-deep)]">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <span key={i}>★</span>
-          ))}
-        </div>
-      )}
-      <figcaption className="mt-5 flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-full bg-[color:var(--color-paper-3)] font-[family-name:var(--font-display)] text-sm font-semibold text-[color:var(--color-ink)]">
-          {name.charAt(0)}
-        </span>
-        <div>
-          <p className="text-[0.85rem] font-semibold text-[color:var(--color-ink)]">{name}</p>
-          <p className="text-[0.72rem] text-[color:var(--color-ink-soft)]">{role}</p>
-        </div>
-      </figcaption>
-    </figure>
-  );
-}
-
 /* ───────────────────────── FINAL CTA ───────────────────────── */
 
 function FinalCTA() {
-  const { t } = useI18n();
   return (
     <section className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-24 lg:px-14">
       <div className="relative overflow-hidden rounded-[1.6rem] border border-[color:var(--color-border-strong)] bg-gradient-to-br from-[#FFFBF0] via-[#FBE9C2] to-[#F2D292] p-10 shadow-[var(--shadow-paper-lg)] lg:p-14">
@@ -787,7 +680,6 @@ function FinalCTA() {
 /* ───────────────────────── FOOTER ───────────────────────── */
 
 function SiteFooter() {
-  const { t } = useI18n();
   return (
     <footer className="relative z-10 border-t border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/60 px-5 sm:px-8 py-12 lg:px-14">
       <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
@@ -932,13 +824,13 @@ function BookStack() {
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-[color:var(--color-sage)]" />
             <span className="h-2 w-2 rounded-full bg-[color:var(--color-coral)]" />
-            <span className="h-2 w-2 rounded-full bg-[color:var(--color-saffron)]" />
+            <span className="h-2 w-2 rounded-full bg-[color:var(--color-sage)]" />
             <span className="ml-2 text-[0.65rem] text-[color:var(--color-ink-soft)]">p. 12 / 240</span>
           </div>
         </div>
       </div>
       <div className="absolute -right-2 bottom-12 hidden rotate-[6deg] rounded-2xl bg-white px-3 py-2 text-xs shadow-[0_18px_30px_-10px_rgba(60,40,15,0.25)] sm:block">
-        <p className="font-[family-name:var(--font-display)] text-[color:var(--color-ink)]">“What&apos;s the moral?”</p>
+        <p className="font-[family-name:var(--font-display)] text-[color:var(--color-ink)]">&quot;What&apos;s the moral?&quot;</p>
         <div className="mt-1 flex items-center gap-1 text-[0.65rem] text-[color:var(--color-sage-deep)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
           answered with citations
