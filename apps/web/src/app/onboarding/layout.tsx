@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   description:
     "Sign up free, pick your reading style, and Translify tailors your library — for students, researchers, lifelong readers, or parents reading with kids. 14-day trial, 30-day money-back.",
   alternates: { canonical: "/onboarding" },
+  robots: { index: false, follow: true },
   openGraph: {
     title: "Get started with Translify",
     description:
