@@ -7,6 +7,8 @@ import 'screens/book_detail_screen.dart';
 import 'screens/gardens_index_screen.dart';
 import 'screens/library_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/onboarding_screen.dart';
+import 'screens/paywall_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/splash_screen.dart';
@@ -48,6 +50,8 @@ class TranslifyApp extends StatelessWidget {
         theme: buildTheme(),
         routes: {
           '/': (_) => const SplashScreen(),
+          '/onboarding': (_) => const OnboardingScreen(),
+          '/paywall': (_) => const PaywallScreen(),
           '/login': (_) => const LoginScreen(),
           '/register': (_) => const RegisterScreen(),
           '/library': (_) => const LibraryScreen(),

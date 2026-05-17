@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../state/session.dart';
 import '../theme/tokens.dart';
@@ -15,17 +16,25 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   bool _routed = false;
 
+  Future<bool> _onboardingDone() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('onboarding_v1_done') ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = context.watch<Session>();
     if (!_routed && session.phase != SessionPhase.unknown) {
       _routed = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
+        final nav = Navigator.of(context);
         if (session.phase == SessionPhase.signedIn) {
-          Navigator.of(context).pushReplacementNamed('/library');
+          nav.pushReplacementNamed('/library');
         } else {
-          Navigator.of(context).pushReplacementNamed('/login');
+          final done = await _onboardingDone();
+          if (!mounted) return;
+          nav.pushReplacementNamed(done ? '/login' : '/onboarding');
         }
       });
     }
