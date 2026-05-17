@@ -17,7 +17,8 @@ class Session extends ChangeNotifier {
         profiles = ProfileService(api),
         billing = BillingService(api),
         highlights = HighlightService(api),
-        progress = ProgressService(api);
+        progress = ProgressService(api),
+        onboarding = OnboardingService(api);
 
   final ApiClient api;
   final AuthService auth;
@@ -30,9 +31,11 @@ class Session extends ChangeNotifier {
   final BillingService billing;
   final HighlightService highlights;
   final ProgressService progress;
+  final OnboardingService onboarding;
 
   SessionPhase phase = SessionPhase.unknown;
   User? user;
+  bool get isAnonymous => user?.isAnonymous ?? false;
 
   Future<void> bootstrap() async {
     final token = await api.readToken();
@@ -60,6 +63,16 @@ class Session extends ChangeNotifier {
   Future<void> register(String email, String password, {String? displayName}) async {
     user = await auth.register(email, password, displayName: displayName);
     phase = SessionPhase.signedIn;
+    notifyListeners();
+  }
+
+  /// Silently mint a ghost-account JWT. The phase stays signedOut so splash
+  /// doesn't redirect; the token is stored and authorises seed/chat calls.
+  Future<void> anonymousSignIn() async {
+    await onboarding.anonymousSession();
+    try {
+      user = await auth.me();
+    } catch (_) {}
     notifyListeners();
   }
 

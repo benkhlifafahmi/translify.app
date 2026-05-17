@@ -7,9 +7,10 @@ from datetime import datetime, timezone
 
 from anthropic import RateLimitError as AnthropicRateLimitError
 from fastapi import APIRouter, Depends, HTTPException, Path, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.gate import EmailRequired
 from app.auth.models import User
 from app.auth.users import current_active_user
 from app.billing.active_profile import resolve_active_profile
@@ -115,8 +116,6 @@ async def create_quiz(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> QuizRead:
-    from app.auth.gate import require_non_anonymous
-    require_non_anonymous(user, action="quiz")
     book = await _get_owned_book(book_id, user, session)
     if book.status != BookStatus.ready:
         raise HTTPException(
@@ -124,10 +123,22 @@ async def create_quiz(
             detail="Book is not ready yet.",
         )
 
-    # Plan + per-book quiz quota gate — raises 402 with structured detail.
-    sub = await reserve_quiz_for_book(user, book.id, session)
-    active_profile = await resolve_active_profile(user, session)
-    family_safe = is_family_safe_active(user, sub, active_profile)
+    if user.is_anonymous:
+        # Onboarding trial: one free quiz per book, no billing required.
+        existing = await session.scalar(
+            select(func.count(Quiz.id)).where(
+                Quiz.book_id == book_id, Quiz.user_id == user.id
+            )
+        )
+        if int(existing or 0) >= 1:
+            raise EmailRequired(action="quiz")
+        sub = None
+        family_safe = False
+    else:
+        # Plan + per-book quiz quota gate — raises 402 with structured detail.
+        sub = await reserve_quiz_for_book(user, book.id, session)
+        active_profile = await resolve_active_profile(user, session)
+        family_safe = is_family_safe_active(user, sub, active_profile)
 
     output_language: str | None = None
     if payload.translation_id is not None:

@@ -147,8 +147,9 @@ async def ask_ai(
     user: User = Depends(current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ) -> Highlight:
-    # Live-cost path: gate on active plan, same as chat.
-    await require_active_plan(user, session)
+    # Live-cost path: gate on active plan; anonymous onboarding users get one free AI ask.
+    if not user.is_anonymous:
+        await require_active_plan(user, session)
     hl = await _get_owned_highlight(highlight_id, user, session)
     book = await session.get(Book, hl.book_id)
     if book is None or book.user_id != user.id:

@@ -37,7 +37,10 @@
       "Bash(xargs ls)",
       "Bash(python3 -c \"import httpx_oauth\")",
       "Skill(seo)",
-      "Bash(xargs ls -la)"
+      "Bash(xargs ls -la)",
+      "Read(//home/ben/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/**)",
+      "Bash(python3 skills/ui-ux-pro-max/scripts/search.py \"language learning reading app immersive interactive onboarding mobile\" --design-system -p \"Translify\")",
+      "Bash(python3 .claude/skills/ui-ux-pro-max/scripts/search.py \"language learning reading app immersive interactive onboarding mobile\" --design-system -p \"Translify\")"
     ]
   }
 }

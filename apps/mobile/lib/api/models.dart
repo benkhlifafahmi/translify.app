@@ -21,6 +21,7 @@ class User {
     required this.preferredLanguage,
     this.familySafeMode = false,
     this.activeProfileId,
+    this.isAnonymous = false,
   });
   final String id;
   final String email;
@@ -28,6 +29,7 @@ class User {
   final String preferredLanguage;
   final bool familySafeMode;
   final String? activeProfileId;
+  final bool isAnonymous;
 
   factory User.fromJson(Map<String, dynamic> j) => User(
         id: j['id'] as String,
@@ -36,6 +38,7 @@ class User {
         preferredLanguage: (j['preferred_language'] as String?) ?? 'en',
         familySafeMode: (j['family_safe_mode'] as bool?) ?? false,
         activeProfileId: j['active_profile_id'] as String?,
+        isAnonymous: (j['is_anonymous'] as bool?) ?? false,
       );
 }
 
@@ -538,6 +541,26 @@ class FileUrl {
   final String url;
   factory FileUrl.fromJson(Map<String, dynamic> j) =>
       FileUrl(url: j['url'] as String);
+}
+
+class Seed {
+  const Seed({
+    required this.slug,
+    required this.title,
+    required this.author,
+    this.cloneId,
+  });
+  final String slug;
+  final String title;
+  final String author;
+  final String? cloneId;
+
+  factory Seed.fromJson(Map<String, dynamic> j) => Seed(
+        slug: j['slug'] as String,
+        title: (j['title'] as String?) ?? 'Untitled',
+        author: (j['author'] as String?) ?? '',
+        cloneId: j['clone_id'] as String?,
+      );
 }
 
 class BookProgress {

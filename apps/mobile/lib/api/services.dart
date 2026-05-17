@@ -477,6 +477,29 @@ class HighlightService {
   }
 }
 
+class OnboardingService {
+  OnboardingService(this._api);
+  final ApiClient _api;
+
+  Future<void> anonymousSession() async {
+    final res = await _api.post<Map<String, dynamic>>('/onboarding/anonymous-session');
+    final token = res['access_token'] as String?;
+    if (token != null) await _api.writeToken(token);
+  }
+
+  Future<List<Seed>> listSeeds() async {
+    final res = await _api.get<List<dynamic>>('/seeds');
+    return res.map((e) => Seed.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<Book> cloneSeed(String slug) async {
+    final res = await _api.post<Map<String, dynamic>>(
+      '/seeds/${Uri.encodeComponent(slug)}/clone',
+    );
+    return Book.fromJson(res);
+  }
+}
+
 class ProgressService {
   ProgressService(this._api);
   final ApiClient _api;
