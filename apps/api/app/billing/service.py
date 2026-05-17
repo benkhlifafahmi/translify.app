@@ -141,7 +141,19 @@ async def create_checkout_session(
     else:
         params["allow_promotion_codes"] = True
 
-    checkout = stripe.checkout.Session.create(**params)
+    try:
+        checkout = stripe.checkout.Session.create(**params)
+    except stripe.InvalidRequestError as exc:
+        # Stale customer ID (e.g. switched Stripe env, customer deleted).
+        # Clear it, mint a fresh one, and retry once.
+        if "No such customer" not in str(exc):
+            raise
+        sub.stripe_customer_id = None
+        await session.commit()
+        fresh_customer_id = await ensure_stripe_customer(user, sub, session)
+        params["customer"] = fresh_customer_id
+        checkout = stripe.checkout.Session.create(**params)
+
     if not checkout.url:
         raise RuntimeError("Stripe did not return a checkout URL")
     return checkout.url
