@@ -36,7 +36,8 @@
       "Bash(pnpm --filter web typecheck)",
       "Bash(xargs ls)",
       "Bash(python3 -c \"import httpx_oauth\")",
-      "Skill(seo)"
+      "Skill(seo)",
+      "Bash(xargs ls -la)"
     ]
   }
 }
