@@ -66,6 +66,12 @@ class Session extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> loginWithGoogle(String idToken) async {
+    user = await auth.loginWithGoogleToken(idToken);
+    phase = SessionPhase.signedIn;
+    notifyListeners();
+  }
+
   /// Silently mint a ghost-account JWT. The phase stays signedOut so splash
   /// doesn't redirect; the token is stored and authorises seed/chat calls.
   Future<void> anonymousSignIn() async {

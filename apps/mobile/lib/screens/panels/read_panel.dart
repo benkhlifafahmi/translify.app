@@ -29,11 +29,13 @@ class ReadPanel extends StatefulWidget {
     required this.bookId,
     required this.format,
     this.translationId,
+    this.onTourHighlightCreated,
   });
 
   final String bookId;
   final BookFormat format;
   final String? translationId;
+  final VoidCallback? onTourHighlightCreated;
 
   @override
   State<ReadPanel> createState() => _ReadPanelState();
@@ -472,6 +474,7 @@ class _ReadPanelState extends State<ReadPanel> {
         _pdfOverlay?.addFromTextLines(created, lines);
       }
       setState(() => _savedHighlights = [..._savedHighlights, created]);
+      widget.onTourHighlightCreated?.call();
       _flash('Saved highlight');
     } catch (e) {
       if (!mounted) return;
@@ -879,10 +882,14 @@ class _ReadPanelState extends State<ReadPanel> {
     BuildContext context,
     SelectableRegionState state,
   ) {
+    // Custom actions first so they're always visible (system items can push
+    // them off-screen on Samsung/OEM launchers that inject extra menu entries).
+    final copyItem = state.contextMenuButtonItems
+        .where((b) => b.type == ContextMenuButtonType.copy)
+        .firstOrNull;
     return AdaptiveTextSelectionToolbar.buttonItems(
       anchors: state.contextMenuAnchors,
       buttonItems: <ContextMenuButtonItem>[
-        ...state.contextMenuButtonItems,
         ContextMenuButtonItem(
           label: 'Highlight',
           onPressed: () async {
@@ -907,6 +914,7 @@ class _ReadPanelState extends State<ReadPanel> {
             state.clearSelection();
           },
         ),
+        if (copyItem != null) copyItem,
       ],
     );
   }

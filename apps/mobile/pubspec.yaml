@@ -28,6 +28,9 @@ dependencies:
   # External browser (Stripe checkout / customer portal)
   url_launcher: ^6.3.1
 
+  # Social sign-in
+  google_sign_in: ^6.2.2
+
   # UI / fonts / fx
   google_fonts: ^6.2.1
   flutter_markdown: ^0.7.4+3

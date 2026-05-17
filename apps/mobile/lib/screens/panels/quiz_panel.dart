@@ -14,9 +14,17 @@ import '../../widgets/quest_button.dart';
 import '../../widgets/sticker_card.dart';
 
 class QuizPanel extends StatefulWidget {
-  const QuizPanel({super.key, required this.bookId, this.translationId});
+  const QuizPanel({
+    super.key,
+    required this.bookId,
+    this.translationId,
+    this.onTourComplete,
+    this.tourMode = false,
+  });
   final String bookId;
   final String? translationId;
+  final void Function(int score, int total)? onTourComplete;
+  final bool tourMode;
   @override
   State<QuizPanel> createState() => _QuizPanelState();
 }
@@ -31,6 +39,15 @@ class _QuizPanelState extends State<QuizPanel> {
   bool _submitting = false;
   late final ConfettiController _confetti =
       ConfettiController(duration: const Duration(seconds: 2));
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.tourMode) {
+      _count = 3;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _generate());
+    }
+  }
 
   @override
   void dispose() {
@@ -73,6 +90,7 @@ class _QuizPanelState extends State<QuizPanel> {
       final attempt = await session.quizzes.submit(_quiz!.id, answers);
       if (!mounted) return;
       setState(() => _attempt = attempt);
+      widget.onTourComplete?.call(attempt.score, attempt.total);
       final pct = attempt.total == 0 ? 0.0 : attempt.score / attempt.total;
       final progress = context.read<Progress>();
       await progress.addXp(10 + attempt.score * 5);

@@ -48,6 +48,15 @@ class AuthService {
     return User.fromJson(res);
   }
 
+  Future<User> loginWithGoogleToken(String idToken) async {
+    final res = await _api.post<Map<String, dynamic>>(
+      '/auth/mobile/google',
+      body: {'id_token': idToken},
+    );
+    await _api.writeToken(res['access_token'] as String);
+    return me();
+  }
+
   Future<void> logout() async {
     try {
       await _api.post<dynamic>('/auth/jwt/logout');

@@ -11,9 +11,10 @@ import '../../widgets/lumi_mascot.dart';
 import '../../widgets/quest_button.dart';
 
 class ChatPanel extends StatefulWidget {
-  const ChatPanel({super.key, required this.bookId, this.translationId});
+  const ChatPanel({super.key, required this.bookId, this.translationId, this.onTourMessageSent});
   final String bookId;
   final String? translationId;
+  final VoidCallback? onTourMessageSent;
   @override
   State<ChatPanel> createState() => _ChatPanelState();
 }
@@ -87,6 +88,7 @@ class _ChatPanelState extends State<ChatPanel> {
         _messages = [..._messages.where((m) => m.id != placeholder.id), res.user, res.assistant];
       });
       await context.read<Progress>().addXp(5);
+      widget.onTourMessageSent?.call();
       _jumpToEnd();
     } catch (e) {
       if (!mounted) return;

@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/api_client.dart';
 import '../api/models.dart';
 import '../state/session.dart';
 import '../theme/tokens.dart';
+import '../widgets/coach_mark.dart';
 import '../widgets/lumi_mascot.dart';
 import '../widgets/paper_background.dart';
 import '../widgets/sticker_card.dart';
@@ -18,8 +20,9 @@ import 'panels/read_panel.dart';
 import 'panels/translate_panel.dart';
 
 class BookDetailScreen extends StatefulWidget {
-  const BookDetailScreen({super.key, required this.bookId});
+  const BookDetailScreen({super.key, required this.bookId, this.isOnboardingTour = false});
   final String bookId;
+  final bool isOnboardingTour;
   @override
   State<BookDetailScreen> createState() => _BookDetailScreenState();
 }
@@ -30,6 +33,11 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   Timer? _poll;
   String? _selectedTranslationId;
   int _tab = 0;
+
+  // Tour
+  TourController? _tour;
+  OverlayEntry? _overlay;
+  final _tabKeys = List<GlobalKey>.generate(5, (_) => GlobalKey());
 
   static const _tabs = ['Read', 'Translate', 'Chat', 'Quiz', 'Garden'];
   static const _tabIcons = [
@@ -44,6 +52,9 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.isOnboardingTour) {
+      _tour = TourController()..addListener(_onTourStep);
+    }
     _refresh();
     _poll = Timer.periodic(const Duration(seconds: 3), (_) => _maybeRefresh());
   }
@@ -51,7 +62,88 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   @override
   void dispose() {
     _poll?.cancel();
+    _tour?.removeListener(_onTourStep);
+    _tour?.dispose();
+    _removeOverlay();
     super.dispose();
+  }
+
+  void _onTourStep() {
+    if (!mounted) return;
+    final step = _tour!.step;
+    switch (step) {
+      case TourStep.chatActive:
+        setState(() => _tab = 2);
+        _refreshOverlay();
+      case TourStep.highlightHint:
+        // Return to read so the user can select text.
+        setState(() => _tab = 0);
+        _refreshOverlay();
+      case TourStep.quizActive:
+        setState(() => _tab = 3);
+        _removeOverlay();
+      case TourStep.done:
+        _removeOverlay();
+        // Mark onboarding complete so splash doesn't send user here again.
+        _setOnboardingDone();
+        Navigator.of(context).pushReplacementNamed('/paywall');
+      default:
+        _refreshOverlay();
+    }
+  }
+
+  Future<void> _setOnboardingDone() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarding_v1_done', true);
+  }
+
+  void _mountOverlay() {
+    if (_overlay != null || !mounted) return;
+    _overlay = OverlayEntry(
+      builder: (_) => TourOverlayContent(
+        controller: _tour!,
+        tabKeys: _tabKeys,
+        onSwitchTab: (i) => setState(() => _tab = i),
+        onDone: () {
+          _removeOverlay();
+          Navigator.of(context).pushReplacementNamed('/paywall');
+        },
+        onAutoHighlight: _createTourHighlight,
+      ),
+    );
+    Overlay.of(context).insert(_overlay!);
+  }
+
+  void _removeOverlay() {
+    _overlay?.remove();
+    _overlay = null;
+  }
+
+  void _refreshOverlay() {
+    _overlay?.markNeedsBuild();
+  }
+
+  Future<void> _createTourHighlight() async {
+    if (_book == null) return;
+    // Use a short meaningful excerpt so the saved highlight makes sense in
+    // context. The tour advances as soon as the API call succeeds.
+    const passage = 'This is a key passage I want to remember from this book.';
+    try {
+      await context.read<Session>().highlights.create(
+        _book!.id,
+        page: 1,
+        text: passage,
+      );
+      if (!mounted) return;
+      _tour?.onHighlightCreated();
+      _refreshOverlay();
+    } catch (_) {
+      // Best-effort — advance the tour anyway so a network hiccup doesn't trap
+      // the user on this step.
+      if (!mounted) return;
+      _tour?.onHighlightCreated();
+      _refreshOverlay();
+    }
   }
 
   Future<void> _refresh() async {
@@ -62,6 +154,9 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
         _book = b;
         _error = null;
       });
+      if (_tour != null && b.status == BookStatus.ready && _overlay == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _mountOverlay());
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = describeError(e));
@@ -126,6 +221,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
               tabs: _tabs,
               icons: _tabIcons,
               colors: _tabColors,
+              tabKeys: _tabKeys,
             )
           : null,
     );
@@ -139,6 +235,10 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
           bookId: b.id,
           format: b.format,
           translationId: _selectedTranslationId,
+          onTourHighlightCreated: _tour == null ? null : () {
+            _tour!.onHighlightCreated();
+            _refreshOverlay();
+          },
         );
       case 1:
         return TranslatePanel(
@@ -151,11 +251,19 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
         return ChatPanel(
           bookId: b.id,
           translationId: _selectedTranslationId,
+          onTourMessageSent: _tour == null ? null : () {
+            _tour!.onChatSent();
+            _refreshOverlay();
+          },
         );
       case 3:
         return QuizPanel(
           bookId: b.id,
           translationId: _selectedTranslationId,
+          tourMode: _tour != null,
+          onTourComplete: _tour == null ? null : (score, total) {
+            _tour!.onQuizComplete(score, total);
+          },
         );
       case 4:
         return GardenPanel(bookId: b.id);
@@ -229,6 +337,7 @@ class _TabBar extends StatelessWidget {
     required this.tabs,
     required this.icons,
     required this.colors,
+    this.tabKeys,
   });
 
   final int current;
@@ -236,6 +345,7 @@ class _TabBar extends StatelessWidget {
   final List<String> tabs;
   final List<IconData> icons;
   final List<Color> colors;
+  final List<GlobalKey>? tabKeys;
 
   @override
   Widget build(BuildContext context) {
@@ -259,6 +369,7 @@ class _TabBar extends StatelessWidget {
               return Expanded(
                 flex: active ? 22 : 11,
                 child: GestureDetector(
+                  key: tabKeys?[i],
                   onTap: () => onTap(i),
                   behavior: HitTestBehavior.opaque,
                   child: AnimatedContainer(

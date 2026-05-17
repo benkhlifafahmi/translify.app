@@ -61,9 +61,18 @@ class TranslifyApp extends StatelessWidget {
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/book') {
-            final id = settings.arguments as String;
+            final args = settings.arguments;
+            final String id;
+            final bool tour;
+            if (args is Map) {
+              id = args['id'] as String;
+              tour = args['tour'] as bool? ?? false;
+            } else {
+              id = args as String;
+              tour = false;
+            }
             return MaterialPageRoute(
-              builder: (_) => BookDetailScreen(bookId: id),
+              builder: (_) => BookDetailScreen(bookId: id, isOnboardingTour: tour),
             );
           }
           return null;
