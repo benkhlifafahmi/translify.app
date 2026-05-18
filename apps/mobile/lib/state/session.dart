@@ -10,6 +10,7 @@ class Session extends ChangeNotifier {
   Session(this.api)
       : auth = AuthService(api),
         books = BookService(api),
+        folders = FolderService(api),
         translations = TranslationService(api),
         chats = ChatService(api),
         quizzes = QuizService(api),
@@ -23,6 +24,7 @@ class Session extends ChangeNotifier {
   final ApiClient api;
   final AuthService auth;
   final BookService books;
+  final FolderService folders;
   final TranslationService translations;
   final ChatService chats;
   final QuizService quizzes;

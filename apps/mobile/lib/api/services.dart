@@ -65,6 +65,46 @@ class AuthService {
   }
 }
 
+class FolderService {
+  FolderService(this._api);
+  final ApiClient _api;
+
+  Future<List<Folder>> list() async {
+    final res = await _api.get<List<dynamic>>('/folders');
+    return res.map((e) => Folder.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<Folder> create({required String name, required String color, required String emoji}) async {
+    final res = await _api.post<Map<String, dynamic>>('/folders', body: {
+      'name': name,
+      'color': color,
+      'emoji': emoji,
+    });
+    return Folder.fromJson(res);
+  }
+
+  Future<Folder> update(String id, {String? name, String? color, String? emoji}) async {
+    final body = <String, dynamic>{};
+    if (name != null) body['name'] = name;
+    if (color != null) body['color'] = color;
+    if (emoji != null) body['emoji'] = emoji;
+    final res = await _api.patch<Map<String, dynamic>>('/folders/$id', body: body);
+    return Folder.fromJson(res);
+  }
+
+  Future<void> delete(String id) async {
+    await _api.delete<dynamic>('/folders/$id');
+  }
+
+  Future<Book> assignBook(String bookId, {String? folderId}) async {
+    final res = await _api.patch<Map<String, dynamic>>(
+      '/books/$bookId/folder',
+      body: {'folder_id': folderId},
+    );
+    return Book.fromJson(res);
+  }
+}
+
 class BookService {
   BookService(this._api);
   final ApiClient _api;

@@ -1,3 +1,34 @@
+// ── Folder ────────────────────────────────────────────────────────────────────
+
+class Folder {
+  Folder({
+    required this.id,
+    required this.name,
+    required this.color,
+    required this.emoji,
+    required this.bookCount,
+    required this.position,
+  });
+
+  final String id;
+  final String name;
+  final String color;
+  final String emoji;
+  final int bookCount;
+  final int position;
+
+  factory Folder.fromJson(Map<String, dynamic> j) => Folder(
+        id: j['id'] as String,
+        name: j['name'] as String,
+        color: (j['color'] as String?) ?? 'saffron',
+        emoji: (j['emoji'] as String?) ?? '📚',
+        bookCount: (j['book_count'] as int?) ?? 0,
+        position: (j['position'] as int?) ?? 0,
+      );
+}
+
+// ── Book ──────────────────────────────────────────────────────────────────────
+
 enum BookStatus { uploaded, processing, ready, failed }
 
 BookStatus _statusFromString(String s) => switch (s) {
@@ -254,6 +285,7 @@ class Book {
     this.fileSizeBytes = 0,
     this.errorMessage,
     required this.createdAt,
+    this.folderId,
   });
 
   final String id;
@@ -266,6 +298,7 @@ class Book {
   final int fileSizeBytes;
   final String? errorMessage;
   final DateTime createdAt;
+  final String? folderId;
 
   factory Book.fromJson(Map<String, dynamic> j) => Book(
         id: j['id'] as String,
@@ -279,6 +312,7 @@ class Book {
         errorMessage: j['error_message'] as String?,
         createdAt: DateTime.tryParse(j['created_at'] as String? ?? '') ??
             DateTime.now(),
+        folderId: j['folder_id'] as String?,
       );
 }
 

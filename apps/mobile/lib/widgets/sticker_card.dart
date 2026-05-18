@@ -12,6 +12,7 @@ class StickerCard extends StatelessWidget {
     this.radius = T.radiusLg,
     this.borderColor,
     this.onTap,
+    this.onLongPress,
   });
 
   final Widget child;
@@ -21,6 +22,7 @@ class StickerCard extends StatelessWidget {
   final double radius;
   final Color? borderColor;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -37,12 +39,13 @@ class StickerCard extends StatelessWidget {
 
     return Transform.rotate(
       angle: tilt,
-      child: onTap == null
+      child: (onTap == null && onLongPress == null)
           ? card
           : Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: onTap,
+                onLongPress: onLongPress,
                 borderRadius: BorderRadius.circular(radius),
                 child: card,
               ),

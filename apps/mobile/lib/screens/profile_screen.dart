@@ -221,6 +221,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _requestAccountDeletion() async {
+    final user = context.read<Session>().user;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => _StickerDialog(
+        title: 'Delete your account?',
+        body:
+            'This permanently erases all your books, translations, progress, '
+            'quizzes, and account data. This cannot be undone.',
+        confirmLabel: 'Continue',
+        confirmColor: T.coral,
+      ),
+    );
+    if (confirmed != true) return;
+    final email = Uri.encodeQueryComponent(user?.email ?? '');
+    await _openExternalUrl('https://translify.app/opt-out?email=$email');
+  }
+
   Future<void> _signOut() async {
     final session = context.read<Session>();
     final navigator = Navigator.of(context);
@@ -300,6 +318,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onAdd: _addProfile,
                       onEdit: _editProfile,
                       onDelete: _deleteProfile,
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: _DangerCard(
+                      onDeleteAccount: _requestAccountDeletion,
                     ),
                   ),
                 ),
@@ -1806,6 +1832,73 @@ class _KindChip extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────── Danger zone card ───────────────────────────
+
+class _DangerCard extends StatelessWidget {
+  const _DangerCard({required this.onDeleteAccount});
+  final VoidCallback onDeleteAccount;
+
+  @override
+  Widget build(BuildContext context) {
+    return StickerCard(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: T.coral.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  color: T.coralDeep,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'DANGER ZONE',
+                style: const TextStyle(
+                  color: T.coralDeep,
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.w900,
+                  fontSize: 11,
+                  letterSpacing: 1.4,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Deleting your account permanently removes all books, '
+            'translations, progress, AI chats, and account data. '
+            'This cannot be undone.',
+            style: TextStyle(
+              color: T.inkSoft,
+              fontFamily: 'Nunito',
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          QuestButton(
+            label: 'Delete account',
+            icon: Icons.delete_forever_rounded,
+            color: T.coral,
+            foreground: Colors.white,
+            onPressed: onDeleteAccount,
+          ),
+        ],
       ),
     );
   }

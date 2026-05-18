@@ -41,7 +41,32 @@
       "Read(//home/ben/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/**)",
       "Bash(python3 skills/ui-ux-pro-max/scripts/search.py \"language learning reading app immersive interactive onboarding mobile\" --design-system -p \"Translify\")",
       "Bash(python3 .claude/skills/ui-ux-pro-max/scripts/search.py \"language learning reading app immersive interactive onboarding mobile\" --design-system -p \"Translify\")",
-      "Bash(grep -v \"^Analyzing\\\\|^Got dep\\\\|^Downloading\\\\|package is disc\\\\|packages have newer\\\\|Try \\\\`flutter\")"
+      "Bash(grep -v \"^Analyzing\\\\|^Got dep\\\\|^Downloading\\\\|package is disc\\\\|packages have newer\\\\|Try \\\\`flutter\")",
+      "Bash(python3 -c \"import cairosvg; print\\('cairosvg ok'\\)\")",
+      "Bash(python3 -c \"from PIL import Image; print\\('pillow ok'\\)\")",
+      "Bash(python3 -c ' *)",
+      "Bash(rsvg-convert -w 1024 -h 1024 icon_src/icon.svg -o icon_src/icon_1024.png)",
+      "Bash(identify icon_src/icon_1024.png)",
+      "Bash(echo \"Master PNG generated: $\\(identify icon_src/icon_1024.png 2>/dev/null || file icon_src/icon_1024.png\\)\")",
+      "Bash(cat)",
+      "Bash(cp /tmp/ic_launcher_background.xml /home/ben/workspace/BKGroup/translify.app/apps/mobile/android/app/src/main/res/values/ic_launcher_background.xml)",
+      "Bash(chromium --version)",
+      "Bash(chromium-browser --version)",
+      "Bash(google-chrome --version)",
+      "Bash(npm --version)",
+      "Bash(fc-list)",
+      "Bash(curl -sL https://fonts.gstatic.com/s/fraunces/v31/6NUh8FyLNQOQZAnv9bYEvDiIdE9Eqcbbu9iqNiEYS5TYqIjGJHbQBhBL8FwKbWqe_r0.woff2 -o /home/ben/workspace/BKGroup/translify.app/apps/mobile/icon_src/fonts/fraunces.woff2)",
+      "Bash(curl -sL https://fonts.gstatic.com/s/hankengrotesk/v8/ieVl2ZhZI2eCN5jzbjEETS9weq8-19eDtCYhevTLsZku8GcO.woff2 -o /home/ben/workspace/BKGroup/translify.app/apps/mobile/icon_src/fonts/hankengrotesk.woff2)",
+      "Bash(curl -sL https://fonts.gstatic.com/s/fraunces/v38/6NU58FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChjeveQ.woff2 -o /home/ben/workspace/BKGroup/translify.app/apps/mobile/icon_src/fonts/fraunces-400.woff2)",
+      "Bash(curl -sL https://fonts.gstatic.com/s/fraunces/v38/6NU78FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0KxC9TeA.woff2 -o /home/ben/workspace/BKGroup/translify.app/apps/mobile/icon_src/fonts/fraunces-400i.woff2)",
+      "Bash(curl -sL https://fonts.gstatic.com/s/fraunces/v38/6NU58FyLNQOQZAnv9ZwNjucMHVn85Ni7emAe9lKqZTnbB-gzTK0K1ChjdPeQ_5Y.woff2 -o /home/ben/workspace/BKGroup/translify.app/apps/mobile/icon_src/fonts/fraunces-500.woff2)",
+      "Bash(curl -sL https://fonts.gstatic.com/s/hankengrotesk/v12/ieVn2YZDLWuGJpnzaiwFXS9tYtpS59CjCQ.woff2 -o /home/ben/workspace/BKGroup/translify.app/apps/mobile/icon_src/fonts/hanken-400.woff2)",
+      "Bash(curl -sL https://fonts.gstatic.com/s/hankengrotesk/v12/ieVn2YZDLWuGJpnzaiwFXS9tYtpQ59CjCQ.woff2 -o /home/ben/workspace/BKGroup/translify.app/apps/mobile/icon_src/fonts/hanken-700.woff2)",
+      "Bash(curl -sA 'Mozilla/5.0 \\(X11; Linux x86_64\\) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36' 'https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700;800&display=swap')",
+      "Bash(python3 *)",
+      "Bash(rsvg-convert -w 512 -h 512 icon_src/icon.svg -o store_screenshots/playstore_icon_512.png)",
+      "Bash(identify store_screenshots/playstore_icon_512.png)",
+      "Bash(xargs ls -1)"
     ]
   }
 }

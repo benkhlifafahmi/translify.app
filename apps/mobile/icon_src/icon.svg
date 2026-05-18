@@ -1,0 +1,152 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Warm saffron background gradient -->
+    <radialGradient id="bgGrad" cx="42%" cy="38%" r="62%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#F0BC68"/>
+      <stop offset="100%" stop-color="#C0812A"/>
+    </radialGradient>
+
+    <!-- Subtle inner warmth on left page -->
+    <radialGradient id="pageL" cx="45%" cy="40%" r="60%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFDF7"/>
+      <stop offset="100%" stop-color="#F0E8D6"/>
+    </radialGradient>
+
+    <!-- Right page is slightly warmer -->
+    <radialGradient id="pageR" cx="55%" cy="40%" r="60%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8F0E0"/>
+      <stop offset="100%" stop-color="#E8D8BC"/>
+    </radialGradient>
+
+    <!-- Book drop shadow -->
+    <filter id="bookShadow" x="-15%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="28" stdDeviation="36"
+                    flood-color="#120A00" flood-opacity="0.32"/>
+    </filter>
+
+    <!-- Sparkle glow -->
+    <filter id="sparkGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- ── Background ─────────────────────────────────────────── -->
+  <rect width="1024" height="1024" fill="url(#bgGrad)"/>
+
+  <!-- Subtle texture: soft radial vignette -->
+  <radialGradient id="vig" cx="50%" cy="50%" r="70%">
+    <stop offset="60%" stop-color="transparent"/>
+    <stop offset="100%" stop-color="#8A4800" stop-opacity="0.18"/>
+  </radialGradient>
+  <rect width="1024" height="1024" fill="url(#vig)"/>
+
+  <!-- ── Book (with drop shadow) ────────────────────────────── -->
+  <g filter="url(#bookShadow)">
+
+    <!-- Left cover (dark ink, slightly visible behind page) -->
+    <path d="
+      M 192 312
+      C 192 292, 210 278, 232 280
+      L 500 324
+      L 500 736
+      L 232 736
+      C 210 736, 192 722, 192 702
+      Z"
+      fill="#1A2234"
+    />
+
+    <!-- Left page (paper) -->
+    <path d="
+      M 214 322
+      C 214 305, 229 294, 248 296
+      L 488 336
+      L 488 722
+      L 248 722
+      C 229 722, 214 711, 214 694
+      Z"
+      fill="url(#pageL)"
+    />
+
+    <!-- Right cover -->
+    <path d="
+      M 832 312
+      C 832 292, 814 278, 792 280
+      L 524 324
+      L 524 736
+      L 792 736
+      C 814 736, 832 722, 832 702
+      Z"
+      fill="#1A2234"
+    />
+
+    <!-- Right page (paper, slightly warmer) -->
+    <path d="
+      M 810 322
+      C 810 305, 795 294, 776 296
+      L 536 336
+      L 536 722
+      L 776 722
+      C 795 722, 810 711, 810 694
+      Z"
+      fill="url(#pageR)"
+    />
+
+    <!-- Spine / binding -->
+    <path d="M 496 318 L 496 736 L 528 736 L 528 318 Z" fill="#111828"/>
+
+    <!-- Spine warm accent stripe -->
+    <rect x="509" y="318" width="6" height="418" rx="3" fill="#E0A458" opacity="0.55"/>
+
+  </g>
+
+  <!-- ── Text lines — left page ─────────────────────────────── -->
+  <!-- Lines suggest printed text at a glance -->
+  <rect x="252" y="406" width="198" height="10" rx="5" fill="#20283A" opacity="0.13"/>
+  <rect x="252" y="432" width="172" height="10" rx="5" fill="#20283A" opacity="0.13"/>
+  <rect x="252" y="458" width="200" height="10" rx="5" fill="#20283A" opacity="0.13"/>
+  <rect x="252" y="484" width="145" height="10" rx="5" fill="#20283A" opacity="0.13"/>
+  <rect x="252" y="510" width="188" height="10" rx="5" fill="#20283A" opacity="0.13"/>
+
+  <!-- Saffron highlight — the "tap-to-translate" moment -->
+  <rect x="252" y="556" width="122" height="16" rx="8" fill="#E0A458" opacity="0.88"/>
+
+  <rect x="252" y="596" width="180" height="10" rx="5" fill="#20283A" opacity="0.10"/>
+  <rect x="252" y="622" width="155" height="10" rx="5" fill="#20283A" opacity="0.10"/>
+  <rect x="252" y="648" width="195" height="10" rx="5" fill="#20283A" opacity="0.10"/>
+  <rect x="252" y="674" width="130" height="10" rx="5" fill="#20283A" opacity="0.10"/>
+
+  <!-- ── Text lines — right page ────────────────────────────── -->
+  <rect x="548" y="406" width="214" height="10" rx="5" fill="#20283A" opacity="0.11"/>
+  <rect x="548" y="432" width="180" height="10" rx="5" fill="#20283A" opacity="0.11"/>
+  <rect x="548" y="458" width="210" height="10" rx="5" fill="#20283A" opacity="0.11"/>
+  <rect x="548" y="484" width="165" height="10" rx="5" fill="#20283A" opacity="0.11"/>
+  <rect x="548" y="510" width="196" height="10" rx="5" fill="#20283A" opacity="0.11"/>
+  <rect x="548" y="536" width="140" height="10" rx="5" fill="#20283A" opacity="0.11"/>
+  <rect x="548" y="562" width="206" height="10" rx="5" fill="#20283A" opacity="0.11"/>
+  <rect x="548" y="588" width="172" height="10" rx="5" fill="#20283A" opacity="0.11"/>
+  <rect x="548" y="614" width="190" height="10" rx="5" fill="#20283A" opacity="0.11"/>
+  <rect x="548" y="640" width="130" height="10" rx="5" fill="#20283A" opacity="0.11"/>
+  <rect x="548" y="666" width="175" height="10" rx="5" fill="#20283A" opacity="0.11"/>
+
+  <!-- ── Sparkle ✦ — top-center above book ─────────────────── -->
+  <g transform="translate(512 238)" filter="url(#sparkGlow)">
+    <!-- 4-point star: longer vertical arms, shorter horizontal -->
+    <path d="
+      M 0 -38
+      L 8  -8
+      L 38  0
+      L  8   8
+      L  0  38
+      L -8   8
+      L -38  0
+      L -8  -8
+      Z"
+      fill="#20283A"
+    />
+    <!-- Two small diagonal secondary points -->
+    <circle cx="28"  cy="-28" r="4.5" fill="#20283A" opacity="0.5"/>
+    <circle cx="-28" cy="28"  r="3.5" fill="#20283A" opacity="0.35"/>
+  </g>
+
+</svg>

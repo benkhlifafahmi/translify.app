@@ -19,17 +19,45 @@ import 'theme/tokens.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Edge-to-edge: content renders behind status bar and navigation bar.
+  // SafeArea widgets in each screen keep interactive elements in the safe zone.
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
     ),
   );
   runApp(const TranslifyApp());
 }
 
-class TranslifyApp extends StatelessWidget {
+class TranslifyApp extends StatefulWidget {
   const TranslifyApp({super.key});
+  @override
+  State<TranslifyApp> createState() => _TranslifyAppState();
+}
+
+class _TranslifyAppState extends State<TranslifyApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
