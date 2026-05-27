@@ -119,7 +119,7 @@ export function BlogShell({ post, children, faqs }: Props) {
             Upload your first book. No credit card. 30-day money-back on every paid plan.
           </p>
           <Link
-            href="/onboarding"
+            href="/join"
             className="mt-4 inline-flex h-11 items-center rounded-full bg-[color:var(--color-saffron)] px-5 font-semibold"
           >
             Start reading →

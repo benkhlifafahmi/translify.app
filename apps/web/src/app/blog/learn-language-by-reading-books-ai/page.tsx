@@ -320,7 +320,7 @@ export default function Page() {
 
       <Quote>
         Translify supports reading-based language learning with{" "}
-        <Link href="/onboarding" className="underline decoration-[color:var(--color-saffron)] not-italic">
+        <Link href="/join" className="underline decoration-[color:var(--color-saffron)] not-italic">
           highlight-and-ask vocabulary capture, in-book quizzes, and parallel
           translation
         </Link>

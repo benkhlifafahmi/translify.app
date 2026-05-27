@@ -74,7 +74,7 @@ export default function StartClient() {
         <div className="mt-10 flex flex-col items-center gap-4">
           <Link
             href="/join"
-            className="group inline-flex h-14 items-center gap-2.5 rounded-full bg-[color:var(--color-ink)] px-8 font-[family-name:var(--font-display)] text-[1.05rem] font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_16px_32px_-10px_rgba(20,16,8,0.45)] transition-all hover:-translate-y-[3px] hover:shadow-[0_2px_0_rgba(20,16,8,0.4),0_24px_40px_-10px_rgba(20,16,8,0.45)]"
+            className="group inline-flex h-14 items-center gap-2.5 rounded-full bg-[color:var(--color-ink)] px-8 font-[family-name:var(--font-display)] text-[1.05rem] font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_16px_32px_-10px_rgba(20,16,8,0.45)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[3px] hover:shadow-[0_2px_0_rgba(20,16,8,0.4),0_24px_40px_-10px_rgba(20,16,8,0.45)] active:scale-[0.97] active:translate-y-0"
           >
             {t("start.cta")}
             <span className="transition-transform group-hover:translate-x-1">→</span>
@@ -229,7 +229,7 @@ export default function StartClient() {
 
           <Link
             href="/join"
-            className="group mt-8 inline-flex h-14 items-center gap-2.5 rounded-full bg-[color:var(--color-saffron)] px-8 font-[family-name:var(--font-display)] text-[1.05rem] font-semibold text-[color:var(--color-ink)] shadow-[0_2px_0_rgba(20,16,8,0.3),0_12px_28px_-8px_rgba(20,16,8,0.6)] transition-all hover:-translate-y-[2px]"
+            className="group mt-8 inline-flex h-14 items-center gap-2.5 rounded-full bg-[color:var(--color-saffron)] px-8 font-[family-name:var(--font-display)] text-[1.05rem] font-semibold text-[color:var(--color-ink)] shadow-[0_2px_0_rgba(20,16,8,0.3),0_12px_28px_-8px_rgba(20,16,8,0.6)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[2px] active:scale-[0.97] active:translate-y-0"
           >
             {t("start.bottom.cta")}
             <span className="transition-transform group-hover:translate-x-1">→</span>

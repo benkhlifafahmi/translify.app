@@ -48,7 +48,10 @@ export default function OnboardingPage() {
   const [direction, setDirection] = useState<1 | -1>(1);
   const [persona, setPersona] = useState<Persona | null>(null);
   const [targetLang, setTargetLang] = useState<Locale>("en");
-  const [booksPerMonth, setBooksPerMonth] = useState(4);
+  // Books-per-month used to be a dedicated step but it only drove the
+  // savings copy on the personality preview. A fixed reading cadence keeps
+  // that math intact while shaving one step off the funnel.
+  const booksPerMonth = 4;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,10 +61,9 @@ export default function OnboardingPage() {
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const personality = persona ? PERSONA_TO_PERSONALITY[persona] : null;
 
-  const canNext = useMemo(() => {
-    if (step === 2) return booksPerMonth > 0;
-    return true;
-  }, [step, booksPerMonth]);
+  // Step 2 (personality preview) is informational and always advanceable;
+  // step 3 (signup) has its own submit-driven gating below.
+  const canNext = true;
 
   useEffect(() => {
     posthog?.capture("onboarding_started");
@@ -103,13 +105,11 @@ export default function OnboardingPage() {
     advanceTimer.current = setTimeout(() => goForward(2, { target_lang: l }), 320);
   };
 
-  // Steps 2 & 3: explicit Continue button.
+  // Step 2 (personality preview) advances to signup with an explicit Continue.
   const handleNext = () => {
-    const payloads: Partial<Record<number, Record<string, unknown>>> = {
-      2: { books_per_month: booksPerMonth },
-      3: { recommended_plan: personality?.recommendedPlan },
-    };
-    goForward(step + 1, payloads[step]);
+    const payload =
+      step === 2 ? { recommended_plan: personality?.recommendedPlan } : undefined;
+    goForward(step + 1, payload);
   };
 
   const handleSubscribe = async () => {
@@ -179,12 +179,12 @@ export default function OnboardingPage() {
       <div className="relative z-10 mx-auto mt-5 max-w-xs px-6">
         <div className="h-2.5 overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
           <div
-            className="h-full rounded-full bg-[color:var(--color-saffron-deep)] transition-all duration-500 ease-out"
-            style={{ width: `${((step + 1) / 5) * 100}%` }}
+            className="h-full rounded-full bg-[color:var(--color-saffron-deep)] transition-[width] duration-500 ease-out"
+            style={{ width: `${((step + 1) / 4) * 100}%` }}
           />
         </div>
         <p className="mt-1 text-center text-[0.68rem] font-semibold uppercase tracking-[0.15em] text-[color:var(--color-ink-soft)]">
-          {step + 1} / 5
+          {step + 1} / 4
         </p>
       </div>
 
@@ -197,13 +197,10 @@ export default function OnboardingPage() {
           {step === 1 && (
             <Step2 targetLang={targetLang} onSelect={handleLangSelect} />
           )}
-          {step === 2 && (
-            <Step3 books={booksPerMonth} setBooks={setBooksPerMonth} />
-          )}
-          {step === 3 && personality && (
+          {step === 2 && personality && (
             <Step4 personality={personality} targetLang={targetLang} books={booksPerMonth} />
           )}
-          {step === 4 && personality && (
+          {step === 3 && personality && (
             <Step5
               personality={personality}
               name={name} setName={setName}
@@ -217,13 +214,14 @@ export default function OnboardingPage() {
           )}
         </div>
 
-        {/* Footer nav — hidden for auto-advance steps (0 & 1) */}
-        {step >= 2 && step < 4 && (
+        {/* Footer nav — only on the personality-preview step. Steps 0/1
+            auto-advance; step 3 (signup) ships its own buttons. */}
+        {step === 2 && (
           <div className="mt-12 flex items-center justify-between gap-4">
             <button
               type="button"
               onClick={handleBack}
-              className="inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold text-[color:var(--color-ink-soft)] transition-colors hover:text-[color:var(--color-ink)]"
+              className="inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold text-[color:var(--color-ink-soft)] transition-colors duration-150 hover:text-[color:var(--color-ink)]"
             >
               <span className={dir === "rtl" ? "rotate-180" : ""}>←</span>
               {t("ob.back")}
@@ -232,10 +230,10 @@ export default function OnboardingPage() {
               type="button"
               onClick={handleNext}
               disabled={!canNext}
-              className="group inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-ink)] px-7 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.4)] transition-all hover:-translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+              className="group inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-ink)] px-7 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.4)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[2px] active:scale-[0.97] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
             >
-              {step === 3 ? t("ob.finish") : t("ob.next")}
-              <span className="transition-transform group-hover:translate-x-1">
+              {t("ob.finish")}
+              <span className="transition-transform duration-200 group-hover:translate-x-1">
                 <span className={dir === "rtl" ? "rotate-180 inline-block" : "inline-block"}>→</span>
               </span>
             </button>
@@ -402,112 +400,7 @@ function Step2({ targetLang, onSelect }: { targetLang: Locale; onSelect: (l: Loc
   );
 }
 
-/* ───────────────────── STEP 3: Books slider ───────────────────── */
-
-function Step3({ books, setBooks }: { books: number; setBooks: (n: number) => void }) {
-  const { t } = useI18n();
-  const max = 20;
-  const pct = (books / max) * 100;
-
-  return (
-    <div>
-      {/* Lumi */}
-      <div className="mb-7 flex justify-center">
-        <LumiGuide
-          state="reading"
-          size={80}
-          lines={t("ob.s3.lumi")}
-          bubblePosition="right"
-        />
-      </div>
-
-      <StepHeader eyebrow={t("ob.s3.eyebrow")} title={t("ob.s3.title")} subtitle={t("ob.s3.subtitle")} />
-
-      <div className="mt-10 rounded-[1.6rem] border border-[color:var(--color-border)] bg-gradient-to-br from-[#FFFCF3] to-[#F5E9CD] p-8 shadow-[var(--shadow-paper-lg)]">
-        <div className="text-center">
-          <div className="font-[family-name:var(--font-display)] text-[clamp(4rem,12vw,7rem)] font-semibold leading-none tracking-tight text-[color:var(--color-ink)]">
-            {books}
-            {books === max && <span className="text-[color:var(--color-saffron-deep)]">+</span>}
-          </div>
-          <p className="mt-2 text-sm uppercase tracking-[0.22em] text-[color:var(--color-ink-soft)]">
-            {t("ob.s3.unit.books")}
-          </p>
-        </div>
-
-        {/* Visual book stack */}
-        <div className="mt-8 flex h-16 items-end justify-center gap-1 overflow-hidden">
-          {Array.from({ length: max }).map((_, i) => {
-            const filled = i < books;
-            const colors = ["#E0A458", "#7BA17C", "#E2786C", "#6B5B95"];
-            return (
-              <span
-                key={i}
-                className="rounded-t-md transition-all duration-500"
-                style={{
-                  width: "clamp(8px, 1.6vw, 14px)",
-                  height: filled ? `${30 + Math.random() * 40}px` : "8px",
-                  background: filled ? colors[i % colors.length] : "rgba(74, 60, 30, 0.08)",
-                  opacity: filled ? 0.9 : 1,
-                  transitionDelay: `${i * 30}ms`,
-                }}
-              />
-            );
-          })}
-        </div>
-
-        {/* Slider */}
-        <div className="mt-8 px-2">
-          <div className="relative">
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-[color:var(--color-paper-3)]" />
-            <div
-              className="absolute top-1/2 -translate-y-1/2 h-2 rounded-full bg-gradient-to-r from-[color:var(--color-saffron)] via-[color:var(--color-coral)] to-[color:var(--color-plum)] transition-all"
-              style={{ width: `${pct}%` }}
-            />
-            <input
-              type="range"
-              min={1}
-              max={max}
-              value={books}
-              onChange={(e) => setBooks(Number(e.target.value))}
-              className="ob-slider relative h-6 w-full cursor-pointer appearance-none bg-transparent"
-              aria-label={t("ob.s3.unit.books")}
-            />
-          </div>
-          <div className="mt-3 flex justify-between text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-            <span>1</span><span>5</span><span>10</span><span>15</span><span>20+</span>
-          </div>
-        </div>
-      </div>
-
-      <style jsx>{`
-        .ob-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: var(--color-ink);
-          border: 3px solid var(--color-paper);
-          box-shadow: 0 4px 14px rgba(20, 16, 8, 0.35), 0 1px 0 rgba(20, 16, 8, 0.5);
-          cursor: grab;
-          transition: transform 0.2s;
-        }
-        .ob-slider::-webkit-slider-thumb:active { transform: scale(1.15); cursor: grabbing; }
-        .ob-slider::-moz-range-thumb {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: var(--color-ink);
-          border: 3px solid var(--color-paper);
-          box-shadow: 0 4px 14px rgba(20, 16, 8, 0.35), 0 1px 0 rgba(20, 16, 8, 0.5);
-          cursor: grab;
-        }
-      `}</style>
-    </div>
-  );
-}
-
-/* ───────────────────── STEP 4: The reveal ───────────────────── */
+/* ───────────────────── STEP 3: The reveal ───────────────────── */
 
 function Step4({ personality, targetLang, books }: { personality: Personality; targetLang: Locale; books: number }) {
   const { t } = useI18n();

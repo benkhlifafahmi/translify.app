@@ -140,7 +140,7 @@ export default async function ReadSourceInTargetPage({
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Link
-          href="/onboarding"
+          href="/join"
           className="inline-flex h-12 items-center rounded-full bg-[color:var(--color-saffron)] px-6 font-semibold shadow-[0_2px_0_rgba(140,90,30,0.5)]"
         >
           Start a 14-day trial

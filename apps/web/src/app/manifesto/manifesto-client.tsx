@@ -91,7 +91,7 @@ export default function ManifestoClient() {
         <p className="text-[color:var(--color-ink-soft)]">
           {t("manifesto.signoff.pre")}
           <Link
-            href="/onboarding"
+            href="/join"
             className="font-semibold text-[color:var(--color-saffron-deep)] underline decoration-[color:var(--color-saffron)]/40 hover:decoration-[color:var(--color-saffron)]"
           >
             {t("manifesto.signoff.cta")}

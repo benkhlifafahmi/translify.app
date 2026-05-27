@@ -299,7 +299,7 @@ export default function Page() {
         Translify handles academic PDF translation with citation
         preservation, equation handling, and per-section translation. Try
         it free for 14 days at{" "}
-        <Link href="/onboarding" className="underline decoration-[color:var(--color-saffron)] not-italic">
+        <Link href="/join" className="underline decoration-[color:var(--color-saffron)] not-italic">
           translify.app/onboarding
         </Link>
         .

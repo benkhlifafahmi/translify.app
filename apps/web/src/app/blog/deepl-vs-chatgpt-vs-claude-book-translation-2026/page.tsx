@@ -310,7 +310,7 @@ export default function Page() {
       <Quote>
         Translify uses Claude 4.7 Opus as its primary translation engine,
         with DeepL fallback for European-language short passages. Try the{" "}
-        <Link href="/onboarding" className="underline decoration-[color:var(--color-saffron)] not-italic">
+        <Link href="/join" className="underline decoration-[color:var(--color-saffron)] not-italic">
           14-day free trial
         </Link>
         .

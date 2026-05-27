@@ -297,7 +297,7 @@ export default function Page() {
 
       <Quote>
         Try this with{" "}
-        <Link href="/onboarding" className="underline decoration-[color:var(--color-saffron)] not-italic">
+        <Link href="/join" className="underline decoration-[color:var(--color-saffron)] not-italic">
           Translify
         </Link>{" "}
         — upload your first textbook free for 14 days, see if the workflow

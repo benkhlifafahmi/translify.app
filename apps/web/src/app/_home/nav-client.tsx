@@ -34,7 +34,7 @@ export function SiteNavClient() {
           {t("nav.login")}
         </Link>
         <Link
-          href="/onboarding"
+          href="/join"
           className="rounded-full bg-[color:var(--color-ink)] px-3.5 py-2 text-[0.85rem] font-semibold text-[color:var(--color-primary-foreground)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_8px_18px_-8px_rgba(20,16,8,0.5)] transition-transform hover:-translate-y-[1px] sm:px-5 sm:text-sm"
         >
           {t("nav.cta")}

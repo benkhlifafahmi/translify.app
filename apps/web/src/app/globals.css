@@ -290,8 +290,14 @@
 .lumi-pencil-arm { animation: lumi-write-tilt 1.4s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .lumi-float, .lumi-bubble-in, .lumi-toast-in, .lumi-line-fade, .lumi-pencil-arm {
+  .lumi-float, .lumi-bubble-in, .lumi-toast-in, .lumi-line-fade, .lumi-pencil-arm,
+  .animate-float-in, .animate-pop-in,
+  .ob-enter-forward, .ob-enter-back,
+  .stagger > *,
+  .shimmer,
+  .hover-wiggle:hover {
     animation: none !important;
+    transition-duration: 0ms !important;
   }
 }
 

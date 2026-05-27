@@ -37,15 +37,15 @@ export default function LoginPage() {
 
   const onSendLink = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-    if (!ok) { setLinkErr(t("login.errLink")); return; }
+    // Browser-native validation already enforces type="email" on the input,
+    // so by the time the form submits we have a well-formed address. The
+    // server returns 202 either way to prevent account enumeration.
+    if (!email.trim()) { setLinkErr(t("login.errLink")); return; }
     setLinkErr(null); setLinkBusy(true);
     try {
       await requestMagicLink(email);
       setLinkSent(true);
     } catch {
-      // The endpoint always returns 202 to prevent enumeration — surface a
-      // generic "sent" state regardless.
       setLinkSent(true);
     } finally { setLinkBusy(false); }
   };
@@ -87,7 +87,7 @@ export default function LoginPage() {
         type="button"
         onClick={handleGoogle}
         disabled={googleLoading}
-        className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border-2 text-[0.95rem] font-semibold transition-all hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border-2 text-[0.95rem] font-semibold transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[1px] active:scale-[0.98] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
         style={{ borderColor: "var(--color-border-strong)", background: "white", color: "var(--color-ink)", boxShadow: "0 2px 0 rgba(74,60,30,0.08)" }}
       >
         {googleLoading ? (

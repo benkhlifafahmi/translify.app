@@ -527,7 +527,7 @@ export default async function AlternativePage({
         </h2>
         <p className="mt-3 opacity-80">14-day trial. 30-day money-back. No card required.</p>
         <Link
-          href="/onboarding"
+          href="/join"
           className="mt-6 inline-flex h-12 items-center rounded-full bg-[color:var(--color-saffron)] px-6 font-semibold text-[color:var(--color-ink)]"
         >
           Start your trial →

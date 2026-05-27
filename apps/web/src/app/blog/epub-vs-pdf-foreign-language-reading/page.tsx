@@ -329,7 +329,7 @@ export default function Page() {
         Translify accepts both EPUB and PDF for foreign-language reading,
         with AI-assisted translation, highlights, and chat-with-book on
         either format. Try it at{" "}
-        <Link href="/onboarding" className="underline decoration-[color:var(--color-saffron)] not-italic">
+        <Link href="/join" className="underline decoration-[color:var(--color-saffron)] not-italic">
           translify.app/onboarding
         </Link>
         .

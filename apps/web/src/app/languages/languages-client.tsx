@@ -49,7 +49,7 @@ export default function LanguagesClient() {
                 <li key={tgt.slug}>
                   <Link
                     href={`/read/${src.slug}/in/${tgt.slug}`}
-                    className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-[color:var(--color-border)] bg-white/60 px-4 py-2 text-sm font-medium transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-saffron)] hover:bg-[color:var(--color-saffron)]/5"
+                    className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-[color:var(--color-border)] bg-white/60 px-4 py-2 text-sm font-medium transition-[transform,border-color,background-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[1px] hover:border-[color:var(--color-saffron)] hover:bg-[color:var(--color-saffron)]/5 active:scale-[0.98]"
                   >
                     <span aria-hidden>{tgt.flag}</span>
                     {tgt.native}
@@ -69,7 +69,7 @@ export default function LanguagesClient() {
           {t("lang.notListed.body")}
         </p>
         <Link
-          href="/onboarding"
+          href="/join"
           className="mt-6 inline-flex h-12 items-center rounded-full bg-[color:var(--color-saffron)] px-6 font-semibold"
         >
           {t("lang.cta")}
