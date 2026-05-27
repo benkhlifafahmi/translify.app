@@ -26,7 +26,7 @@ export interface SavedHighlight {
   cfi?: string;
 }
 
-export type HighlightAction = "save" | "note" | "ask-ai";
+export type HighlightAction = "save" | "note" | "ask-ai" | "share";
 
 interface Props {
   fileUrl: string | null;
@@ -428,6 +428,20 @@ export function PdfViewer({
                   </svg>
                 }
               />
+              <ToolbarButton
+                onClick={() => triggerAction("share")}
+                label={t("viewer.share")}
+                tone="plum"
+                icon={
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="18" cy="5" r="3" />
+                    <circle cx="6" cy="12" r="3" />
+                    <circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                  </svg>
+                }
+              />
             </div>
           </div>
         )}
@@ -502,12 +516,13 @@ function ToolbarButton({
   onClick: () => void;
   label: string;
   icon: React.ReactNode;
-  tone: "saffron" | "sage" | "coral";
+  tone: "saffron" | "sage" | "coral" | "plum";
 }) {
   const toneClass = {
     saffron: "text-[color:var(--color-saffron-deep)] hover:bg-[color:var(--color-saffron)]/15 active:bg-[color:var(--color-saffron)]/25",
     sage: "text-[color:var(--color-sage-deep)] hover:bg-[color:var(--color-sage)]/15 active:bg-[color:var(--color-sage)]/25",
     coral: "text-[color:var(--color-coral-deep)] hover:bg-[color:var(--color-coral)]/15 active:bg-[color:var(--color-coral)]/25",
+    plum: "text-[color:var(--color-plum)] hover:bg-[color:var(--color-plum)]/15 active:bg-[color:var(--color-plum)]/25",
   }[tone];
   return (
     <button

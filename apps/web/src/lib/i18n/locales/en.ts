@@ -501,6 +501,7 @@ export const en: Dict = {
   "viewer.highlight": "Highlight",
   "viewer.addNote": "Add note",
   "viewer.askAi": "Ask AI",
+  "viewer.share": "Share",
 
   // Book card
   "bookCard.status.uploaded": "Queued",

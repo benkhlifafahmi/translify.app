@@ -310,6 +310,7 @@ export default function BookDetailPage({
         id: saved.id,
         autoEditNote: vars.action === "note",
         autoAskAi: vars.action === "ask-ai",
+        autoShare: vars.action === "share",
         nonce: Date.now(),
       });
       // On mobile, open the Notes drawer so the user lands on the new card.
@@ -440,7 +441,7 @@ export default function BookDetailPage({
       targetLang={null}
       onConsumed={() =>
         setOpenHighlight((prev) =>
-          prev ? { ...prev, autoAskAi: false, autoEditNote: false } : prev,
+          prev ? { ...prev, autoAskAi: false, autoEditNote: false, autoShare: false } : prev,
         )
       }
       onJumpToPage={(page) => {

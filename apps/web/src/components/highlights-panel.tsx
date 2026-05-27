@@ -26,6 +26,8 @@ export interface OpenHighlightState {
   autoEditNote?: boolean;
   /** Open the Ask-AI input and focus the question textarea (does NOT submit). */
   autoAskAi?: boolean;
+  /** Open the inline share form immediately. */
+  autoShare?: boolean;
   /** Bumped each time to force re-trigger even when id is unchanged. */
   nonce: number;
 }
@@ -86,6 +88,7 @@ export function HighlightsPanel({ bookId, open, onConsumed, onJumpToPage, source
             isOpen={open?.id === h.id}
             autoEditNote={open?.id === h.id && !!open.autoEditNote}
             autoAskAi={open?.id === h.id ? open : null}
+            autoShare={open?.id === h.id ? open : null}
             sourceLang={sourceLang}
             targetLang={targetLang}
             onConsumed={onConsumed}
@@ -118,6 +121,7 @@ interface CardProps {
   isOpen: boolean;
   autoEditNote: boolean;
   autoAskAi: OpenHighlightState | null;
+  autoShare: OpenHighlightState | null;
   sourceLang?: string | null;
   targetLang?: string | null;
   onConsumed: () => void;
@@ -132,6 +136,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
     isOpen,
     autoEditNote,
     autoAskAi,
+    autoShare,
     sourceLang,
     targetLang,
     onConsumed,
@@ -149,6 +154,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
   const [shareExpanded, setShareExpanded] = useState(false);
   const askInputRef = useRef<HTMLTextAreaElement | null>(null);
   const triggeredAskAi = useRef<number | null>(null);
+  const triggeredShare = useRef<number | null>(null);
 
   const saveNote = useMutation({
     mutationFn: async (note: string | null) =>
@@ -195,6 +201,16 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
     requestAnimationFrame(() => askInputRef.current?.focus());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoAskAi?.nonce, autoAskAi?.autoAskAi]);
+
+  // "Share" from the PDF toolbar: expand the share form inline.
+  useEffect(() => {
+    if (!autoShare?.autoShare) return;
+    if (triggeredShare.current === autoShare.nonce) return;
+    triggeredShare.current = autoShare.nonce;
+    setShareExpanded(true);
+    onConsumed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoShare?.nonce, autoShare?.autoShare]);
 
   const onConfirmDelete = () => {
     if (!confirm(t("notes.deleteConfirm"))) return;

@@ -25,6 +25,7 @@ import { LumiHud } from "@/components/lumi/lumi-hud";
 import { LumiGuide } from "@/components/lumi/lumi-guide";
 import { useLumi } from "@/components/lumi/lumi-context";
 import { MilestoneToast } from "@/components/milestone-toast";
+import { SocialNavBar } from "@/components/social-nav-bar";
 import { useI18n } from "@/lib/i18n";
 
 export default function LibraryPage() {
@@ -229,7 +230,11 @@ export default function LibraryPage() {
         </div>
       </header>
 
-      <section className="relative z-10 mx-auto max-w-6xl px-6 lg:px-10">
+      <section className="relative z-10 mx-auto max-w-6xl px-6 pt-2 lg:px-10">
+        <SocialNavBar user={user} />
+      </section>
+
+      <section className="relative z-10 mx-auto max-w-6xl px-6 pt-8 lg:px-10">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-1 inline-flex items-center gap-2 rounded-full bg-[color:var(--color-paper-3)] px-3 py-1 text-xs font-semibold text-[color:var(--color-ink-soft)]">

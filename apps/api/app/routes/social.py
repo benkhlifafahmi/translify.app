@@ -77,9 +77,12 @@ async def _hydrate(
 
     authors: dict[uuid.UUID, User] = {}
     if user_ids:
+        # User has `oauth_accounts` as a joined eager-loaded collection, so
+        # the result set duplicates per-user-per-oauth-row. .unique() dedups
+        # before .scalars(); without it SQLAlchemy raises InvalidRequestError.
         rows = (
             await session.execute(select(User).where(User.id.in_(user_ids)))
-        ).scalars().all()
+        ).unique().scalars().all()
         authors = {u.id: u for u in rows}
 
     books: dict[uuid.UUID, Book] = {}
@@ -215,7 +218,7 @@ async def _get_user_by_username(
         await session.execute(
             select(User).where(func.lower(User.username) == username.lower())
         )
-    ).scalar_one_or_none()
+    ).unique().scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
@@ -359,7 +362,7 @@ async def get_post(
     # them (except for the author themselves).
     author = (
         await session.execute(select(User).where(User.id == post.user_id))
-    ).scalar_one()
+    ).unique().scalar_one()
     if not author.profile_public and (viewer is None or viewer.id != author.id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
 
@@ -486,7 +489,7 @@ async def follow_user(
         )
     target = (
         await session.execute(select(User).where(User.id == user_id))
-    ).scalar_one_or_none()
+    ).unique().scalar_one_or_none()
     if target is None or not target.profile_public:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -546,7 +549,7 @@ async def search_users(
             .order_by(User.username.asc())
             .limit(limit)
         )
-    ).scalars().all()
+    ).unique().scalars().all()
     return [UserSearchResult.model_validate(u) for u in rows]
 
 
