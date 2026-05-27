@@ -394,6 +394,9 @@ export const en: Dict = {
 
   // Onboarding · Step 5, account creation + summary
   "ob.s5.eyebrow": "Almost there",
+  "ob.s5.googleCta": "Continue with Google",
+  "ob.s5.googleRedirecting": "Redirecting",
+  "ob.s5.or": "or with email",
   "ob.s5.title": "Make your shelf.",
   "ob.s5.subtitle":
     "A private space for the books you read, the questions you have, and the things you learn.",
