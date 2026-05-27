@@ -9,6 +9,7 @@ import { getGoogleAuthUrl, startAnonymousSession } from "@/lib/auth";
 import { cloneSeed, listSeeds, type Seed } from "@/lib/seeds";
 import { trackLead } from "@/lib/onboarding";
 import { Lumi } from "@/components/lumi/lumi";
+import { SeedCover } from "@/components/seed-covers";
 import { TranslifyIcon } from "@/components/translify-mark";
 import { useI18n } from "@/lib/i18n";
 
@@ -46,21 +47,21 @@ const TONE_MAP: Record<Tone, { ring: string; bg: string; iconBg: string; iconCol
 };
 
 // ─── Seed-book display metadata ───────────────────────────────────────────────
-// Pairs with the backend by ``seed_slug``. Titles/authors come from /books;
-// covers and topic chips are display-only and live here.
+// Pairs with the backend by ``seed_slug``. Titles/authors come from /books.
+// Cover artwork lives in ``components/seed-covers.tsx`` keyed by slug; this
+// record only carries the per-seed topic mapping used for ranking step 2.
 interface SeedDisplay {
-  cover: { bg: string; emoji: string };
   topics: TopicId[];
 }
 const SEED_DISPLAY: Record<string, SeedDisplay> = {
-  "pride-and-prejudice":   { cover: { bg: "linear-gradient(135deg,#6B5B95,#3D2D5C)", emoji: "💃" }, topics: ["fiction"] },
-  "alice-in-wonderland":   { cover: { bg: "linear-gradient(135deg,#94C48A,#3D6B44)", emoji: "🐇" }, topics: ["fiction"] },
-  "meditations":           { cover: { bg: "linear-gradient(135deg,#E2786C,#9B3B2D)", emoji: "🏛️" }, topics: ["philosophy", "self-help"] },
-  "art-of-war":            { cover: { bg: "linear-gradient(135deg,#4A3C1E,#1F1808)", emoji: "⚔️" }, topics: ["business", "history"] },
-  "origin-of-species":     { cover: { bg: "linear-gradient(135deg,#7BA17C,#3F5C40)", emoji: "🐢" }, topics: ["science", "history", "nature"] },
-  "tao-te-ching":          { cover: { bg: "linear-gradient(135deg,#5A8C5A,#2A4530)", emoji: "☯️" }, topics: ["philosophy", "self-help", "art"] },
-  "shakespeares-sonnets":  { cover: { bg: "linear-gradient(135deg,#E0A450,#8E5C18)", emoji: "🪶" }, topics: ["art"] },
-  "walden":                { cover: { bg: "linear-gradient(135deg,#3D6B44,#1E3A24)", emoji: "🌲" }, topics: ["nature", "self-help", "philosophy"] },
+  "pride-and-prejudice":   { topics: ["fiction"] },
+  "alice-in-wonderland":   { topics: ["fiction"] },
+  "meditations":           { topics: ["philosophy", "self-help"] },
+  "art-of-war":            { topics: ["business", "history"] },
+  "origin-of-species":     { topics: ["science", "history", "nature"] },
+  "tao-te-ching":          { topics: ["philosophy", "self-help", "art"] },
+  "shakespeares-sonnets":  { topics: ["art"] },
+  "walden":                { topics: ["nature", "self-help", "philosophy"] },
 };
 
 // Stable order to surface in step 3 — used when no topic intersection.
@@ -497,11 +498,12 @@ function StepShelf({
                     </span>
                   )}
                   <div
-                    className="relative grid h-20 w-14 shrink-0 place-items-center overflow-hidden rounded-md"
-                    style={{ background: display.cover.bg, boxShadow: "2px 3px 0 rgba(74,60,30,0.18)" }}
+                    className="relative h-20 w-14 shrink-0 overflow-hidden rounded-md"
+                    style={{ boxShadow: "2px 3px 0 rgba(74,60,30,0.18)" }}
                   >
-                    <span className="text-[1.8rem]">{display.cover.emoji}</span>
-                    <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: "rgba(0,0,0,0.25)" }} />
+                    <SeedCover slug={seed.slug} />
+                    <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-[3px]" style={{ background: "rgba(0,0,0,0.28)" }} />
+                    <span aria-hidden className="pointer-events-none absolute inset-y-0 left-[3px] w-[1.5px]" style={{ background: "rgba(255,255,255,0.10)" }} />
                   </div>
 
                   <div className="min-w-0 flex-1">
