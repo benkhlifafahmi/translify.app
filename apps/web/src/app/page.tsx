@@ -20,12 +20,14 @@ export default function Home() {
       <SiteNavClient />
       <Hero />
       <TrustStrip />
-      <LiveDemo />
       <HowItWorks />
       <FeatureShowcase />
+      <ProofRow />
+      <LiveDemo />
       <ForEveryone />
       <LanguagesStrip />
       <TestimonialsClient />
+      <PriceTease />
       <Pricing />
       <FAQ />
       <FinalCTA />
@@ -65,32 +67,37 @@ function Hero() {
             </span>
             <Underline />
           </span>
-          .
         </h1>
 
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-[color:var(--color-ink-soft)]">
           {t("hero.subtitle")}
         </p>
 
-        <div className="mt-10 flex flex-wrap items-center gap-3">
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <CapabilityPill tone="sage" icon={<ChatIcon />} label="Chat with the book" />
+          <CapabilityPill tone="coral" icon={<QuizIcon />} label="AI quizzes" />
+          <CapabilityPill tone="saffron" icon={<GlobeIcon />} label="14 languages" />
+        </div>
+
+        <div className="mt-9 flex flex-wrap items-center gap-3">
           <Link
             href="/onboarding"
-            className="group inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-saffron)] px-6 font-semibold text-[color:var(--color-accent-foreground)] shadow-[0_2px_0_rgba(140,90,30,0.5),0_10px_22px_-8px_rgba(200,137,62,0.6)] transition-transform hover:-translate-y-[2px]"
+            className="group inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-saffron)] px-6 font-semibold text-[color:var(--color-accent-foreground)] shadow-[0_2px_0_rgba(140,90,30,0.5),0_10px_22px_-8px_rgba(200,137,62,0.6)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[2px] active:scale-[0.97] active:translate-y-0"
           >
             {t("hero.cta.primary")}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1 rtl:rotate-180">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-1 rtl:rotate-180">
               <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
             </svg>
           </Link>
           <a
             href="#pricing"
-            className="inline-flex h-12 items-center rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)]/60 px-6 font-semibold text-[color:var(--color-ink)] hover:bg-[color:var(--color-paper-2)]"
+            className="inline-flex h-12 items-center rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)]/60 px-6 font-semibold text-[color:var(--color-ink)] transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-[color:var(--color-paper-2)] active:scale-[0.97]"
           >
             {t("hero.cta.secondary")}
           </a>
         </div>
 
-        <ul className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-[color:var(--color-ink-soft)]">
+        <ul className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-[color:var(--color-ink-soft)]">
           <li className="flex items-center gap-2"><Tick /> {t("hero.bullet.1")}</li>
           <li className="flex items-center gap-2"><Tick /> {t("hero.bullet.2")}</li>
           <li className="flex items-center gap-2"><Tick /> {t("hero.bullet.3")}</li>
@@ -185,8 +192,8 @@ function HowItWorks() {
 
       <div className="mt-12 grid gap-5 md:grid-cols-3">
         <Step n="01" tone="saffron" title={t("how.step1.title")} body={t("how.step1.body")} mock={<MockUpload />} />
-        <Step n="02" tone="sage"    title={t("how.step2.title")} body={t("how.step2.body")} mock={<MockTranslate />} />
-        <Step n="03" tone="coral"   title={t("how.step3.title")} body={t("how.step3.body")} mock={<MockChat />} />
+        <Step n="02" tone="sage"    title={t("how.step2.title")} body={t("how.step2.body")} mock={<MockChat />} />
+        <Step n="03" tone="coral"   title={t("how.step3.title")} body={t("how.step3.body")} mock={<MockQuizSmall />} />
       </div>
     </section>
   );
@@ -240,29 +247,39 @@ function MockUpload() {
   );
 }
 
-function MockTranslate() {
+function MockQuizSmall() {
   return (
     <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-3">
-      <p className="mb-2 text-[0.65rem] uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
-        Original → Target
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[0.65rem] uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
+          Question 3 / 8
+        </span>
+        <span className="text-[0.65rem] font-semibold text-[color:var(--color-coral-deep)]">⏱ 0:32</span>
+      </div>
+      <div className="mb-3 h-1 w-full overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
+        <div className="h-full bg-gradient-to-r from-[color:var(--color-coral)] to-[color:var(--color-saffron)]" style={{ width: "37%" }} />
+      </div>
+      <p className="mb-2 text-[0.78rem] font-semibold leading-snug text-[color:var(--color-ink)]">
+        Who does Cosette live with before Valjean finds her?
       </p>
       <div className="space-y-1.5">
         {[
-          { code: "FR", name: "Français", pct: 100, ready: true },
-          { code: "JA", name: "日本語", pct: 64, ready: false },
-          { code: "AR", name: "العربية", pct: 38, ready: false },
-        ].map((l) => (
-          <div key={l.code} className="flex items-center gap-3">
-            <span className="w-6 rounded-md bg-[color:var(--color-paper-3)] px-1.5 py-0.5 text-center text-[0.6rem] font-bold text-[color:var(--color-ink-soft)]">
-              {l.code}
+          { l: "A", t: "The Bishop", on: false },
+          { l: "B", t: "The Thénardiers", on: true },
+          { l: "C", t: "Her grandfather", on: false },
+        ].map((c) => (
+          <div
+            key={c.l}
+            className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${c.on ? "border-[color:var(--color-sage-deep)] bg-[color:var(--color-sage)]/15" : "border-[color:var(--color-border)] bg-[color:var(--color-paper)]"}`}
+          >
+            <span className={`grid h-5 w-5 place-items-center rounded-full text-[0.62rem] font-bold ${c.on ? "bg-[color:var(--color-sage)] text-white" : "bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]"}`}>
+              {c.l}
             </span>
-            <span className="flex-1 text-[0.8rem] text-[color:var(--color-ink)]">{l.name}</span>
-            {l.ready ? (
-              <span className="rounded-full bg-[color:var(--color-sage)]/20 px-2 py-0.5 text-[0.62rem] font-bold text-[color:var(--color-sage-deep)]">READY</span>
-            ) : (
-              <div className="h-1.5 w-16 overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
-                <div className="h-full bg-gradient-to-r from-[color:var(--color-saffron)] to-[color:var(--color-coral)]" style={{ width: `${l.pct}%` }} />
-              </div>
+            <span className="text-[0.72rem] text-[color:var(--color-ink)]">{c.t}</span>
+            {c.on && (
+              <span className="ml-auto rounded-full bg-[color:var(--color-sage)]/25 px-1.5 py-0.5 text-[0.55rem] font-bold text-[color:var(--color-sage-deep)]">
+                p. 287
+              </span>
             )}
           </div>
         ))}
@@ -304,21 +321,12 @@ function FeatureShowcase() {
 
       <div className="mt-14 space-y-12">
         <FeatureRow
-          eyebrow={t("feat.translate.eyebrow")}
-          title={t("feat.translate.title")}
-          body={t("feat.translate.body")}
-          highlights={[t("feat.translate.h1"), t("feat.translate.h2"), t("feat.translate.h3")]}
-          mock={<TranslateMockBig />}
-          align="left"
-          tone="saffron"
-        />
-        <FeatureRow
           eyebrow={t("feat.chat.eyebrow")}
           title={t("feat.chat.title")}
           body={t("feat.chat.body")}
           highlights={[t("feat.chat.h1"), t("feat.chat.h2"), t("feat.chat.h3")]}
           mock={<ChatMockBig />}
-          align="right"
+          align="left"
           tone="sage"
         />
         <FeatureRow
@@ -327,8 +335,17 @@ function FeatureShowcase() {
           body={t("feat.quiz.body")}
           highlights={[t("feat.quiz.h1"), t("feat.quiz.h2"), t("feat.quiz.h3")]}
           mock={<QuizMockBig />}
-          align="left"
+          align="right"
           tone="coral"
+        />
+        <FeatureRow
+          eyebrow={t("feat.translate.eyebrow")}
+          title={t("feat.translate.title")}
+          body={t("feat.translate.body")}
+          highlights={[t("feat.translate.h1"), t("feat.translate.h2"), t("feat.translate.h3")]}
+          mock={<TranslateMockBig />}
+          align="left"
+          tone="saffron"
         />
       </div>
     </section>
@@ -511,6 +528,72 @@ function QuizMockBig() {
   );
 }
 
+/* ───────────────────────── PROOF ROW ───────────────────────── */
+
+function ProofRow() {
+  return (
+    <section className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pb-20 lg:px-14">
+      <div className="text-center">
+        <span className="badge-pill bg-[color:var(--color-sage)]/15 text-[color:var(--color-sage-deep)]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
+          {t("proof.badge")}
+        </span>
+        <h2 className="mx-auto mt-4 max-w-3xl font-[family-name:var(--font-display)] text-[clamp(1.8rem,3.6vw,2.6rem)] font-semibold leading-tight tracking-tight">
+          {t("proof.title.1")}{" "}
+          <em className="text-[color:var(--color-saffron-deep)]">{t("proof.title.2")}</em>
+        </h2>
+      </div>
+
+      <div className="mt-10 grid gap-5 md:grid-cols-3">
+        <ProofCard tone="sage"    quote={t("proof.q1")} role={t("proof.q1.role")} />
+        <ProofCard tone="coral"   quote={t("proof.q2")} role={t("proof.q2.role")} />
+        <ProofCard tone="saffron" quote={t("proof.q3")} role={t("proof.q3.role")} />
+      </div>
+    </section>
+  );
+}
+
+function ProofCard({
+  tone, quote, role,
+}: { tone: "saffron" | "sage" | "coral"; quote: string; role: string }) {
+  const dot = {
+    saffron: "bg-[color:var(--color-saffron)]",
+    sage: "bg-[color:var(--color-sage)]",
+    coral: "bg-[color:var(--color-coral)]",
+  }[tone];
+  return (
+    <figure className="card-paper-lifted relative flex h-full flex-col p-6">
+      <span aria-hidden className={`absolute left-6 top-5 h-1.5 w-1.5 rounded-full ${dot}`} />
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="mb-3 h-6 w-6 text-[color:var(--color-ink-soft)]/30"
+        fill="currentColor"
+      >
+        <path d="M9.6 7.2c-2.6 1.3-4.4 3.6-4.4 6.6 0 2.7 1.7 4.7 4.2 4.7 1.9 0 3.4-1.4 3.4-3.3 0-1.8-1.3-3.1-2.9-3.1-.3 0-.5 0-.7.1.4-1.4 1.5-2.7 3.1-3.5l-2.7-1.5zm9 0c-2.6 1.3-4.4 3.6-4.4 6.6 0 2.7 1.7 4.7 4.2 4.7 1.9 0 3.4-1.4 3.4-3.3 0-1.8-1.3-3.1-2.9-3.1-.3 0-.5 0-.7.1.4-1.4 1.5-2.7 3.1-3.5l-2.7-1.5z" />
+      </svg>
+      <blockquote className="flex-1 font-[family-name:var(--font-display)] text-[1.05rem] leading-snug text-[color:var(--color-ink)]">
+        “{quote}”
+      </blockquote>
+      <figcaption className="mt-4 text-[0.78rem] uppercase tracking-[0.12em] text-[color:var(--color-ink-soft)]">
+        {role}
+      </figcaption>
+    </figure>
+  );
+}
+
+/* ───────────────────────── PRICE TEASE ───────────────────────── */
+
+function PriceTease() {
+  return (
+    <section className="relative z-10 mx-auto -mb-2 max-w-6xl px-5 sm:px-8 lg:px-14">
+      <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-5 gap-y-2 rounded-full border-[1.5px] border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)]/70 px-6 py-3 text-[0.82rem] text-[color:var(--color-ink-soft)] shadow-[var(--shadow-paper)] backdrop-blur-sm">
+        <span className="font-semibold text-[color:var(--color-ink)]">{t("tease.line")}</span>
+      </div>
+    </section>
+  );
+}
+
 /* ───────────────────────── FOR EVERYONE ───────────────────────── */
 
 function ForEveryone() {
@@ -562,7 +645,7 @@ function AudienceCard({
     coral:   { bg: "bg-gradient-to-br from-[#FFF1EE] to-[#F6CCC4]", chip: "bg-[color:var(--color-coral)]/20",   chipText: "text-[color:var(--color-coral-deep)]" },
   }[tone];
   return (
-    <div className={`relative ${rotate} rounded-[1.4rem] border border-[color:var(--color-border)] ${colors.bg} p-7 shadow-[var(--shadow-paper)] transition-transform duration-300 hover:rotate-0 hover:-translate-y-1`}>
+    <div className={`relative ${rotate} rounded-[1.4rem] border border-[color:var(--color-border)] ${colors.bg} p-7 shadow-[var(--shadow-paper)] transition-transform duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:rotate-0 hover:-translate-y-1`}>
       <h3 className="font-[family-name:var(--font-display)] text-[1.6rem] font-semibold leading-tight tracking-tight">
         For <em>{who}</em>.
       </h3>
@@ -616,7 +699,7 @@ function LanguagesStrip() {
             {LANGUAGES.map((l, i) => (
               <div
                 key={l.n}
-                className="flex items-center gap-2.5 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3 py-2.5 shadow-[0_1px_0_rgba(74,60,30,0.04)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-saffron-deep)]"
+                className="flex items-center gap-2.5 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3 py-2.5 shadow-[0_1px_0_rgba(74,60,30,0.04)] transition-[transform,border-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[1px] hover:border-[color:var(--color-saffron-deep)]"
                 style={{ animationDelay: `${i * 0.04}s` }}
               >
                 <span className="text-lg leading-none">{l.f}</span>
@@ -654,16 +737,16 @@ function FinalCTA() {
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href="/onboarding"
-              className="group inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-ink)] px-7 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.5)] transition-transform hover:-translate-y-[2px]"
+              className="group inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-ink)] px-7 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.5)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[2px] active:scale-[0.97] active:translate-y-0"
             >
               {t("cta.primary")}
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1 rtl:rotate-180">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-1 rtl:rotate-180">
                 <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
               </svg>
             </Link>
             <a
               href="#pricing"
-              className="inline-flex h-12 items-center rounded-full border-[1.5px] border-[color:var(--color-ink)] bg-[color:var(--color-paper)] px-6 font-semibold text-[color:var(--color-ink)] hover:bg-[color:var(--color-paper-2)]"
+              className="inline-flex h-12 items-center rounded-full border-[1.5px] border-[color:var(--color-ink)] bg-[color:var(--color-paper)] px-6 font-semibold text-[color:var(--color-ink)] transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-[color:var(--color-paper-2)] active:scale-[0.97]"
             >
               {t("cta.secondary")}
             </a>
@@ -745,6 +828,67 @@ function FooterCol({ heading, links }: { heading: string; links: { label: string
 }
 
 /* ───────────────────────── SHARED BITS ───────────────────────── */
+
+function CapabilityPill({
+  tone, icon, label,
+}: {
+  tone: "saffron" | "sage" | "coral";
+  icon: React.ReactNode;
+  label: string;
+}) {
+  const styles = {
+    saffron: {
+      bg: "bg-[color:var(--color-saffron)]/12",
+      text: "text-[color:var(--color-saffron-deep)]",
+      ring: "ring-[color:var(--color-saffron)]/25",
+    },
+    sage: {
+      bg: "bg-[color:var(--color-sage)]/15",
+      text: "text-[color:var(--color-sage-deep)]",
+      ring: "ring-[color:var(--color-sage)]/30",
+    },
+    coral: {
+      bg: "bg-[color:var(--color-coral)]/12",
+      text: "text-[color:var(--color-coral-deep)]",
+      ring: "ring-[color:var(--color-coral)]/25",
+    },
+  }[tone];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full ${styles.bg} ${styles.text} px-3 py-1.5 text-[0.78rem] font-semibold ring-1 ${styles.ring}`}
+    >
+      <span className="grid h-4 w-4 place-items-center">{icon}</span>
+      {label}
+    </span>
+  );
+}
+
+function ChatIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  );
+}
+
+function QuizIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.1 9a3 3 0 0 1 5.83 1c0 2-3 2.5-3 4.5" />
+      <line x1="12" y1="17.5" x2="12.01" y2="17.5" />
+    </svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+    </svg>
+  );
+}
 
 function Underline() {
   return (

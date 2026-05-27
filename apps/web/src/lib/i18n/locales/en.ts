@@ -10,20 +10,20 @@ export const en: Dict = {
   "nav.cta": "Get started",
 
   // Hero
-  "hero.badge": "For serious readers in any language",
-  "hero.title.1": "Understand any book,",
-  "hero.title.2": "in your language",
+  "hero.badge": "AI reader · books that answer back",
+  "hero.title.1": "Read it. Talk to it.",
+  "hero.title.2": "Remember it.",
   "hero.subtitle":
-    "Drop in a PDF or EPUB. Translify rebuilds the whole book in your language with the layout intact, then lets you chat with it, highlight passages for AI explanations, and quiz yourself — so you actually remember what you read.",
+    "Translify is an AI reader for PDFs and EPUBs. Drop a book in, then chat with it like a tutor that has read every page, quiz yourself before exams, and — if it isn't in your language yet — read every page in any of 14 tongues.",
   "hero.cta.primary": "Start your 14-day trial",
   "hero.cta.secondary": "See plans",
-  "hero.bullet.1": "Layout preserved, page by page",
-  "hero.bullet.2": "14 languages, every script",
-  "hero.bullet.3": "Money-back in 30 days, no questions",
+  "hero.bullet.1": "Ask anything — every answer cites the page",
+  "hero.bullet.2": "AI quizzes that send you back to the exact passage",
+  "hero.bullet.3": "14 languages with layout preserved, money-back in 30",
 
   // Trust strip
   "trust.stat1.n": "42,000+",
-  "trust.stat1.l": "books translated",
+  "trust.stat1.l": "books read & chatted",
   "trust.stat2.n": "14",
   "trust.stat2.l": "languages, every script",
   "trust.stat3.n": "9.4 / 10",
@@ -39,24 +39,24 @@ export const en: Dict = {
   // How it works
   "how.badge": "Three steps, ten minutes",
   "how.title.1": "From PDF to",
-  "how.title.2": "a book you understand",
+  "how.title.2": "a book you can talk to",
   "how.subtitle":
-    "No setup. No fiddling with translation tools. No copy-pasting paragraphs into another tab. Drop, wait a coffee's worth of time, read.",
+    "No setup. No copy-pasting paragraphs into another tab. Drop a book, wait a coffee's worth of time, and start asking it questions.",
   "how.step1.title": "Drop your book",
   "how.step1.body":
-    "PDF or EPUB, up to 200 MB. We accept textbooks, novels, papers, kids' books — anything readable.",
-  "how.step2.title": "Pick a language",
+    "PDF or EPUB, up to 200 MB. Textbooks, novels, papers, kids' books — anything readable.",
+  "how.step2.title": "Ask it anything",
   "how.step2.body":
-    "Choose from 14 languages. We rebuild every page in your target language, keeping the original layout intact.",
-  "how.step3.title": "Read, chat, quiz",
+    "Chat like it's a tutor that has memorised every page. Each reply links to the exact passage — page number, excerpt, jump button.",
+  "how.step3.title": "Quiz, learn, remember",
   "how.step3.body":
-    "Open the book, ask questions in plain language, and let surprise quizzes seal what you learned.",
+    "5, 8 or 12-question rounds generated from what you actually read. Miss one and we send you to the page that explains it.",
 
   // Features
   "feat.badge": "What you actually get",
   "feat.title.1": "Every tool you need to",
   "feat.title.2": "finish",
-  "feat.title.3": "the book.",
+  "feat.title.3": "the book — and remember it.",
   "feat.translate.eyebrow": "Translation",
   "feat.translate.title": "Same book. Same shape. Your language.",
   "feat.translate.body":
@@ -114,12 +114,26 @@ export const en: Dict = {
   "testimonials.badge": "Loved by readers",
   "testimonials.title": "What readers are saying.",
 
+  // Proof (chat + quiz lift quotes)
+  "proof.badge": "Why people upgrade",
+  "proof.title.1": "It's not the translation.",
+  "proof.title.2": "It's the chat and the quizzes.",
+  "proof.q1": "I asked a 600-page paper what its argument actually was. It cited me three pages and saved me a weekend.",
+  "proof.q1.role": "PhD candidate · Berlin",
+  "proof.q2": "Two AI quizzes before my exam. Same score as a week of flashcards.",
+  "proof.q2.role": "Med student · 3rd year",
+  "proof.q3": "It's like having the author on call. I finished a novel I'd carried around for four years.",
+  "proof.q3.role": "Lifelong reader",
+
+  // One-line "what it is" tease above pricing
+  "tease.line": "Free 14-day trial · from €7.99/mo · 30-day money-back · cancel in one click",
+
   // Final CTA
   "cta.badge": "Ready when you are",
   "cta.title.1": "Stop wishing you'd read it.",
-  "cta.title.2": "Read it.",
+  "cta.title.2": "Talk to it.",
   "cta.body":
-    "Pick a plan, drop your first book, and read the way you mean to. If 30 days in you don't love it, we refund you in full — no forms, no friction.",
+    "Pick a plan, drop your first book, and read it the way you mean to — with a tutor on call and quizzes to make it stick. If 30 days in you don't love it, we refund you in full — no forms, no friction.",
   "cta.primary": "Start your 14-day trial",
   "cta.secondary": "Compare plans",
   "cta.note": "No free plan. No surprise charges. Cancel any time, refund within 30 days.",
