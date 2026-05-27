@@ -16,6 +16,14 @@ from app.models.onboarding import OnboardingLead, OnboardingStep
 from app.models.progress import BookProgress
 from app.models.profile import ProfileKind, ReaderProfile
 from app.models.quiz import Quiz, QuizAttempt
+from app.models.social import (
+    Follow,
+    Milestone,
+    MilestoneKind,
+    Post,
+    PostType,
+    PostVisibility,
+)
 from app.models.subscription import (
     StripeEvent,
     Subscription,
@@ -31,6 +39,7 @@ __all__ = [
     "ChatScope",
     "Chunk",
     "Folder",
+    "Follow",
     "Garden",
     "GardenEvent",
     "GardenEventKind",
@@ -42,8 +51,13 @@ __all__ = [
     "HighlightColor",
     "Message",
     "MessageRole",
+    "Milestone",
+    "MilestoneKind",
     "OnboardingLead",
     "OnboardingStep",
+    "Post",
+    "PostType",
+    "PostVisibility",
     "ProfileKind",
     "Quiz",
     "QuizAttempt",

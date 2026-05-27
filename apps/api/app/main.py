@@ -23,6 +23,7 @@ from app.routes.onboarding import router as onboarding_router
 from app.routes.profiles import router as profiles_router
 from app.routes.quizzes import router as quizzes_router
 from app.routes.seeds import router as seeds_router
+from app.routes.social import router as social_router
 from app.routes.social_auth import router as social_auth_router
 from app.routes.translations import router as translations_router
 
@@ -132,3 +133,4 @@ app.include_router(magic_link_router)
 app.include_router(seeds_router)
 app.include_router(folders_router)
 app.include_router(social_auth_router)
+app.include_router(social_router)

@@ -68,7 +68,8 @@
       "Bash(identify store_screenshots/playstore_icon_512.png)",
       "Bash(xargs ls -1)",
       "Bash(pnpm exec *)",
-      "Bash(pnpm run *)"
+      "Bash(pnpm run *)",
+      "Bash(python -c \"from app.models import Post, Follow, Milestone, MilestoneKind, PostType, PostVisibility; from app.schemas.social import PostCreate, PublicProfile, ProfilePatch, UsernameClaim, FollowStatus, UserSearchResult; from app.routes.social import router; print\\('OK', len\\(router.routes\\), 'routes'\\)\")"
     ]
   }
 }

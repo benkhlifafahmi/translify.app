@@ -13,6 +13,12 @@ export interface User {
    * actions (chat, quiz, upload, translate) reject these users with a 402
    * `email_required` detail until they call `claimSession`. */
   is_anonymous: boolean;
+  /** Social handle. Null until the user claims one via /settings/profile. */
+  username: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  profile_public: boolean;
+  created_at: string;
 }
 
 export async function login(email: string, password: string): Promise<User> {
