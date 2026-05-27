@@ -31,6 +31,7 @@ export function MarketingHeader({ compact = false }: { compact?: boolean }) {
         <div className="hidden items-center gap-7 text-sm font-medium text-[color:var(--color-ink-soft)] md:flex">
           <Link href="/#how" className="transition-colors duration-150 hover:text-[color:var(--color-ink)]">{t("nav.how")}</Link>
           <Link href="/#features" className="transition-colors duration-150 hover:text-[color:var(--color-ink)]">{t("nav.features")}</Link>
+          <Link href="/discover" className="transition-colors duration-150 hover:text-[color:var(--color-ink)]">{t("nav.discover")}</Link>
           <Link href="/pricing" className="transition-colors duration-150 hover:text-[color:var(--color-ink)]">{t("nav.pricing")}</Link>
           <Link href="/#faq" className="transition-colors duration-150 hover:text-[color:var(--color-ink)]">{t("nav.faq")}</Link>
         </div>

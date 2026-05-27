@@ -16,6 +16,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
+import { HighlightShare } from "@/components/highlight-share";
 import { useI18n } from "@/lib/i18n";
 import { Lumi } from "@/components/lumi/lumi";
 
@@ -34,11 +35,16 @@ interface Props {
   open: OpenHighlightState | null;
   onConsumed: () => void;
   onJumpToPage: (page: number) => void;
+  /** The book's original language (e.g. "fr" for Du côté de chez Swann).
+   * Used to tag shared sentence/passage posts with the language pair. */
+  sourceLang?: string | null;
+  /** The language the user is reading in. */
+  targetLang?: string | null;
 }
 
 const COLORS: HighlightColor[] = ["yellow", "green", "blue", "pink"];
 
-export function HighlightsPanel({ bookId, open, onConsumed, onJumpToPage }: Props) {
+export function HighlightsPanel({ bookId, open, onConsumed, onJumpToPage, sourceLang, targetLang }: Props) {
   const qc = useQueryClient();
   const { t } = useI18n();
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -80,6 +86,8 @@ export function HighlightsPanel({ bookId, open, onConsumed, onJumpToPage }: Prop
             isOpen={open?.id === h.id}
             autoEditNote={open?.id === h.id && !!open.autoEditNote}
             autoAskAi={open?.id === h.id ? open : null}
+            sourceLang={sourceLang}
+            targetLang={targetLang}
             onConsumed={onConsumed}
             onJumpToPage={() => onJumpToPage(h.page)}
             onUpdated={(updated) => {
@@ -110,6 +118,8 @@ interface CardProps {
   isOpen: boolean;
   autoEditNote: boolean;
   autoAskAi: OpenHighlightState | null;
+  sourceLang?: string | null;
+  targetLang?: string | null;
   onConsumed: () => void;
   onJumpToPage: () => void;
   onUpdated: (h: Highlight) => void;
@@ -122,6 +132,8 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
     isOpen,
     autoEditNote,
     autoAskAi,
+    sourceLang,
+    targetLang,
     onConsumed,
     onJumpToPage,
     onUpdated,
@@ -134,6 +146,7 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
   const [noteDraft, setNoteDraft] = useState(highlight.note ?? "");
   const [askQuestion, setAskQuestion] = useState("");
   const [askExpanded, setAskExpanded] = useState(false);
+  const [shareExpanded, setShareExpanded] = useState(false);
   const askInputRef = useRef<HTMLTextAreaElement | null>(null);
   const triggeredAskAi = useRef<number | null>(null);
 
@@ -417,6 +430,36 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
               </ReactMarkdown>
             </div>
           </div>
+        )}
+
+        {/* Share — sits alongside Ask AI in the action row */}
+        {!shareExpanded && (
+          <button
+            type="button"
+            onClick={() => setShareExpanded(true)}
+            className="ml-3 inline-flex items-center gap-1.5 text-[0.7rem] font-semibold text-[color:var(--color-saffron-deep)] hover:underline"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            Share to timeline
+          </button>
+        )}
+
+        {shareExpanded && (
+          <HighlightShare
+            highlightId={highlight.id}
+            bookId={highlight.book_id}
+            page={highlight.page}
+            text={highlight.text}
+            sourceLang={sourceLang}
+            targetLang={targetLang}
+            onClose={() => setShareExpanded(false)}
+          />
         )}
       </div>
     </div>

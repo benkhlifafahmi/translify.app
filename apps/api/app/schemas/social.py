@@ -251,3 +251,21 @@ class UserSearchResult(BaseModel):
     display_name: str | None
     avatar_url: str | None
     bio: str | None
+
+
+# ─── Milestones ───────────────────────────────────────────────────────────────
+
+
+class MilestoneRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    kind: MilestoneKind
+    context: dict
+    shared_post_id: uuid.UUID | None
+    created_at: datetime
+
+
+class MilestoneShareRequest(BaseModel):
+    note: str | None = Field(default=None, max_length=280)
+    visibility: PostVisibility = PostVisibility.public

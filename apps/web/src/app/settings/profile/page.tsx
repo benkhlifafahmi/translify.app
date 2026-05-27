@@ -150,7 +150,7 @@ export default function SocialProfileSettings() {
           {claimed && (
             <p className="mt-3 text-sm">
               <Link
-                href={`/${encodeURIComponent(profile!.username!)}`}
+                href={`/u/${encodeURIComponent(profile!.username!)}`}
                 className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4"
               >
                 See your profile, @{profile!.username}

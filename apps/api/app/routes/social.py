@@ -36,9 +36,11 @@ from app.auth.models import User
 from app.auth.users import current_active_user, current_optional_user
 from app.db import get_async_session
 from app.models.book import Book
-from app.models.social import Follow, Post, PostType, PostVisibility
+from app.models.social import Follow, Milestone, Post, PostType, PostVisibility
 from app.schemas.social import (
     FollowStatus,
+    MilestoneRead,
+    MilestoneShareRequest,
     PostAuthor,
     PostCreate,
     PostRead,
@@ -47,6 +49,7 @@ from app.schemas.social import (
     UserSearchResult,
     UsernameClaim,
 )
+from app.services.milestones import share_milestone
 
 log = logging.getLogger(__name__)
 
@@ -545,3 +548,83 @@ async def search_users(
         )
     ).scalars().all()
     return [UserSearchResult.model_validate(u) for u in rows]
+
+
+# ─── Milestones ───────────────────────────────────────────────────────────────
+
+
+@router.get("/milestones/pending", response_model=list[MilestoneRead])
+async def list_pending_milestones(
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> list[MilestoneRead]:
+    """Milestones the user has earned but not yet shared. Drives the toast."""
+    rows = (
+        await session.execute(
+            select(Milestone)
+            .where(Milestone.user_id == user.id, Milestone.shared_post_id.is_(None))
+            .order_by(Milestone.created_at.desc())
+            .limit(20)
+        )
+    ).scalars().all()
+    return [MilestoneRead.model_validate(m) for m in rows]
+
+
+@router.post("/milestones/{milestone_id}/share", response_model=PostRead)
+async def share_milestone_route(
+    milestone_id: uuid.UUID,
+    body: MilestoneShareRequest,
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> PostRead:
+    """Atomically create a Post from a Milestone and link them."""
+    require_non_anonymous(user, action="share_milestone")
+
+    milestone = (
+        await session.execute(
+            select(Milestone).where(
+                Milestone.id == milestone_id, Milestone.user_id == user.id
+            )
+        )
+    ).scalar_one_or_none()
+    if milestone is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Milestone not found")
+
+    post = await share_milestone(
+        milestone=milestone,
+        session=session,
+        note=body.note,
+        visibility=body.visibility,
+    )
+    await session.commit()
+    await session.refresh(post)
+
+    hydrated = await _hydrate([post], session, user)
+    return hydrated[0]
+
+
+@router.post("/milestones/{milestone_id}/dismiss", status_code=status.HTTP_204_NO_CONTENT)
+async def dismiss_milestone(
+    milestone_id: uuid.UUID,
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+) -> None:
+    """Hard-delete a pending milestone. Used when the user closes the toast
+    without sharing. Already-shared milestones cannot be dismissed (the
+    shared Post is the canonical artifact and lives on its own lifecycle)."""
+    milestone = (
+        await session.execute(
+            select(Milestone).where(
+                Milestone.id == milestone_id, Milestone.user_id == user.id
+            )
+        )
+    ).scalar_one_or_none()
+    if milestone is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Milestone not found")
+    if milestone.shared_post_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This milestone has already been shared. Delete the post instead.",
+        )
+    await session.delete(milestone)
+    await session.commit()

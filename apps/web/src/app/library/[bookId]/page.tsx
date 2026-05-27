@@ -434,6 +434,10 @@ export default function BookDetailPage({
     <HighlightsPanel
       bookId={bookId}
       open={openHighlight}
+      sourceLang={book.source_language ?? null}
+      // TODO: thread the user's reading language through so shared posts
+      // carry the language pair on the OG card. For V1, null is fine.
+      targetLang={null}
       onConsumed={() =>
         setOpenHighlight((prev) =>
           prev ? { ...prev, autoAskAi: false, autoEditNote: false } : prev,

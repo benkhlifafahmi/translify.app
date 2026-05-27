@@ -4,6 +4,7 @@ export const en: Dict = {
   // Nav
   "nav.how": "How it works",
   "nav.features": "Features",
+  "nav.discover": "Discover",
   "nav.pricing": "Pricing",
   "nav.faq": "FAQ",
   "nav.login": "Log in",

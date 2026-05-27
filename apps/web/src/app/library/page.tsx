@@ -24,6 +24,7 @@ import { getToken } from "@/lib/api";
 import { LumiHud } from "@/components/lumi/lumi-hud";
 import { LumiGuide } from "@/components/lumi/lumi-guide";
 import { useLumi } from "@/components/lumi/lumi-context";
+import { MilestoneToast } from "@/components/milestone-toast";
 import { useI18n } from "@/lib/i18n";
 
 export default function LibraryPage() {
@@ -183,6 +184,7 @@ export default function LibraryPage() {
 
   return (
     <main className="relative min-h-screen pb-24">
+      <MilestoneToast />
       <div
         aria-hidden
         className="pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-[color:var(--color-saffron)]/12 blur-3xl"

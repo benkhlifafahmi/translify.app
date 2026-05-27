@@ -19,7 +19,9 @@ from app.billing.quota import reserve_quiz_for_book
 from app.db import get_async_session
 from app.models.book import Book, BookStatus
 from app.models.quiz import Quiz, QuizAttempt
+from app.models.social import MilestoneKind
 from app.models.translation import Translation
+from app.services.milestones import record_milestone
 from app.schemas.quiz import (
     QuizAnswerResult,
     QuizAttemptCreate,
@@ -307,6 +309,25 @@ async def submit_attempt(
     session.add(attempt)
     await session.commit()
     await session.refresh(attempt)
+
+    # Milestone hook: perfect score (only when there were questions). Failure
+    # to record is silent so a milestone bug never breaks the quiz response.
+    if total > 0 and score == total:
+        try:
+            await record_milestone(
+                user_id=user.id,
+                kind=MilestoneKind.quiz_perfect,
+                context={
+                    "quiz_id": str(quiz.id),
+                    "book_id": str(quiz.book_id),
+                    "quiz_title": quiz.title,
+                    "total": total,
+                },
+                session=session,
+            )
+            await session.commit()
+        except Exception:
+            log.exception("milestone record failed; quiz response unaffected")
 
     return QuizAttemptRead(
         id=attempt.id,

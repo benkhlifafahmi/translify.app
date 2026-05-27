@@ -277,3 +277,28 @@ export function searchUsers(
   const params = new URLSearchParams({ q, limit: String(limit) });
   return api<UserSearchResult[]>(`/social/search?${params.toString()}`);
 }
+
+// ─── Milestones ──────────────────────────────────────────────────────────────
+
+export interface Milestone {
+  id: string;
+  kind: MilestoneKind;
+  context: Record<string, unknown>;
+  shared_post_id: string | null;
+  created_at: string;
+}
+
+export function listPendingMilestones(): Promise<Milestone[]> {
+  return api<Milestone[]>("/social/milestones/pending");
+}
+
+export function shareMilestone(
+  id: string,
+  body: { note?: string | null; visibility?: PostVisibility } = {},
+): Promise<Post> {
+  return api<Post>(`/social/milestones/${id}/share`, { method: "POST", body });
+}
+
+export function dismissMilestone(id: string): Promise<void> {
+  return api<void>(`/social/milestones/${id}/dismiss`, { method: "POST" });
+}
