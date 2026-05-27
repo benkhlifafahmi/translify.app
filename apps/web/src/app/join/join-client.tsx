@@ -180,7 +180,7 @@ export function JoinClient() {
           <button
             type="button"
             onClick={() => { SFX.tap(); setStep("topics"); }}
-            className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90"
+            className="flex h-9 w-9 items-center justify-center rounded-full transition-[transform,box-shadow] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-90"
             style={{ background: "white", border: "1.5px solid var(--color-border)", boxShadow: "0 2px 0 rgba(74,60,30,0.08)" }}
             aria-label={t("join.back")}
           >
@@ -274,7 +274,9 @@ function StepTopics({
 
   return (
     <div>
-      <div className="text-center">
+      <HeroHook />
+
+      <div className="mt-9 text-center">
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-sage-deep)" }}>
           {t("join.t.eyebrow")}
         </p>
@@ -298,7 +300,7 @@ function StepTopics({
               key={topic.id}
               type="button"
               onClick={() => toggle(topic.id)}
-              className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 px-3 py-5 text-center transition-all duration-200 active:scale-[0.97] animate-float-in"
+              className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 px-3 py-5 text-center transition-[transform,box-shadow,border-color,background] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] animate-float-in"
               style={{
                 animationDelay: `${i * 0.04}s`,
                 borderColor: selected ? tone.ring : "var(--color-border-strong)",
@@ -323,12 +325,80 @@ function StepTopics({
         })}
       </div>
 
+      <p className="mt-6 text-center text-[0.78rem]" style={{ color: "var(--color-ink-soft)" }}>
+        {t("join.t.trust")}
+      </p>
+
       <FixedFooter>
         <BigButton onClick={onContinue} disabled={topics.length === 0}>
           {topics.length === 0 ? t("join.t.cta.empty") : t("join.t.cta.continue", { n: topics.length })}
         </BigButton>
       </FixedFooter>
     </div>
+  );
+}
+
+// ─── Hero hook (top of step 1) ────────────────────────────────────────────────
+function HeroHook() {
+  const { t } = useI18n();
+  return (
+    <section className="text-center">
+      <h1
+        className="font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
+        style={{ fontSize: "clamp(1.9rem,6vw,2.5rem)", color: "var(--color-ink)" }}
+      >
+        {t("join.hook.title")}
+      </h1>
+      <p
+        className="mx-auto mt-3 max-w-[34ch] text-[0.95rem] leading-relaxed"
+        style={{ color: "var(--color-ink-soft)" }}
+      >
+        {t("join.hook.body")}
+      </p>
+      <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+        <HookPill tone="sage" label={t("join.cap.chat")}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z" />
+          </svg>
+        </HookPill>
+        <HookPill tone="coral" label={t("join.cap.quiz")}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9.1 9a3 3 0 0 1 5.83 1c0 2-3 2.5-3 4.5" />
+            <line x1="12" y1="17.5" x2="12.01" y2="17.5" />
+          </svg>
+        </HookPill>
+        <HookPill tone="saffron" label={t("join.cap.translate")}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+          </svg>
+        </HookPill>
+      </div>
+    </section>
+  );
+}
+
+function HookPill({
+  tone, label, children,
+}: {
+  tone: "saffron" | "sage" | "coral";
+  label: string;
+  children: React.ReactNode;
+}) {
+  const styles = {
+    saffron: { bg: "rgba(224,164,80,0.14)", color: "var(--color-saffron-deep)", ring: "rgba(224,164,80,0.28)" },
+    sage:    { bg: "rgba(123,161,124,0.18)", color: "var(--color-sage-deep)",    ring: "rgba(123,161,124,0.34)" },
+    coral:   { bg: "rgba(226,120,108,0.16)", color: "var(--color-coral-deep)",   ring: "rgba(226,120,108,0.30)" },
+  }[tone];
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.74rem] font-semibold"
+      style={{ background: styles.bg, color: styles.color, boxShadow: `0 0 0 1px ${styles.ring}` }}
+    >
+      {children}
+      {label}
+    </span>
   );
 }
 
@@ -403,20 +473,29 @@ function StepShelf({
             const tagTopics = display.topics.slice(0, 2);
             const isCloning = cloningSlug === seed.slug;
             const alreadyOpened = !!seed.clone_id;
+            const isLoved = i === 0 && !alreadyOpened;
             return (
               <li key={seed.slug}>
                 <button
                   type="button"
                   disabled={!!cloningSlug && !isCloning}
                   onClick={() => onOpen(seed)}
-                  className="group flex w-full items-center gap-4 rounded-2xl border-2 p-3.5 text-start transition-all active:scale-[0.99] animate-float-in disabled:cursor-not-allowed disabled:opacity-60"
+                  className="group relative flex w-full items-center gap-4 rounded-2xl border-2 p-3.5 text-start transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.99] animate-float-in disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
                     animationDelay: `${i * 0.06}s`,
-                    borderColor: "var(--color-border-strong)",
+                    borderColor: isLoved ? "var(--color-saffron-deep)" : "var(--color-border-strong)",
                     background: "white",
-                    boxShadow: "0 4px 0 rgba(74,60,30,0.10)",
+                    boxShadow: isLoved ? "0 4px 0 rgba(152,96,24,0.30)" : "0 4px 0 rgba(74,60,30,0.10)",
                   }}
                 >
+                  {isLoved && (
+                    <span
+                      className="absolute -top-2 left-4 rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-[0.10em] text-white"
+                      style={{ background: "var(--color-saffron-deep)", boxShadow: "0 2px 0 rgba(152,96,24,0.40)" }}
+                    >
+                      ★ {t("join.s.loved")}
+                    </span>
+                  )}
                   <div
                     className="relative grid h-20 w-14 shrink-0 place-items-center overflow-hidden rounded-md"
                     style={{ background: display.cover.bg, boxShadow: "2px 3px 0 rgba(74,60,30,0.18)" }}
@@ -486,6 +565,28 @@ function StepShelf({
       <p className="mt-6 text-center text-[0.78rem]" style={{ color: "var(--color-ink-soft)" }}>
         {t("join.s.foot")}
       </p>
+
+      {!isLoading && !error && ordered.length > 0 && (
+        <div className="mt-10">
+          <div className="relative flex items-center" role="separator" aria-hidden>
+            <span className="flex-1 border-t" style={{ borderColor: "var(--color-border)" }} />
+            <span
+              className="mx-3 text-[0.7rem] font-semibold uppercase tracking-[0.18em]"
+              style={{ color: "var(--color-ink-soft)" }}
+            >
+              {t("join.s.skipDivider")}
+            </span>
+            <span className="flex-1 border-t" style={{ borderColor: "var(--color-border)" }} />
+          </div>
+
+          <div className="mt-5">
+            <GoogleButton label={t("join.s.skipGoogle")} />
+          </div>
+          <p className="mt-3 text-center text-[0.76rem]" style={{ color: "var(--color-ink-soft)" }}>
+            {t("join.s.skipNote")}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -575,7 +676,7 @@ function FixedFooter({ children }: { children: React.ReactNode }) {
   );
 }
 
-function GoogleButton() {
+function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
@@ -593,7 +694,7 @@ function GoogleButton() {
       type="button"
       onClick={handleClick}
       disabled={loading}
-      className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border-2 font-[family-name:var(--font-display)] text-[0.98rem] font-semibold transition-all active:translate-y-1 disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border-2 font-[family-name:var(--font-display)] text-[0.98rem] font-semibold transition-[transform,box-shadow] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:translate-y-1 disabled:cursor-not-allowed disabled:opacity-50"
       style={{
         borderColor: "var(--color-border-strong)",
         background: "white",
@@ -606,7 +707,7 @@ function GoogleButton() {
       ) : (
         <GoogleLogo />
       )}
-      {loading ? "Redirecting…" : "Continue with Google"}
+      {loading ? "Redirecting" : label}
     </button>
   );
 }

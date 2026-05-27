@@ -14,10 +14,10 @@ export const en: Dict = {
   "hero.title.1": "Read it. Talk to it.",
   "hero.title.2": "Remember it.",
   "hero.subtitle":
-    "Translify is an AI reader for PDFs and EPUBs. Drop a book in, then chat with it like a tutor that has read every page, quiz yourself before exams, and — if it isn't in your language yet — read every page in any of 14 tongues.",
+    "Translify is an AI reader for PDFs and EPUBs. Drop a book in, then chat with it like a tutor that has read every page, quiz yourself before exams, and (if it isn't in your language yet) read every page in any of 14 tongues.",
   "hero.cta.primary": "Start your 14-day trial",
   "hero.cta.secondary": "See plans",
-  "hero.bullet.1": "Ask anything — every answer cites the page",
+  "hero.bullet.1": "Ask anything, every answer cites the page",
   "hero.bullet.2": "AI quizzes that send you back to the exact passage",
   "hero.bullet.3": "14 languages with layout preserved, money-back in 30",
 
@@ -44,10 +44,10 @@ export const en: Dict = {
     "No setup. No copy-pasting paragraphs into another tab. Drop a book, wait a coffee's worth of time, and start asking it questions.",
   "how.step1.title": "Drop your book",
   "how.step1.body":
-    "PDF or EPUB, up to 200 MB. Textbooks, novels, papers, kids' books — anything readable.",
+    "PDF or EPUB, up to 200 MB. Textbooks, novels, papers, kids' books, anything readable.",
   "how.step2.title": "Ask it anything",
   "how.step2.body":
-    "Chat like it's a tutor that has memorised every page. Each reply links to the exact passage — page number, excerpt, jump button.",
+    "Chat like it's a tutor that has memorised every page. Each reply links to the exact passage: page number, excerpt, jump button.",
   "how.step3.title": "Quiz, learn, remember",
   "how.step3.body":
     "5, 8 or 12-question rounds generated from what you actually read. Miss one and we send you to the page that explains it.",
@@ -56,7 +56,7 @@ export const en: Dict = {
   "feat.badge": "What you actually get",
   "feat.title.1": "Every tool you need to",
   "feat.title.2": "finish",
-  "feat.title.3": "the book — and remember it.",
+  "feat.title.3": "the book, and remember it.",
   "feat.translate.eyebrow": "Translation",
   "feat.translate.title": "Same book. Same shape. Your language.",
   "feat.translate.body":
@@ -133,7 +133,7 @@ export const en: Dict = {
   "cta.title.1": "Stop wishing you'd read it.",
   "cta.title.2": "Talk to it.",
   "cta.body":
-    "Pick a plan, drop your first book, and read it the way you mean to — with a tutor on call and quizzes to make it stick. If 30 days in you don't love it, we refund you in full — no forms, no friction.",
+    "Pick a plan, drop your first book, and read it the way you mean to, with a tutor on call and quizzes to make it stick. If 30 days in you don't love it, we refund you in full. No forms, no friction.",
   "cta.primary": "Start your 14-day trial",
   "cta.secondary": "Compare plans",
   "cta.note": "No free plan. No surprise charges. Cancel any time, refund within 30 days.",
@@ -1035,19 +1035,29 @@ export const en: Dict = {
   // Join · steps
   "join.signIn": "Sign in",
   "join.back": "Back",
-  "join.t.eyebrow": "Your shelf is ready",
+  "join.hook.title": "Tap what you love.",
+  "join.hook.body": "We hand you a book you can chat with, quiz yourself on, and read in your own language.",
+  "join.cap.chat": "Chat with it",
+  "join.cap.quiz": "Quiz yourself",
+  "join.cap.translate": "14 languages",
+  "join.t.eyebrow": "1 of 2 · Your interests",
   "join.t.title": "What do you love reading?",
-  "join.t.subtitle": "Pick a few — we'll surface books in those topics first.",
+  "join.t.subtitle": "Pick a few. We surface books in those topics first.",
+  "join.t.trust": "No card, no email yet. One minute to start reading.",
   "join.t.cta.empty": "Pick at least one",
   "join.t.cta.continue": "Continue (%n%) →",
-  "join.s.eyebrow": "Step %idx% of %total%",
+  "join.s.eyebrow": "%idx% of %total% · Your starter shelf",
   "join.s.title": "Pick a book to open",
-  "join.s.subtitle": "The first 10 pages of any book are free — keep going on a 14-day trial.",
+  "join.s.subtitle": "The first ten pages of any book are free. Keep going on a 14-day trial.",
+  "join.s.loved": "Most loved",
   "join.s.loadError": "Couldn't load the starter shelf. Refresh to try again.",
   "join.s.openError": "Couldn't open that book. Please try again.",
   "join.s.inLibrary": "✓ In your library",
   "join.s.emptyCatalog": "The seed catalogue isn't loaded on this server yet. Ask the admin to run app.scripts.seed_books.",
   "join.s.foot": "You can upload your own books later from your library.",
+  "join.s.skipDivider": "or skip the demo",
+  "join.s.skipGoogle": "Sign up with Google",
+  "join.s.skipNote": "Bring your own PDF or EPUB. Free 14-day trial.",
 
   // Join · topic chips
   "topic.fiction": "Fiction",
