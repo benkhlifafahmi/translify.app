@@ -43,17 +43,31 @@ def upgrade() -> None:
     )
 
     # ─── posts ───────────────────────────────────────────────────────────────
-    post_type = postgresql.ENUM(
+    # Enum types: created once via `.create(..., checkfirst=True)`. Column
+    # definitions below use `postgresql.ENUM(..., create_type=False)` so
+    # `op.create_table` does not try to recreate the same type.
+    post_type_create = postgresql.ENUM(
         "word", "sentence", "passage", "milestone", "list", "reflection",
         name="post_type",
     )
-    post_type.create(op.get_bind(), checkfirst=True)
+    post_type_create.create(op.get_bind(), checkfirst=True)
 
-    post_visibility = postgresql.ENUM(
+    post_visibility_create = postgresql.ENUM(
         "public", "followers", "private",
         name="post_visibility",
     )
-    post_visibility.create(op.get_bind(), checkfirst=True)
+    post_visibility_create.create(op.get_bind(), checkfirst=True)
+
+    post_type_ref = postgresql.ENUM(
+        "word", "sentence", "passage", "milestone", "list", "reflection",
+        name="post_type",
+        create_type=False,
+    )
+    post_visibility_ref = postgresql.ENUM(
+        "public", "followers", "private",
+        name="post_visibility",
+        create_type=False,
+    )
 
     op.create_table(
         "posts",
@@ -64,15 +78,7 @@ def upgrade() -> None:
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
         ),
-        sa.Column(
-            "type",
-            sa.Enum(
-                "word", "sentence", "passage", "milestone", "list", "reflection",
-                name="post_type",
-                create_type=False,
-            ),
-            nullable=False,
-        ),
+        sa.Column("type", post_type_ref, nullable=False),
         sa.Column("payload", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column(
             "book_id",
@@ -91,11 +97,7 @@ def upgrade() -> None:
         sa.Column("note", sa.String(length=280), nullable=True),
         sa.Column(
             "visibility",
-            sa.Enum(
-                "public", "followers", "private",
-                name="post_visibility",
-                create_type=False,
-            ),
+            post_visibility_ref,
             nullable=False,
             server_default="public",
         ),
@@ -153,14 +155,23 @@ def upgrade() -> None:
     op.create_index("ix_follows_followed_created", "follows", ["followed_id", "created_at"])
 
     # ─── milestones ──────────────────────────────────────────────────────────
-    milestone_kind = postgresql.ENUM(
+    milestone_kind_create = postgresql.ENUM(
         "first_book_finished", "book_finished",
         "streak_7", "streak_30", "streak_100",
         "words_100", "words_500", "words_1000",
         "quiz_perfect", "garden_bloom",
         name="milestone_kind",
     )
-    milestone_kind.create(op.get_bind(), checkfirst=True)
+    milestone_kind_create.create(op.get_bind(), checkfirst=True)
+
+    milestone_kind_ref = postgresql.ENUM(
+        "first_book_finished", "book_finished",
+        "streak_7", "streak_30", "streak_100",
+        "words_100", "words_500", "words_1000",
+        "quiz_perfect", "garden_bloom",
+        name="milestone_kind",
+        create_type=False,
+    )
 
     op.create_table(
         "milestones",
@@ -171,18 +182,7 @@ def upgrade() -> None:
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
         ),
-        sa.Column(
-            "kind",
-            sa.Enum(
-                "first_book_finished", "book_finished",
-                "streak_7", "streak_30", "streak_100",
-                "words_100", "words_500", "words_1000",
-                "quiz_perfect", "garden_bloom",
-                name="milestone_kind",
-                create_type=False,
-            ),
-            nullable=False,
-        ),
+        sa.Column("kind", milestone_kind_ref, nullable=False),
         sa.Column(
             "context",
             postgresql.JSONB(astext_type=sa.Text()),
@@ -230,9 +230,9 @@ def downgrade() -> None:
     op.drop_table("posts")
 
     bind = op.get_bind()
-    sa.Enum(name="milestone_kind").drop(bind, checkfirst=True)
-    sa.Enum(name="post_visibility").drop(bind, checkfirst=True)
-    sa.Enum(name="post_type").drop(bind, checkfirst=True)
+    postgresql.ENUM(name="milestone_kind").drop(bind, checkfirst=True)
+    postgresql.ENUM(name="post_visibility").drop(bind, checkfirst=True)
+    postgresql.ENUM(name="post_type").drop(bind, checkfirst=True)
 
     op.drop_column("users", "profile_public")
     op.drop_column("users", "avatar_url")
