@@ -10,6 +10,7 @@ import {
   patchProfile,
   type PublicProfile,
 } from "@/lib/social";
+import { AvatarPicker } from "@/components/avatar-picker";
 import { MarketingHeader } from "@/components/marketing-header";
 
 /**
@@ -247,20 +248,11 @@ export default function SocialProfileSettings() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="avatar" className="text-[0.85rem] font-semibold text-[color:var(--color-ink)]">
-                Avatar URL
-              </label>
-              <input
-                id="avatar"
-                type="url"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                placeholder="https://…"
-                className="rounded-2xl border-[1.5px] border-[color:var(--color-border-strong)] bg-white px-4 py-3 text-[0.98rem] outline-none transition-colors duration-150 placeholder:text-[color:var(--color-ink-soft)]/55 focus:border-[color:var(--color-saffron-deep)]"
+              <AvatarPicker
+                value={avatarUrl || null}
+                onChange={(url) => setAvatarUrl(url ?? "")}
+                initialSeed={profile?.username ?? null}
               />
-              <p className="text-[0.78rem] text-[color:var(--color-ink-soft)]">
-                Paste a link to an image. Direct uploads are coming.
-              </p>
             </div>
 
             <label className="flex cursor-pointer items-start gap-3 rounded-2xl border-[1.5px] border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40 px-4 py-3">

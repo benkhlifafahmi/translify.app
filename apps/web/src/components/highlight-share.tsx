@@ -15,7 +15,7 @@
  *   - Picks the post type by source length: ≤ 280 chars → sentence,
  *     ≤ 500 → passage, > 500 → rejected with an inline error.
  */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { ApiError, getToken } from "@/lib/api";
 import {
@@ -52,6 +52,10 @@ export function HighlightShare({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shared, setShared] = useState<Post | null>(null);
+  // Synchronous guard against double-fires. React 18 batches `setBusy(true)`
+  // so the button's `disabled` attribute doesn't update before a fast
+  // second click runs `onShare` again. The ref blocks that path.
+  const inFlight = useRef(false);
 
   const len = text.length;
   const tooLong = len > PASSAGE_MAX;
@@ -59,11 +63,13 @@ export function HighlightShare({
   const remainingNote = 280 - note.length;
 
   const onShare = async () => {
+    if (inFlight.current) return;
     if (tooLong) return;
     if (!getToken()) {
       window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
       return;
     }
+    inFlight.current = true;
     setBusy(true);
     setError(null);
     try {
@@ -101,6 +107,7 @@ export function HighlightShare({
       setError("Couldn't share that. Try again in a moment.");
     } finally {
       setBusy(false);
+      inFlight.current = false;
     }
   };
 

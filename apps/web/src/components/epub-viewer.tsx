@@ -500,6 +500,11 @@ export function EpubViewer({
     const onKey = (e: KeyboardEvent) => {
       const r = renditionRef.current;
       if (!r) return;
+      // Don't hijack keys when the user is typing in a text field. Without
+      // this, the share-note textarea and any inline note editor would
+      // eat their own spacebars to flip the page.
+      const target = e.target as HTMLElement | null;
+      if (target && isEditable(target)) return;
       if (e.key === "ArrowRight" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)) {
         e.preventDefault();
         r.next();
@@ -1006,4 +1011,13 @@ function flattenNav(toc: { label: string; href: string; subitems?: unknown[] }[]
   };
   walk(toc);
   return out;
+}
+
+/** True when the event originated from a text field the user is typing in.
+ * Used by the keyboard-nav handler to skip page-flips while typing. */
+function isEditable(el: HTMLElement): boolean {
+  const tag = el.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+  if (el.isContentEditable) return true;
+  return false;
 }

@@ -319,6 +319,26 @@ async def create_post(
     session: AsyncSession = Depends(get_async_session),
 ) -> PostRead:
     require_non_anonymous(user, action="create_post")
+
+    # Idempotency: when a post is minted from an existing highlight, the same
+    # (user, highlight, type) tuple should resolve to the same row. This
+    # catches React 18 double-click double-fires and retried network calls,
+    # and stops the per-book ceiling from being burned by accidental dupes.
+    incoming_highlight_id = getattr(body, "highlight_id", None)
+    if incoming_highlight_id is not None:
+        existing = (
+            await session.execute(
+                select(Post).where(
+                    Post.user_id == user.id,
+                    Post.highlight_id == incoming_highlight_id,
+                    Post.type == body.type,
+                )
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            hydrated = await _hydrate([existing], session, user)
+            return hydrated[0]
+
     await _enforce_post_caps(user, body, session)
 
     # Strip the pydantic discriminator; SQLA column expects a plain dict for
@@ -329,7 +349,7 @@ async def create_post(
         type=body.type,
         payload=payload_dict,
         book_id=getattr(body, "book_id", None),
-        highlight_id=getattr(body, "highlight_id", None),
+        highlight_id=incoming_highlight_id,
         source_lang=getattr(body, "source_lang", None),
         target_lang=getattr(body, "target_lang", None),
         note=body.note,

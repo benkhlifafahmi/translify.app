@@ -15,7 +15,7 @@
  * deliberate. Users who close the toast and reopen the page see the same
  * queue, which is the right behavior for important achievements.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiError, getToken } from "@/lib/api";
 import {
   dismissMilestone,
@@ -45,6 +45,10 @@ export function MilestoneToast() {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Synchronous guard: React 18 batches `setBusy(true)` so the button's
+  // `disabled` attribute may not update before a fast second click runs
+  // `onShare` again. The ref blocks that re-entry.
+  const inFlight = useRef(false);
 
   useEffect(() => {
     // Anonymous accounts have no milestones to fetch.
@@ -88,6 +92,8 @@ export function MilestoneToast() {
   };
 
   const onShare = async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     setError(null);
     try {
@@ -102,6 +108,7 @@ export function MilestoneToast() {
       setError("Couldn't share that. Try again in a moment.");
     } finally {
       setBusy(false);
+      inFlight.current = false;
     }
   };
 
