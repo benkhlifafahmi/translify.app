@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { MarketingHeader } from "@/components/marketing-header";
 import { useI18n } from "@/lib/i18n";
 
 const LANGS = [
@@ -17,13 +18,9 @@ const LANGS = [
 export default function LanguagesClient() {
   const { t } = useI18n();
   return (
-    <main className="mx-auto max-w-5xl px-6 py-16">
-      <nav className="mb-8 text-sm text-[color:var(--color-ink-soft)]">
-        <Link href="/" className="hover:text-[color:var(--color-ink)]">
-          {t("lang.back")}
-        </Link>
-      </nav>
-
+    <>
+      <MarketingHeader />
+      <main className="mx-auto max-w-5xl px-6 py-12 lg:py-16">
       <header className="max-w-3xl">
         <span className="badge-pill bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
@@ -75,6 +72,7 @@ export default function LanguagesClient() {
           {t("lang.cta")}
         </Link>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

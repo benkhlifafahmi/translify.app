@@ -3,6 +3,7 @@
 // Leading underscore = not a route.
 
 import Link from "next/link";
+import { MarketingHeader } from "@/components/marketing-header";
 import type { BlogPost } from "./_posts";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
@@ -44,7 +45,9 @@ export function BlogShell({ post, children, faqs }: Props) {
     : null;
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16 lg:py-20">
+    <>
+      <MarketingHeader />
+      <main className="mx-auto max-w-2xl px-6 py-12 lg:py-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
@@ -126,7 +129,8 @@ export function BlogShell({ post, children, faqs }: Props) {
           </Link>
         </div>
       </article>
-    </main>
+      </main>
+    </>
   );
 }
 

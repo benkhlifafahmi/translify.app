@@ -1,18 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { MarketingHeader } from "@/components/marketing-header";
 import { useI18n } from "@/lib/i18n";
 
 export default function ContactClient() {
   const { t } = useI18n();
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16 lg:py-20">
-      <nav className="mb-10 text-sm text-[color:var(--color-ink-soft)]">
-        <Link href="/" className="hover:text-[color:var(--color-ink)]">
-          {t("contact.back")}
-        </Link>
-      </nav>
-
+    <>
+      <MarketingHeader />
+      <main className="mx-auto max-w-2xl px-6 py-12 lg:py-16">
       <header className="mb-12">
         <span className="badge-pill bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
@@ -102,7 +99,8 @@ export default function ContactClient() {
           {t("contact.footer.end")}
         </p>
       </section>
-    </main>
+      </main>
+    </>
   );
 }
 

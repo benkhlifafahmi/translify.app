@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { TranslifyIcon } from "@/components/translify-mark";
+import { MarketingHeader } from "@/components/marketing-header";
 import { useI18n } from "@/lib/i18n";
 
 const TESTIMONIAL_KEYS = [
@@ -39,22 +39,8 @@ export default function StartClient() {
     <main className="relative min-h-screen overflow-hidden bg-[color:var(--color-paper)]">
       <Blobs />
 
-      <header className="relative z-10 mx-auto flex max-w-5xl items-center justify-between px-6 py-5 lg:px-10">
-        <Link
-          href="/"
-          aria-label="Translify"
-          className="flex items-center gap-2.5 font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight text-[color:var(--color-ink)]"
-        >
-          <TranslifyIcon size={34} />
-          Translify
-        </Link>
-        <Link
-          href="/login"
-          className="text-sm font-semibold text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)] transition-colors"
-        >
-          {t("start.login")}
-        </Link>
-      </header>
+      <MarketingHeader />
+
 
       <section className="relative z-10 mx-auto max-w-4xl px-6 pb-14 pt-12 text-center lg:px-10 lg:pt-20">
         <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-saffron-deep)]/30 bg-[color:var(--color-saffron)]/15 px-4 py-1.5 text-[0.72rem] font-bold uppercase tracking-[0.2em] text-[color:var(--color-saffron-deep)]">

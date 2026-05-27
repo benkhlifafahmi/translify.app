@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Pricing } from "@/components/landing/pricing";
 import { FAQ } from "@/components/landing/faq";
-import { TranslifyIcon } from "@/components/translify-mark";
+import { MarketingHeader } from "@/components/marketing-header";
 import { useI18n } from "@/lib/i18n";
 
 export default function PricingClient() {
@@ -21,22 +21,8 @@ export default function PricingClient() {
         className="pointer-events-none absolute -right-20 top-40 h-[24rem] w-[24rem] rounded-full bg-[color:var(--color-sage)]/10 blur-3xl"
       />
 
-      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6 lg:px-10">
-        <Link
-          href="/"
-          aria-label="Translify"
-          className="flex items-center gap-2.5 font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight"
-        >
-          <TranslifyIcon size={36} />
-          Translify
-        </Link>
-        <Link
-          href="/login"
-          className="text-sm font-semibold text-[color:var(--color-ink-soft)] transition-colors duration-150 hover:text-[color:var(--color-ink)]"
-        >
-          {t("pricing.signIn")}
-        </Link>
-      </header>
+      <MarketingHeader />
+
 
       <section className="relative z-10 mx-auto max-w-5xl px-6 pt-8 text-center lg:px-10">
         <span className="badge-pill bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)]">
