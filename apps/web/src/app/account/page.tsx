@@ -344,6 +344,34 @@ function ProfileSection({
       title="Your reader card."
       lede="The way you appear to the books, the citations, and the people you share a shelf with."
     >
+      {/* Quick link out to the social/public profile editor — handle, bio,
+          avatar. Lives at /settings/profile because the social schema is
+          separate from the reader-card preferences below. */}
+      <Link
+        href="/settings/profile"
+        className="mb-6 flex items-center justify-between gap-4 rounded-2xl border-[1.5px] border-dashed border-[color:var(--color-saffron-deep)]/40 bg-gradient-to-br from-[#FFFBF0] to-[#FBE9C2] px-5 py-4 transition-[transform,border-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[1px] hover:border-[color:var(--color-saffron-deep)] active:scale-[0.995]"
+      >
+        <div className="min-w-0">
+          <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[color:var(--color-saffron-deep)]">
+            Public profile
+          </p>
+          <p className="mt-1 font-[family-name:var(--font-display)] text-[1.05rem] font-semibold leading-tight text-[color:var(--color-ink)]">
+            Handle, bio, and avatar
+          </p>
+          <p className="mt-0.5 text-[0.84rem] leading-snug text-[color:var(--color-ink-soft)]">
+            What people see when you share a sentence to your timeline.
+          </p>
+        </div>
+        <span
+          aria-hidden
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[color:var(--color-ink)] text-[color:var(--color-paper)]"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M13 5l7 7-7 7" />
+          </svg>
+        </span>
+      </Link>
+
       <form onSubmit={onSubmit} className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
         {/* Form column */}
         <div className="flex flex-col gap-5">

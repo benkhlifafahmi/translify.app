@@ -1,13 +1,22 @@
 "use client";
 
 /**
- * Small client island that lives on /u/[username] below the bio. Handles
- * follow + unfollow with optimistic updates. If the viewer is anonymous or
- * logged out, the button routes to /login instead of attempting the call.
+ * Profile action button below the bio on /u/[username].
+ *
+ * Renders one of three states, decided client-side after a fetch of /users/me:
+ *   - Owner (you're viewing your own profile) → "Edit profile" link to /settings/profile
+ *   - Follower → "Follow" / "Following" toggle with optimistic updates
+ *   - Anonymous / signed-out → "Follow" button that bounces to /login on click
+ *
+ * Until /users/me resolves we render the Follow button optimistically (it
+ * was the only behaviour before owner-aware logic; now it's also the
+ * sensible fallback for the brief loading window).
  */
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, getToken } from "@/lib/api";
+import { me } from "@/lib/auth";
 import { followUser, unfollowUser } from "@/lib/social";
 
 interface Props {
@@ -26,6 +35,44 @@ export function FollowButton({
   const [followerCount, setFollowerCount] = useState(initialFollowerCount);
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
+  // null = "not yet resolved or not logged in".
+  const [viewerId, setViewerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!getToken()) return;
+    let cancelled = false;
+    me()
+      .then((u) => {
+        if (!cancelled) setViewerId(u.id);
+      })
+      .catch(() => { /* token invalid; leave anonymous */ });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const isOwner = viewerId === targetUserId;
+
+  if (isOwner) {
+    return (
+      <div className="flex items-center gap-3">
+        <Link
+          href="/settings/profile"
+          className="inline-flex h-10 items-center gap-2 rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)] px-5 text-[0.92rem] font-semibold text-[color:var(--color-ink)] transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-[color:var(--color-paper-2)] active:scale-[0.97]"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+          Edit profile
+        </Link>
+        <p className="text-[0.84rem] text-[color:var(--color-ink-soft)]">
+          <span className="font-semibold text-[color:var(--color-ink)]">{followerCount}</span>{" "}
+          {followerCount === 1 ? "follower" : "followers"}
+        </p>
+      </div>
+    );
+  }
 
   const handle = async () => {
     if (busy) return;
