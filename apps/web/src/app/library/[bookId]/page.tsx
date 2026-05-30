@@ -15,6 +15,7 @@ import { EpubViewer } from "@/components/epub-viewer-lazy";
 import { TranslifyIcon } from "@/components/translify-mark";
 import { useI18n } from "@/lib/i18n";
 import { TranslatePanel } from "@/components/translate-panel";
+import { StudyPanel } from "@/components/study/study-panel";
 import { ChatPanel } from "@/components/chat-panel";
 import { QuizPanel } from "@/components/quiz-panel";
 import {
@@ -58,7 +59,7 @@ import { FreePreviewChip } from "@/components/free-preview-chip";
 import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
 
 type RightTab = "chat" | "quiz" | "notes";
-type MobilePanel = null | "translate" | "chat" | "notes" | "quiz" | "garden";
+type MobilePanel = null | "study" | "chat" | "notes" | "quiz" | "garden";
 
 export default function BookDetailPage({
   params,
@@ -422,6 +423,16 @@ export default function BookDetailPage({
     />
   );
 
+  const studyPanelNode = (
+    <StudyPanel
+      bookId={bookId}
+      onFocusComplete={() => {
+        // Phase 2: a finished focus block can water the Garden / extend the
+        // streak once the backend grows a "focus" event kind.
+      }}
+    />
+  );
+
   const chatPanelNode = (
     <ChatPanel
       bookId={bookId}
@@ -494,7 +505,7 @@ export default function BookDetailPage({
         onClose={() => setPaywallPage(null)}
       />
 
-      <BookHeader book={book} />
+      <BookHeader book={book} translationSlot={translatePanelNode} />
 
       {!ready ? (
         <NotReadyState book={book} />
@@ -502,8 +513,8 @@ export default function BookDetailPage({
         <>
           {/* Desktop layout — 3 columns at lg+, hidden on mobile */}
           <div className="hidden flex-1 overflow-hidden lg:grid lg:grid-cols-12">
-            <aside className="col-span-3 flex flex-col overflow-y-auto border-r border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40">
-              {translatePanelNode}
+            <aside className="col-span-3 flex flex-col overflow-hidden border-r border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40">
+              {studyPanelNode}
             </aside>
 
             <section className="col-span-5 flex flex-col overflow-hidden border-r border-[color:var(--color-border)]">
@@ -575,7 +586,7 @@ export default function BookDetailPage({
             title={mobilePanel ? t(`app.tab.${mobilePanel}`) : ""}
             tone={mobilePanel ? PANEL_TONES[mobilePanel] : "sage"}
           >
-            {mobilePanel === "translate" && translatePanelNode}
+            {mobilePanel === "study"     && studyPanelNode}
             {mobilePanel === "chat"      && chatPanelNode}
             {mobilePanel === "notes"     && notesPanelNode}
             {mobilePanel === "quiz"      && quizPanelNode}
@@ -594,7 +605,7 @@ export default function BookDetailPage({
 }
 
 const PANEL_TONES: Record<Exclude<MobilePanel, null>, "sage" | "saffron" | "coral" | "plum"> = {
-  translate: "plum",
+  study: "plum",
   chat: "sage",
   notes: "saffron",
   quiz: "coral",
@@ -603,8 +614,26 @@ const PANEL_TONES: Record<Exclude<MobilePanel, null>, "sage" | "saffron" | "cora
 
 // ───────────────────────── Book header ─────────────────────────
 
-function BookHeader({ book }: { book: Book }) {
+function BookHeader({
+  book,
+  translationSlot,
+}: {
+  book: Book;
+  translationSlot?: React.ReactNode;
+}) {
   const { t } = useI18n();
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!langOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [langOpen]);
   return (
     <header className="flex shrink-0 items-center gap-2 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/80 px-3 py-2.5 backdrop-blur sm:gap-3 sm:py-3 sm:px-4 lg:px-7">
       {/* Back button — always visible. Slightly smaller on mobile. */}
@@ -651,17 +680,49 @@ function BookHeader({ book }: { book: Book }) {
         </p>
       </div>
 
-      {/* Garden chip — quick step out to this book's reading garden. Kept
-          compact on mobile (just the leaf), full label from sm up. */}
-      <Link
-        href={`/garden/${book.id}`}
-        aria-label="Open this book's garden"
-        title="Open this book's garden"
-        className="ml-auto inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-2.5 text-xs font-semibold text-[color:var(--color-ink-soft)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-sage)] hover:text-[color:var(--color-sage-deep)] sm:h-9 sm:px-3.5"
-      >
-        <span aria-hidden>🌿</span>
-        <span className="hidden sm:inline">Garden</span>
-      </Link>
+      <div className="ml-auto flex shrink-0 items-center gap-2">
+        {/* Languages — translation now lives in the header, freeing the
+            reading space for the study tools. Opens the translation manager. */}
+        {translationSlot && (
+          <div className="relative" ref={langRef}>
+            <button
+              type="button"
+              onClick={() => setLangOpen((o) => !o)}
+              aria-haspopup="dialog"
+              aria-expanded={langOpen}
+              title="Languages & translations"
+              className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold transition-all hover:-translate-y-[1px] sm:h-9 sm:px-3.5 ${
+                langOpen
+                  ? "border-[color:var(--color-plum)] text-[color:var(--color-plum)]"
+                  : "border-[color:var(--color-border)] bg-[color:var(--color-paper)] text-[color:var(--color-ink-soft)] hover:border-[color:var(--color-plum)] hover:text-[color:var(--color-plum)]"
+              }`}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M2 12h20" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+              <span className="hidden sm:inline">Languages</span>
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 top-[calc(100%+8px)] z-50 max-h-[72vh] w-[min(92vw,340px)] overflow-y-auto rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] shadow-[var(--shadow-paper-lg)]">
+                {translationSlot}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Garden chip — quick step out to this book's reading garden. */}
+        <Link
+          href={`/garden/${book.id}`}
+          aria-label="Open this book's garden"
+          title="Open this book's garden"
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-2.5 text-xs font-semibold text-[color:var(--color-ink-soft)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-sage)] hover:text-[color:var(--color-sage-deep)] sm:h-9 sm:px-3.5"
+        >
+          <span aria-hidden>🌿</span>
+          <span className="hidden sm:inline">Garden</span>
+        </Link>
+      </div>
     </header>
   );
 }
@@ -743,13 +804,13 @@ function PaperTabBar({
           tone="plum"
           icon={
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 8h14" />
-              <path d="M5 12h14" />
-              <path d="M5 16h10" />
+              <circle cx="12" cy="13" r="8" />
+              <path d="M12 9v4l2 2" />
+              <path d="M9 2h6" />
             </svg>
           }
-          label={t("app.tab.translate")}
-          onClick={() => onOpen("translate")}
+          label={t("app.tab.study")}
+          onClick={() => onOpen("study")}
         />
         <PaperTabBtn
           tone="sage"

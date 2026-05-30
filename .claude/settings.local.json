@@ -76,7 +76,11 @@
       "Bash(echo \"BUILD_EXIT=$?\")",
       "Read(//tmp/**)",
       "Read(//private/tmp/**)",
-      "Bash(echo \"log exists exit: $?\")"
+      "Bash(echo \"log exists exit: $?\")",
+      "Bash(echo \"BUILD2_EXIT=$?\")"
     ]
+  },
+  "enabledPlugins": {
+    "posthog@claude-plugins-official": true
   }
 }
