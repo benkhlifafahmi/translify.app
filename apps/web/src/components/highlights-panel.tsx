@@ -4,6 +4,8 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import {
   askAiAboutHighlight,
   deleteHighlight,
@@ -441,7 +443,10 @@ const HighlightCard = forwardRef<HTMLDivElement, CardProps>(function HighlightCa
               </p>
             )}
             <div className="prose-chat text-xs leading-relaxed text-[color:var(--color-ink)]">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[[rehypeKatex, { throwOnError: false, strict: false }]]}
+              >
                 {highlight.ai_answer}
               </ReactMarkdown>
             </div>

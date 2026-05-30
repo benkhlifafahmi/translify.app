@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { Button } from "@/components/ui/button";
 import {
   createBookChat,
@@ -310,7 +312,8 @@ function AssistantMarkdown({ content }: { content: string }) {
   return (
     <div className="prose-chat text-sm leading-relaxed text-[color:var(--color-ink)]">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[[rehypeKatex, { throwOnError: false, strict: false }]]}
         components={{
           p: ({ children }) => (
             <p className="mb-2 whitespace-pre-wrap last:mb-0">{children}</p>
