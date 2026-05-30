@@ -6,10 +6,10 @@ import { FocusTool } from "@/components/study/focus-tool";
 
 type Tool = "focus" | "cards" | "map";
 
-const TOOLS: { id: Tool; label: string; icon: LucideIcon; ready: boolean }[] = [
-  { id: "focus", label: "Focus", icon: Timer, ready: true },
-  { id: "cards", label: "Flashcards", icon: Layers, ready: false },
-  { id: "map", label: "Mind map", icon: Network, ready: false },
+const TOOLS: { id: Tool; label: string; short: string; icon: LucideIcon; ready: boolean }[] = [
+  { id: "focus", label: "Focus", short: "Focus", icon: Timer, ready: true },
+  { id: "cards", label: "Flashcards", short: "Cards", icon: Layers, ready: false },
+  { id: "map", label: "Mind map", short: "Map", icon: Network, ready: false },
 ];
 
 interface Props {
@@ -26,7 +26,7 @@ export function StudyPanel({ bookId, onFocusComplete, onCollapse }: Props) {
   return (
     <div className="flex h-full min-h-0">
       {/* Icon rail */}
-      <nav className="flex w-14 shrink-0 flex-col items-center gap-1.5 border-r border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/60 py-3">
+      <nav className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1 border-r border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/60 py-3">
         {onCollapse && (
           <button
             type="button"
@@ -37,7 +37,7 @@ export function StudyPanel({ bookId, onFocusComplete, onCollapse }: Props) {
             <ChevronLeft size={18} />
           </button>
         )}
-        {TOOLS.map(({ id, label, icon: Icon, ready }) => {
+        {TOOLS.map(({ id, label, short, icon: Icon, ready }) => {
           const active = tool === id;
           return (
             <button
@@ -45,15 +45,16 @@ export function StudyPanel({ bookId, onFocusComplete, onCollapse }: Props) {
               type="button"
               onClick={() => setTool(id)}
               title={ready ? label : `${label} — coming soon`}
-              className={`relative grid h-10 w-10 place-items-center rounded-xl transition-colors ${
+              className={`relative flex w-[3.5rem] flex-col items-center gap-1 rounded-xl py-1.5 transition-colors ${
                 active
                   ? "bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)] ring-1 ring-[color:var(--color-saffron)]/30"
                   : "text-[color:var(--color-ink-soft)] hover:bg-[color:var(--color-paper-3)]/60 hover:text-[color:var(--color-ink)]"
               }`}
             >
               <Icon size={18} />
+              <span className="text-[0.6rem] font-semibold leading-none tracking-tight">{short}</span>
               {!ready && (
-                <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
+                <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
               )}
             </button>
           );

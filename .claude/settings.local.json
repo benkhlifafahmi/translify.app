@@ -78,7 +78,11 @@
       "Read(//private/tmp/**)",
       "Bash(echo \"log exists exit: $?\")",
       "Bash(echo \"BUILD2_EXIT=$?\")",
-      "Bash(echo \"JOIN_BUILD_EXIT=$?\")"
+      "Bash(echo \"JOIN_BUILD_EXIT=$?\")",
+      "Bash(grep -n \"app.tab.study\\\\|onOpen\\(\\\\\"study\\\\\"\\)\\\\|label={t\\(\\\\`app.tab\" src/app/library/\\\\[bookId\\\\]/page.tsx)",
+      "Bash(echo \"FIX_BUILD_EXIT=$?\")",
+      "Bash(echo \"FIX2_EXIT=$?\")",
+      "Bash(echo \"FIX3_EXIT=$?\")"
     ]
   },
   "enabledPlugins": {

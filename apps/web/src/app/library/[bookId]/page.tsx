@@ -635,7 +635,7 @@ function BookHeader({
     return () => window.removeEventListener("mousedown", onDown);
   }, [langOpen]);
   return (
-    <header className="flex shrink-0 items-center gap-2 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/80 px-3 py-2.5 backdrop-blur sm:gap-3 sm:py-3 sm:px-4 lg:px-7">
+    <header className="relative z-50 flex shrink-0 items-center gap-2 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/80 px-3 py-2.5 backdrop-blur sm:gap-3 sm:py-3 sm:px-4 lg:px-7">
       {/* Back button — always visible. Slightly smaller on mobile. */}
       <Link
         href="/library"
@@ -705,7 +705,7 @@ function BookHeader({
               <span className="hidden sm:inline">Languages</span>
             </button>
             {langOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-50 max-h-[72vh] w-[min(92vw,340px)] overflow-y-auto rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] shadow-[var(--shadow-paper-lg)]">
+              <div className="absolute right-0 top-[calc(100%+8px)] z-[60] max-h-[72vh] w-[min(92vw,340px)] overflow-y-auto rounded-2xl border border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)] shadow-[0_24px_48px_-16px_rgba(20,16,8,0.45)] ring-1 ring-black/5">
                 {translationSlot}
               </div>
             )}
