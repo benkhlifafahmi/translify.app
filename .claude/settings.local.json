@@ -82,7 +82,8 @@
       "Bash(grep -n \"app.tab.study\\\\|onOpen\\(\\\\\"study\\\\\"\\)\\\\|label={t\\(\\\\`app.tab\" src/app/library/\\\\[bookId\\\\]/page.tsx)",
       "Bash(echo \"FIX_BUILD_EXIT=$?\")",
       "Bash(echo \"FIX2_EXIT=$?\")",
-      "Bash(echo \"FIX3_EXIT=$?\")"
+      "Bash(echo \"FIX3_EXIT=$?\")",
+      "Bash(echo \"JOINFIX_EXIT=$?\")"
     ]
   },
   "enabledPlugins": {

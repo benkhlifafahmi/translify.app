@@ -106,10 +106,10 @@ export function JoinClient() {
 
   // A/B (experiment key: `join-books-first`). When on, lead with the bookshelf
   // — the instant, no-signup read — instead of the topics quiz that visitors
-  // currently drop on. Flag absent/undefined → control (current flow).
-  const flag = useFeatureFlagEnabled("join-books-first");
-  const flagsReady = flag !== undefined;
-  const booksFirst = flag === true;
+  // currently drop on. Undefined/false → control, so the page NEVER blocks on
+  // PostHog flags loading (a missing/blocked key would otherwise hang forever
+  // on the spinner — which broke /join).
+  const booksFirst = useFeatureFlagEnabled("join-books-first") === true;
   const startedRef = useRef(false);
 
   const [step, setStep] = useState<Step>("topics");
@@ -119,12 +119,12 @@ export function JoinClient() {
   // In books-first the shelf is the landing; the quiz becomes an inline filter.
   const effectiveStep: Step = booksFirst ? "shelf" : step;
 
-  // Fire once, after flags resolve, so the variant is attached to the event.
+  // Fire once on mount. PostHog auto-attaches the active flag to the event.
   useEffect(() => {
-    if (!flagsReady || startedRef.current) return;
+    if (startedRef.current) return;
     startedRef.current = true;
-    posthog?.capture("join_started", { variant: booksFirst ? "books_first" : "control" });
-  }, [flagsReady, booksFirst, posthog]);
+    posthog?.capture("join_started");
+  }, [posthog]);
 
   // Capture document.referrer once on mount — used for analytics if the
   // visitor later claims their session with an email.
@@ -246,29 +246,23 @@ export function JoinClient() {
       </header>
 
       <main className="relative z-10 mx-auto w-full max-w-md px-4 pb-32 pt-4 sm:max-w-lg sm:pt-8">
-        {!flagsReady ? (
-          <div className="mt-16 flex justify-center">
-            <Lumi state="thinking" size={68} animate />
-          </div>
-        ) : (
-          <div key={effectiveStep} className="ob-enter-forward">
-            {effectiveStep === "topics" && (
-              <StepTopics
-                topics={topics} setTopics={setTopics}
-                onContinue={handleTopicsContinue}
-              />
-            )}
-            {effectiveStep === "shelf" && (
-              <StepShelf
-                booksFirst={booksFirst}
-                topics={topics} setTopics={setTopics}
-                onOpen={handleSeedOpen}
-                cloningSlug={cloningSlug}
-                total={TOTAL} idx={stepIdx}
-              />
-            )}
-          </div>
-        )}
+        <div key={effectiveStep} className="ob-enter-forward">
+          {effectiveStep === "topics" && (
+            <StepTopics
+              topics={topics} setTopics={setTopics}
+              onContinue={handleTopicsContinue}
+            />
+          )}
+          {effectiveStep === "shelf" && (
+            <StepShelf
+              booksFirst={booksFirst}
+              topics={topics} setTopics={setTopics}
+              onOpen={handleSeedOpen}
+              cloningSlug={cloningSlug}
+              total={TOTAL} idx={stepIdx}
+            />
+          )}
+        </div>
       </main>
     </div>
   );

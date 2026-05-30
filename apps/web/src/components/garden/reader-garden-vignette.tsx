@@ -103,7 +103,7 @@ export const ReaderGardenVignette = forwardRef<ReaderGardenVignetteHandle, Props
         aria-label="Open this book's garden"
         title="Open this book's garden"
         className={[
-          "group fixed bottom-5 left-5 z-20 hidden",
+          "group fixed bottom-5 left-[calc(25%_+_1.25rem)] z-20 hidden",
           "lg:block",
           // sit *above* any viewer chrome bars
           "pointer-events-auto",
