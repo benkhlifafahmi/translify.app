@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Lumi } from "@/components/lumi/lumi";
 import {
@@ -63,8 +63,8 @@ export function MindmapTool({ bookId }: { bookId: string }) {
           Mind map
         </h3>
         <p className="mt-1 text-sm text-[color:var(--color-ink-soft)]">
-          Ask the AI to map out any topic from this book, then reshape it to match
-          how you think.
+          Ask the AI to map any topic from this book around a central idea, then
+          reshape it to match how you think.
         </p>
       </div>
 
@@ -103,14 +103,8 @@ export function MindmapTool({ bookId }: { bookId: string }) {
           </p>
           {store.maps.map((m) => (
             <div key={m.id} className="card-paper flex items-center gap-2 p-3">
-              <button
-                type="button"
-                onClick={() => setActive(m)}
-                className="min-w-0 flex-1 text-left"
-              >
-                <p className="truncate text-sm font-semibold text-[color:var(--color-ink)]">
-                  {m.title}
-                </p>
+              <button type="button" onClick={() => setActive(m)} className="min-w-0 flex-1 text-left">
+                <p className="truncate text-sm font-semibold text-[color:var(--color-ink)]">{m.title}</p>
                 <p className="text-[0.72rem] text-[color:var(--color-ink-soft)]">
                   {countNodes(m.root)} nodes
                 </p>
@@ -131,6 +125,13 @@ export function MindmapTool({ bookId }: { bookId: string }) {
   );
 }
 
+interface NodeHandlers {
+  onRename: (id: string, label: string) => void;
+  onAdd: (id: string) => void;
+  onDelete: (id: string) => void;
+  onToggle: (id: string) => void;
+}
+
 function Editor({
   map,
   onChange,
@@ -142,12 +143,26 @@ function Editor({
 }) {
   const root = map.root;
   const update = (next: MindNode) => onChange({ ...map, root: next, updatedAt: Date.now() });
+  const handlers: NodeHandlers = {
+    onRename: (id, label) => update(mapNode(root, id, (n) => ({ ...n, label }))),
+    onAdd: (id) => update(addChild(root, id)),
+    onDelete: (id) => update(removeNode(root, id)),
+    onToggle: (id) => update(mapNode(root, id, (n) => ({ ...n, collapsed: !n.collapsed }))),
+  };
 
-  const rename = (id: string, label: string) => update(mapNode(root, id, (n) => ({ ...n, label })));
-  const add = (id: string) => update(addChild(root, id));
-  const del = (id: string) => update(removeNode(root, id));
-  const toggle = (id: string) =>
-    update(mapNode(root, id, (n) => ({ ...n, collapsed: !n.collapsed })));
+  // Centre the scroll on the root when the map first opens.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2;
+    el.scrollTop = (el.scrollHeight - el.clientHeight) / 2;
+  }, [map.id]);
+
+  const kids = root.collapsed ? [] : root.children;
+  const mid = Math.ceil(kids.length / 2);
+  const right = kids.slice(0, mid);
+  const left = kids.slice(mid);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -165,16 +180,33 @@ function Editor({
         </p>
         <span className="text-[0.7rem] font-semibold text-[color:var(--color-sage-deep)]">Saved</span>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto p-4">
-        <Branch
-          node={root}
-          isRoot
-          onRename={rename}
-          onAdd={add}
-          onDelete={del}
-          onToggle={toggle}
-        />
+
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-auto"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(74,60,30,0.07) 1px, transparent 1px)",
+          backgroundSize: "18px 18px",
+        }}
+      >
+        <div className="flex min-h-full min-w-max items-center justify-center gap-5 p-10">
+          <div className="flex flex-col items-end gap-3">
+            {left.map((c) => (
+              <Branch key={c.id} node={c} side="left" {...handlers} />
+            ))}
+          </div>
+
+          <Chip node={root} isRoot {...handlers} />
+
+          <div className="flex flex-col items-start gap-3">
+            {right.map((c) => (
+              <Branch key={c.id} node={c} side="right" {...handlers} />
+            ))}
+          </div>
+        </div>
       </div>
+
       <p className="shrink-0 border-t border-[color:var(--color-border)] px-4 py-2 text-[0.7rem] text-[color:var(--color-ink-soft)]">
         Click a node to rename · hover for ＋ add / ✕ delete · edits save automatically
       </p>
@@ -184,110 +216,127 @@ function Editor({
 
 function Branch({
   node,
+  side,
+  onRename,
+  onAdd,
+  onDelete,
+  onToggle,
+}: { node: MindNode; side: "left" | "right" } & NodeHandlers) {
+  const kids = node.collapsed ? [] : node.children;
+  const column =
+    kids.length > 0 ? (
+      <div
+        className={`flex flex-col gap-2 border-[color:var(--color-border)] ${
+          side === "left" ? "items-end border-r-2 pr-3" : "items-start border-l-2 pl-3"
+        }`}
+      >
+        {kids.map((c) => (
+          <Branch
+            key={c.id}
+            node={c}
+            side={side}
+            onRename={onRename}
+            onAdd={onAdd}
+            onDelete={onDelete}
+            onToggle={onToggle}
+          />
+        ))}
+      </div>
+    ) : null;
+
+  return (
+    <div className="flex items-center gap-2">
+      {side === "left" && column}
+      <Chip node={node} onRename={onRename} onAdd={onAdd} onDelete={onDelete} onToggle={onToggle} />
+      {side === "right" && column}
+    </div>
+  );
+}
+
+function Chip({
+  node,
   isRoot,
   onRename,
   onAdd,
   onDelete,
   onToggle,
-}: {
-  node: MindNode;
-  isRoot?: boolean;
-  onRename: (id: string, label: string) => void;
-  onAdd: (id: string) => void;
-  onDelete: (id: string) => void;
-  onToggle: (id: string) => void;
-}) {
+}: { node: MindNode; isRoot?: boolean } & NodeHandlers) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(node.label);
   const hasKids = node.children.length > 0;
 
-  return (
-    <div className="flex items-start gap-2">
-      <div
-        className={`group inline-flex shrink-0 items-center gap-1.5 rounded-xl border-[1.5px] px-2.5 py-1.5 ${
-          isRoot
-            ? "border-[color:var(--color-saffron-deep)] bg-[color:var(--color-saffron)]/12"
-            : "border-[color:var(--color-border-strong)] bg-white"
-        }`}
-      >
-        {hasKids && (
-          <button
-            type="button"
-            onClick={() => onToggle(node.id)}
-            className="text-[0.7rem] text-[color:var(--color-ink-soft)]"
-            title={node.collapsed ? "Expand" : "Collapse"}
-          >
-            {node.collapsed ? "▸" : "▾"}
-          </button>
-        )}
-        {editing ? (
-          <input
-            autoFocus
-            value={val}
-            onChange={(e) => setVal(e.target.value)}
-            onBlur={() => {
-              onRename(node.id, val.trim() || node.label);
-              setEditing(false);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                onRename(node.id, val.trim() || node.label);
-                setEditing(false);
-              } else if (e.key === "Escape") {
-                setVal(node.label);
-                setEditing(false);
-              }
-            }}
-            className="w-[140px] bg-transparent text-sm outline-none"
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              setVal(node.label);
-              setEditing(true);
-            }}
-            className="text-left text-sm font-medium text-[color:var(--color-ink)]"
-          >
-            {node.label}
-          </button>
-        )}
-        <span className="ml-1 hidden items-center gap-1.5 group-hover:inline-flex">
-          <button
-            type="button"
-            onClick={() => onAdd(node.id)}
-            title="Add child"
-            className="text-[color:var(--color-sage-deep)]"
-          >
-            ＋
-          </button>
-          {!isRoot && (
-            <button
-              type="button"
-              onClick={() => onDelete(node.id)}
-              title="Delete"
-              className="text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-destructive)]"
-            >
-              ✕
-            </button>
-          )}
-        </span>
-      </div>
+  const commit = () => {
+    onRename(node.id, val.trim() || node.label);
+    setEditing(false);
+  };
 
-      {hasKids && !node.collapsed && (
-        <div className="flex flex-col gap-2 border-l-2 border-[color:var(--color-border)] pl-3">
-          {node.children.map((c) => (
-            <Branch
-              key={c.id}
-              node={c}
-              onRename={onRename}
-              onAdd={onAdd}
-              onDelete={onDelete}
-              onToggle={onToggle}
-            />
-          ))}
-        </div>
+  return (
+    <div
+      className={`group inline-flex shrink-0 items-center gap-1.5 rounded-xl border-[1.5px] ${
+        isRoot
+          ? "border-[color:var(--color-saffron-deep)] bg-[color:var(--color-saffron)]/15 px-3 py-2 shadow-[0_2px_0_rgba(152,96,24,0.18)]"
+          : "border-[color:var(--color-border-strong)] bg-white px-2.5 py-1.5"
+      }`}
+    >
+      {hasKids && (
+        <button
+          type="button"
+          onClick={() => onToggle(node.id)}
+          title={node.collapsed ? "Expand" : "Collapse"}
+          className="text-[0.7rem] text-[color:var(--color-ink-soft)]"
+        >
+          {node.collapsed ? "⊕" : "⊖"}
+        </button>
       )}
+      {editing ? (
+        <input
+          autoFocus
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit();
+            else if (e.key === "Escape") {
+              setVal(node.label);
+              setEditing(false);
+            }
+          }}
+          className="w-[130px] bg-transparent text-sm outline-none"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            setVal(node.label);
+            setEditing(true);
+          }}
+          className={`text-left text-[color:var(--color-ink)] ${
+            isRoot ? "text-[0.95rem] font-semibold" : "text-sm font-medium"
+          }`}
+        >
+          {node.label}
+        </button>
+      )}
+      <span className="ml-1 hidden items-center gap-1.5 group-hover:inline-flex">
+        <button
+          type="button"
+          onClick={() => onAdd(node.id)}
+          title="Add branch"
+          className="text-[color:var(--color-sage-deep)]"
+        >
+          ＋
+        </button>
+        {!isRoot && (
+          <button
+            type="button"
+            onClick={() => onDelete(node.id)}
+            title="Delete"
+            className="text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-destructive)]"
+          >
+            ✕
+          </button>
+        )}
+      </span>
     </div>
   );
 }

@@ -80,6 +80,9 @@ export default function BookDetailPage({
 
   // Mobile state — which drawer is open. Null = none (viewer is full screen).
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>(null);
+  // Desktop: when a roomy study tool (flashcards / mind map) is open, widen the
+  // study column and hide the right chat panel so it's actually usable.
+  const [studyWide, setStudyWide] = useState(false);
 
   const onCitationClick = (citation: Citation) => {
     if (citation.page_start == null) return;
@@ -426,6 +429,8 @@ export default function BookDetailPage({
   const studyPanelNode = (
     <StudyPanel
       bookId={bookId}
+      wide={studyWide}
+      onWideChange={setStudyWide}
       onFocusComplete={() => {
         // Phase 2: a finished focus block can water the Garden / extend the
         // streak once the backend grows a "focus" event kind.
@@ -513,7 +518,7 @@ export default function BookDetailPage({
         <>
           {/* Desktop layout — 3 columns at lg+, hidden on mobile */}
           <div className="hidden flex-1 overflow-hidden lg:grid lg:grid-cols-12">
-            <aside className="col-span-3 flex flex-col overflow-hidden border-r border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40">
+            <aside className={`${studyWide ? "col-span-7" : "col-span-3"} flex flex-col overflow-hidden border-r border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40`}>
               {studyPanelNode}
             </aside>
 
@@ -521,7 +526,7 @@ export default function BookDetailPage({
               {viewerNode}
             </section>
 
-            <aside className="col-span-4 flex flex-col overflow-hidden bg-[color:var(--color-paper-2)]/30">
+            <aside className={`${studyWide ? "hidden" : "col-span-4"} flex flex-col overflow-hidden bg-[color:var(--color-paper-2)]/30`}>
               <div className="flex shrink-0 items-center gap-1 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/60 px-3 py-2">
                 <TabPill
                   active={rightTab === "chat"}

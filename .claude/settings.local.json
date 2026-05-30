@@ -84,7 +84,9 @@
       "Bash(echo \"FIX2_EXIT=$?\")",
       "Bash(echo \"FIX3_EXIT=$?\")",
       "Bash(echo \"JOINFIX_EXIT=$?\")",
-      "Bash(echo \"STUDY2_EXIT=$?\")"
+      "Bash(echo \"STUDY2_EXIT=$?\")",
+      "Bash(echo \"WIDE_EXIT=$?\")",
+      "Bash(echo \"RADIAL_EXIT=$?\")"
     ]
   },
   "enabledPlugins": {
