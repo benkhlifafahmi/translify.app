@@ -83,7 +83,8 @@
       "Bash(echo \"FIX_BUILD_EXIT=$?\")",
       "Bash(echo \"FIX2_EXIT=$?\")",
       "Bash(echo \"FIX3_EXIT=$?\")",
-      "Bash(echo \"JOINFIX_EXIT=$?\")"
+      "Bash(echo \"JOINFIX_EXIT=$?\")",
+      "Bash(echo \"STUDY2_EXIT=$?\")"
     ]
   },
   "enabledPlugins": {

@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { Timer, Layers, Network, ChevronLeft, type LucideIcon } from "lucide-react";
 import { FocusTool } from "@/components/study/focus-tool";
+import { FlashcardsTool } from "@/components/study/flashcards-tool";
+import { MindmapTool } from "@/components/study/mindmap-tool";
 
 type Tool = "focus" | "cards" | "map";
 
-const TOOLS: { id: Tool; label: string; short: string; icon: LucideIcon; ready: boolean }[] = [
-  { id: "focus", label: "Focus", short: "Focus", icon: Timer, ready: true },
-  { id: "cards", label: "Flashcards", short: "Cards", icon: Layers, ready: false },
-  { id: "map", label: "Mind map", short: "Map", icon: Network, ready: false },
+const TOOLS: { id: Tool; label: string; short: string; icon: LucideIcon }[] = [
+  { id: "focus", label: "Focus", short: "Focus", icon: Timer },
+  { id: "cards", label: "Flashcards", short: "Cards", icon: Layers },
+  { id: "map", label: "Mind map", short: "Map", icon: Network },
 ];
 
 interface Props {
@@ -37,14 +39,14 @@ export function StudyPanel({ bookId, onFocusComplete, onCollapse }: Props) {
             <ChevronLeft size={18} />
           </button>
         )}
-        {TOOLS.map(({ id, label, short, icon: Icon, ready }) => {
+        {TOOLS.map(({ id, label, short, icon: Icon }) => {
           const active = tool === id;
           return (
             <button
               key={id}
               type="button"
               onClick={() => setTool(id)}
-              title={ready ? label : `${label} — coming soon`}
+              title={label}
               className={`relative flex w-[3.5rem] flex-col items-center gap-1 rounded-xl py-1.5 transition-colors ${
                 active
                   ? "bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)] ring-1 ring-[color:var(--color-saffron)]/30"
@@ -53,9 +55,6 @@ export function StudyPanel({ bookId, onFocusComplete, onCollapse }: Props) {
             >
               <Icon size={18} />
               <span className="text-[0.6rem] font-semibold leading-none tracking-tight">{short}</span>
-              {!ready && (
-                <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
-              )}
             </button>
           );
         })}
@@ -64,51 +63,10 @@ export function StudyPanel({ bookId, onFocusComplete, onCollapse }: Props) {
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         {tool === "focus" && <FocusTool bookId={bookId} onFocusComplete={onFocusComplete} />}
-        {tool === "cards" && (
-          <ComingSoon
-            title="Flashcards"
-            tagline="Turn your highlights into a deck and review with spaced repetition."
-            why="Active recall (testing yourself) and spaced repetition are two of the most strongly supported techniques in learning science — far better than re-reading."
-          />
-        )}
-        {tool === "map" && (
-          <ComingSoon
-            title="Mind map"
-            tagline="Connect the ideas in this book into a visual web."
-            why="Dual coding — pairing words with visual structure — helps you encode and recall complex relationships."
-          />
-        )}
+        {tool === "cards" && <FlashcardsTool bookId={bookId} />}
+        {tool === "map" && <MindmapTool bookId={bookId} />}
       </div>
     </div>
   );
 }
 
-function ComingSoon({
-  title,
-  tagline,
-  why,
-}: {
-  title: string;
-  tagline: string;
-  why: string;
-}) {
-  return (
-    <div className="flex flex-col gap-3 p-5">
-      <div>
-        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
-          Study mode
-        </p>
-        <h3 className="mt-1.5 font-[family-name:var(--font-display)] text-xl font-semibold leading-tight tracking-tight">
-          {title}
-        </h3>
-        <p className="mt-1 text-sm text-[color:var(--color-ink-soft)]">{tagline}</p>
-      </div>
-      <div className="card-paper flex flex-col gap-2 p-4">
-        <span className="w-fit rounded-full bg-[color:var(--color-sage)]/15 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[color:var(--color-sage-deep)]">
-          Coming soon
-        </span>
-        <p className="text-[0.8rem] leading-relaxed text-[color:var(--color-ink-soft)]">{why}</p>
-      </div>
-    </div>
-  );
-}
