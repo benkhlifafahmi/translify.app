@@ -86,7 +86,9 @@
       "Bash(echo \"JOINFIX_EXIT=$?\")",
       "Bash(echo \"STUDY2_EXIT=$?\")",
       "Bash(echo \"WIDE_EXIT=$?\")",
-      "Bash(echo \"RADIAL_EXIT=$?\")"
+      "Bash(echo \"RADIAL_EXIT=$?\")",
+      "Bash(IMPECCABLE_CONTEXT_DIR=/Users/ben/workspace/BKGroup/translify.app node /Users/ben/.claude/skills/impeccable/scripts/load-context.mjs)",
+      "Bash(echo \"REDESIGN_EXIT=$?\")"
     ]
   },
   "enabledPlugins": {
