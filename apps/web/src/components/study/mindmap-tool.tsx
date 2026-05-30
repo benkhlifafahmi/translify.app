@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Lumi } from "@/components/lumi/lumi";
 import {
@@ -34,7 +34,7 @@ export function MindmapTool({ bookId }: { bookId: string }) {
       setActive(map);
       setTopic("");
     } catch {
-      setErr("Couldn't generate the map. Check your connection and try again.");
+      setErr("Couldn't generate the breakdown. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
@@ -54,14 +54,14 @@ export function MindmapTool({ bookId }: { bookId: string }) {
   }
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-5 p-5 sm:p-6">
+    <div className="flex flex-col gap-5 p-5">
       <div>
         <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold leading-tight tracking-tight text-[color:var(--color-ink)]">
           Mind map
         </h3>
         <p className="mt-1 text-sm text-[color:var(--color-ink-soft)]">
-          Ask the AI to map any topic from this book around a central idea, then
-          reshape it to match how you think.
+          Ask the AI to break a topic from this book into its key ideas, then
+          shape the outline however helps you understand it.
         </p>
       </div>
 
@@ -103,13 +103,13 @@ export function MindmapTool({ bookId }: { bookId: string }) {
               <li key={m.id} className="group flex items-center gap-2 py-2.5">
                 <button type="button" onClick={() => setActive(m)} className="min-w-0 flex-1 text-left">
                   <p className="truncate text-sm font-semibold text-[color:var(--color-ink)]">{m.title}</p>
-                  <p className="text-[0.72rem] text-[color:var(--color-ink-soft)]">{countNodes(m.root)} nodes</p>
+                  <p className="text-[0.72rem] text-[color:var(--color-ink-soft)]">{countNodes(m.root)} ideas</p>
                 </button>
                 <button
                   type="button"
                   onClick={() => store.deleteMap(m.id)}
                   title="Delete"
-                  className="opacity-0 transition-opacity group-hover:opacity-100 text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-destructive)]"
+                  className="text-[color:var(--color-ink-soft)] opacity-0 transition-opacity hover:text-[color:var(--color-destructive)] group-hover:opacity-100"
                 >
                   ✕
                 </button>
@@ -120,83 +120,6 @@ export function MindmapTool({ bookId }: { bookId: string }) {
       )}
     </div>
   );
-}
-
-// ---------------------------------------------------------------------------
-// Center-out layout (topic in the middle, branches fan left + right)
-// ---------------------------------------------------------------------------
-
-interface Pos {
-  x: number;
-  y: number;
-  depth: number;
-}
-
-const COL = 210; // horizontal distance per depth level
-const ROW = 60; // vertical distance per leaf row
-const PAD = 160; // canvas breathing room
-
-function computeLayout(root: MindNode) {
-  const pos: Record<string, Pos> = {};
-
-  function place(node: MindNode, depth: number, sign: number, cursor: { v: number }): number {
-    const kids = node.collapsed ? [] : node.children;
-    let y: number;
-    if (kids.length === 0) {
-      y = cursor.v;
-      cursor.v += ROW;
-    } else {
-      const ys = kids.map((k) => place(k, depth + 1, sign, cursor));
-      y = (ys[0] + ys[ys.length - 1]) / 2;
-    }
-    pos[node.id] = { x: sign * depth * COL, y, depth };
-    return y;
-  }
-
-  const kids = root.collapsed ? [] : root.children;
-  const mid = Math.ceil(kids.length / 2);
-  const right = kids.slice(0, mid);
-  const left = kids.slice(mid);
-
-  const rc = { v: 0 };
-  const rightYs = right.map((k) => place(k, 1, 1, rc));
-  const lc = { v: 0 };
-  const leftYs = left.map((k) => place(k, 1, -1, lc));
-
-  const firstYs = [...rightYs, ...leftYs];
-  const rootY = firstYs.length ? firstYs.reduce((a, b) => a + b, 0) / firstYs.length : 0;
-  pos[root.id] = { x: 0, y: rootY, depth: 0 };
-
-  const all = Object.values(pos);
-  const xs = all.map((p) => p.x);
-  const ys = all.map((p) => p.y);
-  const minX = Math.min(0, ...xs);
-  const maxX = Math.max(0, ...xs);
-  const minY = Math.min(0, ...ys);
-  const maxY = Math.max(0, ...ys);
-  const offX = -minX + PAD;
-  const offY = -minY + PAD;
-  const width = maxX - minX + PAD * 2;
-  const height = maxY - minY + PAD * 2;
-
-  const nodes: MindNode[] = [];
-  const edges: { from: string; to: string }[] = [];
-  const walk = (n: MindNode) => {
-    nodes.push(n);
-    const ch = n.collapsed ? [] : n.children;
-    for (const c of ch) {
-      edges.push({ from: n.id, to: c.id });
-      walk(c);
-    }
-  };
-  walk(root);
-
-  return { pos, nodes, edges, width, height, offX, offY };
-}
-
-function curvePath(x1: number, y1: number, x2: number, y2: number): string {
-  const mx = (x1 + x2) / 2;
-  return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
 }
 
 interface NodeHandlers {
@@ -217,25 +140,15 @@ function Editor({
 }) {
   const root = map.root;
   const update = (next: MindNode) => onChange({ ...map, root: next, updatedAt: Date.now() });
-  const handlers: NodeHandlers = {
+  const h: NodeHandlers = {
     onRename: (id, label) => update(mapNode(root, id, (n) => ({ ...n, label }))),
     onAdd: (id) => update(addChild(root, id)),
     onDelete: (id) => update(removeNode(root, id)),
     onToggle: (id) => update(mapNode(root, id, (n) => ({ ...n, collapsed: !n.collapsed }))),
   };
 
-  const { pos, nodes, edges, width, height, offX, offY } = useMemo(() => computeLayout(root), [root]);
-
-  const scrollRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = scrollRef.current;
-    const rp = pos[root.id];
-    if (!el || !rp) return;
-    el.scrollLeft = offX + rp.x - el.clientWidth / 2;
-    el.scrollTop = offY + rp.y - el.clientHeight / 2;
-    // Centre on the root only when a different map opens.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map.id]);
+  const [editingTopic, setEditingTopic] = useState(false);
+  const [tv, setTv] = useState(root.label);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -252,70 +165,75 @@ function Editor({
         <span className="text-[0.7rem] font-semibold text-[color:var(--color-sage-deep)]">Saved</span>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="min-h-0 flex-1 overflow-auto"
-        style={{
-          backgroundImage: "radial-gradient(circle, rgba(74,60,30,0.06) 1px, transparent 1px)",
-          backgroundSize: "20px 20px",
-        }}
-      >
-        <div className="relative" style={{ width, height }}>
-          <svg className="absolute left-0 top-0" width={width} height={height} aria-hidden>
-            {edges.map((e) => {
-              const a = pos[e.from];
-              const b = pos[e.to];
-              if (!a || !b) return null;
-              return (
-                <path
-                  key={`${e.from}-${e.to}`}
-                  d={curvePath(offX + a.x, offY + a.y, offX + b.x, offY + b.y)}
-                  fill="none"
-                  stroke="var(--color-border-strong)"
-                  strokeWidth={1.75}
-                  strokeLinecap="round"
-                />
-              );
-            })}
-          </svg>
-
-          {nodes.map((n) => {
-            const p = pos[n.id];
-            if (!p) return null;
-            return (
-              <Chip
-                key={n.id}
-                node={n}
-                isRoot={n.id === root.id}
-                left={offX + p.x}
-                top={offY + p.y}
-                {...handlers}
-              />
-            );
-          })}
+      <div className="min-h-0 flex-1 overflow-auto px-5 py-4">
+        <div className="group mb-3 flex items-center gap-2">
+          {editingTopic ? (
+            <input
+              autoFocus
+              value={tv}
+              onChange={(e) => setTv(e.target.value)}
+              onBlur={() => {
+                h.onRename(root.id, tv.trim() || root.label);
+                setEditingTopic(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  h.onRename(root.id, tv.trim() || root.label);
+                  setEditingTopic(false);
+                } else if (e.key === "Escape") {
+                  setTv(root.label);
+                  setEditingTopic(false);
+                }
+              }}
+              className="w-full bg-transparent font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight outline-none"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setTv(root.label);
+                setEditingTopic(true);
+              }}
+              className="text-left font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight text-[color:var(--color-ink)]"
+            >
+              {root.label}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => h.onAdd(root.id)}
+            title="Add idea"
+            className="shrink-0 text-[color:var(--color-sage-deep)] opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            ＋
+          </button>
         </div>
+
+        {root.children.length === 0 ? (
+          <p className="rounded-xl border-[1.5px] border-dashed border-[color:var(--color-border)] px-3 py-2.5 text-xs text-[color:var(--color-ink-soft)]">
+            Hover the topic above and tap ＋ to start adding ideas.
+          </p>
+        ) : (
+          <ul className="flex flex-col">
+            {root.children.map((c) => (
+              <Row key={c.id} node={c} depth={0} {...h} />
+            ))}
+          </ul>
+        )}
       </div>
 
       <p className="shrink-0 border-t border-[color:var(--color-border)] px-4 py-2 text-[0.7rem] text-[color:var(--color-ink-soft)]">
-        Click a node to rename · hover for ＋ add / ✕ delete · edits save automatically
+        Click any idea to rename · hover for ＋ / ✕ · edits save automatically
       </p>
     </div>
   );
 }
 
-function Chip({
-  node,
-  isRoot,
-  left,
-  top,
-  onRename,
-  onAdd,
-  onDelete,
-  onToggle,
-}: { node: MindNode; isRoot?: boolean; left: number; top: number } & NodeHandlers) {
+function Row({ node, depth, onRename, onAdd, onDelete, onToggle }: { node: MindNode; depth: number } & NodeHandlers) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(node.label);
   const hasKids = node.children.length > 0;
+  const open = hasKids && !node.collapsed;
 
   const commit = () => {
     onRename(node.id, val.trim() || node.label);
@@ -323,24 +241,21 @@ function Chip({
   };
 
   return (
-    <div className="absolute z-10 -translate-x-1/2 -translate-y-1/2" style={{ left, top }}>
-      <div
-        className={`group inline-flex items-center gap-1.5 rounded-xl border-[1.5px] ${
-          isRoot
-            ? "border-[color:var(--color-saffron-deep)] bg-[color:var(--color-saffron)]/20 px-3.5 py-2 shadow-[0_2px_0_rgba(152,96,24,0.2)]"
-            : "border-[color:var(--color-border-strong)] bg-[#FFFCF3] px-2.5 py-1.5 shadow-[0_1px_0_rgba(74,60,30,0.08)]"
-        }`}
-      >
-        {hasKids && (
+    <li>
+      <div className="group flex items-center gap-1 rounded-lg px-1 py-1 transition-colors hover:bg-[color:var(--color-paper-3)]/40">
+        {hasKids ? (
           <button
             type="button"
             onClick={() => onToggle(node.id)}
             title={node.collapsed ? "Expand" : "Collapse"}
-            className="text-[0.7rem] text-[color:var(--color-ink-soft)]"
+            className="grid h-5 w-5 shrink-0 place-items-center text-[0.7rem] text-[color:var(--color-ink-soft)]"
           >
-            {node.collapsed ? "⊕" : "⊖"}
+            {node.collapsed ? "▸" : "▾"}
           </button>
+        ) : (
+          <span className="grid h-5 w-5 shrink-0 place-items-center text-[color:var(--color-border-strong)]">·</span>
         )}
+
         {editing ? (
           <input
             autoFocus
@@ -354,7 +269,7 @@ function Chip({
                 setEditing(false);
               }
             }}
-            className="w-[140px] bg-transparent text-sm outline-none"
+            className="min-w-0 flex-1 bg-transparent text-sm outline-none"
           />
         ) : (
           <button
@@ -363,34 +278,38 @@ function Chip({
               setVal(node.label);
               setEditing(true);
             }}
-            className={`whitespace-nowrap text-left text-[color:var(--color-ink)] ${
-              isRoot ? "text-[0.95rem] font-semibold" : "text-sm font-medium"
+            className={`min-w-0 flex-1 truncate text-left ${
+              depth === 0
+                ? "text-[0.95rem] font-medium text-[color:var(--color-ink)]"
+                : "text-sm text-[color:var(--color-ink-soft)]"
             }`}
           >
             {node.label}
           </button>
         )}
-        <span className="ml-0.5 hidden items-center gap-1.5 group-hover:inline-flex">
-          <button
-            type="button"
-            onClick={() => onAdd(node.id)}
-            title="Add branch"
-            className="text-[color:var(--color-sage-deep)]"
-          >
+
+        <span className="ml-1 hidden shrink-0 items-center gap-2 group-hover:inline-flex">
+          <button type="button" onClick={() => onAdd(node.id)} title="Add" className="text-[color:var(--color-sage-deep)]">
             ＋
           </button>
-          {!isRoot && (
-            <button
-              type="button"
-              onClick={() => onDelete(node.id)}
-              title="Delete"
-              className="text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-destructive)]"
-            >
-              ✕
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => onDelete(node.id)}
+            title="Delete"
+            className="text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-destructive)]"
+          >
+            ✕
+          </button>
         </span>
       </div>
-    </div>
+
+      {open && (
+        <ul className="ml-[0.65rem] flex flex-col border-l border-[color:var(--color-border)] pl-2">
+          {node.children.map((c) => (
+            <Row key={c.id} node={c} depth={depth + 1} onRename={onRename} onAdd={onAdd} onDelete={onDelete} onToggle={onToggle} />
+          ))}
+        </ul>
+      )}
+    </li>
   );
 }

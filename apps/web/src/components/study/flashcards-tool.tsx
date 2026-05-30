@@ -31,14 +31,13 @@ export function FlashcardsTool({ bookId }: { bookId: string }) {
   }
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-5 p-5 sm:p-6">
+    <div className="flex flex-col gap-5 p-5">
       <div>
         <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold leading-tight tracking-tight text-[color:var(--color-ink)]">
           Flashcards
         </h3>
         <p className="mt-1 text-sm text-[color:var(--color-ink-soft)]">
-          Test yourself, then let the spacing do the work. The most reliable way
-          to remember what you read.
+          Test yourself, then let the spacing do the work.
         </p>
       </div>
 
@@ -80,9 +79,8 @@ function EmptyHint() {
 }
 
 function Review({ deck }: { deck: FlashcardDeck }) {
-  const [flipped, setFlipped] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const card = deck.due[0];
-  const remaining = deck.due.length;
 
   if (deck.cards.length === 0) return <EmptyHint />;
   if (!card) {
@@ -95,38 +93,34 @@ function Review({ deck }: { deck: FlashcardDeck }) {
 
   function grade(ok: boolean) {
     deck.grade(card.id, ok);
-    setFlipped(false);
+    setRevealed(false);
   }
 
   return (
-    <div className="flex flex-col items-center gap-5">
+    <div className="flex flex-col gap-4">
       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-        {remaining} to review
+        {deck.due.length} to review
       </p>
 
-      <div className="relative w-full max-w-md">
-        {/* The pile behind the active card */}
-        {remaining > 2 && (
-          <div className="absolute inset-x-7 -bottom-2.5 top-2.5 -z-10 rounded-2xl border-[1.5px] border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/70 [transform:rotate(2.2deg)]" />
-        )}
-        {remaining > 1 && (
-          <div className="absolute inset-x-3.5 -bottom-1.5 top-1.5 -z-10 rounded-2xl border-[1.5px] border-[color:var(--color-border)] bg-[color:var(--color-paper-2)] [transform:rotate(-1.6deg)]" />
-        )}
+      <div className="rounded-2xl border-[1.5px] border-[color:var(--color-border-strong)] bg-[#FFFCF3] p-5 shadow-[0_8px_22px_-12px_rgba(74,60,30,0.18)]">
+        <span className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
+          Prompt
+        </span>
+        <p className="mt-1.5 text-[1.05rem] leading-relaxed text-[color:var(--color-ink)]">{card.front}</p>
 
-        <button type="button" onClick={() => setFlipped((f) => !f)} className="block w-full [perspective:1400px]">
-          <div
-            className={`relative min-h-[240px] w-full [transform-style:preserve-3d] transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-              flipped ? "[transform:rotateY(180deg)]" : ""
-            }`}
-          >
-            <Face label="Prompt" text={card.front} hint="tap to reveal" />
-            <Face label="Answer" text={card.back} className="absolute inset-0 [transform:rotateY(180deg)]" />
-          </div>
-        </button>
+        {revealed && (
+          <>
+            <hr className="my-4 border-[color:var(--color-border)]" />
+            <span className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-sage-deep)]">
+              Answer
+            </span>
+            <p className="mt-1.5 text-[1.05rem] leading-relaxed text-[color:var(--color-ink)]">{card.back}</p>
+          </>
+        )}
       </div>
 
-      {flipped ? (
-        <div className="flex w-full max-w-md gap-2">
+      {revealed ? (
+        <div className="flex gap-2">
           <Button variant="outline" className="flex-1" onClick={() => grade(false)}>
             Again
           </Button>
@@ -135,26 +129,10 @@ function Review({ deck }: { deck: FlashcardDeck }) {
           </Button>
         </div>
       ) : (
-        <Button variant="accent" className="w-full max-w-md" onClick={() => setFlipped(true)}>
-          Reveal answer
+        <Button variant="accent" onClick={() => setRevealed(true)}>
+          Show answer
         </Button>
       )}
-    </div>
-  );
-}
-
-function Face({ label, text, hint, className }: { label: string; text: string; hint?: string; className?: string }) {
-  return (
-    <div
-      className={`flex min-h-[240px] flex-col items-center justify-center gap-3 rounded-2xl border-[1.5px] border-[color:var(--color-border-strong)] bg-[#FFFCF3] px-6 py-8 text-center shadow-[0_8px_22px_-12px_rgba(74,60,30,0.18)] [backface-visibility:hidden] ${
-        className ?? ""
-      }`}
-    >
-      <span className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
-        {label}
-      </span>
-      <p className="text-[1.05rem] leading-relaxed text-[color:var(--color-ink)]">{text}</p>
-      {hint && <span className="text-[0.7rem] text-[color:var(--color-ink-soft)]">{hint}</span>}
     </div>
   );
 }
@@ -238,7 +216,7 @@ function Row({ card, deck }: { card: FlashcardDeck["cards"][number]; deck: Flash
           setEditing(true);
         }}
         title="Edit"
-        className="opacity-0 transition-opacity group-hover:opacity-100 text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)]"
+        className="text-[color:var(--color-ink-soft)] opacity-0 transition-opacity hover:text-[color:var(--color-ink)] group-hover:opacity-100"
       >
         ✎
       </button>
@@ -246,7 +224,7 @@ function Row({ card, deck }: { card: FlashcardDeck["cards"][number]; deck: Flash
         type="button"
         onClick={() => deck.removeCard(card.id)}
         title="Delete"
-        className="opacity-0 transition-opacity group-hover:opacity-100 text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-destructive)]"
+        className="text-[color:var(--color-ink-soft)] opacity-0 transition-opacity hover:text-[color:var(--color-destructive)] group-hover:opacity-100"
       >
         ✕
       </button>
