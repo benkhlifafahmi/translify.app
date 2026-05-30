@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { usePostHog, useFeatureFlagEnabled } from "posthog-js/react";
 import { ApiError, getToken } from "@/lib/api";
 import { getGoogleAuthUrl, startAnonymousSession } from "@/lib/auth";
 import { cloneSeed, listSeeds, type Seed } from "@/lib/seeds";
@@ -101,10 +102,29 @@ const SFX = {
 export function JoinClient() {
   const router = useRouter();
   const { t } = useI18n();
+  const posthog = usePostHog();
+
+  // A/B (experiment key: `join-books-first`). When on, lead with the bookshelf
+  // — the instant, no-signup read — instead of the topics quiz that visitors
+  // currently drop on. Flag absent/undefined → control (current flow).
+  const flag = useFeatureFlagEnabled("join-books-first");
+  const flagsReady = flag !== undefined;
+  const booksFirst = flag === true;
+  const startedRef = useRef(false);
 
   const [step, setStep] = useState<Step>("topics");
   const [topics, setTopics] = useState<TopicId[]>([]);
   const [err, setErr] = useState<string | null>(null);
+
+  // In books-first the shelf is the landing; the quiz becomes an inline filter.
+  const effectiveStep: Step = booksFirst ? "shelf" : step;
+
+  // Fire once, after flags resolve, so the variant is attached to the event.
+  useEffect(() => {
+    if (!flagsReady || startedRef.current) return;
+    startedRef.current = true;
+    posthog?.capture("join_started", { variant: booksFirst ? "books_first" : "control" });
+  }, [flagsReady, booksFirst, posthog]);
 
   // Capture document.referrer once on mount — used for analytics if the
   // visitor later claims their session with an email.
@@ -116,6 +136,7 @@ export function JoinClient() {
   // ─── Handlers ─────────────────────────────────────────────────────────────
   const handleTopicsContinue = () => {
     if (topics.length === 0) { SFX.error(); return; }
+    posthog?.capture("join_topics_selected", { count: topics.length, topics });
     SFX.advance();
     setStep("shelf");
   };
@@ -126,6 +147,13 @@ export function JoinClient() {
 
   const handleSeedOpen = async (seed: Seed) => {
     if (cloningSlug) return; // double-tap guard
+    // Capture intent up front so it survives a slow/failed clone — this is the
+    // activation event the experiment optimises for.
+    posthog?.capture("join_seed_opened", {
+      slug: seed.slug,
+      already_opened: !!seed.clone_id,
+      variant: booksFirst ? "books_first" : "control",
+    });
     SFX.select();
 
     // Fast path — the visitor already opened this seed before; deep-link in.
@@ -141,6 +169,7 @@ export function JoinClient() {
       // step — it's invisible friction-free auth for TikTok visitors.
       if (!getToken()) {
         await startAnonymousSession();
+        posthog?.capture("anon_session_started", { slug: seed.slug });
       }
       const book = await cloneSeed(seed.slug);
       // Best-effort lead-track — useful even before they claim with an email
@@ -177,7 +206,7 @@ export function JoinClient() {
         className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 backdrop-blur-md"
         style={{ background: "rgba(252,248,238,0.85)", borderBottom: "1px solid rgba(74,60,30,0.06)" }}
       >
-        {step === "shelf" ? (
+        {effectiveStep === "shelf" && !booksFirst ? (
           <button
             type="button"
             onClick={() => { SFX.tap(); setStep("topics"); }}
@@ -199,7 +228,7 @@ export function JoinClient() {
         )}
 
         <div className="flex items-center gap-1.5">
-          {VISIBLE_STEPS.map((s, i) => (
+          {!booksFirst && VISIBLE_STEPS.map((s, i) => (
             <span
               key={s}
               className="h-1.5 rounded-full transition-all duration-500"
@@ -217,22 +246,29 @@ export function JoinClient() {
       </header>
 
       <main className="relative z-10 mx-auto w-full max-w-md px-4 pb-32 pt-4 sm:max-w-lg sm:pt-8">
-        <div key={step} className="ob-enter-forward">
-          {step === "topics" && (
-            <StepTopics
-              topics={topics} setTopics={setTopics}
-              onContinue={handleTopicsContinue}
-            />
-          )}
-          {step === "shelf" && (
-            <StepShelf
-              topics={topics}
-              onOpen={handleSeedOpen}
-              cloningSlug={cloningSlug}
-              total={TOTAL} idx={stepIdx}
-            />
-          )}
-        </div>
+        {!flagsReady ? (
+          <div className="mt-16 flex justify-center">
+            <Lumi state="thinking" size={68} animate />
+          </div>
+        ) : (
+          <div key={effectiveStep} className="ob-enter-forward">
+            {effectiveStep === "topics" && (
+              <StepTopics
+                topics={topics} setTopics={setTopics}
+                onContinue={handleTopicsContinue}
+              />
+            )}
+            {effectiveStep === "shelf" && (
+              <StepShelf
+                booksFirst={booksFirst}
+                topics={topics} setTopics={setTopics}
+                onOpen={handleSeedOpen}
+                cloningSlug={cloningSlug}
+                total={TOTAL} idx={stepIdx}
+              />
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
@@ -403,15 +439,70 @@ function HookPill({
   );
 }
 
-// ─── Step 3 — Shelf (seed catalogue, clone-on-tap) ────────────────────────────
-function StepShelf({
-  topics, onOpen, cloningSlug, total, idx,
+// ─── Books-first hero (variant) ───────────────────────────────────────────────
+// Leads with the value prop instead of a quiz, with topics demoted to an
+// optional inline filter that re-ranks the shelf live.
+function BooksFirstHero({
+  topics, setTopics,
 }: {
   topics: TopicId[];
+  setTopics: (fn: (prev: TopicId[]) => TopicId[]) => void;
+}) {
+  const toggle = (id: TopicId) => {
+    SFX.tap();
+    setTopics((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+  return (
+    <section className="text-center">
+      <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-sage-deep)" }}>
+        Free · no sign-up
+      </p>
+      <h1
+        className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
+        style={{ fontSize: "clamp(1.85rem,6vw,2.5rem)", color: "var(--color-ink)" }}
+      >
+        Read any book — in your language
+      </h1>
+      <p className="mx-auto mt-3 max-w-[32ch] text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+        Tap one to start reading instantly. Translate any page into your language as you go — layout kept intact. No account needed.
+      </p>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        {TOPICS.map((topic) => {
+          const selected = topics.includes(topic.id);
+          const tone = TONE_MAP[topic.tone];
+          return (
+            <button
+              key={topic.id}
+              type="button"
+              onClick={() => toggle(topic.id)}
+              className="inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-[0.8rem] font-semibold transition-[transform,box-shadow,border-color,background] duration-150 active:scale-[0.96]"
+              style={{
+                borderColor: selected ? tone.ring : "var(--color-border-strong)",
+                background: selected ? tone.bg : "white",
+                color: "var(--color-ink)",
+                boxShadow: selected ? `0 2px 0 ${tone.ring}40` : "0 2px 0 rgba(74,60,30,0.06)",
+              }}
+            >
+              <span className="text-[0.95rem] leading-none">{topic.icon}</span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ─── Step 3 — Shelf (seed catalogue, clone-on-tap) ────────────────────────────
+function StepShelf({
+  topics, setTopics, onOpen, cloningSlug, total, idx, booksFirst,
+}: {
+  topics: TopicId[];
+  setTopics: (fn: (prev: TopicId[]) => TopicId[]) => void;
   onOpen: (seed: Seed) => void;
   cloningSlug: string | null;
   total: number;
   idx: number;
+  booksFirst?: boolean;
 }) {
   const { t } = useI18n();
   // Catalogue lives server-side — `clone_id` is populated for seeds the user
@@ -435,20 +526,24 @@ function StepShelf({
 
   return (
     <div>
-      <div className="text-center">
-        <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-plum)" }}>
-          {t("join.s.eyebrow", { idx: idx + 1, total })}
-        </p>
-        <h2
-          className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
-          style={{ fontSize: "clamp(1.7rem,5.5vw,2.2rem)", color: "var(--color-ink)" }}
-        >
-          {t("join.s.title")}
-        </h2>
-        <p className="mx-auto mt-2 max-w-[30ch] text-[0.92rem]" style={{ color: "var(--color-ink-soft)" }}>
-          {t("join.s.subtitle")}
-        </p>
-      </div>
+      {booksFirst ? (
+        <BooksFirstHero topics={topics} setTopics={setTopics} />
+      ) : (
+        <div className="text-center">
+          <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-plum)" }}>
+            {t("join.s.eyebrow", { idx: idx + 1, total })}
+          </p>
+          <h2
+            className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
+            style={{ fontSize: "clamp(1.7rem,5.5vw,2.2rem)", color: "var(--color-ink)" }}
+          >
+            {t("join.s.title")}
+          </h2>
+          <p className="mx-auto mt-2 max-w-[30ch] text-[0.92rem]" style={{ color: "var(--color-ink-soft)" }}>
+            {t("join.s.subtitle")}
+          </p>
+        </div>
+      )}
 
       {isLoading && (
         <div className="mt-10 flex justify-center">
@@ -680,8 +775,10 @@ function FixedFooter({ children }: { children: React.ReactNode }) {
 
 function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
   const [loading, setLoading] = useState(false);
+  const posthog = usePostHog();
 
   const handleClick = async () => {
+    posthog?.capture("join_google_clicked");
     setLoading(true);
     try {
       const url = await getGoogleAuthUrl("https://translify.app/auth/google/callback");

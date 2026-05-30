@@ -77,7 +77,8 @@
       "Read(//tmp/**)",
       "Read(//private/tmp/**)",
       "Bash(echo \"log exists exit: $?\")",
-      "Bash(echo \"BUILD2_EXIT=$?\")"
+      "Bash(echo \"BUILD2_EXIT=$?\")",
+      "Bash(echo \"JOIN_BUILD_EXIT=$?\")"
     ]
   },
   "enabledPlugins": {
