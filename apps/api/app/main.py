@@ -12,6 +12,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.auth.schemas import UserCreate, UserRead, UserUpdate
 from app.auth.users import auth_backend, fastapi_users, google_oauth_client
 from app.config import settings
+from app.routes.admin import router as admin_router
 from app.routes.billing import router as billing_router
 from app.routes.books import router as books_router
 from app.routes.chats import router as chats_router
@@ -134,3 +135,4 @@ app.include_router(seeds_router)
 app.include_router(folders_router)
 app.include_router(social_auth_router)
 app.include_router(social_router)
+app.include_router(admin_router)

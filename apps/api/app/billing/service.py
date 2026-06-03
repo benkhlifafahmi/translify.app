@@ -16,6 +16,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models import User
 from app.billing.plans import Cycle, Plan, plan_for_price_id, price_id_for
 from app.config import settings
+from app.emails import client as email_client
+from app.emails import templates as email_templates
 from app.models.subscription import (
     StripeEvent,
     Subscription,
@@ -189,6 +191,23 @@ def _ts_to_dt(value: int | None) -> datetime | None:
     return datetime.fromtimestamp(value, tz=UTC)
 
 
+_CURRENCY_SYMBOL = {"usd": "$", "eur": "€", "gbp": "£", "cad": "$", "aud": "$"}
+
+
+def _format_amount(cents: int, currency: str) -> str:
+    """'1200', 'usd' -> '$12.00'. Falls back to a trailing ISO code."""
+    major = cents / 100
+    symbol = _CURRENCY_SYMBOL.get(currency.lower())
+    if symbol:
+        return f"{symbol}{major:,.2f}"
+    return f"{major:,.2f} {currency.upper()}"
+
+
+def _format_date(dt: datetime) -> str:
+    """'March 3, 2026' — %-d isn't portable, so the day is interpolated."""
+    return f"{dt:%B} {dt.day}, {dt.year}"
+
+
 async def _record_event(event_id: str, event_type: str, session: AsyncSession) -> bool:
     """Insert a row in stripe_events; return False if already seen (duplicate)."""
     existing = await session.execute(
@@ -264,6 +283,53 @@ async def _apply_subscription_object(
     return sub
 
 
+async def _notify_upcoming_invoice(invoice: dict, session: AsyncSession) -> None:
+    """Email the customer a heads-up that their subscription renews soon.
+
+    Fired from the ``invoice.upcoming`` event, which Stripe sends a few days
+    before a renewal (lead time is set in the dashboard billing settings). The
+    upcoming invoice has no ``id`` of its own — it's a preview — so we key off
+    the customer to find the user. Best-effort: a missing customer or a $0
+    preview (e.g. fully-discounted) is skipped, and email failures are
+    swallowed by the client so they never wedge the webhook.
+    """
+    customer_id: str | None = _g(invoice, "customer")
+    if not customer_id:
+        return
+
+    result = await session.execute(
+        select(Subscription).where(Subscription.stripe_customer_id == customer_id)
+    )
+    sub = result.scalar_one_or_none()
+    if sub is None:
+        log.warning("invoice.upcoming for unknown customer %s", customer_id)
+        return
+
+    amount_due = _g(invoice, "amount_due") or 0
+    if amount_due <= 0:
+        log.info("Skipping upcoming-invoice notice for %s — amount is 0", customer_id)
+        return
+
+    user_result = await session.execute(select(User).where(User.id == sub.user_id))
+    user = user_result.scalar_one_or_none()
+    if user is None or not user.email or user.is_anonymous:
+        return
+
+    currency = _g(invoice, "currency") or "usd"
+    renews_dt = _ts_to_dt(_g(invoice, "next_payment_attempt") or _g(invoice, "period_end"))
+
+    subject, html, text = email_templates.upcoming_invoice(
+        name=user.display_name,
+        amount_label=_format_amount(int(amount_due), currency),
+        renews_label=_format_date(renews_dt) if renews_dt else "soon",
+        manage_url=f"{settings.web_public_url}/account",
+    )
+    await email_client.send(
+        to=user.email, subject=subject, html=html, text=text, tag="upcoming-invoice"
+    )
+    log.info("Sent upcoming-invoice notice to %s", user.email)
+
+
 async def handle_event(event: stripe.Event, session: AsyncSession) -> None:
     """Dispatch a verified Stripe event to the appropriate handler."""
     fresh = await _record_event(event["id"], event["type"], session)
@@ -281,6 +347,9 @@ async def handle_event(event: stripe.Event, session: AsyncSession) -> None:
         "customer.subscription.trial_will_end",
     }:
         await _apply_subscription_object(obj, session)
+
+    elif event_type == "invoice.upcoming":
+        await _notify_upcoming_invoice(obj, session)
 
     elif event_type == "checkout.session.completed":
         # The subscription will be created via customer.subscription.created;

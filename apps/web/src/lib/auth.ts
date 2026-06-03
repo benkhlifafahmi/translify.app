@@ -5,6 +5,8 @@ export interface User {
   email: string;
   is_active: boolean;
   is_verified: boolean;
+  /** Back-office access — gates the /admin surface. Set in the DB. */
+  is_superuser: boolean;
   display_name: string | null;
   preferred_language: string;
   family_safe_mode: boolean;

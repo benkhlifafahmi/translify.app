@@ -447,3 +447,161 @@ exactly as it was. No action needed.
 """
 
     return subject, _layout(preheader=preheader, hero=hero, body=body), text
+
+
+# ─────────────────────────────  Upcoming invoice  ─────────────────────────────
+
+
+def upcoming_invoice(
+    *,
+    name: str | None,
+    amount_label: str,
+    renews_label: str,
+    manage_url: str,
+) -> tuple[str, str, str]:
+    """Heads-up before a subscription renews.
+
+    Fired from the ``invoice.upcoming`` Stripe webhook. ``amount_label`` and
+    ``renews_label`` arrive pre-formatted (e.g. "$12.00", "March 3, 2026") so
+    the template stays free of currency / locale logic.
+    """
+    salutation = (name and name.strip()) or "reader"
+    safe_salutation = html.escape(salutation)
+    safe_amount = html.escape(amount_label)
+    safe_renews = html.escape(renews_label)
+
+    subject = "Your Translify renewal is coming up"
+    preheader = f"{amount_label} on {renews_label}. Nothing to do if it all looks right."
+
+    hero = _hero(
+        eyebrow="Upcoming charge",
+        headline="A quick heads-up.",
+        accent_word="heads-up",
+    )
+
+    body = f"""
+<p style="margin:24px 0 18px;font-family:{BODY_FONT_STACK};font-size:16px;
+          line-height:1.65;color:{INK}">
+  Hello {safe_salutation} —
+</p>
+<p style="margin:0 0 14px;font-family:{BODY_FONT_STACK};font-size:16px;
+          line-height:1.65;color:{INK}">
+  Your Translify subscription renews soon. Here's the upcoming charge so there
+  are no surprises on your statement.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+       style="margin:20px 0 8px;background:{PAPER_2};border:1px solid {BORDER};
+              border-radius:12px">
+  <tr>
+    <td style="padding:16px 20px;font-family:{BODY_FONT_STACK};font-size:13px;
+               color:{INK_SOFT};letter-spacing:0.04em">Amount</td>
+    <td align="right" style="padding:16px 20px;font-family:{DISPLAY_FONT_STACK};
+               font-size:22px;font-weight:600;color:{INK}">{safe_amount}</td>
+  </tr>
+  <tr>
+    <td style="padding:0 20px 16px;font-family:{BODY_FONT_STACK};font-size:13px;
+               color:{INK_SOFT};letter-spacing:0.04em">Renews on</td>
+    <td align="right" style="padding:0 20px 16px;font-family:{BODY_FONT_STACK};
+               font-size:15px;font-weight:600;color:{INK}">{safe_renews}</td>
+  </tr>
+</table>
+
+<p style="margin:18px 0 28px;font-family:{BODY_FONT_STACK};font-size:16px;
+          line-height:1.65;color:{INK}">
+  If everything looks right, there's nothing to do. To update your card, switch
+  plans, or cancel before the renewal, open your billing settings.
+</p>
+
+{_button(label="Manage billing", href=manage_url, tone="ink")}
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+       style="margin-top:32px">
+  <tr><td style="border-top:1px dashed {BORDER};padding-top:18px">
+    <p style="margin:0;font-family:{BODY_FONT_STACK};font-size:13px;
+              line-height:1.6;color:{INK_SOFT}">
+      Questions about this charge? Just reply to this email and a human will
+      get back to you.
+    </p>
+  </td></tr>
+</table>
+"""
+
+    text = f"""\
+Hello {salutation} —
+
+Your Translify subscription renews soon. Here's the upcoming charge so there
+are no surprises on your statement:
+
+  Amount:    {amount_label}
+  Renews on: {renews_label}
+
+If everything looks right, there's nothing to do. To update your card, switch
+plans, or cancel before the renewal, open your billing settings:
+
+  {manage_url}
+
+Questions about this charge? Just reply to this email.
+
+— Translify · hello@translify.app
+"""
+
+    return subject, _layout(preheader=preheader, hero=hero, body=body), text
+
+
+# ─────────────────────────────  Admin broadcast / 1:1  ─────────────────────────────
+
+
+def admin_message(*, name: str | None, subject: str, body: str) -> tuple[str, str, str]:
+    """A free-form note composed by an admin in the back office.
+
+    ``subject`` becomes the email subject verbatim. ``body`` is plain text —
+    blank lines split paragraphs; everything is HTML-escaped before rendering.
+    """
+    salutation = (name and name.strip()) or "reader"
+    safe_salutation = html.escape(salutation)
+
+    preheader = subject
+
+    hero = _hero(
+        eyebrow="A note from Translify",
+        headline="Hello there.",
+    )
+
+    paragraphs = [p.strip() for p in body.replace("\r\n", "\n").split("\n\n") if p.strip()]
+    para_html = "".join(
+        f"""<p style="margin:0 0 14px;font-family:{BODY_FONT_STACK};font-size:16px;
+              line-height:1.65;color:{INK}">{html.escape(p).replace(chr(10), "<br>")}</p>"""
+        for p in paragraphs
+    )
+
+    body_html = f"""
+<p style="margin:24px 0 18px;font-family:{BODY_FONT_STACK};font-size:16px;
+          line-height:1.65;color:{INK}">
+  Hello {safe_salutation} —
+</p>
+{para_html}
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+       style="margin-top:32px">
+  <tr><td style="border-top:1px dashed {BORDER};padding-top:18px">
+    <p style="margin:0;font-family:{DISPLAY_FONT_STACK};font-style:italic;
+              font-size:15px;line-height:1.6;color:{INK_SOFT}">
+      You can reply straight to this email — it reaches a real person.
+    </p>
+  </td></tr>
+</table>
+"""
+
+    text_body = "\n\n".join(paragraphs)
+    text = f"""\
+Hello {salutation} —
+
+{text_body}
+
+You can reply straight to this email — it reaches a real person.
+
+— Translify · hello@translify.app
+"""
+
+    return subject, _layout(preheader=preheader, hero=hero, body=body_html), text

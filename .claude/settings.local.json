@@ -93,7 +93,9 @@
       "Bash(echo \"tsc exit: $?\")",
       "Bash(npx eslint *)",
       "Bash(echo \"eslint exit: $?\")",
-      "Bash(echo \"=== next lint exit: $? ===\")"
+      "Bash(echo \"=== next lint exit: $? ===\")",
+      "Bash(command -v uv)",
+      "Bash(command -v python3)"
     ]
   },
   "enabledPlugins": {
