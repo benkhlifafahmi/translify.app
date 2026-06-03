@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useFlashcards, type FlashcardDeck } from "@/lib/flashcards";
+import { type FlashcardDeck } from "@/lib/flashcards";
 
 const INPUT =
   "w-full rounded-xl border-[1.5px] border-[color:var(--color-border)] bg-[#FFFCF3] px-3 py-2 text-sm focus:border-[color:var(--color-saffron)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-saffron)]/30";
 
-export function FlashcardsTool({ bookId }: { bookId: string }) {
-  const deck = useFlashcards(bookId);
+export function FlashcardsTool({ bookId, deck }: { bookId: string; deck: FlashcardDeck }) {
   const [mode, setMode] = useState<"review" | "manage">("review");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);

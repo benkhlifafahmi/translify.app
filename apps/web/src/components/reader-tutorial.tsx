@@ -75,11 +75,14 @@ const STEPS: Step[] = [
     id: "open-quiz",
     showAtPage: 6,
     eyebrow: "Make it stick",
-    body: "Generate a quick Quiz to test what you've read.",
+    body: "Open Study to quiz yourself and turn your highlights into flashcards.",
     cta: "Cool",
     lumi: "excited",
-    pointer: "★ The glowing tab",
-    spotlight: { kind: "anchor", selectors: ['[data-tutorial-anchor="quiz-tab"]'] },
+    pointer: "★ Your study tools",
+    spotlight: {
+      kind: "anchor",
+      selectors: ['[data-tutorial-anchor="quiz-rail"]', '[data-tutorial-anchor="study-tab"]'],
+    },
   },
 ];
 

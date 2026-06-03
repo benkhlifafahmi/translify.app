@@ -17,7 +17,6 @@ import { useI18n } from "@/lib/i18n";
 import { TranslatePanel } from "@/components/translate-panel";
 import { StudyPanel } from "@/components/study/study-panel";
 import { ChatPanel } from "@/components/chat-panel";
-import { QuizPanel } from "@/components/quiz-panel";
 import {
   HighlightsPanel,
   type OpenHighlightState,
@@ -58,8 +57,8 @@ import { ReaderTutorial } from "@/components/reader-tutorial";
 import { FreePreviewChip } from "@/components/free-preview-chip";
 import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
 
-type RightTab = "chat" | "quiz" | "notes";
-type MobilePanel = null | "study" | "chat" | "notes" | "quiz" | "garden";
+type RightTab = "chat" | "notes";
+type MobilePanel = null | "study" | "chat" | "notes" | "garden";
 
 export default function BookDetailPage({
   params,
@@ -426,6 +425,10 @@ export default function BookDetailPage({
   const studyPanelNode = (
     <StudyPanel
       bookId={bookId}
+      currentPage={Math.max(currentPage, initialPage ?? 1)}
+      pageCount={book.page_count ?? null}
+      selectedTranslationId={selectedTranslationId}
+      onEmailRequired={openEmailGate}
       onFocusComplete={() => {
         // Phase 2: a finished focus block can water the Garden / extend the
         // streak once the backend grows a "focus" event kind.
@@ -460,14 +463,6 @@ export default function BookDetailPage({
         // Close the drawer on mobile so the user sees the page.
         setMobilePanel(null);
       }}
-    />
-  );
-
-  const quizPanelNode = (
-    <QuizPanel
-      bookId={bookId}
-      selectedTranslationId={selectedTranslationId}
-      onEmailRequired={openEmailGate}
     />
   );
 
@@ -539,19 +534,9 @@ export default function BookDetailPage({
                   label={highlights.length > 0 ? `${t("app.tab.notes")} (${highlights.length})` : t("app.tab.notes")}
                   dataAnchor="notes-tab"
                 />
-                <TabPill
-                  active={rightTab === "quiz"}
-                  onClick={() => setRightTab("quiz")}
-                  tone="coral"
-                  icon="★"
-                  label={t("app.tab.quiz")}
-                  dataAnchor="quiz-tab"
-                />
               </div>
               <div className="flex-1 overflow-hidden">
-                {rightTab === "chat" ? chatPanelNode
-                  : rightTab === "notes" ? notesPanelNode
-                    : quizPanelNode}
+                {rightTab === "chat" ? chatPanelNode : notesPanelNode}
               </div>
             </aside>
           </div>
@@ -589,7 +574,6 @@ export default function BookDetailPage({
             {mobilePanel === "study"     && studyPanelNode}
             {mobilePanel === "chat"      && chatPanelNode}
             {mobilePanel === "notes"     && notesPanelNode}
-            {mobilePanel === "quiz"      && quizPanelNode}
             {mobilePanel === "garden"    && <MobileGardenPanel bookId={bookId} />}
           </MobileDrawer>
 
@@ -608,7 +592,6 @@ const PANEL_TONES: Record<Exclude<MobilePanel, null>, "sage" | "saffron" | "cora
   study: "plum",
   chat: "sage",
   notes: "saffron",
-  quiz: "coral",
   garden: "sage",
 };
 
@@ -799,7 +782,7 @@ function PaperTabBar({
         aria-hidden
         className="pointer-events-none absolute -top-px left-1/2 h-px w-32 -translate-x-1/2 bg-gradient-to-r from-transparent via-[color:var(--color-saffron)]/60 to-transparent"
       />
-      <div className={`grid ${gardenSlot ? "grid-cols-5" : "grid-cols-4"} gap-1 px-2 py-2`}>
+      <div className={`grid ${gardenSlot ? "grid-cols-4" : "grid-cols-3"} gap-1 px-2 py-2`}>
         <PaperTabBtn
           tone="plum"
           icon={
@@ -811,6 +794,7 @@ function PaperTabBar({
           }
           label={t("app.tab.study")}
           onClick={() => onOpen("study")}
+          dataAnchor="study-tab"
         />
         <PaperTabBtn
           tone="sage"
@@ -835,17 +819,6 @@ function PaperTabBar({
           badge={counts.notes > 0 ? counts.notes : undefined}
           onClick={() => onOpen("notes")}
           dataAnchor="notes-tab"
-        />
-        <PaperTabBtn
-          tone="coral"
-          icon={
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2 14.7 8.5 22 9.3l-5.6 4.9 1.7 7.1L12 17.7 5.9 21.3l1.7-7.1L2 9.3l7.3-.8z" />
-            </svg>
-          }
-          label={t("app.tab.quiz")}
-          onClick={() => onOpen("quiz")}
-          dataAnchor="quiz-tab"
         />
         {gardenSlot}
       </div>

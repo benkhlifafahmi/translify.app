@@ -42,10 +42,15 @@ async def send(
     html: str,
     text: str,
     tag: str | None = None,
-) -> None:
+) -> dict[str, Any] | None:
     """Send an email via Resend. Failures are logged, not raised — auth flows
     must remain side-effect-tolerant (we don't want a Resend outage to brick
-    registration)."""
+    registration).
+
+    Returns the Resend response dict on success, or ``None`` when delivery was
+    skipped (no API key) or failed — callers that care (e.g. the admin
+    composer) can branch on the result; callers that don't can ignore it.
+    """
     _configure()
 
     if not settings.resend_api_key:
@@ -53,7 +58,7 @@ async def send(
             "RESEND_API_KEY unset — would have sent to=%s subject=%r",
             to, subject,
         )
-        return
+        return None
 
     payload: dict[str, Any] = {
         "from": f"{settings.email_from_name} <{settings.email_from_address}>",
@@ -69,4 +74,4 @@ async def send(
     if tag:
         payload["tags"] = [{"name": "category", "value": tag}]
 
-    await asyncio.to_thread(_send_sync, payload)
+    return await asyncio.to_thread(_send_sync, payload)

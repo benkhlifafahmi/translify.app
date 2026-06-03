@@ -89,7 +89,11 @@
       "Bash(echo \"RADIAL_EXIT=$?\")",
       "Bash(IMPECCABLE_CONTEXT_DIR=/Users/ben/workspace/BKGroup/translify.app node /Users/ben/.claude/skills/impeccable/scripts/load-context.mjs)",
       "Bash(echo \"REDESIGN_EXIT=$?\")",
-      "Bash(echo \"V3_EXIT=$?\")"
+      "Bash(echo \"V3_EXIT=$?\")",
+      "Bash(echo \"tsc exit: $?\")",
+      "Bash(npx eslint *)",
+      "Bash(echo \"eslint exit: $?\")",
+      "Bash(echo \"=== next lint exit: $? ===\")"
     ]
   },
   "enabledPlugins": {

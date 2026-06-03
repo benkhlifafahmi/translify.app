@@ -85,6 +85,21 @@ function cardFromHighlight(h: Highlight): Flashcard | null {
   return null;
 }
 
+/**
+ * How many highlights could still become cards (cardable + not already
+ * imported). Lets the study home surface "turn N new highlights into cards"
+ * without re-running the import. Mirrors generateFromHighlights' filtering.
+ */
+export function countUncarded(cards: Flashcard[], highlights: Highlight[]): number {
+  const have = new Set(cards.map((c) => c.sourceId).filter(Boolean));
+  let n = 0;
+  for (const h of highlights) {
+    if (have.has(h.id)) continue;
+    if (cardFromHighlight(h)) n++;
+  }
+  return n;
+}
+
 export interface FlashcardDeck {
   cards: Flashcard[];
   /** Cards due for review right now. */
@@ -100,8 +115,6 @@ export interface FlashcardDeck {
 
 export function useFlashcards(bookId: string): FlashcardDeck {
   const [cards, setCards] = useState<Flashcard[]>(() => load(bookId));
-  // Fixed "now" for the session so the due list doesn't shift mid-review.
-  const [now] = useState(() => Date.now());
 
   useEffect(() => {
     setCards(load(bookId));
@@ -174,7 +187,10 @@ export function useFlashcards(bookId: string): FlashcardDeck {
     [mutate],
   );
 
-  const due = cards.filter((c) => c.due <= now);
+  // Evaluated against the live clock (not a frozen mount-time value) so cards
+  // just generated from highlights — whose due date is their creation moment —
+  // appear in the review queue immediately, closing the read → recall loop.
+  const due = cards.filter((c) => c.due <= Date.now());
 
   return { cards, due, addCard, updateCard, removeCard, grade, generateFromHighlights };
 }

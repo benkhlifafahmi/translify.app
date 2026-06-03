@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  useBookStudy,
-  useFocusTimer,
   formatClock,
   FOCUS_MINUTES,
   LONG_BREAK_EVERY,
   MODE_LABEL,
+  type BookStudy,
+  type FocusTimer,
   type GoalUnit,
 } from "@/lib/focus";
 
@@ -16,18 +16,13 @@ const RING = 54; // radius
 const CIRC = 2 * Math.PI * RING;
 
 interface Props {
-  bookId: string;
-  /** Wired by the page so a finished focus block can water the Garden, etc. */
-  onFocusComplete?: (minutes: number) => void;
+  /** Shared session state, lifted to StudyPanel so the Today desk and this
+   *  tab drive one and the same timer / goal within the tab. */
+  study: BookStudy;
+  timer: FocusTimer;
 }
 
-export function FocusTool({ bookId, onFocusComplete }: Props) {
-  const study = useBookStudy(bookId);
-  const timer = useFocusTimer((minutes) => {
-    study.creditFocus(minutes);
-    onFocusComplete?.(minutes);
-  });
-
+export function FocusTool({ study, timer }: Props) {
   const isFocus = timer.mode === "focus";
   const tone = isFocus ? "saffron" : "sage";
   const fraction = timer.total > 0 ? timer.remaining / timer.total : 0;
@@ -138,7 +133,7 @@ export function FocusTool({ bookId, onFocusComplete }: Props) {
 
 // ---------------------------------------------------------------------------
 
-function GoalCard({ study }: { study: ReturnType<typeof useBookStudy> }) {
+function GoalCard({ study }: { study: BookStudy }) {
   const [editing, setEditing] = useState(false);
   const [unit, setUnit] = useState<GoalUnit>(study.goal?.unit ?? "minutes");
   const [target, setTarget] = useState<string>(String(study.goal?.target ?? 50));
@@ -251,7 +246,7 @@ function GoalCard({ study }: { study: ReturnType<typeof useBookStudy> }) {
 
 // ---------------------------------------------------------------------------
 
-function TaskList({ study }: { study: ReturnType<typeof useBookStudy> }) {
+function TaskList({ study }: { study: BookStudy }) {
   const [draft, setDraft] = useState("");
 
   function add() {
