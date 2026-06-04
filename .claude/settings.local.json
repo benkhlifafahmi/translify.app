@@ -97,7 +97,9 @@
       "Bash(command -v uv)",
       "Bash(command -v python3)",
       "Bash(grep -nA18 \"const t = useCallback\\\\|const t = \\\\|function t\\(\" index.tsx)",
-      "Bash(rm -f /tmp/backfill_i18n.py)"
+      "Bash(rm -f /tmp/backfill_i18n.py)",
+      "Bash(sed -n '1,80p' app/seeds/catalog.py)",
+      "Bash(sed -n '1,50p' app/scripts/seed_books.py)"
     ]
   },
   "enabledPlugins": {

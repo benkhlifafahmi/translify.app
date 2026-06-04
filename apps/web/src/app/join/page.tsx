@@ -4,13 +4,13 @@ import { JoinClient } from "./join-client";
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
 
 export const metadata: Metadata = {
-  title: "Start reading any book in your language — Translify",
+  title: "Pick your subject. Start studying free — Translify",
   description:
-    "Upload any PDF or EPUB. Translify rebuilds it in your language, layout intact. Chat with the book, quiz yourself, build real fluency. Free to start.",
+    "Tap a subject and jump straight into a real textbook: Biology, Chemistry, Physics, Calculus, CS, and more. Ask it anything with cited answers, quiz yourself, drill flashcards. Free to start, no card.",
   alternates: { canonical: "/join" },
   openGraph: {
-    title: "Read any book. Finally in your language.",
-    description: "AI-powered translation that preserves layout. Chat with your book. Free to start.",
+    title: "Pick your subject. Start studying.",
+    description: "Jump into a real textbook and study it with an AI tutor, quizzes, and flashcards. Free to start, no card.",
     url: `${SITE}/join`,
   },
 };

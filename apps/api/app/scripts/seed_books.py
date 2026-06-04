@@ -65,22 +65,27 @@ async def _ingest_one(
     if book is not None and not force:
         return "skip-existing"
 
-    epub_path = seed_dir / spec.epub_filename
-    if not epub_path.is_file():
+    fmt = BookFormat.pdf if spec.source_format == "pdf" else BookFormat.epub
+    ext = "pdf" if fmt is BookFormat.pdf else "epub"
+    content_type = "application/pdf" if fmt is BookFormat.pdf else "application/epub+zip"
+
+    src_path = seed_dir / spec.filename
+    if not src_path.is_file():
         raise FileNotFoundError(
-            f"seed EPUB missing: {epub_path} — "
-            "did you run `git lfs pull` / build the API image with sample-books mounted?"
+            f"seed file missing: {src_path} — "
+            "place the file under apps/web/public/sample-books/ "
+            "(or run `git lfs pull` / build the API image with sample-books mounted)."
         )
 
-    file_bytes = epub_path.read_bytes()
+    file_bytes = src_path.read_bytes()
     size = len(file_bytes)
 
     if dry_run:
-        return f"dry-run ({size:,} bytes)"
+        return f"dry-run ({size:,} bytes, {ext})"
 
     # Upload to object storage under a stable, well-known key.
-    key = f"seeds/{spec.slug}.epub"
-    put_object_bytes(key, file_bytes, "application/epub+zip")
+    key = f"seeds/{spec.slug}.{ext}"
+    put_object_bytes(key, file_bytes, content_type)
 
     system_user = await get_or_create_system_user(session)
 
@@ -91,7 +96,7 @@ async def _ingest_one(
             title=spec.title,
             author=spec.author,
             source_language=spec.source_language,
-            format=BookFormat.epub,
+            format=fmt,
             file_key=key,
             file_size_bytes=size,
             status=BookStatus.uploaded,
@@ -104,6 +109,7 @@ async def _ingest_one(
         book.title = spec.title
         book.author = spec.author
         book.source_language = spec.source_language
+        book.format = fmt
         book.file_key = key
         book.file_size_bytes = size
         book.status = BookStatus.uploaded

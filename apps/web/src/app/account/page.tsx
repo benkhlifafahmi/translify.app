@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { usePostHog } from "posthog-js/react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { TranslifyMark } from "@/components/translify-mark";
 import { TrialBanner } from "@/components/trial-banner";
@@ -71,6 +72,7 @@ export default function AccountPage() {
 function AccountInner() {
   const router = useRouter();
   const params = useSearchParams();
+  const posthog = usePostHog();
   const { t, locale } = useI18n();
 
   const [user, setUser] = useState<User | null>(null);
@@ -113,6 +115,20 @@ function AccountInner() {
     const checkout = params.get("checkout");
     const upgrade = params.get("upgrade");
     if (checkout === "success") {
+      // Conversion event for experiments (e.g. the /study hero A/B). PostHog
+      // auto-attaches the user's active flags, so this attributes the purchase
+      // back to the variant. Deduped per checkout session so a refresh of the
+      // success URL doesn't double-count.
+      const sessionId = params.get("session_id") ?? undefined;
+      try {
+        const key = `ph_sub_started_${sessionId ?? "x"}`;
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, "1");
+          posthog?.capture("subscription_started", { session_id: sessionId });
+        }
+      } catch {
+        posthog?.capture("subscription_started", { session_id: sessionId });
+      }
       setFlash({
         tone: "success",
         text: "Welcome aboard. Your plan is being activated — this page will refresh shortly.",
