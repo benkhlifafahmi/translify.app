@@ -69,7 +69,9 @@ async def list_users(
         list_stmt = list_stmt.where(cond)
 
     total = (await session.execute(count_stmt)).scalar_one()
-    users = (await session.execute(list_stmt)).scalars().all()
+    # .unique() is required because User eager-loads the oauth_accounts
+    # collection (lazy="joined"), which yields duplicate entity rows.
+    users = (await session.execute(list_stmt)).unique().scalars().all()
     ids = [u.id for u in users]
 
     subs: dict[uuid.UUID, Subscription] = {}
@@ -119,7 +121,7 @@ async def get_user_detail(
     """Full profile for one customer: subscription, usage, content stats, files."""
     user = (
         await session.execute(select(User).where(User.id == user_id))
-    ).scalar_one_or_none()
+    ).unique().scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
@@ -229,7 +231,7 @@ async def send_user_email(
     """Send a one-off branded email to a single customer via Resend."""
     user = (
         await session.execute(select(User).where(User.id == user_id))
-    ).scalar_one_or_none()
+    ).unique().scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if not user.email:

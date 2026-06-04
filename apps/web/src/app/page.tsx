@@ -74,8 +74,8 @@ function Hero() {
         </p>
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
-          <CapabilityPill tone="sage" icon={<ChatIcon />} label="Chat with the book" />
-          <CapabilityPill tone="coral" icon={<QuizIcon />} label="AI quizzes" />
+          <CapabilityPill tone="sage" icon={<ChatIcon />} label="Cited tutor chat" />
+          <CapabilityPill tone="coral" icon={<QuizIcon />} label="Quizzes & flashcards" />
           <CapabilityPill tone="saffron" icon={<GlobeIcon />} label="14 languages" />
         </div>
 
@@ -90,7 +90,7 @@ function Hero() {
             </svg>
           </Link>
           <a
-            href="#pricing"
+            href="#how"
             className="inline-flex h-12 items-center rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)]/60 px-6 font-semibold text-[color:var(--color-ink)] transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-[color:var(--color-paper-2)] active:scale-[0.97]"
           >
             {t("hero.cta.secondary")}
@@ -238,8 +238,8 @@ function MockUpload() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-[color:var(--color-ink)]">les-misérables.pdf</p>
-          <p className="text-[0.7rem] text-[color:var(--color-ink-soft)]">2.4 MB · 487 pages</p>
+          <p className="truncate text-sm font-semibold text-[color:var(--color-ink)]">organic-chemistry.pdf</p>
+          <p className="text-[0.7rem] text-[color:var(--color-ink-soft)]">12.4 MB · 1,180 pages</p>
         </div>
         <span className="rounded-full bg-[color:var(--color-sage)]/20 px-2 py-1 text-[0.65rem] font-semibold text-[color:var(--color-sage-deep)]">100%</span>
       </div>
@@ -339,12 +339,25 @@ function FeatureShowcase() {
           tone="coral"
         />
         <FeatureRow
+          eyebrow="Flashcards & focus"
+          title="Drill it in, then make it stick."
+          body="Turn your highlights into flashcards with one tap. Spaced repetition brings each card back right before you'd forget. A focus timer and a daily goal keep you in the chair."
+          highlights={[
+            "One-tap flashcards from your highlights",
+            "Spaced repetition that schedules itself",
+            "Focus timer and a daily study goal",
+          ]}
+          mock={<StudyMockBig />}
+          align="left"
+          tone="plum"
+        />
+        <FeatureRow
           eyebrow={t("feat.translate.eyebrow")}
           title={t("feat.translate.title")}
           body={t("feat.translate.body")}
           highlights={[t("feat.translate.h1"), t("feat.translate.h2"), t("feat.translate.h3")]}
           mock={<TranslateMockBig />}
-          align="left"
+          align="right"
           tone="saffron"
         />
       </div>
@@ -361,17 +374,19 @@ function FeatureRow({
   highlights: string[];
   mock: React.ReactNode;
   align: "left" | "right";
-  tone: "saffron" | "sage" | "coral";
+  tone: "saffron" | "sage" | "coral" | "plum";
 }) {
   const dotByTone = {
     saffron: "bg-[color:var(--color-saffron)]",
     sage: "bg-[color:var(--color-sage)]",
     coral: "bg-[color:var(--color-coral)]",
+    plum: "bg-[color:var(--color-plum)]",
   }[tone];
   const eyebrowText = {
     saffron: "text-[color:var(--color-saffron-deep)]",
     sage: "text-[color:var(--color-sage-deep)]",
     coral: "text-[color:var(--color-coral-deep)]",
+    plum: "text-[color:var(--color-plum)]",
   }[tone];
 
   const text = (
@@ -523,6 +538,52 @@ function QuizMockBig() {
             )}
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function StudyMockBig() {
+  return (
+    <div className="card-paper-lifted relative p-5">
+      <div className="flex items-center justify-between">
+        <span className="badge-pill bg-[color:var(--color-plum)]/12 text-[color:var(--color-plum)]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-plum)]" />
+          Study desk · Today
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-saffron)]/15 px-2.5 py-1 text-[0.7rem] font-semibold text-[color:var(--color-saffron-deep)]">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2 2" /><path d="M9 2h6" /></svg>
+          Focus 18:24
+        </span>
+      </div>
+
+      <div className="mt-4 rounded-2xl border-[1.5px] border-[color:var(--color-border-strong)] bg-[#FFFCF3] p-4 shadow-[0_8px_22px_-12px_rgba(74,60,30,0.18)]">
+        <span className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">Prompt</span>
+        <p className="mt-1.5 text-[0.95rem] leading-snug text-[color:var(--color-ink)]">
+          What does Le Chatelier&apos;s principle predict when you add a reactant?
+        </p>
+        <div className="mt-3 flex gap-2">
+          <span className="flex-1 rounded-xl border-[1.5px] border-[color:var(--color-border)] bg-white/60 px-3 py-1.5 text-center text-[0.72rem] font-semibold text-[color:var(--color-ink-soft)]">Again</span>
+          <span className="flex-1 rounded-xl bg-[color:var(--color-sage)] px-3 py-1.5 text-center text-[0.72rem] font-semibold text-white">Got it</span>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center gap-4">
+        <span className="inline-flex shrink-0 items-center gap-1.5 text-[0.74rem] font-semibold text-[color:var(--color-ink)]">
+          <span className="grid h-5 w-5 place-items-center rounded-md bg-[color:var(--color-sage)]/15 text-[color:var(--color-sage-deep)]">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z" /><path d="m3 12 9 5 9-5" /><path d="m3 17 9 5 9-5" /></svg>
+          </span>
+          12 cards due
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between text-[0.62rem] text-[color:var(--color-ink-soft)]">
+            <span>Today&apos;s goal</span>
+            <span className="tabular-nums">32 / 50 min</span>
+          </div>
+          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
+            <div className="h-full rounded-full bg-[color:var(--color-saffron)]" style={{ width: "64%" }} />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -958,18 +1019,18 @@ function BookStack() {
             <div className="h-1 w-20 rounded-full bg-[color:var(--color-ink-soft)]/50" />
           </div>
           <div className="font-[family-name:var(--font-display)] text-[color:var(--color-ink)]">
-            <p className="text-[0.65rem] uppercase tracking-[0.25em] text-[color:var(--color-ink-soft)]">⤳ now in français</p>
+            <p className="text-[0.65rem] uppercase tracking-[0.25em] text-[color:var(--color-ink-soft)]">★ due today</p>
             <h3 className="mt-1 text-[1.4rem] font-semibold leading-tight">
-              Le Lecteur
+              Quiz me on
               <br />
-              <em className="text-[color:var(--color-saffron-deep)]">Curieux</em>
+              <em className="text-[color:var(--color-saffron-deep)]">chapter 3</em>
             </h3>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-[color:var(--color-sage)]" />
             <span className="h-2 w-2 rounded-full bg-[color:var(--color-coral)]" />
             <span className="h-2 w-2 rounded-full bg-[color:var(--color-sage)]" />
-            <span className="ml-2 text-[0.65rem] text-[color:var(--color-ink-soft)]">p. 12 / 240</span>
+            <span className="ml-2 text-[0.65rem] text-[color:var(--color-ink-soft)]">12 cards due</span>
           </div>
         </div>
       </div>

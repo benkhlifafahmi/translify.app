@@ -35,17 +35,20 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: {
-    default: "Translify — Understand any book, in any language",
+    default: "Translify — Study any book, in any language",
     template: "%s · Translify",
   },
   description:
-    "Read any PDF or EPUB in 14 languages with the layout preserved. Chat with the whole book and get cited answers, highlight passages for AI explanations in your language, and quiz yourself to remember what you read. 30-day money-back, no questions.",
+    "Turn any textbook, paper, or PDF into a study workspace: a tutor that answers with cited pages, quizzes and flashcards built from what you read, a focus timer, and full translation in 14 languages. Start free, no card.",
   applicationName: "Translify",
   keywords: [
-    "understand foreign language book AI",
-    "AI study companion for books",
-    "chat with foreign language book",
-    "read books in another language with AI",
+    "AI study app for students",
+    "turn textbook into flashcards AI",
+    "quiz yourself from your textbook",
+    "AI tutor for any book",
+    "study any book AI",
+    "exam prep with AI",
+    "chat with your textbook AI cited answers",
     "AI book reader for students",
     "AI book reader for researchers",
     "read Spanish books in English",
@@ -69,9 +72,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Translify",
-    title: "Translify — Understand any book, in any language",
+    title: "Translify — Study any book, in any language",
     description:
-      "Upload any PDF or EPUB. Read it in 14 languages with the layout preserved. Chat with the book, highlight for AI explanations, quiz yourself.",
+      "Turn any textbook, paper, or PDF into a study workspace: a tutor with cited answers, quizzes and flashcards from your reading, a focus timer, and translation in 14 languages.",
     url: SITE,
     locale: "en_US",
     alternateLocale: ["fr_FR", "es_ES", "de_DE", "ja_JP", "zh_CN", "ar_SA", "id_ID", "ms_MY"],
@@ -79,9 +82,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Translify — Understand any book, in any language",
+    title: "Translify — Study any book, in any language",
     description:
-      "Upload a PDF or EPUB. Read it in 14 languages with layout preserved. Chat with the book, highlight for AI explanations, quiz yourself.",
+      "Turn any textbook or PDF into a study workspace: cited tutor chat, quizzes and flashcards from your reading, a focus timer, and translation in 14 languages.",
     site: "@translifyapp",
     creator: "@translifyapp",
   },

@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Translify — Understand any book, in any language";
+export const alt = "Translify — Study any book, ace the exam";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -73,7 +73,7 @@ export default function OpengraphImage() {
               maxWidth: 980,
             }}
           >
-            Understand any book,
+            Study any book,
           </div>
           <div
             style={{
@@ -85,7 +85,7 @@ export default function OpengraphImage() {
               color: "#A26B22",
             }}
           >
-            in any language.
+            ace the exam.
           </div>
         </div>
 
@@ -99,9 +99,9 @@ export default function OpengraphImage() {
             fontWeight: 500,
           }}
         >
-          <span>Translate · Chat · Highlight · Quiz</span>
+          <span>Tutor · Quizzes · Flashcards · Focus</span>
           <span>·</span>
-          <span>14 languages · Layout preserved</span>
+          <span>14 languages · cited answers</span>
         </div>
       </div>
     ),

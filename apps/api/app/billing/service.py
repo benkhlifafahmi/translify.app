@@ -310,8 +310,9 @@ async def _notify_upcoming_invoice(invoice: dict, session: AsyncSession) -> None
         log.info("Skipping upcoming-invoice notice for %s — amount is 0", customer_id)
         return
 
+    # .unique() because User eager-loads the oauth_accounts collection.
     user_result = await session.execute(select(User).where(User.id == sub.user_id))
-    user = user_result.scalar_one_or_none()
+    user = user_result.unique().scalar_one_or_none()
     if user is None or not user.email or user.is_anonymous:
         return
 
