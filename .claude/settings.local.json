@@ -95,7 +95,9 @@
       "Bash(echo \"eslint exit: $?\")",
       "Bash(echo \"=== next lint exit: $? ===\")",
       "Bash(command -v uv)",
-      "Bash(command -v python3)"
+      "Bash(command -v python3)",
+      "Bash(grep -nA18 \"const t = useCallback\\\\|const t = \\\\|function t\\(\" index.tsx)",
+      "Bash(rm -f /tmp/backfill_i18n.py)"
     ]
   },
   "enabledPlugins": {
