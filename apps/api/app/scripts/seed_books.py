@@ -58,11 +58,28 @@ def _resolve_seed_dir() -> Path:
 async def _ingest_one(
     session, spec: SeedBookSpec, seed_dir: Path, *, force: bool, dry_run: bool
 ) -> str:
-    existing = await session.execute(
-        select(Book).where(Book.seed_slug == spec.slug)
-    )
-    book = existing.scalar_one_or_none()
+    # Fetch ALL rows for this slug — historically a few slugs ended up with
+    # duplicate seed rows, which made scalar_one_or_none() raise. Keep the
+    # oldest as canonical and drop the extras (they're system-owned seed rows;
+    # user clones are independent rows and aren't touched).
+    existing_rows = (
+        await session.execute(
+            select(Book)
+            .where(Book.seed_slug == spec.slug)
+            .order_by(Book.created_at.asc())
+        )
+    ).scalars().all()
+    book = existing_rows[0] if existing_rows else None
+    dups = existing_rows[1:]
+    if dups:
+        log.warning("seed %s has %d duplicate row(s)", spec.slug, len(dups))
+        if not dry_run:
+            for d in dups:
+                await session.delete(d)
+
     if book is not None and not force:
+        if dups and not dry_run:
+            return f"skip-existing (removed {len(dups)} duplicate)"
         return "skip-existing"
 
     fmt = BookFormat.pdf if spec.source_format == "pdf" else BookFormat.epub
