@@ -161,9 +161,15 @@ async def amain(force: bool, dry_run: bool) -> int:
     try:
         async with session_maker() as session:
             for spec in SEED_BOOKS:
-                result = await _ingest_one(
-                    session, spec, seed_dir, force=force, dry_run=dry_run
-                )
+                try:
+                    result = await _ingest_one(
+                        session, spec, seed_dir, force=force, dry_run=dry_run
+                    )
+                except FileNotFoundError:
+                    # Missing source file — skip this one and keep going so a
+                    # partial set of downloaded PDFs still ingests the rest.
+                    log.warning("[skip-missing] %s — file not found, skipping", spec.slug)
+                    continue
                 log.info("[%s] %s — %s", result, spec.slug, spec.title)
             if not dry_run:
                 await session.commit()
