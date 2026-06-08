@@ -503,6 +503,18 @@ export const en: Dict = {
   "viewer.addNote": "Add note",
   "viewer.askAi": "Ask AI",
   "viewer.share": "Share",
+  "viewer.prevPage": "Previous page",
+  "viewer.nextPage": "Next page",
+  "viewer.pageNumber": "Page number",
+  "viewer.zoomOut": "Zoom out",
+  "viewer.zoomIn": "Zoom in",
+  "viewer.search.label": "Search in book",
+  "viewer.search.placeholder": "Search in book",
+  "viewer.search.searching": "Searching…",
+  "viewer.search.noResults": "No results",
+  "viewer.search.prev": "Previous match",
+  "viewer.search.next": "Next match",
+  "viewer.search.close": "Close search",
 
   // Book card
   "bookCard.status.uploaded": "Queued",

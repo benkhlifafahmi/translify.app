@@ -36,10 +36,6 @@ import {
   putBookProgress,
   type BookProgress,
 } from "@/lib/progress";
-import {
-  ReaderGardenVignette,
-  type ReaderGardenVignetteHandle,
-} from "@/components/garden/reader-garden-vignette";
 import { Lumi } from "@/components/lumi/lumi";
 import {
   MobileGardenTab,
@@ -100,17 +96,15 @@ export default function BookDetailPage({
   // to /gardens/{bookId}/events when the user passes a threshold or leaves.
   const { markReached } = useReadingTracker(bookId);
 
-  // Floating "the farmer is doing something" vignette — desktop bottom-left
-  // tile and the mobile bottom-tab garden chip both animate from the same
-  // activity signals. We hold refs so the page-reached / highlight-save
-  // handlers can trigger them without re-rendering on every event.
-  const vignetteRef = useRef<ReaderGardenVignetteHandle | null>(null);
+  // Garden activity feedback — the mobile bottom-tab garden chip animates from
+  // page-reached / highlight-save signals. We hold a ref so those handlers can
+  // trigger it without re-rendering on every event. (The desktop floating
+  // vignette was removed — it overlapped the reading column.)
   const mobileGardenRef = useRef<MobileGardenTabHandle | null>(null);
   const furthestPageRef = useRef(0);
 
   const playGardenActivity = useCallback(
-    (kind: "water" | "plant", caption?: string) => {
-      vignetteRef.current?.play(kind, caption);
+    (kind: "water" | "plant") => {
       mobileGardenRef.current?.play(kind);
     },
     [],
@@ -165,7 +159,7 @@ export default function BookDetailPage({
       setCurrentPage((prev) => (page > prev ? page : prev));
       if (page > furthestPageRef.current) {
         furthestPageRef.current = page;
-        playGardenActivity("water", `+ page ${page}`);
+        playGardenActivity("water");
       }
       // Free + seed book + over cap → paywall. Paid plans pass straight through.
       if (isCapBound && book?.is_seed && page > seedCap) {
@@ -315,9 +309,9 @@ export default function BookDetailPage({
       });
       // On mobile, open the Notes drawer so the user lands on the new card.
       setMobilePanel("notes");
-      // Plant a sapling in the garden vignette to celebrate the highlight —
-      // fires on both the desktop tile and the mobile tab.
-      playGardenActivity("plant", "+ new leaf");
+      // Plant a sapling in the garden to celebrate the highlight — animates
+      // the mobile garden tab.
+      playGardenActivity("plant");
     },
   });
 
@@ -576,12 +570,6 @@ export default function BookDetailPage({
             {mobilePanel === "notes"     && notesPanelNode}
             {mobilePanel === "garden"    && <MobileGardenPanel bookId={bookId} />}
           </MobileDrawer>
-
-          {/* Floating garden vignette — desktop-only. The farmer comes out
-              to water the plant whenever a new page is reached, and plants
-              a sapling whenever a highlight is saved. See
-              reader-garden-vignette.tsx for the animation choreography. */}
-          <ReaderGardenVignette ref={vignetteRef} bookId={bookId} />
         </>
       )}
     </main>
