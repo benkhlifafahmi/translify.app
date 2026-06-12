@@ -65,6 +65,14 @@ class Settings(BaseSettings):
     email_from_address: str = "hello@translify.app"
     email_reply_to: str = "hello@translify.app"
 
+    # IP geolocation — used by GET /geo to suggest a UI language from the
+    # visitor's country. Keyless by default (ipwho.is); ``{ip}`` is substituted
+    # with the resolved client IP. Set empty to disable IP detection entirely
+    # (the web app then falls back to browser language only).
+    geoip_provider_url: str = "https://ipwho.is/{ip}"
+    geoip_timeout_seconds: float = 2.5
+    geoip_cache_ttl_seconds: int = 60 * 60 * 24 * 7  # 7 days
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

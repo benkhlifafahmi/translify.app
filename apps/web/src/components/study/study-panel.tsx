@@ -9,15 +9,16 @@ import { FlashcardsTool } from "@/components/study/flashcards-tool";
 import { MindmapTool } from "@/components/study/mindmap-tool";
 import { QuizPanel } from "@/components/quiz-panel";
 import { TodayView } from "@/components/study/today-view";
+import { useI18n } from "@/lib/i18n";
 
 type Tool = "today" | "focus" | "cards" | "quiz" | "map";
 
-const TOOLS: { id: Tool; label: string; icon: LucideIcon; anchor?: string }[] = [
-  { id: "today", label: "Today", icon: LayoutGrid },
-  { id: "focus", label: "Focus", icon: Timer },
-  { id: "cards", label: "Cards", icon: Layers },
-  { id: "quiz", label: "Quiz", icon: Star, anchor: "quiz-rail" },
-  { id: "map", label: "Map", icon: Network },
+const TOOLS: { id: Tool; labelKey: string; icon: LucideIcon; anchor?: string }[] = [
+  { id: "today", labelKey: "study.tool.today", icon: LayoutGrid },
+  { id: "focus", labelKey: "study.tool.focus", icon: Timer },
+  { id: "cards", labelKey: "study.tool.cards", icon: Layers },
+  { id: "quiz", labelKey: "study.tool.quiz", icon: Star, anchor: "quiz-rail" },
+  { id: "map", labelKey: "study.tool.map", icon: Network },
 ];
 
 interface Props {
@@ -41,6 +42,7 @@ export function StudyPanel({
   onFocusComplete,
 }: Props) {
   const [tool, setTool] = useState<Tool>("today");
+  const { t } = useI18n();
 
   // Session state is owned here, not inside each tool, so the Today desk and
   // the Focus/Cards tabs read and write the same timer, goal, and deck — a
@@ -56,8 +58,9 @@ export function StudyPanel({
   return (
     <div className="flex h-full min-h-0">
       <nav className="flex w-[4.5rem] shrink-0 flex-col items-center gap-1 border-r border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/60 py-3">
-        {TOOLS.map(({ id, label, icon: Icon, anchor }) => {
+        {TOOLS.map(({ id, labelKey, icon: Icon, anchor }) => {
           const active = tool === id;
+          const label = t(labelKey);
           return (
             <button
               key={id}

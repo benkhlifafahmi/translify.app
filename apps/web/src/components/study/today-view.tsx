@@ -18,10 +18,10 @@ import { countUncarded, type FlashcardDeck } from "@/lib/flashcards";
 import {
   formatClock,
   FOCUS_MINUTES,
-  MODE_LABEL,
   type BookStudy,
   type FocusTimer,
 } from "@/lib/focus";
+import { useI18n } from "@/lib/i18n";
 
 /** Tools the home can route to. Mirrors StudyPanel's rail (minus "today"). */
 type Target = "focus" | "cards" | "quiz" | "map";
@@ -74,6 +74,7 @@ export function TodayView({
   pageCount,
   onNavigate,
 }: Props) {
+  const { t, tn } = useI18n();
   // Shares the page's cache key, so this is a cache hit, not a second fetch.
   const { data: highlights = [] } = useQuery<Highlight[]>({
     queryKey: ["highlights", bookId],
@@ -91,9 +92,9 @@ export function TodayView({
     setFlash(null);
     try {
       const n = await deck.generateFromHighlights(bookId);
-      setFlash(n > 0 ? `Added ${n} card${n === 1 ? "" : "s"}. They're ready to review.` : null);
+      setFlash(n > 0 ? tn("study.today.added", n) : null);
     } catch {
-      setFlash("Couldn't reach your highlights. Try again.");
+      setFlash(t("study.today.addError"));
     } finally {
       setGenBusy(false);
     }
@@ -103,10 +104,10 @@ export function TodayView({
     <div className="flex flex-col gap-5 p-4">
       <header>
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
-          Study desk
+          {t("study.today.eyebrow")}
         </p>
         <h3 className="mt-1 font-[family-name:var(--font-display)] text-xl font-semibold leading-tight tracking-tight">
-          Today
+          {t("study.today.title")}
         </h3>
       </header>
 
@@ -117,7 +118,7 @@ export function TodayView({
 
       <div className="flex flex-col gap-2">
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-          Next up
+          {t("study.today.nextUp")}
         </p>
 
         <FocusRow timer={timer} onOpen={() => onNavigate("focus")} />
@@ -126,8 +127,8 @@ export function TodayView({
           <ActionRow
             tone="sage"
             icon={<Layers size={18} />}
-            title={`Review ${due} card${due === 1 ? "" : "s"}`}
-            sub="Due now. Spaced repetition makes it stick."
+            title={tn("study.today.review", due)}
+            sub={t("study.today.review.sub")}
             trailing={<CountChip n={due} />}
             onClick={() => onNavigate("cards")}
           />
@@ -137,12 +138,12 @@ export function TodayView({
           <ActionRow
             tone="sage"
             icon={<Sparkles size={18} />}
-            title={`Make ${uncarded} card${uncarded === 1 ? "" : "s"} from highlights`}
-            sub="Turn what you marked while reading into recall practice."
+            title={tn("study.today.make", uncarded)}
+            sub={t("study.today.make.sub")}
             trailing={
               genBusy ? (
                 <span className="shrink-0 text-[0.7rem] font-semibold text-[color:var(--color-sage-deep)]">
-                  Adding…
+                  {t("study.today.adding")}
                 </span>
               ) : (
                 <Chevron />
@@ -160,8 +161,8 @@ export function TodayView({
         <ActionRow
           tone="coral"
           icon={<Star size={18} />}
-          title="Quiz yourself"
-          sub="Multiple-choice from this book, graded with explanations."
+          title={t("study.today.quiz.title")}
+          sub={t("study.today.quiz.sub")}
           trailing={<Chevron />}
           onClick={() => onNavigate("quiz")}
         />
@@ -169,8 +170,8 @@ export function TodayView({
         <ActionRow
           tone="plum"
           icon={<Network size={18} />}
-          title="Map a tricky topic"
-          sub="Let AI break it into key ideas you can rearrange."
+          title={t("study.today.map.title")}
+          sub={t("study.today.map.sub")}
           trailing={<Chevron />}
           onClick={() => onNavigate("map")}
         />
@@ -184,6 +185,7 @@ export function TodayView({
 // ───────────────────────── Reading progress ─────────────────────────
 
 function ProgressMeter({ currentPage, pageCount }: { currentPage: number; pageCount: number | null }) {
+  const { t } = useI18n();
   const hasPages = typeof pageCount === "number" && pageCount > 0;
   const shown = hasPages ? Math.min(currentPage, pageCount!) : currentPage;
   const pct = hasPages ? Math.min(100, Math.round((shown / pageCount!) * 100)) : null;
@@ -191,7 +193,7 @@ function ProgressMeter({ currentPage, pageCount }: { currentPage: number; pageCo
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between">
-        <p className="text-sm font-semibold text-[color:var(--color-ink)]">Reading progress</p>
+        <p className="text-sm font-semibold text-[color:var(--color-ink)]">{t("study.today.progress.label")}</p>
         {pct != null && (
           <p className="text-[0.78rem] font-semibold tabular-nums text-[color:var(--color-saffron-deep)]">
             {pct}%
@@ -207,12 +209,12 @@ function ProgressMeter({ currentPage, pageCount }: { currentPage: number; pageCo
             />
           </div>
           <p className="text-[0.72rem] text-[color:var(--color-ink-soft)]">
-            You&apos;ve reached page {shown} of {pageCount}.
+            {t("study.today.progress.reached", { page: shown, total: pageCount! })}
           </p>
         </>
       ) : (
         <p className="text-[0.72rem] text-[color:var(--color-ink-soft)]">
-          Your place is saved as you read.
+          {t("study.today.progress.saved")}
         </p>
       )}
     </div>
@@ -224,13 +226,14 @@ function ProgressMeter({ currentPage, pageCount }: { currentPage: number; pageCo
 const GOAL_PRESETS = [20, 30, 45];
 
 function GoalMeter({ study, onEdit }: { study: BookStudy; onEdit: () => void }) {
+  const { t } = useI18n();
   if (!study.goal) {
     return (
       <div className="flex flex-col gap-2">
         <div>
-          <p className="text-sm font-semibold text-[color:var(--color-ink)]">Set today&apos;s goal</p>
+          <p className="text-sm font-semibold text-[color:var(--color-ink)]">{t("study.today.goal.setTitle")}</p>
           <p className="text-[0.72rem] text-[color:var(--color-ink-soft)]">
-            A specific target measurably lifts follow-through.
+            {t("study.goal.body")}
           </p>
         </div>
         <div className="flex gap-1.5">
@@ -241,7 +244,7 @@ function GoalMeter({ study, onEdit }: { study: BookStudy; onEdit: () => void }) 
               onClick={() => study.setGoal({ unit: "minutes", target: n })}
               className="rounded-full border-[1.5px] border-[color:var(--color-border)] bg-white/60 px-3 py-1 text-[0.78rem] font-semibold text-[color:var(--color-ink-soft)] transition-colors hover:border-[color:var(--color-saffron)] hover:text-[color:var(--color-saffron-deep)]"
             >
-              {n} min
+              {t("study.today.goal.preset", { n })}
             </button>
           ))}
         </div>
@@ -256,13 +259,13 @@ function GoalMeter({ study, onEdit }: { study: BookStudy; onEdit: () => void }) 
     <button type="button" onClick={onEdit} className="group flex flex-col gap-1.5 text-left">
       <div className="flex items-baseline justify-between">
         <p className="text-sm font-semibold text-[color:var(--color-ink)]">
-          Today&apos;s goal
+          {t("study.goal.title")}
           <span className="ml-1.5 text-[0.68rem] font-medium text-[color:var(--color-ink-soft)] opacity-0 transition-opacity group-hover:opacity-100">
-            edit
+            {t("study.today.goal.edit")}
           </span>
         </p>
         <p className="text-[0.78rem] font-semibold tabular-nums text-[color:var(--color-ink-soft)]">
-          {have} / {study.goal.target} {study.goal.unit}
+          {have} / {study.goal.target} {t(`study.unit.${study.goal.unit}`)}
         </p>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
@@ -275,7 +278,7 @@ function GoalMeter({ study, onEdit }: { study: BookStudy; onEdit: () => void }) 
       </div>
       {study.goalMet && (
         <p className="text-[0.72rem] font-semibold text-[color:var(--color-sage-deep)]">
-          Goal reached. Strong day.
+          {t("study.today.goal.met")}
         </p>
       )}
     </button>
@@ -285,24 +288,25 @@ function GoalMeter({ study, onEdit }: { study: BookStudy; onEdit: () => void }) 
 // ───────────────────────── Focus sprint row ─────────────────────────
 
 function FocusRow({ timer, onOpen }: { timer: FocusTimer; onOpen: () => void }) {
+  const { t } = useI18n();
   const isFocus = timer.mode === "focus";
   const tone: Tone = isFocus ? "saffron" : "sage";
   const c = TONE[tone];
   const idle = !timer.running && timer.remaining >= timer.total;
 
   const title = timer.running
-    ? `${MODE_LABEL[timer.mode]} · ${formatClock(timer.remaining)}`
+    ? `${t(`study.focus.mode.${timer.mode}`)} · ${formatClock(timer.remaining)}`
     : idle
-      ? "Start a focus sprint"
-      : `Resume · ${formatClock(timer.remaining)}`;
+      ? t("study.today.focus.start")
+      : `${t("study.today.focus.resume")} · ${formatClock(timer.remaining)}`;
 
   const sub = timer.running
     ? isFocus
-      ? "Deep work in progress."
-      : "Take a breather."
+      ? t("study.today.focus.deep")
+      : t("study.today.focus.break")
     : idle
-      ? `${FOCUS_MINUTES.focus} min focus, then a break.`
-      : "Paused. Pick up where you left off.";
+      ? t("study.today.focus.idleSub", { n: FOCUS_MINUTES.focus })
+      : t("study.today.focus.pausedSub");
 
   return (
     <div
@@ -324,7 +328,7 @@ function FocusRow({ timer, onOpen }: { timer: FocusTimer; onOpen: () => void }) 
       <button
         type="button"
         onClick={() => (timer.running ? timer.pause() : timer.start())}
-        aria-label={timer.running ? "Pause focus timer" : "Start focus timer"}
+        aria-label={timer.running ? t("study.today.focus.pauseAria") : t("study.today.focus.startAria")}
         className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-transform active:scale-95 ${
           isFocus
             ? "bg-[color:var(--color-saffron)] text-[color:var(--color-accent-foreground)]"
@@ -398,17 +402,22 @@ function CountChip({ n }: { n: number }) {
 // ───────────────────────── Momentum footer ─────────────────────────
 
 function Momentum({ minutes, sessions }: { minutes: number; sessions: number }) {
+  const { t, tn } = useI18n();
   if (minutes <= 0 && sessions <= 0) {
     return (
       <p className="text-center text-[0.72rem] text-[color:var(--color-ink-soft)]">
-        Your focused minutes will show up here.
+        {t("study.today.momentum.empty")}
       </p>
     );
   }
   return (
     <p className="text-center text-[0.72rem] text-[color:var(--color-ink-soft)]">
-      Today: <b className="font-semibold text-[color:var(--color-ink)]">{minutes} min</b> focused
-      {sessions > 0 && <> · {sessions} session{sessions === 1 ? "" : "s"}</>}
+      {t("study.today.momentum.today")}{" "}
+      <b className="font-semibold text-[color:var(--color-ink)]">
+        {minutes} {t("study.unit.min")}
+      </b>{" "}
+      {t("study.today.momentum.focused")}
+      {sessions > 0 && <> · {tn("study.today.momentum.sessions", sessions)}</>}
     </p>
   );
 }

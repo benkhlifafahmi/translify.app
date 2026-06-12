@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { type FlashcardDeck } from "@/lib/flashcards";
+import { useI18n } from "@/lib/i18n";
 
 const INPUT =
   "w-full rounded-xl border-[1.5px] border-[color:var(--color-border)] bg-[#FFFCF3] px-3 py-2 text-sm focus:border-[color:var(--color-saffron)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-saffron)]/30";
 
 export function FlashcardsTool({ bookId, deck }: { bookId: string; deck: FlashcardDeck }) {
+  const { t, tn } = useI18n();
   const [mode, setMode] = useState<"review" | "manage">("review");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -17,13 +19,9 @@ export function FlashcardsTool({ bookId, deck }: { bookId: string; deck: Flashca
     setMsg(null);
     try {
       const n = await deck.generateFromHighlights(bookId);
-      setMsg(
-        n > 0
-          ? `Added ${n} card${n === 1 ? "" : "s"} from your highlights.`
-          : "No new highlights to turn into cards yet. Highlight as you read.",
-      );
+      setMsg(n > 0 ? tn("study.cards.added", n) : t("study.cards.noNew"));
     } catch {
-      setMsg("Couldn't load your highlights. Try again.");
+      setMsg(t("study.cards.loadError"));
     } finally {
       setBusy(false);
     }
@@ -33,16 +31,16 @@ export function FlashcardsTool({ bookId, deck }: { bookId: string; deck: Flashca
     <div className="flex flex-col gap-5 p-5">
       <div>
         <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold leading-tight tracking-tight text-[color:var(--color-ink)]">
-          Flashcards
+          {t("study.cards.title")}
         </h3>
         <p className="mt-1 text-sm text-[color:var(--color-ink-soft)]">
-          Test yourself, then let the spacing do the work.
+          {t("study.cards.desc")}
         </p>
       </div>
 
       <div className="flex items-center gap-2">
         <Button variant="accent" size="sm" onClick={generate} disabled={busy}>
-          {busy ? "Generating…" : "Generate from highlights"}
+          {busy ? t("study.cards.generating") : t("study.cards.generate")}
         </Button>
         <div className="ml-auto inline-flex overflow-hidden rounded-full border-[1.5px] border-[color:var(--color-border)] text-[0.82rem]">
           {(["review", "manage"] as const).map((m) => (
@@ -56,7 +54,9 @@ export function FlashcardsTool({ bookId, deck }: { bookId: string; deck: Flashca
                   : "text-[color:var(--color-ink-soft)] hover:bg-[color:var(--color-paper-3)]/60"
               }`}
             >
-              {m === "review" ? `Review${deck.due.length ? ` · ${deck.due.length}` : ""}` : `All · ${deck.cards.length}`}
+              {m === "review"
+                ? `${t("study.cards.tab.review")}${deck.due.length ? ` · ${deck.due.length}` : ""}`
+                : `${t("study.cards.tab.all")} · ${deck.cards.length}`}
             </button>
           ))}
         </div>
@@ -69,15 +69,16 @@ export function FlashcardsTool({ bookId, deck }: { bookId: string; deck: Flashca
 }
 
 function EmptyHint() {
+  const { t } = useI18n();
   return (
     <p className="rounded-2xl border-[1.5px] border-dashed border-[color:var(--color-border)] p-5 text-center text-sm text-[color:var(--color-ink-soft)]">
-      No cards yet. Highlight passages while you read, then “Generate from
-      highlights”, or add your own in the All tab.
+      {t("study.cards.empty")}
     </p>
   );
 }
 
 function Review({ deck }: { deck: FlashcardDeck }) {
+  const { t } = useI18n();
   const [revealed, setRevealed] = useState(false);
   const card = deck.due[0];
 
@@ -85,7 +86,7 @@ function Review({ deck }: { deck: FlashcardDeck }) {
   if (!card) {
     return (
       <p className="rounded-2xl border-[1.5px] border-dashed border-[color:var(--color-border)] p-5 text-center text-sm text-[color:var(--color-ink-soft)]">
-        🎉 Nothing due right now. Switch to “All” to review ahead.
+        {t("study.cards.allDone")}
       </p>
     );
   }
@@ -98,12 +99,12 @@ function Review({ deck }: { deck: FlashcardDeck }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-        {deck.due.length} to review
+        {t("study.cards.toReview", { n: deck.due.length })}
       </p>
 
       <div className="rounded-2xl border-[1.5px] border-[color:var(--color-border-strong)] bg-[#FFFCF3] p-5 shadow-[0_8px_22px_-12px_rgba(74,60,30,0.18)]">
         <span className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
-          Prompt
+          {t("study.cards.prompt")}
         </span>
         <p className="mt-1.5 text-[1.05rem] leading-relaxed text-[color:var(--color-ink)]">{card.front}</p>
 
@@ -111,7 +112,7 @@ function Review({ deck }: { deck: FlashcardDeck }) {
           <>
             <hr className="my-4 border-[color:var(--color-border)]" />
             <span className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-sage-deep)]">
-              Answer
+              {t("study.cards.answer")}
             </span>
             <p className="mt-1.5 text-[1.05rem] leading-relaxed text-[color:var(--color-ink)]">{card.back}</p>
           </>
@@ -121,15 +122,15 @@ function Review({ deck }: { deck: FlashcardDeck }) {
       {revealed ? (
         <div className="flex gap-2">
           <Button variant="outline" className="flex-1" onClick={() => grade(false)}>
-            Again
+            {t("study.cards.again")}
           </Button>
           <Button variant="sage" className="flex-1" onClick={() => grade(true)}>
-            Got it
+            {t("study.cards.gotit")}
           </Button>
         </div>
       ) : (
         <Button variant="accent" onClick={() => setRevealed(true)}>
-          Show answer
+          {t("study.cards.show")}
         </Button>
       )}
     </div>
@@ -137,14 +138,15 @@ function Review({ deck }: { deck: FlashcardDeck }) {
 }
 
 function Manage({ deck }: { deck: FlashcardDeck }) {
+  const { t } = useI18n();
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 rounded-2xl border-[1.5px] border-[color:var(--color-border)] bg-[#FFFCF3] p-3">
-        <input className={INPUT} placeholder="Front (prompt)" value={front} onChange={(e) => setFront(e.target.value)} />
-        <input className={INPUT} placeholder="Back (answer)" value={back} onChange={(e) => setBack(e.target.value)} />
+        <input className={INPUT} placeholder={t("study.cards.frontPlaceholder")} value={front} onChange={(e) => setFront(e.target.value)} />
+        <input className={INPUT} placeholder={t("study.cards.backPlaceholder")} value={back} onChange={(e) => setBack(e.target.value)} />
         <Button
           size="sm"
           variant="accent"
@@ -155,7 +157,7 @@ function Manage({ deck }: { deck: FlashcardDeck }) {
             setBack("");
           }}
         >
-          Add card
+          {t("study.cards.addCard")}
         </Button>
       </div>
 
@@ -173,6 +175,7 @@ function Manage({ deck }: { deck: FlashcardDeck }) {
 }
 
 function Row({ card, deck }: { card: FlashcardDeck["cards"][number]; deck: FlashcardDeck }) {
+  const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const [f, setF] = useState(card.front);
   const [b, setB] = useState(card.back);
@@ -191,10 +194,10 @@ function Row({ card, deck }: { card: FlashcardDeck["cards"][number]; deck: Flash
               setEditing(false);
             }}
           >
-            Save
+            {t("study.common.save")}
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-            Cancel
+            {t("study.common.cancel")}
           </Button>
         </div>
       </li>
@@ -214,7 +217,7 @@ function Row({ card, deck }: { card: FlashcardDeck["cards"][number]; deck: Flash
           setB(card.back);
           setEditing(true);
         }}
-        title="Edit"
+        title={t("study.common.edit")}
         className="text-[color:var(--color-ink-soft)] opacity-0 transition-opacity hover:text-[color:var(--color-ink)] group-hover:opacity-100"
       >
         ✎
@@ -222,7 +225,7 @@ function Row({ card, deck }: { card: FlashcardDeck["cards"][number]; deck: Flash
       <button
         type="button"
         onClick={() => deck.removeCard(card.id)}
-        title="Delete"
+        title={t("study.common.delete")}
         className="text-[color:var(--color-ink-soft)] opacity-0 transition-opacity hover:text-[color:var(--color-destructive)] group-hover:opacity-100"
       >
         ✕

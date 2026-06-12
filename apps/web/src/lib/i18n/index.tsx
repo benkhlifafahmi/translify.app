@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Dict, Testimonial, FaqItem } from "./locales/types";
 import { en, enTestimonials, enFaq } from "./locales/en";
 import { fr, frTestimonials, frFaq } from "./locales/fr";
@@ -11,6 +11,8 @@ import { ar, arTestimonials, arFaq } from "./locales/ar";
 import { id as idDict, idTestimonials, idFaq } from "./locales/id";
 import { ms, msTestimonials, msFaq } from "./locales/ms";
 import { zh, zhTestimonials, zhFaq } from "./locales/zh";
+import { LanguageChoiceModal } from "@/components/language-choice-modal";
+import { browserLocale, detectGeoLocale } from "@/lib/geo";
 
 export type Locale = "en" | "fr" | "es" | "de" | "ja" | "ar" | "id" | "ms" | "zh";
 
@@ -54,11 +56,32 @@ const FAQS: Record<Locale, FaqItem[]> = {
   zh: zhFaq,
 };
 
+function interpolate(s: string, vars?: Record<string, string | number>): string {
+  if (!vars) return s;
+  for (const [k, v] of Object.entries(vars)) {
+    s = s.replace(`%${k}%`, String(v));
+  }
+  return s;
+}
+
+/** Look up a key in a specific locale, falling back to English then the key. */
+export function translateIn(
+  locale: Locale,
+  key: string,
+  vars?: Record<string, string | number>,
+): string {
+  const dict = DICTS[locale] ?? en;
+  return interpolate(dict[key] ?? en[key] ?? key, vars);
+}
+
 interface I18nValue {
   locale: Locale;
   dir: "ltr" | "rtl";
   setLocale: (l: Locale) => void;
   t: (key: string, vars?: Record<string, string | number>) => string;
+  /** Plural helper: picks `<key>.one` when n === 1, else `<key>.other`, and
+   *  always provides `%n%`. Pass extra `vars` to interpolate alongside. */
+  tn: (key: string, n: number, vars?: Record<string, string | number>) => string;
   testimonials: Testimonial[];
   faq: FaqItem[];
 }
@@ -68,6 +91,20 @@ const STORAGE_KEY = "translify.locale";
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("en");
+  // When set, the IP-vs-browser language popup is shown. `geo` is the locale the
+  // visitor's location suggests; `current` is what we auto-applied meanwhile.
+  const [choice, setChoice] = useState<{ geo: Locale; current: Locale } | null>(null);
+  // True once a locale is committed to storage — stops the geo popup from ever
+  // appearing after the visitor has expressed (or we've recorded) a preference.
+  const resolved = useRef(false);
+
+  const persist = useCallback((l: Locale) => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, l);
+    } catch {
+      // ignore (private mode, storage disabled)
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -76,25 +113,41 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     // via hreflang alternates land here).
     const urlLang = new URLSearchParams(window.location.search).get("lang") as Locale | null;
     if (urlLang && DICTS[urlLang]) {
+      resolved.current = true;
       setLocaleState(urlLang);
-      try {
-        window.localStorage.setItem(STORAGE_KEY, urlLang);
-      } catch {
-        // ignore
-      }
+      persist(urlLang);
       return;
     }
 
+    // A stored choice always wins — geo detection only runs on a truly first
+    // visit, so we never re-nag someone who already has a preference.
     const stored = window.localStorage.getItem(STORAGE_KEY) as Locale | null;
     if (stored && DICTS[stored]) {
+      resolved.current = true;
       setLocaleState(stored);
       return;
     }
-    if (typeof navigator !== "undefined") {
-      const nav = navigator.language.slice(0, 2) as Locale;
-      if (DICTS[nav]) setLocaleState(nav);
-    }
-  }, []);
+
+    // First visit: apply the browser language immediately so nothing flashes,
+    // then ask the API what the IP suggests. If they disagree, pop the chooser.
+    const browser = browserLocale();
+    const initial: Locale = browser ?? "en";
+    setLocaleState(initial);
+
+    const controller = new AbortController();
+    detectGeoLocale(controller.signal).then(({ suggestedLocale }) => {
+      if (resolved.current) return; // user already picked via the switcher
+      if (suggestedLocale && suggestedLocale !== initial) {
+        setChoice({ geo: suggestedLocale, current: initial });
+      } else {
+        // No conflict — lock in the auto-detected locale so we skip detection
+        // (and the /geo call) on every future load.
+        resolved.current = true;
+        persist(initial);
+      }
+    });
+    return () => controller.abort();
+  }, [persist]);
 
   const dir: "ltr" | "rtl" = locale === "ar" ? "rtl" : "ltr";
 
@@ -104,26 +157,24 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.dir = dir;
   }, [locale, dir]);
 
-  const setLocale = useCallback((l: Locale) => {
-    setLocaleState(l);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, l);
-    } catch {
-      // ignore
-    }
-  }, []);
+  const setLocale = useCallback(
+    (l: Locale) => {
+      resolved.current = true;
+      setLocaleState(l);
+      persist(l);
+      setChoice(null);
+    },
+    [persist],
+  );
 
   const t = useCallback(
-    (key: string, vars?: Record<string, string | number>) => {
-      const dict = DICTS[locale] ?? en;
-      let s = dict[key] ?? en[key] ?? key;
-      if (vars) {
-        for (const [k, v] of Object.entries(vars)) {
-          s = s.replace(`%${k}%`, String(v));
-        }
-      }
-      return s;
-    },
+    (key: string, vars?: Record<string, string | number>) => translateIn(locale, key, vars),
+    [locale],
+  );
+
+  const tn = useCallback(
+    (key: string, n: number, vars?: Record<string, string | number>) =>
+      translateIn(locale, `${key}.${n === 1 ? "one" : "other"}`, { n, ...vars }),
     [locale],
   );
 
@@ -133,13 +184,31 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       dir,
       setLocale,
       t,
+      tn,
       testimonials: TESTIMONIALS[locale] ?? enTestimonials,
       faq: FAQS[locale] ?? enFaq,
     }),
-    [locale, dir, setLocale, t],
+    [locale, dir, setLocale, t, tn],
   );
 
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+  return (
+    <I18nContext.Provider value={value}>
+      {children}
+      {choice && (
+        <LanguageChoiceModal
+          geo={choice.geo}
+          current={choice.current}
+          onPick={setLocale}
+          onDismiss={() => {
+            // Dismissed without choosing — keep what's on screen and stop asking.
+            resolved.current = true;
+            persist(locale);
+            setChoice(null);
+          }}
+        />
+      )}
+    </I18nContext.Provider>
+  );
 }
 
 export function useI18n(): I18nValue {

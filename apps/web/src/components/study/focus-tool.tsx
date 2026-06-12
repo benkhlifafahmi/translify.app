@@ -6,11 +6,11 @@ import {
   formatClock,
   FOCUS_MINUTES,
   LONG_BREAK_EVERY,
-  MODE_LABEL,
   type BookStudy,
   type FocusTimer,
   type GoalUnit,
 } from "@/lib/focus";
+import { useI18n } from "@/lib/i18n";
 
 const RING = 54; // radius
 const CIRC = 2 * Math.PI * RING;
@@ -23,6 +23,7 @@ interface Props {
 }
 
 export function FocusTool({ study, timer }: Props) {
+  const { t } = useI18n();
   const isFocus = timer.mode === "focus";
   const tone = isFocus ? "saffron" : "sage";
   const fraction = timer.total > 0 ? timer.remaining / timer.total : 0;
@@ -31,14 +32,13 @@ export function FocusTool({ study, timer }: Props) {
     <div className="flex flex-col gap-5 p-5">
       <div>
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
-          Study mode
+          {t("study.focus.eyebrow")}
         </p>
         <h3 className="mt-1.5 font-[family-name:var(--font-display)] text-xl font-semibold leading-tight tracking-tight">
-          Focus session
+          {t("study.focus.title")}
         </h3>
         <p className="mt-1 text-sm text-[color:var(--color-ink-soft)]">
-          Short, timed sprints with built-in breaks — proven to keep attention
-          fresh and beat procrastination.
+          {t("study.focus.desc")}
         </p>
       </div>
 
@@ -74,7 +74,7 @@ export function FocusTool({ study, timer }: Props) {
             <span
               className={`mt-0.5 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-${tone}-deep)]`}
             >
-              {MODE_LABEL[timer.mode]}
+              {t(`study.focus.mode.${timer.mode}`)}
             </span>
           </div>
         </div>
@@ -99,12 +99,16 @@ export function FocusTool({ study, timer }: Props) {
             className="flex-1"
             onClick={() => (timer.running ? timer.pause() : timer.start())}
           >
-            {timer.running ? "Pause" : timer.remaining < timer.total ? "Resume" : "Start"}
+            {timer.running
+              ? t("study.focus.pause")
+              : timer.remaining < timer.total
+                ? t("study.focus.resume")
+                : t("study.focus.start")}
           </Button>
           <button
             type="button"
             onClick={timer.reset}
-            title="Reset this block"
+            title={t("study.focus.resetTitle")}
             className="grid h-10 w-10 place-items-center rounded-xl border-[1.5px] border-[color:var(--color-border)] text-[color:var(--color-ink-soft)] transition-colors hover:border-[color:var(--color-border-strong)] hover:text-[color:var(--color-ink)]"
           >
             ↺
@@ -112,15 +116,18 @@ export function FocusTool({ study, timer }: Props) {
           <button
             type="button"
             onClick={timer.skip}
-            title="Skip to the next block"
+            title={t("study.focus.skipTitle")}
             className="grid h-10 w-10 place-items-center rounded-xl border-[1.5px] border-[color:var(--color-border)] text-[color:var(--color-ink-soft)] transition-colors hover:border-[color:var(--color-border-strong)] hover:text-[color:var(--color-ink)]"
           >
             ⇥
           </button>
         </div>
         <p className="text-center text-[0.7rem] text-[color:var(--color-ink-soft)]">
-          {FOCUS_MINUTES.focus}-min focus · {FOCUS_MINUTES["short-break"]}-min break ·
-          long break every {LONG_BREAK_EVERY}
+          {t("study.focus.cadence", {
+            f: FOCUS_MINUTES.focus,
+            s: FOCUS_MINUTES["short-break"],
+            n: LONG_BREAK_EVERY,
+          })}
         </p>
       </div>
 
@@ -134,6 +141,7 @@ export function FocusTool({ study, timer }: Props) {
 // ---------------------------------------------------------------------------
 
 function GoalCard({ study }: { study: BookStudy }) {
+  const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const [unit, setUnit] = useState<GoalUnit>(study.goal?.unit ?? "minutes");
   const [target, setTarget] = useState<string>(String(study.goal?.target ?? 50));
@@ -154,13 +162,13 @@ function GoalCard({ study }: { study: BookStudy }) {
     return (
       <div className="card-paper flex items-center justify-between gap-3 p-4">
         <div>
-          <p className="text-sm font-semibold">Today&apos;s goal</p>
+          <p className="text-sm font-semibold">{t("study.goal.title")}</p>
           <p className="text-[0.75rem] text-[color:var(--color-ink-soft)]">
-            A specific target makes you far more likely to follow through.
+            {t("study.goal.body")}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-          Set goal
+          {t("study.focus.goal.set")}
         </Button>
       </div>
     );
@@ -169,7 +177,7 @@ function GoalCard({ study }: { study: BookStudy }) {
   if (editing) {
     return (
       <div className="card-paper flex flex-col gap-3 p-4">
-        <p className="text-sm font-semibold">Today&apos;s goal</p>
+        <p className="text-sm font-semibold">{t("study.goal.title")}</p>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -190,14 +198,14 @@ function GoalCard({ study }: { study: BookStudy }) {
                     : "text-[color:var(--color-ink-soft)] hover:bg-[color:var(--color-paper-3)]/60"
                 }`}
               >
-                {u}
+                {t(`study.unit.${u}`)}
               </button>
             ))}
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="accent" size="sm" onClick={save}>
-            Save goal
+            {t("study.focus.goal.save")}
           </Button>
           {study.goal && (
             <Button
@@ -208,7 +216,7 @@ function GoalCard({ study }: { study: BookStudy }) {
                 setEditing(false);
               }}
             >
-              Remove
+              {t("study.focus.goal.remove")}
             </Button>
           )}
         </div>
@@ -224,9 +232,9 @@ function GoalCard({ study }: { study: BookStudy }) {
       className="card-paper flex flex-col gap-2 p-4 text-left transition-transform hover:-translate-y-[1px]"
     >
       <div className="flex items-baseline justify-between">
-        <p className="text-sm font-semibold">Today&apos;s goal</p>
+        <p className="text-sm font-semibold">{t("study.goal.title")}</p>
         <p className="text-[0.78rem] font-semibold tabular-nums text-[color:var(--color-ink-soft)]">
-          {have} / {study.goal!.target} {study.goal!.unit}
+          {have} / {study.goal!.target} {t(`study.unit.${study.goal!.unit}`)}
         </p>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
@@ -237,7 +245,7 @@ function GoalCard({ study }: { study: BookStudy }) {
       </div>
       {study.goalMet && (
         <p className="text-[0.75rem] font-semibold text-[color:var(--color-sage-deep)]">
-          🎉 Goal reached — nice work today.
+          {t("study.focus.goal.met")}
         </p>
       )}
     </button>
@@ -247,6 +255,7 @@ function GoalCard({ study }: { study: BookStudy }) {
 // ---------------------------------------------------------------------------
 
 function TaskList({ study }: { study: BookStudy }) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState("");
 
   function add() {
@@ -257,7 +266,7 @@ function TaskList({ study }: { study: BookStudy }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-        Session checklist
+        {t("study.focus.tasks.title")}
       </p>
       <div className="flex items-center gap-2">
         <input
@@ -266,14 +275,14 @@ function TaskList({ study }: { study: BookStudy }) {
           onKeyDown={(e) => {
             if (e.key === "Enter") add();
           }}
-          placeholder="e.g. Re-read §2 and summarise it"
+          placeholder={t("study.focus.tasks.placeholder")}
           className="flex-1 rounded-xl border-[1.5px] border-[color:var(--color-border)] bg-white/70 px-3 py-2 text-sm focus:border-[color:var(--color-saffron)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-saffron)]/30"
         />
         <button
           type="button"
           onClick={add}
           className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[color:var(--color-ink)] text-lg text-[color:var(--color-paper)] transition-transform hover:-translate-y-[1px]"
-          title="Add task"
+          title={t("study.focus.tasks.add")}
         >
           +
         </button>
@@ -309,7 +318,7 @@ function TaskList({ study }: { study: BookStudy }) {
               type="button"
               onClick={() => study.removeTask(task.id)}
               className="text-[color:var(--color-ink-soft)] opacity-0 transition-opacity hover:text-[color:var(--color-destructive)] group-hover:opacity-100"
-              title="Remove"
+              title={t("study.common.remove")}
             >
               ✕
             </button>
@@ -317,7 +326,7 @@ function TaskList({ study }: { study: BookStudy }) {
         ))}
         {study.tasks.length === 0 && (
           <p className="rounded-xl border-[1.5px] border-dashed border-[color:var(--color-border)] px-3 py-2.5 text-xs text-[color:var(--color-ink-soft)]">
-            Jot down what you want to get done this session.
+            {t("study.focus.tasks.empty")}
           </p>
         )}
       </div>
@@ -328,6 +337,7 @@ function TaskList({ study }: { study: BookStudy }) {
 // ---------------------------------------------------------------------------
 
 function ScienceNote() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   return (
     <details
@@ -336,16 +346,13 @@ function ScienceNote() {
       className="rounded-xl bg-[color:var(--color-paper-3)]/50 px-3.5 py-2.5"
     >
       <summary className="flex cursor-pointer list-none items-center justify-between text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[color:var(--color-ink-soft)]">
-        Why this works
+        {t("study.focus.science.title")}
         <span className="transition-transform" style={{ transform: open ? "rotate(90deg)" : "" }}>
           ›
         </span>
       </summary>
       <p className="mt-2 text-[0.78rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-        Attention naturally fades after a stretch of work. Short, timed focus
-        blocks with deliberate breaks (distributed practice) keep you fresher and
-        retain more than one long cram. Setting a specific, measurable goal
-        reliably lifts effort and follow-through.
+        {t("study.focus.science.body")}
       </p>
     </details>
   );

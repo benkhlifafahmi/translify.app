@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 /**
  * Desktop pull-up sheet for the roomy study tools (flashcards, mind map). It
@@ -16,6 +17,7 @@ export function StudySheet({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  const { t } = useI18n();
   const [shown, setShown] = useState(false);
   const [heightVh, setHeightVh] = useState(82);
   const dragging = useRef(false);
@@ -52,7 +54,7 @@ export function StudySheet({
     <div className="fixed inset-0 z-[60]">
       <button
         type="button"
-        aria-label="Close study sheet"
+        aria-label={t("study.sheet.close")}
         onClick={onClose}
         className={`absolute inset-0 bg-[color:var(--color-ink)]/35 transition-opacity duration-300 ${
           shown ? "opacity-100" : "opacity-0"
@@ -72,7 +74,7 @@ export function StudySheet({
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
           className="flex cursor-row-resize touch-none flex-col items-center pb-1 pt-2.5"
-          title="Drag to resize"
+          title={t("study.sheet.resize")}
         >
           <span className="h-1.5 w-10 rounded-full bg-[color:var(--color-border-strong)]" />
         </div>
@@ -85,7 +87,7 @@ export function StudySheet({
             onClick={onClose}
             className="rounded-full px-3 py-1 text-sm font-semibold text-[color:var(--color-ink-soft)] transition-colors hover:bg-[color:var(--color-paper-2)] hover:text-[color:var(--color-ink)]"
           >
-            Done
+            {t("study.common.done")}
           </button>
         </header>
         <div className="min-h-0 flex-1 overflow-auto">{children}</div>

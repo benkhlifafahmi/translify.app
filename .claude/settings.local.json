@@ -101,7 +101,24 @@
       "Bash(sed -n '1,80p' app/seeds/catalog.py)",
       "Bash(sed -n '1,50p' app/scripts/seed_books.py)",
       "Bash(git check-ignore *)",
-      "Bash(echo \"=== tsc exit: $? ===\")"
+      "Bash(echo \"=== tsc exit: $? ===\")",
+      "Bash([ -x \"$CHROME\" ])",
+      "Read(//Applications/Google Chrome.app/Contents/MacOS/**)",
+      "Bash(mkdir -p /tmp/translify-cap/frames)",
+      "Bash(npm init *)",
+      "Bash(npm i *)",
+      "Bash(ffmpeg -version)",
+      "Bash(mkdir -p /Users/ben/workspace/BKGroup/translify.app/ads)",
+      "Bash(ffmpeg -y -f concat -safe 0 -i list.txt -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -vf fps=30,format=yuv420p -c:v libx264 -crf 18 -preset slow -c:a aac -b:a 128k -shortest -movflags +faststart -t 23.4 /Users/ben/workspace/BKGroup/translify.app/ads/translify-study-ad.mp4)",
+      "Bash(ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate -show_entries format=duration,size:format_tags=major_brand -of default=noprint_wrappers=1 /Users/ben/workspace/BKGroup/translify.app/ads/translify-study-ad.mp4)",
+      "Bash(grep -v \":0$\")",
+      "Bash(sed -n '410,440p' src/app/library/[bookId]/page.tsx)",
+      "Bash(.venv/bin/ruff check *)",
+      "Bash(pnpm lint *)",
+      "Bash(awk '/\\\\/\\\\/ ── Study workspace \\\\+ language popup ──/,/^};$/' /Users/ben/workspace/BKGroup/translify.app/apps/web/src/lib/i18n/locales/es.ts)",
+      "Bash(awk '/\\\\/\\\\/ ── Study workspace \\\\+ language popup ──/,0' /Users/ben/workspace/BKGroup/translify.app/apps/web/src/lib/i18n/locales/fr.ts)",
+      "Bash(awk 'NR>=1091 && NR<=1296' /Users/ben/workspace/BKGroup/translify.app/apps/web/src/lib/i18n/locales/es.ts)",
+      "Bash(awk 'NR>=1115 && NR<=1326' /Users/ben/workspace/BKGroup/translify.app/apps/web/src/lib/i18n/locales/en.ts)"
     ]
   },
   "enabledPlugins": {

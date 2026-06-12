@@ -17,6 +17,7 @@ from app.routes.billing import router as billing_router
 from app.routes.books import router as books_router
 from app.routes.chats import router as chats_router
 from app.routes.garden import router as garden_router
+from app.routes.geo import router as geo_router
 from app.routes.folders import router as folders_router
 from app.routes.highlights import router as highlights_router
 from app.routes.magic_link import router as magic_link_router
@@ -133,6 +134,7 @@ app.include_router(onboarding_router)
 app.include_router(magic_link_router)
 app.include_router(seeds_router)
 app.include_router(folders_router)
+app.include_router(geo_router)
 app.include_router(social_auth_router)
 app.include_router(social_router)
 app.include_router(admin_router)
