@@ -1,6 +1,25 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const ar: Dict = {
+  // Media (YouTube import) — v1
+  "media.import.button": "إضافة فيديو",
+  "media.import.title": "استيراد فيديو من يوتيوب",
+  "media.import.desc": "الصق رابط يوتيوب وسننشئ مواد دراسية من ترجمته النصية.",
+  "media.import.placeholder": "https://youtube.com/watch?v=…",
+  "media.import.submit": "استيراد",
+  "media.import.importing": "جارٍ الاستيراد…",
+  "media.import.cancel": "إلغاء",
+  "media.import.invalidUrl": "لا يبدو هذا رابط يوتيوب. الصق رابط youtube.com أو youtu.be.",
+  "media.import.failed": "تعذّر استيراد هذا الفيديو.",
+  "media.captionsNote": "يعمل مع مقاطع الفيديو التي تحتوي على ترجمة — ننشئ موادك الدراسية من النص.",
+  "media.processing.title": "جارٍ جلب النص…",
+  "media.processing.body": "نحوّل ترجمة هذا الفيديو إلى مواد دراسية. عادةً ما يستغرق ذلك لحظات.",
+  "media.failed.title": "تعذّر استيراد هذا الفيديو",
+  "watch.tab.quiz": "اختبار",
+  "watch.youtubeLabel": "يوتيوب",
+  "watch.openOnYouTube": "فتح في يوتيوب",
+  "watch.noVideo": "لا يمكن تشغيل هذا الفيديو هنا.",
+  "chat.tapToJump": "اضغط للانتقال",
   "nav.how": "كيف يعمل",
   "nav.features": "الميزات",
   "nav.pricing": "الأسعار",

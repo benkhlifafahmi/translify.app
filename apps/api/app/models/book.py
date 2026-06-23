@@ -27,6 +27,17 @@ class BookStatus(str, enum.Enum):
 class BookFormat(str, enum.Enum):
     pdf = "pdf"
     epub = "epub"
+    # Media formats — transcribed into a timestamped transcript that flows
+    # through the same chunk/embed pipeline as documents. ``youtube`` has no
+    # stored file (only ``source_url``); ``audio``/``video`` are uploaded files
+    # (reserved for the v2 upload path — captions-only YouTube ships first).
+    youtube = "youtube"
+    audio = "audio"
+    video = "video"
+
+    @property
+    def is_media(self) -> bool:
+        return self in (BookFormat.youtube, BookFormat.audio, BookFormat.video)
 
 
 class Book(Base):
@@ -45,9 +56,18 @@ class Book(Base):
     source_language: Mapped[str | None] = mapped_column(String(8), nullable=True)
     format: Mapped[BookFormat] = mapped_column(Enum(BookFormat, name="book_format"), nullable=False)
 
-    file_key: Mapped[str] = mapped_column(String(500), nullable=False)
-    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Nullable for media books sourced from a remote URL (e.g. a YouTube video
+    # ingested from its captions) — those have no stored file, just a
+    # ``source_url`` + a transcript. Document uploads always set both.
+    file_key: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    file_size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    # Media-only fields. ``source_url`` is the canonical watch URL (YouTube);
+    # ``duration_seconds`` is the transcript length, the media analogue of
+    # ``page_count``. Both NULL for document uploads.
+    source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     status: Mapped[BookStatus] = mapped_column(
         Enum(BookStatus, name="book_status"),

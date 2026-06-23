@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { UploadButton } from "@/components/upload-button";
+import { YouTubeImportButton } from "@/components/youtube-import-button";
 import { TrialBanner } from "@/components/trial-banner";
 import { ConversionModal } from "@/components/conversion-modal";
 import { FolderShelf } from "@/components/folder-shelf";
@@ -278,6 +279,7 @@ export default function LibraryPage() {
               </svg>
               {t("library.newFolder")}
             </button>
+            <YouTubeImportButton />
             <UploadButton />
           </div>
         </div>

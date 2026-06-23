@@ -1,6 +1,25 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const ja: Dict = {
+  // Media (YouTube import) — v1
+  "media.import.button": "動画を追加",
+  "media.import.title": "YouTube動画をインポート",
+  "media.import.desc": "YouTubeのリンクを貼り付けると、字幕から学習教材を作成します。",
+  "media.import.placeholder": "https://youtube.com/watch?v=…",
+  "media.import.submit": "インポート",
+  "media.import.importing": "インポート中…",
+  "media.import.cancel": "キャンセル",
+  "media.import.invalidUrl": "YouTubeのリンクではないようです。youtube.com または youtu.be のURLを貼り付けてください。",
+  "media.import.failed": "この動画をインポートできませんでした。",
+  "media.captionsNote": "字幕付きの動画に対応しています。字幕（書き起こし）から学習教材を作成します。",
+  "media.processing.title": "字幕を取得しています…",
+  "media.processing.body": "この動画の字幕を学習教材に変換しています。通常は少し時間がかかります。",
+  "media.failed.title": "この動画をインポートできませんでした",
+  "watch.tab.quiz": "クイズ",
+  "watch.youtubeLabel": "YouTube",
+  "watch.openOnYouTube": "YouTubeで開く",
+  "watch.noVideo": "この動画はここでは再生できません。",
+  "chat.tapToJump": "タップして移動",
   "nav.how": "仕組み",
   "nav.features": "機能",
   "nav.pricing": "料金",

@@ -36,6 +36,13 @@ class Chunk(Base):
     page_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
     page_end: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
+    # For media (audio/video/YouTube) chunks, the transcript time range this
+    # slice spans, in whole seconds. Document chunks leave these NULL and use
+    # page_start/page_end; citations render whichever pair is present so a
+    # video citation becomes a clickable "▶ 12:34" deep-link.
+    time_start_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    time_end_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     text: Mapped[str] = mapped_column(Text, nullable=False)
     token_count: Mapped[int] = mapped_column(Integer, nullable=False)
 

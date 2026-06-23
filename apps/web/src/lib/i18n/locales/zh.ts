@@ -1,6 +1,25 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const zh: Dict = {
+  // Media (YouTube import) — v1
+  "media.import.button": "添加视频",
+  "media.import.title": "导入 YouTube 视频",
+  "media.import.desc": "粘贴 YouTube 链接，我们会根据其字幕生成学习材料。",
+  "media.import.placeholder": "https://youtube.com/watch?v=…",
+  "media.import.submit": "导入",
+  "media.import.importing": "正在导入…",
+  "media.import.cancel": "取消",
+  "media.import.invalidUrl": "这看起来不是 YouTube 链接。请粘贴 youtube.com 或 youtu.be 网址。",
+  "media.import.failed": "无法导入此视频。",
+  "media.captionsNote": "适用于带字幕的视频——我们会根据字幕（文字稿）生成你的学习材料。",
+  "media.processing.title": "正在获取字幕…",
+  "media.processing.body": "我们正在把这个视频的字幕转化为学习材料，通常只需片刻。",
+  "media.failed.title": "无法导入此视频",
+  "watch.tab.quiz": "测验",
+  "watch.youtubeLabel": "YouTube",
+  "watch.openOnYouTube": "在 YouTube 中打开",
+  "watch.noVideo": "此视频无法在此处播放。",
+  "chat.tapToJump": "点按跳转",
   // Nav
   "nav.how": "使用方式",
   "nav.features": "功能",

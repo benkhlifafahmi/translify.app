@@ -6,6 +6,10 @@ export interface Citation {
   chunk_id: string;
   page_start: number | null;
   page_end: number | null;
+  /** Media (video/audio) sources: transcript time range in seconds. The
+   *  reader turns these into a "▶ 12:34" deep-link that seeks the player. */
+  time_start_seconds: number | null;
+  time_end_seconds: number | null;
   snippet: string;
 }
 

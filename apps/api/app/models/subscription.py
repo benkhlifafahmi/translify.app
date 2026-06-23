@@ -111,6 +111,10 @@ class UsageCounter(Base):
     )
     pages_uploaded: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     quizzes_generated: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Whole minutes of media (YouTube/audio/video) transcribed this period.
+    minutes_transcribed: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False

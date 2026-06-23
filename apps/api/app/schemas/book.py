@@ -17,8 +17,11 @@ class BookRead(BaseModel):
     author: str | None
     source_language: str | None
     format: BookFormat
-    file_size_bytes: int
+    file_size_bytes: int | None
     page_count: int | None
+    # Media books (YouTube etc.) — NULL for document uploads.
+    source_url: str | None = None
+    duration_seconds: int | None = None
     status: BookStatus
     error_message: str | None
     is_seed: bool = False
@@ -52,4 +55,11 @@ class FinalizeUploadRequest(BaseModel):
     upload_id: str
     title: str | None = Field(default=None, max_length=500)
     author: str | None = Field(default=None, max_length=500)
+    source_language: str | None = Field(default=None, max_length=8)
+
+
+class YouTubeImportRequest(BaseModel):
+    """Import a YouTube video as a media book, built from its captions."""
+
+    url: str = Field(min_length=1, max_length=1000)
     source_language: str | None = Field(default=None, max_length=8)

@@ -111,6 +111,42 @@ async def reserve_book_upload(
     return sub
 
 
+async def reserve_media_minutes(
+    user: User, minutes: int, session: AsyncSession
+) -> str | None:
+    """Reserve transcription minutes for a media (YouTube/audio/video) import.
+
+    Returns ``None`` when the import is allowed (and increments the period
+    counter), or a human-readable message when it would exceed the plan's
+    monthly transcription cap.
+
+    Non-raising on purpose: this runs inside the ingest worker, where there is
+    no HTTP response to attach a 402 to. The caller surfaces the returned
+    message as the book's ``error_message`` so the reader sees exactly why the
+    import stopped. Mirrors ``reserve_book_upload`` — Free users get a small
+    allowance without an active plan so they can taste the feature.
+    """
+    sub = await get_or_create_subscription(user, session)
+    quota = quota_for(Plan(sub.plan))
+    usage = await _load_usage(sub, session)
+
+    mins = max(1, int(minutes))  # treat unknown / zero as 1, never free
+
+    if quota.minutes_transcribed_per_month >= UNLIMITED:
+        usage.minutes_transcribed += mins
+        return None
+
+    if usage.minutes_transcribed + mins > quota.minutes_transcribed_per_month:
+        return (
+            f"This video is about {mins} minute(s) long, which would put you "
+            f"over your {quota.minutes_transcribed_per_month}-minutes-per-month "
+            "transcription limit. Upgrade to import longer or more videos."
+        )
+
+    usage.minutes_transcribed += mins
+    return None
+
+
 async def reserve_quiz_for_book(
     user: User, book_id: uuid.UUID, session: AsyncSession
 ) -> Subscription:

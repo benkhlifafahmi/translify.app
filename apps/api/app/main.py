@@ -21,6 +21,7 @@ from app.routes.geo import router as geo_router
 from app.routes.folders import router as folders_router
 from app.routes.highlights import router as highlights_router
 from app.routes.magic_link import router as magic_link_router
+from app.routes.media import router as media_router
 from app.routes.onboarding import router as onboarding_router
 from app.routes.profiles import router as profiles_router
 from app.routes.quizzes import router as quizzes_router
@@ -123,6 +124,7 @@ app.include_router(
 
 # Domain routes
 app.include_router(books_router)
+app.include_router(media_router)
 app.include_router(translations_router)
 app.include_router(chats_router)
 app.include_router(highlights_router)

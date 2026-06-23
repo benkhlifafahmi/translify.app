@@ -1,6 +1,25 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const ms: Dict = {
+  // Media (YouTube import) — v1
+  "media.import.button": "Tambah video",
+  "media.import.title": "Import video YouTube",
+  "media.import.desc": "Tampal pautan YouTube dan kami akan bina bahan belajar daripada sari katanya.",
+  "media.import.placeholder": "https://youtube.com/watch?v=…",
+  "media.import.submit": "Import",
+  "media.import.importing": "Mengimport…",
+  "media.import.cancel": "Batal",
+  "media.import.invalidUrl": "Itu tidak kelihatan seperti pautan YouTube. Tampal URL youtube.com atau youtu.be.",
+  "media.import.failed": "Tidak dapat mengimport video ini.",
+  "media.captionsNote": "Berfungsi untuk video yang mempunyai sari kata — bahan belajar dibina daripada transkripnya.",
+  "media.processing.title": "Mendapatkan transkrip…",
+  "media.processing.body": "Kami menukar sari kata video ini menjadi bahan belajar. Biasanya mengambil masa sebentar.",
+  "media.failed.title": "Tidak dapat mengimport video ini",
+  "watch.tab.quiz": "Kuiz",
+  "watch.youtubeLabel": "YouTube",
+  "watch.openOnYouTube": "Buka di YouTube",
+  "watch.noVideo": "Video ini tidak boleh dimainkan di sini.",
+  "chat.tapToJump": "ketik untuk lompat",
   "nav.how": "Cara ia berfungsi",
   "nav.features": "Ciri-ciri",
   "nav.pricing": "Harga",

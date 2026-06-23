@@ -38,6 +38,9 @@ class PlanQuota:
 
     pages_per_month: int        # rolling cap on translated pages this period
     max_pages_per_book: int     # reject any single upload over this — abuse guard
+    # Rolling cap on minutes of media (YouTube/audio/video) transcribed this
+    # period. The media analogue of pages_per_month.
+    minutes_transcribed_per_month: int
     quizzes_per_book: int
     profiles: int
     chat_with_citations: bool
@@ -63,6 +66,7 @@ PLAN_QUOTAS: dict[Plan, PlanQuota] = {
         # *upgrade*, not abuse the demo as a free service.
         pages_per_month=2,
         max_pages_per_book=2,
+        minutes_transcribed_per_month=10,   # a short clip, to taste the feature
         quizzes_per_book=3,         # let them taste quizzes on seed books
         profiles=1,
         chat_with_citations=True,   # let them taste chat on seed books
@@ -75,6 +79,7 @@ PLAN_QUOTAS: dict[Plan, PlanQuota] = {
     Plan.reader: PlanQuota(
         pages_per_month=2_000,       # ~8 average novels or one fat textbook
         max_pages_per_book=1_000,    # rejects 600-page-textbook abuse cases
+        minutes_transcribed_per_month=600,  # ~10 hours of lectures / month
         quizzes_per_book=10,
         profiles=1,
         chat_with_citations=True,
@@ -87,6 +92,7 @@ PLAN_QUOTAS: dict[Plan, PlanQuota] = {
     Plan.scholar: PlanQuota(
         pages_per_month=UNLIMITED,
         max_pages_per_book=UNLIMITED,
+        minutes_transcribed_per_month=UNLIMITED,
         quizzes_per_book=UNLIMITED,
         profiles=1,
         chat_with_citations=True,
@@ -99,6 +105,7 @@ PLAN_QUOTAS: dict[Plan, PlanQuota] = {
     Plan.family: PlanQuota(
         pages_per_month=UNLIMITED,
         max_pages_per_book=UNLIMITED,
+        minutes_transcribed_per_month=UNLIMITED,
         quizzes_per_book=UNLIMITED,
         profiles=5,
         chat_with_citations=True,

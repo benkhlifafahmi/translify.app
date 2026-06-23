@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteBook, formatBytes, type Book } from "@/lib/books";
+import { deleteBook, formatBytes, isMediaBook, type Book } from "@/lib/books";
+import { formatDuration } from "@/lib/media";
 import { useI18n } from "@/lib/i18n";
 
 const STATUS_DOT: Record<Book["status"], string> = {
@@ -59,10 +60,13 @@ export function BookCard({
 
   const tone = SPINE_TONES[index % SPINE_TONES.length];
   const ready = book.status === "ready";
+  const media = isMediaBook(book);
+  // Media books open in the player workspace; documents open in the reader.
+  const href = media ? `/watch/${book.id}` : `/library/${book.id}`;
 
   return (
     <Link
-      href={`/library/${book.id}`}
+      href={href}
       className="group card-paper relative flex flex-col gap-4 overflow-hidden p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-paper-lg)]"
     >
       {/* Soft top tint based on tone */}
@@ -110,7 +114,15 @@ export function BookCard({
             {book.page_count != null && (
               <span className="text-[0.7rem]">{book.page_count}p</span>
             )}
-            <span className="text-[0.7rem]">{formatBytes(book.file_size_bytes)}</span>
+            {media ? (
+              book.duration_seconds != null && (
+                <span className="text-[0.7rem]">{formatDuration(book.duration_seconds)}</span>
+              )
+            ) : (
+              book.file_size_bytes != null && (
+                <span className="text-[0.7rem]">{formatBytes(book.file_size_bytes)}</span>
+              )
+            )}
             {noteCount > 0 && (
               <span
                 className="badge-pill bg-[color:var(--color-saffron)]/15 text-[color:var(--color-saffron-deep)]"

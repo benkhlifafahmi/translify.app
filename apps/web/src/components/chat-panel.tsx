@@ -391,6 +391,15 @@ function AssistantMarkdown({ content }: { content: string }) {
   );
 }
 
+function fmtCitationTime(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
+
 function MessageBubble({
   message,
   onCitationClick,
@@ -438,14 +447,21 @@ function MessageBubble({
                   <button
                     type="button"
                     onClick={() => onCitationClick?.(c)}
-                    disabled={!onCitationClick || c.page_start == null}
+                    disabled={
+                      !onCitationClick ||
+                      (c.page_start == null && c.time_start_seconds == null)
+                    }
                     className="group flex w-full items-start gap-2 rounded-xl border-[1.5px] border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40 p-2.5 text-left transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-saffron)] hover:bg-[color:var(--color-saffron)]/8 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[color:var(--color-saffron)]/20 text-[0.65rem] font-bold text-[color:var(--color-saffron-deep)]">
                       {i + 1}
                     </span>
                     <span className="flex-1 min-w-0">
-                      {c.page_start != null && (
+                      {c.time_start_seconds != null ? (
+                        <span className="block text-[0.7rem] font-semibold uppercase tracking-wide text-[color:var(--color-ink-soft)] group-hover:text-[color:var(--color-saffron-deep)]">
+                          ▶ {fmtCitationTime(c.time_start_seconds)} {t("chat.tapToJump")}
+                        </span>
+                      ) : c.page_start != null ? (
                         <span className="block text-[0.7rem] font-semibold uppercase tracking-wide text-[color:var(--color-ink-soft)] group-hover:text-[color:var(--color-saffron-deep)]">
                           {t("chat.pagePrefix")} {c.page_start}
                           {c.page_end && c.page_end !== c.page_start
@@ -453,7 +469,7 @@ function MessageBubble({
                             : ""}{" "}
                           {t("chat.tapToFind")}
                         </span>
-                      )}
+                      ) : null}
                       <span className="mt-1 block text-xs italic leading-relaxed text-[color:var(--color-ink-soft)]">
                         “{c.snippet}”
                       </span>

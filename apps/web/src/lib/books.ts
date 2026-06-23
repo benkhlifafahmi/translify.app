@@ -1,7 +1,13 @@
 import { api, ApiError } from "./api";
 
 export type BookStatus = "uploaded" | "processing" | "ready" | "failed";
-export type BookFormat = "pdf" | "epub";
+export type BookFormat = "pdf" | "epub" | "youtube" | "audio" | "video";
+
+/** Media books (transcribed from a video/audio source) vs. document uploads. */
+export const MEDIA_FORMATS: BookFormat[] = ["youtube", "audio", "video"];
+export function isMediaBook(book: Pick<Book, "format">): boolean {
+  return MEDIA_FORMATS.includes(book.format);
+}
 
 export interface Book {
   id: string;
@@ -9,8 +15,13 @@ export interface Book {
   author: string | null;
   source_language: string | null;
   format: BookFormat;
-  file_size_bytes: number;
+  /** Null for media books sourced from a URL (no stored file). */
+  file_size_bytes: number | null;
   page_count: number | null;
+  /** Media-only: canonical source URL (e.g. the YouTube watch link). */
+  source_url: string | null;
+  /** Media-only: transcript length in seconds. */
+  duration_seconds: number | null;
   status: BookStatus;
   error_message: string | null;
   /** True for system-owned seed books that appear in every user's library. */

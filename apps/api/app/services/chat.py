@@ -69,6 +69,11 @@ async def answer_question(
                 "chunk_id": str(chunk.id),
                 "page_start": chunk.page_start,
                 "page_end": chunk.page_end,
+                # Media (YouTube/audio/video) chunks carry a transcript time
+                # range instead of pages — the client turns these into a
+                # "▶ 12:34" deep-link that seeks the player.
+                "time_start_seconds": chunk.time_start_seconds,
+                "time_end_seconds": chunk.time_end_seconds,
                 "snippet": chunk.text.strip()[:240],
             }
         )
@@ -136,7 +141,18 @@ async def _search_chunks(
     return list(result.scalars().all())
 
 
+def _fmt_timestamp(seconds: int) -> str:
+    """Seconds → H:MM:SS or M:SS for citation labels."""
+    seconds = max(0, int(seconds))
+    h, rem = divmod(seconds, 3600)
+    m, s = divmod(rem, 60)
+    return f"{h}:{m:02d}:{s:02d}" if h else f"{m}:{s:02d}"
+
+
 def _page_label(chunk: Chunk) -> str:
+    # Media chunks: label with the transcript timestamp instead of a page.
+    if chunk.time_start_seconds is not None:
+        return f", at {_fmt_timestamp(chunk.time_start_seconds)}"
     if chunk.page_start is None:
         return ""
     if chunk.page_end and chunk.page_end != chunk.page_start:

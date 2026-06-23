@@ -34,6 +34,7 @@ dependencies = [
     "tiktoken>=0.8.0",
     "python-multipart>=0.0.18",
     "langdetect>=1.0.9",
+    "youtube-transcript-api>=1.2.0",
     "pymupdf-fonts>=1.0.5",
     "arabic-reshaper>=3.0.1",
     "python-bidi>=0.6.7",
