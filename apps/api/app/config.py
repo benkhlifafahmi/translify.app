@@ -65,6 +65,14 @@ class Settings(BaseSettings):
     email_from_address: str = "hello@translify.app"
     email_reply_to: str = "hello@translify.app"
 
+    # Transcript service — used by the media (YouTube) import to fetch a
+    # video's captions *without* hitting YouTube directly (our server IP gets
+    # blocked). We GET ``{url}?v=<video_id>`` and scrape the timestamped
+    # ``transcript-segment`` spans from the returned HTML. Override the URL to
+    # swap providers or self-host without a code change.
+    transcript_service_url: str = "https://youtubetotranscript.com/transcript"
+    transcript_timeout_seconds: float = 20.0
+
     # IP geolocation — used by GET /geo to suggest a UI language from the
     # visitor's country. Keyless by default (ipwho.is); ``{ip}`` is substituted
     # with the resolved client IP. Set empty to disable IP detection entirely

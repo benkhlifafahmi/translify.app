@@ -1,12 +1,19 @@
 """YouTube transcript retrieval.
 
 v1 of the media-import feature uses *existing captions only* — no audio
-download, no speech-to-text. We pull the caption track via
-``youtube-transcript-api`` (which returns timestamped cues for free) and hand
-the segments to the media ingest pipeline.
+download, no speech-to-text.
 
-Everything here is synchronous/blocking (the library uses ``requests`` under
-the hood), so callers must invoke it via ``asyncio.to_thread``.
+We don't query YouTube directly: our server IP gets blocked. Instead we fetch
+the transcript from an external service that exposes it as HTML
+(``settings.transcript_service_url?v=<id>``) and pull the timestamped
+``transcript-segment`` spans out of the page with BeautifulSoup. Each span
+looks like::
+
+    <span data-start="8.0" data-duration="5.0"
+          class="transcript-segment ...">this course took me weeks ...</span>
+
+Everything here is synchronous/blocking (httpx sync client + bs4), so callers
+must invoke it via ``asyncio.to_thread``.
 """
 from __future__ import annotations
 
@@ -20,6 +27,13 @@ log = logging.getLogger(__name__)
 # YouTube video IDs are 11 chars from the URL-safe base64 alphabet.
 _ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 _PATH_PREFIXES = ("embed", "shorts", "v", "live")
+
+# Browser-like UA — the transcript service serves different (or no) content to
+# obvious bots.
+_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+)
 
 
 class TranscriptUnavailable(Exception):
@@ -86,94 +100,80 @@ def canonical_watch_url(video_id: str) -> str:
     return f"https://www.youtube.com/watch?v={video_id}"
 
 
-def _pick_transcript(transcript_list):
-    """Choose a transcript from the available tracks.
+def _to_float(value: object) -> float:
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return 0.0
 
-    Prefer a manually-created track (more accurate) over an auto-generated one;
-    accept any language since we re-detect / can translate downstream.
+
+def _parse_segments(html: str) -> list[TranscriptSegment]:
+    """Pull timestamped transcript segments out of the service's HTML.
+
+    Targets ``<span class="transcript-segment ...">`` elements carrying
+    ``data-start`` and ``data-duration`` attributes. Tolerant of extra classes
+    and missing/garbled timing attributes (those fall back to 0).
     """
-    transcripts = list(transcript_list)
-    if not transcripts:
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(html, "html.parser")
+    segments: list[TranscriptSegment] = []
+    # ``[class*="transcript-segment"]`` matches any span whose class attribute
+    # *contains* the token, so future utility classes on the element don't
+    # break extraction.
+    for span in soup.select('span[class*="transcript-segment"]'):
+        text = span.get_text(" ", strip=True)
+        if not text:
+            continue
+        segments.append(
+            TranscriptSegment(
+                start_seconds=_to_float(span.get("data-start")),
+                duration_seconds=_to_float(span.get("data-duration")),
+                text=text,
+            )
+        )
+    return segments
+
+
+def fetch_transcript(video_id: str) -> FetchedTranscript:
+    """Fetch a video's transcript via the external transcript service.
+
+    Raises ``TranscriptUnavailable`` (with a user-facing message) on any
+    failure: network/HTTP error, blocked request, or no captions for the
+    video.
+    """
+    import httpx
+
+    from app.config import settings
+
+    try:
+        resp = httpx.get(
+            settings.transcript_service_url,
+            params={"v": video_id},
+            headers={
+                "User-Agent": _USER_AGENT,
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+            },
+            timeout=settings.transcript_timeout_seconds,
+            follow_redirects=True,
+        )
+        resp.raise_for_status()
+    except Exception as exc:  # network, HTTP status, timeout — keep it friendly
+        log.warning("transcript service request failed for %s: %s", video_id, exc)
+        raise TranscriptUnavailable(
+            "We couldn't fetch this video's transcript right now. It may have "
+            "no captions, or the transcript service is busy — please try again."
+        ) from exc
+
+    segments = _parse_segments(resp.text)
+    if not segments:
         raise TranscriptUnavailable(
             "This video has no captions available, so we can't turn it into "
             "study material yet. Try a video that has captions or subtitles."
         )
-    manual = [t for t in transcripts if not getattr(t, "is_generated", False)]
-    return (manual or transcripts)[0]
 
-
-def fetch_transcript(
-    video_id: str, *, languages: list[str] | None = None
-) -> FetchedTranscript:
-    """Fetch the best available caption track for ``video_id``.
-
-    Targets youtube-transcript-api v1.x (instance API). Raises
-    ``TranscriptUnavailable`` (with a user-facing message) for any failure —
-    no captions, private/removed video, IP block, or missing dependency.
-    """
-    try:
-        from youtube_transcript_api import (
-            YouTubeTranscriptApi,
-        )
-        from youtube_transcript_api import (
-            _errors as yt_errors,
-        )
-    except ImportError as exc:  # dependency not installed yet (pre-rebuild)
-        raise TranscriptUnavailable(
-            "Video transcript support isn't available on the server right now."
-        ) from exc
-
-    transcripts_disabled = getattr(yt_errors, "TranscriptsDisabled", ())
-    no_transcript = getattr(yt_errors, "NoTranscriptFound", ())
-    video_unavailable = getattr(yt_errors, "VideoUnavailable", ())
-
-    api = YouTubeTranscriptApi()
-    try:
-        if languages:
-            fetched = api.fetch(video_id, languages=languages)
-        else:
-            fetched = _pick_transcript(api.list(video_id)).fetch()
-    except TranscriptUnavailable:
-        raise
-    except transcripts_disabled as exc:
-        raise TranscriptUnavailable(
-            "Captions are disabled for this video, so we can't build study "
-            "material from it. Try a video with captions."
-        ) from exc
-    except no_transcript as exc:
-        raise TranscriptUnavailable(
-            "We couldn't find a usable caption track for this video."
-        ) from exc
-    except video_unavailable as exc:
-        raise TranscriptUnavailable(
-            "This video is unavailable, private, or region-locked."
-        ) from exc
-    except Exception as exc:  # IP block, network, parsing — keep it friendly
-        log.warning("transcript fetch failed for %s: %s", video_id, exc)
-        raise TranscriptUnavailable(
-            "We couldn't fetch this video's transcript. It may have no "
-            "captions, or YouTube blocked the request — please try again."
-        ) from exc
-
-    # FetchedTranscript exposes `.snippets`; older shapes are iterable.
-    snippets = getattr(fetched, "snippets", None)
-    if snippets is None:
-        snippets = list(fetched)
-
-    segments = [
-        TranscriptSegment(
-            start_seconds=float(getattr(s, "start", 0.0) or 0.0),
-            duration_seconds=float(getattr(s, "duration", 0.0) or 0.0),
-            text=str(getattr(s, "text", "") or "").strip(),
-        )
-        for s in snippets
-    ]
-    segments = [s for s in segments if s.text]
-    if not segments:
-        raise TranscriptUnavailable("This video's transcript was empty.")
-
-    return FetchedTranscript(
-        segments=segments,
-        language_code=getattr(fetched, "language_code", None),
-        is_generated=bool(getattr(fetched, "is_generated", False)),
-    )
+    log.info("transcript: video=%s segments=%d", video_id, len(segments))
+    # The service doesn't expose language metadata; the pipeline treats a
+    # missing language as "unknown" and leaves source_language null.
+    return FetchedTranscript(segments=segments, language_code=None, is_generated=False)
