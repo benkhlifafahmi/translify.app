@@ -19,6 +19,39 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "study-from-youtube-videos-ai",
+    title: "How to study from YouTube videos with AI (notes, quizzes, and timestamped answers)",
+    description:
+      "YouTube is full of lectures and explainers but gives you no way to study them. Here's how to turn any captioned YouTube video into real study material with AI — a chat that answers with timestamped citations back to the video, plus practice quizzes for active recall.",
+    excerpt:
+      "YouTube is the world's biggest lecture hall and its worst study tool — no notes, no quizzes, no way to find the one thing you needed. Here's how to fix that with AI.",
+    publishedAt: "2026-06-24",
+    readingMinutes: 11,
+    tags: ["how-to", "youtube", "video", "study", "ai-study"],
+  },
+  {
+    slug: "chat-with-youtube-video-ai",
+    title: "How to chat with a YouTube video using AI (and get answers that cite the timestamp)",
+    description:
+      "How to ask an AI questions about a YouTube video and get answers grounded in what was actually said — with citations that link to the exact timestamp. Why source-grounded, timestamped answers beat a generic AI summary when you're studying.",
+    excerpt:
+      "Most AI video tools hand you a summary and hope. The useful version answers your specific question and shows you the exact moment in the video it came from.",
+    publishedAt: "2026-06-24",
+    readingMinutes: 8,
+    tags: ["how-to", "youtube", "video", "ai-study"],
+  },
+  {
+    slug: "take-notes-from-video-lectures",
+    title: "How to take notes from video lectures (a system that actually sticks)",
+    description:
+      "Taking notes from video lectures and online courses is harder than from a textbook — you can't skim, and pausing every twenty seconds wrecks comprehension. A practical, research-backed system for turning lectures into durable notes, with or without AI.",
+    excerpt:
+      "Pausing every twenty seconds to scribble doesn't work — you lose the thread and the notes are still bad. A better system for taking notes from video lectures.",
+    publishedAt: "2026-06-24",
+    readingMinutes: 9,
+    tags: ["how-to", "note-taking", "video", "study", "students"],
+  },
+  {
     slug: "read-german-philosophy-in-english-ai",
     title: "How to read a German philosophy book in English (without losing the nuance)",
     description:
