@@ -1,14 +1,25 @@
 import type { Garden } from "@/lib/garden";
+import { useI18n } from "@/lib/i18n";
 
-const STAGE_LABELS = [
-  "Stage 0 · seed", "Stage I · sprout", "Stage II · seedling",
-  "Stage III · stem", "Stage IV · bud forming", "Stage V · in flower", "Stage VI · full bloom",
+const STAGE_LABEL_KEYS = [
+  "gstats.stageLabel.seed",
+  "gstats.stageLabel.sprout",
+  "gstats.stageLabel.seedling",
+  "gstats.stageLabel.stem",
+  "gstats.stageLabel.budForming",
+  "gstats.stageLabel.inFlower",
+  "gstats.stageLabel.fullBloom",
 ];
 
 export function VitalityPanel({ garden }: { garden: Garden }) {
+  const { t, tn } = useI18n();
   const thriving = garden.vitality >= 4;
   const wilting = garden.vitality <= 1;
-  const status = wilting ? "Wilting" : thriving ? "Thriving" : "Steady";
+  const status = wilting
+    ? t("gstats.status.wilting")
+    : thriving
+      ? t("gstats.status.thriving")
+      : t("gstats.status.steady");
   const dotClass = wilting
     ? "bg-[color:var(--color-coral)]"
     : "bg-[color:var(--color-sage)]";
@@ -22,7 +33,7 @@ export function VitalityPanel({ garden }: { garden: Garden }) {
       ].join(" ")}
     >
       <div className="mb-3.5 flex items-baseline justify-between">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl italic">Vitality</h2>
+        <h2 className="font-[family-name:var(--font-display)] text-2xl italic">{t("gstats.vitality")}</h2>
         <span className="flex items-center gap-2 font-[family-name:var(--font-display)] text-[12px] uppercase tracking-[0.18em] text-[color:var(--color-sage-deep)]">
           <span className={`garden-pulse-dot inline-block h-2 w-2 rounded-full ${dotClass}`} />
           {status}
@@ -30,7 +41,7 @@ export function VitalityPanel({ garden }: { garden: Garden }) {
       </div>
 
       <div className="mb-4 flex items-center justify-between gap-2">
-        <div className="flex gap-1.5" title="Water reserve">
+        <div className="flex gap-1.5" title={t("gstats.waterReserve")}>
           {Array.from({ length: garden.vitalityCapacity }).map((_, i) => (
             <DropletGlyph key={i} filled={i < garden.vitality} />
           ))}
@@ -39,11 +50,11 @@ export function VitalityPanel({ garden }: { garden: Garden }) {
           <div className="font-[family-name:var(--font-display)] text-[42px] font-light leading-none tracking-[-0.03em] tabular-nums">
             {garden.daysUntilThirst}
             <span className="ml-0.5 text-[22px] italic text-[color:var(--color-muted-foreground)]">
-              /5
+              {t("gstats.reserve.outOf")}
             </span>
           </div>
           <div className="mt-1 font-[family-name:var(--font-display)] text-[13px] italic text-[color:var(--color-muted-foreground)]">
-            days of reserve
+            {t("gstats.reserve.days")}
           </div>
         </div>
       </div>
@@ -60,38 +71,38 @@ export function VitalityPanel({ garden }: { garden: Garden }) {
       <div className="mt-2 flex justify-between font-[family-name:var(--font-display)] text-[12px] italic text-[color:var(--color-muted-foreground)]">
         <span>
           <b className="font-medium not-italic text-[color:var(--color-sage-deep)]">
-            {STAGE_LABELS[garden.stage]}
+            {t(STAGE_LABEL_KEYS[garden.stage])}
           </b>
         </span>
-        <span>{garden.growthPercent}% to bloom</span>
+        <span>{t("gstats.toBloom", { percent: garden.growthPercent })}</span>
       </div>
 
       {/* stat grid */}
       <div className="mt-5 grid grid-cols-2 border-t border-dashed border-[color:var(--color-border-strong)]/50">
         <StatCell
-          label="Pages turned"
+          label={t("gstats.stat.pagesTurned")}
           val={garden.pagesRead.toString()}
           sup={`/${garden.pageCount}`}
-          sub={`+${garden.pagesReadDelta} since Tuesday`}
+          sub={t("gstats.stat.pagesDelta", { delta: garden.pagesReadDelta })}
         />
         <StatCell
-          label="Quizzes answered"
+          label={t("gstats.stat.quizzesAnswered")}
           val={garden.quizzesAnswered.toString()}
           sup={`/${garden.quizzesTotal}`}
-          sub={`${garden.quizAccuracyPercent}% accuracy`}
+          sub={t("gstats.stat.quizAccuracy", { percent: garden.quizAccuracyPercent })}
           rightCol
         />
         <StatCell
-          label="New leaves"
+          label={t("gstats.stat.newLeaves")}
           val={garden.newLeaves.toString()}
-          sub={garden.lastLeafAt ? `last grown ${relTime(garden.lastLeafAt)}` : "no leaves yet"}
+          sub={garden.lastLeafAt ? t("gstats.stat.lastGrown", { when: relTime(garden.lastLeafAt, tn) }) : t("gstats.stat.noLeaves")}
           topBordered
         />
         <StatCell
-          label="Streak"
+          label={t("gstats.stat.streak")}
           val={garden.streakDays.toString()}
-          sup="d"
-          sub={`personal best · ${garden.bestStreakDays}d`}
+          sup={t("gstats.stat.streakUnit")}
+          sub={t("gstats.stat.personalBest", { best: garden.bestStreakDays })}
           rightCol
           topBordered
         />
@@ -147,12 +158,15 @@ function DropletGlyph({ filled }: { filled: boolean }) {
   );
 }
 
-function relTime(iso: string): string {
+function relTime(
+  iso: string,
+  tn: (key: string, n: number, vars?: Record<string, string | number>) => string,
+): string {
   const ms = Date.now() - new Date(iso).getTime();
   const minutes = Math.round(ms / 60_000);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return tn("gstats.rel.minutes", minutes);
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return tn("gstats.rel.hours", hours);
   const days = Math.round(hours / 24);
-  return `${days}d ago`;
+  return tn("gstats.rel.days", days);
 }

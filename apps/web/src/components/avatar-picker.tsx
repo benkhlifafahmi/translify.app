@@ -14,6 +14,7 @@
  * parent reads `value` to know which URL to save.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 const STYLE = "avataaars";
 const API = `https://api.dicebear.com/9.x/${STYLE}/svg`;
@@ -44,6 +45,7 @@ interface Props {
 }
 
 export function AvatarPicker({ value, onChange, initialSeed }: Props) {
+  const { t } = useI18n();
   const [seeds, setSeeds] = useState<string[]>(() => {
     const first = initialSeed ?? makeSeed();
     return [first, ...Array.from({ length: 7 }, makeSeed)];
@@ -75,10 +77,10 @@ export function AvatarPicker({ value, onChange, initialSeed }: Props) {
         <CurrentAvatar url={value} />
         <div className="flex flex-col gap-1.5">
           <p className="text-[0.85rem] font-semibold text-[color:var(--color-ink)]">
-            Pick your avatar
+            {t("avatar.heading")}
           </p>
           <p className="text-[0.78rem] leading-snug text-[color:var(--color-ink-soft)]">
-            Eight random characters. Roll again until one feels right.
+            {t("avatar.description")}
           </p>
         </div>
       </div>
@@ -91,7 +93,7 @@ export function AvatarPicker({ value, onChange, initialSeed }: Props) {
               key={seed}
               type="button"
               onClick={() => onChange(url)}
-              aria-label="Select this avatar"
+              aria-label={t("avatar.select")}
               aria-pressed={selected}
               className={
                 selected
@@ -135,7 +137,7 @@ export function AvatarPicker({ value, onChange, initialSeed }: Props) {
             <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
             <path d="M3 21v-5h5" />
           </svg>
-          Roll again
+          {t("avatar.reroll")}
         </button>
         {value && (
           <button
@@ -143,7 +145,7 @@ export function AvatarPicker({ value, onChange, initialSeed }: Props) {
             onClick={clear}
             className="inline-flex h-10 items-center rounded-full px-3 text-[0.84rem] font-medium text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-4 transition-colors duration-150 hover:text-[color:var(--color-ink)]"
           >
-            No avatar
+            {t("avatar.clear")}
           </button>
         )}
       </div>

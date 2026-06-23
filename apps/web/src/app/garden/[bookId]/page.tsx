@@ -104,34 +104,32 @@ export default function GardenDetailPage({
       <section className="relative z-10 mx-auto max-w-6xl px-6 lg:px-10">
         <div className="mt-9 flex justify-between font-[family-name:var(--font-display)] text-[13px] uppercase tracking-[0.08em] italic text-[color:var(--color-muted-foreground)]">
           <span>
-            Plate № {garden.bookId.slice(-2)}
+            {t("gpage.plate", { n: garden.bookId.slice(-2) })}
             <Dot />
-            Volume II
+            {t("gpage.volume")}
             <Dot />
-            Cultivated since {startedAt}
+            {t("gpage.cultivatedSince", { date: startedAt })}
             <Dot />
-            Day {daysSince(garden.startedAt)}
+            {t("gpage.day", { n: daysSince(garden.startedAt) })}
           </span>
           <span className="hidden sm:inline">
-            Climate: temperate · prose
+            {t("gpage.climate")}
             <Dot />
-            Reader: {garden.farmer.name}
+            {t("gpage.reader", { name: garden.farmer.name })}
           </span>
         </div>
 
         {/* HEADLINE */}
         <h1 className="mt-4 font-[family-name:var(--font-display)] text-[clamp(48px,7.4vw,104px)] font-light leading-[0.94] tracking-[-0.025em]">
-          <span className="italic text-[color:var(--color-coral)] tracking-tight">The Garden of</span>{" "}
+          <span className="italic text-[color:var(--color-coral)] tracking-tight">{t("gpage.gardenOf")}</span>{" "}
           <span className="block font-medium italic">{garden.bookTitle}</span>
         </h1>
 
         <p className="mt-3 max-w-[580px] font-[family-name:var(--font-display)] text-[18px] italic text-[color:var(--color-ink-soft)]">
           <span className="float-left mr-2.5 pt-1.5 font-[family-name:var(--font-display)] text-[68px] not-italic font-medium leading-[0.85] text-[color:var(--color-sage-deep)]">
-            A
+            {t("gpage.dropcap")}
           </span>
-          living record of your reading. Each page turned waters the soil; each
-          answered question sends a new leaf into the light. Tend faithfully —
-          neglect, and the green will turn.
+          {t("gpage.intro")}
         </p>
 
         {/* ornament */}
@@ -173,15 +171,14 @@ export default function GardenDetailPage({
         {/* COLOPHON */}
         <footer className="mt-20 flex items-baseline justify-between border-t border-[color:var(--color-border)] pt-6 font-[family-name:var(--font-display)] text-[13px] italic text-[color:var(--color-muted-foreground)]">
           <div className="max-w-[480px]">
-            <small className="text-[11px] not-italic uppercase tracking-[0.2em]">Colophon</small>
+            <small className="text-[11px] not-italic uppercase tracking-[0.2em]">{t("gpage.colophon")}</small>
             <br />
-            Composed in Fraunces &amp; Hanken Grotesk. Specimens drawn by hand. Your Garden is private —
-            no plant, leaf, or wilt is shared without your permission.
+            {t("gpage.colophonText")}
           </div>
           <div className="text-right">
             <small className="text-[11px] not-italic uppercase tracking-[0.2em]">Translify Almanac</small>
             <br />
-            <em>vol. ii · plate {garden.bookId.slice(-2)} · {new Date().getFullYear()}</em>
+            <em>{t("gpage.almanacRef", { p: garden.bookId.slice(-2), year: new Date().getFullYear() })}</em>
           </div>
         </footer>
       </section>

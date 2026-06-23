@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 
+import { useI18n } from "@/lib/i18n";
 import { getGarden, type Garden, type SpeciesId } from "@/lib/garden";
 
 export type MobileGardenActivity = "water" | "plant";
@@ -36,6 +37,7 @@ const DURATION_MS = 2_150;
 // scale — the full PlantSvg/FarmerSvg are too detailed to render at 36px.
 export const MobileGardenTab = forwardRef<MobileGardenTabHandle, Props>(
   function MobileGardenTab({ bookId, label, onOpen }, ref) {
+    const { t } = useI18n();
     const [active, setActive] = useState<ActiveState | null>(null);
     const lockUntilRef = useRef<number>(0);
 
@@ -76,7 +78,7 @@ export const MobileGardenTab = forwardRef<MobileGardenTabHandle, Props>(
       <button
         type="button"
         onClick={onOpen}
-        aria-label={`${label} — ${species}, stage ${stage}`}
+        aria-label={t("gview.tab.aria", { label, species, stage })}
         className="relative flex flex-col items-center gap-0.5 rounded-2xl px-2 py-2 text-[color:var(--color-ink-soft)] transition-all active:scale-[0.97]"
       >
         <span

@@ -23,6 +23,7 @@ import {
   createSentencePost,
   type Post,
 } from "@/lib/social";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   highlightId: string;
@@ -48,6 +49,7 @@ export function HighlightShare({
   onClose,
   onShared,
 }: Props) {
+  const { t } = useI18n();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,10 +103,10 @@ export function HighlightShare({
       }
       if (err instanceof ApiError && err.status === 429) {
         const detail = (err.body as { detail?: string } | null)?.detail;
-        setError(detail ?? "You've hit a sharing limit. Try again later.");
+        setError(detail ?? t("hshare.limitError"));
         return;
       }
-      setError("Couldn't share that. Try again in a moment.");
+      setError(t("hshare.error"));
     } finally {
       setBusy(false);
       inFlight.current = false;
@@ -136,7 +138,7 @@ export function HighlightShare({
             </svg>
           </span>
           <p className="text-[0.78rem] font-semibold text-[color:var(--color-sage-deep)]">
-            Shared to your timeline.
+            {t("hshare.shared")}
           </p>
         </div>
         <div className="mt-2 flex items-center gap-3 text-[0.74rem]">
@@ -144,14 +146,14 @@ export function HighlightShare({
             href={`/p/${shared.share_slug}`}
             className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4"
           >
-            View post
+            {t("hshare.viewPost")}
           </Link>
           <button
             type="button"
             onClick={onClose}
             className="text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-4 hover:text-[color:var(--color-ink)]"
           >
-            Close
+            {t("common.close")}
           </button>
         </div>
       </div>
@@ -164,20 +166,19 @@ export function HighlightShare({
         value={note}
         onChange={(e) => setNote(e.target.value.slice(0, 280))}
         rows={2}
-        placeholder="Why this passage? (optional)"
+        placeholder={t("hshare.notePlaceholder")}
         className="w-full resize-none rounded-lg border-[1.5px] border-[color:var(--color-border)] bg-white px-2.5 py-1.5 text-xs leading-relaxed outline-none transition-colors duration-150 focus:border-[color:var(--color-saffron-deep)]"
       />
       <div className="flex items-center justify-between text-[0.66rem] text-[color:var(--color-ink-soft)]">
         <span>
-          {len} / {PASSAGE_MAX} chars · post type: <b>{kind}</b>
+          {t("hshare.meta", { len, max: PASSAGE_MAX })} <b>{t(`hshare.kind.${kind}`)}</b>
         </span>
-        <span>{remainingNote} note chars left</span>
+        <span>{t("hshare.noteLeft", { n: remainingNote })}</span>
       </div>
 
       {tooLong && (
         <p className="rounded-md bg-[color:var(--color-destructive)]/10 px-2 py-1 text-[0.7rem] text-[color:var(--color-destructive)]">
-          This passage is longer than {PASSAGE_MAX} characters. Shorten the
-          highlight or share a single sentence from it.
+          {t("hshare.tooLong", { max: PASSAGE_MAX })}
         </p>
       )}
 
@@ -193,7 +194,7 @@ export function HighlightShare({
           onClick={onClose}
           className="rounded-full px-3 py-1 text-[0.7rem] font-semibold text-[color:var(--color-ink-soft)] transition-colors duration-150 hover:text-[color:var(--color-ink)]"
         >
-          Cancel
+          {t("common.cancel")}
         </button>
         <button
           type="button"
@@ -201,7 +202,7 @@ export function HighlightShare({
           disabled={busy || tooLong}
           className="rounded-full bg-[color:var(--color-saffron-deep)] px-3 py-1 text-[0.7rem] font-semibold text-white transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:opacity-90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {busy ? "Sharing…" : "Share to timeline"}
+          {busy ? t("common.sharing") : t("hshare.shareCta")}
         </button>
       </div>
     </div>

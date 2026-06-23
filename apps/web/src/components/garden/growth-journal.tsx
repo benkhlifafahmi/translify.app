@@ -1,5 +1,6 @@
 import type { JournalEntry } from "@/lib/garden";
 import { formatJournalDate } from "@/lib/garden";
+import { useI18n } from "@/lib/i18n";
 
 const KIND_ICON: Record<JournalEntry["kind"], { bg: string; fg: string; path: React.ReactNode }> = {
   read: {
@@ -52,14 +53,15 @@ const KIND_ICON: Record<JournalEntry["kind"], { bg: string; fg: string; path: Re
 };
 
 export function GrowthJournal({ entries }: { entries: JournalEntry[] }) {
+  const { t } = useI18n();
   return (
     <div>
       <div className="mb-5 flex items-baseline justify-between border-b border-[color:var(--color-border)] pb-3">
         <h2 className="font-[family-name:var(--font-display)] text-[34px] font-light italic leading-none tracking-[-0.01em]">
-          Growth Journal
+          {t("gstats.journal.title")}
         </h2>
         <span className="font-[family-name:var(--font-display)] text-[13px] italic uppercase tracking-[0.18em] text-[color:var(--color-muted-foreground)]">
-          last seven days
+          {t("gstats.journal.lastSevenDays")}
         </span>
       </div>
 

@@ -13,8 +13,11 @@
  * Server component. Wrap in <Link> if the surrounding surface wants the
  * whole card to navigate to /p/<slug>; pass `linked` to opt in.
  */
+"use client";
+
 import Link from "next/link";
 import type { Post, PostType } from "@/lib/social";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   post: Post;
@@ -25,8 +28,9 @@ interface Props {
 }
 
 export function PostCard({ post, linked = true, hideAuthor = false }: Props) {
+  const { t, tn } = useI18n();
   const handle = post.author?.username ?? null;
-  const displayName = post.author?.display_name ?? handle ?? "Anonymous";
+  const displayName = post.author?.display_name ?? handle ?? t("postcard.anonymous");
 
   return (
     <article
@@ -43,13 +47,13 @@ export function PostCard({ post, linked = true, hideAuthor = false }: Props) {
               {displayName}
             </Link>
             <p className="truncate text-[0.78rem] text-[color:var(--color-ink-soft)]">
-              @{handle} · {formatRelative(post.created_at)}
+              @{handle} · {formatRelative(post.created_at, t, tn)}
             </p>
           </div>
           {linked && (
             <Link
               href={`/p/${post.share_slug}`}
-              aria-label="Open post"
+              aria-label={t("postcard.open")}
               className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[color:var(--color-ink-soft)] transition-colors duration-150 hover:bg-[color:var(--color-paper-2)] hover:text-[color:var(--color-ink)]"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -70,8 +74,8 @@ export function PostCard({ post, linked = true, hideAuthor = false }: Props) {
 
       {post.book_title && post.type !== "list" && (
         <footer className="mt-5 border-t border-dashed border-[color:var(--color-border)] pt-3 text-[0.78rem] text-[color:var(--color-ink-soft)]">
-          From <span className="font-semibold text-[color:var(--color-ink)]">{post.book_title}</span>
-          {post.book_author && <> by {post.book_author}</>}
+          {t("postcard.from")} <span className="font-semibold text-[color:var(--color-ink)]">{post.book_title}</span>
+          {post.book_author && <> {t("postcard.by", { author: post.book_author })}</>}
         </footer>
       )}
     </article>
@@ -150,6 +154,7 @@ function SentenceBody({ post }: { post: Post }) {
 }
 
 function PassageBody({ post }: { post: Post }) {
+  const { t } = useI18n();
   const p = post.payload as {
     source_text: string;
     target_text: string;
@@ -168,7 +173,7 @@ function PassageBody({ post }: { post: Post }) {
       </p>
       {p.source_page && (
         <p className="mt-2 text-[0.74rem] uppercase tracking-[0.14em] text-[color:var(--color-ink-soft)]">
-          Page {p.source_page}
+          {t("postcard.page", { page: p.source_page })}
         </p>
       )}
     </blockquote>
@@ -206,6 +211,7 @@ function MilestoneBody({ post }: { post: Post }) {
 }
 
 function ListBody({ post }: { post: Post }) {
+  const { tn } = useI18n();
   const p = post.payload as {
     title: string;
     description?: string | null;
@@ -222,7 +228,7 @@ function ListBody({ post }: { post: Post }) {
         </p>
       )}
       <p className="mt-3 text-[0.78rem] uppercase tracking-[0.14em] text-[color:var(--color-ink-soft)]">
-        {p.book_ids.length} {p.book_ids.length === 1 ? "book" : "books"}
+        {tn("postcard.books", p.book_ids.length)}
       </p>
     </div>
   );
@@ -266,17 +272,21 @@ function Avatar({ src, fallback }: { src?: string | null; fallback: string }) {
 /** Renders "5m", "2h", "3d", "12 Mar" depending on age. Cheap and locale-naive
  * on purpose: the surrounding page is i18n-aware but these tags are too dense
  * to benefit from full Intl.RelativeTimeFormat at every render. */
-function formatRelative(iso: string): string {
+function formatRelative(
+  iso: string,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+  tn: (key: string, n: number, vars?: Record<string, string | number>) => string,
+): string {
   const then = new Date(iso).getTime();
   const now = Date.now();
   const diffSec = Math.max(0, Math.floor((now - then) / 1000));
-  if (diffSec < 60) return "just now";
+  if (diffSec < 60) return t("postcard.justNow");
   const m = Math.floor(diffSec / 60);
-  if (m < 60) return `${m}m`;
+  if (m < 60) return tn("postcard.minutes", m);
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
+  if (h < 24) return tn("postcard.hours", h);
   const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d`;
+  if (d < 7) return tn("postcard.days", d);
   return new Date(iso).toLocaleDateString(undefined, {
     day: "numeric",
     month: "short",

@@ -18,12 +18,14 @@ import { Suspense } from "react";
 import { ApiError } from "@/lib/api";
 import { searchUsers, type UserSearchResult } from "@/lib/social";
 import { MarketingHeader } from "@/components/marketing-header";
+import { useI18n } from "@/lib/i18n";
 
 const DEBOUNCE_MS = 250;
 
 export default function SearchPage() {
+  const { t } = useI18n();
   return (
-    <Suspense fallback={<Shell><p className="text-[color:var(--color-ink-soft)]">Loading…</p></Shell>}>
+    <Suspense fallback={<Shell><p className="text-[color:var(--color-ink-soft)]">{t("search.loading")}</p></Shell>}>
       <SearchInner />
     </Suspense>
   );
@@ -39,6 +41,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function SearchInner() {
+  const { t } = useI18n();
   const router = useRouter();
   const params = useSearchParams();
   const initial = params.get("q") ?? "";
@@ -79,8 +82,8 @@ function SearchInner() {
         if (!cancelled) {
           setError(
             err instanceof ApiError
-              ? "Search failed. Try again."
-              : "Couldn't reach the server.",
+              ? t("search.error.failed")
+              : t("search.error.unreachable"),
           );
           setResults([]);
         }
@@ -97,10 +100,10 @@ function SearchInner() {
     <Shell>
       <header className="mb-7">
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-ink-soft)]">
-          Find people
+          {t("search.eyebrow")}
         </p>
         <h1 className="mt-2 font-[family-name:var(--font-display)] text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-tight tracking-tight">
-          Who do you want to follow?
+          {t("search.heading")}
         </h1>
       </header>
 
@@ -118,14 +121,14 @@ function SearchInner() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoFocus
-          placeholder="Search by handle or name"
-          aria-label="Search users"
+          placeholder={t("search.placeholder")}
+          aria-label={t("search.aria")}
           className="block h-14 w-full rounded-2xl border-[1.5px] border-[color:var(--color-border-strong)] bg-white pl-12 pr-4 text-[1rem] outline-none transition-colors duration-150 placeholder:text-[color:var(--color-ink-soft)]/55 focus:border-[color:var(--color-saffron-deep)]"
         />
       </div>
 
       <p className="mt-2 text-[0.78rem] text-[color:var(--color-ink-soft)]">
-        Start typing. We match handle and display name.
+        {t("search.hint")}
       </p>
 
       <section className="mt-8">
@@ -209,20 +212,21 @@ function Avatar({ src, fallback }: { src?: string | null; fallback: string }) {
 }
 
 function PromptState() {
+  const { t } = useI18n();
   return (
     <div className="rounded-2xl border-[1.5px] border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper-2)]/40 px-6 py-10 text-center">
       <p className="font-[family-name:var(--font-display)] text-[1.05rem] font-semibold leading-tight text-[color:var(--color-ink)]">
-        Type at least 2 letters.
+        {t("search.prompt.title")}
       </p>
       <p className="mx-auto mt-2 max-w-[40ch] text-[0.88rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-        Or jump into the global feed to find people by what they share.
+        {t("search.prompt.body")}
       </p>
       <p className="mt-4 text-[0.84rem]">
         <Link
           href="/discover"
           className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4"
         >
-          Open Discover
+          {t("search.prompt.discover")}
         </Link>
       </p>
     </div>
@@ -230,13 +234,14 @@ function PromptState() {
 }
 
 function NoResults({ query }: { query: string }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-2xl border-[1.5px] border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper-2)]/40 px-6 py-10 text-center">
       <p className="font-[family-name:var(--font-display)] text-[1.05rem] font-semibold leading-tight text-[color:var(--color-ink)]">
-        Nobody matched “{query}”.
+        {t("search.empty.title", { query })}
       </p>
       <p className="mx-auto mt-2 max-w-[40ch] text-[0.88rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-        Try a different spelling, or look in Discover for who's posting now.
+        {t("search.empty.body")}
       </p>
     </div>
   );

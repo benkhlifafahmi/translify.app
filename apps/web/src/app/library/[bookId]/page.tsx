@@ -661,7 +661,7 @@ function BookHeader({
               onClick={() => setLangOpen((o) => !o)}
               aria-haspopup="dialog"
               aria-expanded={langOpen}
-              title="Languages & translations"
+              title={t("reader.langTitle")}
               className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold transition-all hover:-translate-y-[1px] sm:h-9 sm:px-3.5 ${
                 langOpen
                   ? "border-[color:var(--color-plum)] text-[color:var(--color-plum)]"
@@ -673,7 +673,7 @@ function BookHeader({
                 <path d="M2 12h20" />
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
               </svg>
-              <span className="hidden sm:inline">Languages</span>
+              <span className="hidden sm:inline">{t("reader.languages")}</span>
             </button>
             {langOpen && (
               <div className="absolute right-0 top-[calc(100%+8px)] z-[60] max-h-[72vh] w-[min(92vw,340px)] overflow-y-auto rounded-2xl border border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)] shadow-[0_24px_48px_-16px_rgba(20,16,8,0.45)] ring-1 ring-black/5">
@@ -686,12 +686,12 @@ function BookHeader({
         {/* Garden chip — quick step out to this book's reading garden. */}
         <Link
           href={`/garden/${book.id}`}
-          aria-label="Open this book's garden"
-          title="Open this book's garden"
+          aria-label={t("reader.gardenOpen")}
+          title={t("reader.gardenOpen")}
           className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-2.5 text-xs font-semibold text-[color:var(--color-ink-soft)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-sage)] hover:text-[color:var(--color-sage-deep)] sm:h-9 sm:px-3.5"
         >
           <span aria-hidden>🌿</span>
-          <span className="hidden sm:inline">Garden</span>
+          <span className="hidden sm:inline">{t("app.tab.garden") || "Garden"}</span>
         </Link>
       </div>
     </header>
@@ -757,7 +757,7 @@ function PaperTabBar({
   const { t } = useI18n();
   return (
     <nav
-      aria-label="Reading tools"
+      aria-label={t("reader.tools")}
       className="relative shrink-0 border-t border-[color:var(--color-border)] bg-[color:var(--color-paper)]/85 backdrop-blur"
       style={{
         paddingBottom: "max(env(safe-area-inset-bottom), 0px)",
@@ -876,6 +876,7 @@ function MobileDrawer({
   tone: "sage" | "saffron" | "coral" | "plum";
   children: React.ReactNode;
 }) {
+  const { t } = useI18n();
   // Lock body scroll when open.
   useEffect(() => {
     if (!open) return;
@@ -913,7 +914,7 @@ function MobileDrawer({
       {/* Backdrop */}
       <button
         type="button"
-        aria-label="Close panel"
+        aria-label={t("reader.closePanel")}
         onClick={onClose}
         className="absolute inset-0 bg-[color:var(--color-ink)]/40 backdrop-blur-[1.5px]"
       />
@@ -947,7 +948,7 @@ function MobileDrawer({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("common.close")}
             className="grid h-8 w-8 place-items-center rounded-full text-[color:var(--color-ink-soft)] hover:bg-[color:var(--color-paper-2)] hover:text-[color:var(--color-ink)]"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">

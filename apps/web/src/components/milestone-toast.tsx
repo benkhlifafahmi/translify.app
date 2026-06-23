@@ -23,24 +23,26 @@ import {
   shareMilestone,
   type Milestone,
 } from "@/lib/social";
+import { useI18n } from "@/lib/i18n";
 
 const KIND_META: Record<
   string,
-  { label: string; icon: string; valueKey?: string }
+  { labelKey: string; icon: string; valueKey?: string }
 > = {
-  first_book_finished: { label: "First book finished", icon: "📖" },
-  book_finished: { label: "Book finished", icon: "📖" },
-  streak_7: { label: "7-day reading streak", icon: "🔥", valueKey: "days" },
-  streak_30: { label: "30-day reading streak", icon: "🔥", valueKey: "days" },
-  streak_100: { label: "100-day reading streak", icon: "🔥", valueKey: "days" },
-  words_100: { label: "100 words translated", icon: "✦", valueKey: "count" },
-  words_500: { label: "500 words translated", icon: "✦", valueKey: "count" },
-  words_1000: { label: "1000 words translated", icon: "✦", valueKey: "count" },
-  quiz_perfect: { label: "Perfect quiz score", icon: "★" },
-  garden_bloom: { label: "Garden bloomed", icon: "❀" },
+  first_book_finished: { labelKey: "milestone.kind.first_book_finished", icon: "📖" },
+  book_finished: { labelKey: "milestone.kind.book_finished", icon: "📖" },
+  streak_7: { labelKey: "milestone.kind.streak_7", icon: "🔥", valueKey: "days" },
+  streak_30: { labelKey: "milestone.kind.streak_30", icon: "🔥", valueKey: "days" },
+  streak_100: { labelKey: "milestone.kind.streak_100", icon: "🔥", valueKey: "days" },
+  words_100: { labelKey: "milestone.kind.words_100", icon: "✦", valueKey: "count" },
+  words_500: { labelKey: "milestone.kind.words_500", icon: "✦", valueKey: "count" },
+  words_1000: { labelKey: "milestone.kind.words_1000", icon: "✦", valueKey: "count" },
+  quiz_perfect: { labelKey: "milestone.kind.quiz_perfect", icon: "★" },
+  garden_bloom: { labelKey: "milestone.kind.garden_bloom", icon: "❀" },
 };
 
 export function MilestoneToast() {
+  const { t, tn } = useI18n();
   const [pending, setPending] = useState<Milestone[]>([]);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
@@ -72,9 +74,10 @@ export function MilestoneToast() {
   if (!current) return null;
 
   const meta = KIND_META[current.kind] ?? {
-    label: "Milestone",
+    labelKey: "milestone.fallback",
     icon: "✦",
   };
+  const metaLabel = t(meta.labelKey);
   const value =
     meta.valueKey && typeof current.context[meta.valueKey] === "number"
       ? (current.context[meta.valueKey] as number)
@@ -83,7 +86,7 @@ export function MilestoneToast() {
     typeof current.context.book_title === "string"
       ? (current.context.book_title as string)
       : null;
-  const labelLine = bookTitle ? `${meta.label}: ${bookTitle}` : meta.label;
+  const labelLine = bookTitle ? `${metaLabel}: ${bookTitle}` : metaLabel;
 
   const advance = () => {
     setPending((q) => q.slice(1));
@@ -105,7 +108,7 @@ export function MilestoneToast() {
         window.location.href = "/onboarding";
         return;
       }
-      setError("Couldn't share that. Try again in a moment.");
+      setError(t("milestone.shareError"));
     } finally {
       setBusy(false);
       inFlight.current = false;
@@ -127,7 +130,7 @@ export function MilestoneToast() {
     <div
       role="dialog"
       aria-live="polite"
-      aria-label="Milestone earned"
+      aria-label={t("milestone.aria")}
       className="lumi-bubble-in fixed bottom-4 left-1/2 z-40 w-[calc(100%-2rem)] -translate-x-1/2 sm:bottom-6 sm:left-auto sm:right-6 sm:w-[22rem] sm:translate-x-0"
     >
       <div
@@ -139,7 +142,7 @@ export function MilestoneToast() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[color:var(--color-saffron-deep)]">
-              Milestone unlocked
+              {t("milestone.unlocked")}
             </p>
             <p className="mt-0.5 truncate font-[family-name:var(--font-display)] text-[1.05rem] font-semibold leading-tight tracking-tight text-[color:var(--color-ink)]">
               {value !== null ? `${value} · ` : ""}
@@ -149,14 +152,14 @@ export function MilestoneToast() {
         </div>
 
         <p className="mt-4 text-[0.86rem] leading-snug text-[color:var(--color-ink-soft)]">
-          Share this to your profile?
+          {t("milestone.sharePrompt")}
         </p>
 
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value.slice(0, 280))}
           rows={2}
-          placeholder="Add a note (optional)"
+          placeholder={t("milestone.notePlaceholder")}
           className="mt-2 w-full resize-none rounded-xl border-[1.5px] border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3 py-2 text-[0.86rem] leading-snug outline-none transition-colors duration-150 placeholder:text-[color:var(--color-ink-soft)]/55 focus:border-[color:var(--color-saffron-deep)]"
         />
 
@@ -173,7 +176,7 @@ export function MilestoneToast() {
             disabled={busy}
             className="text-[0.84rem] font-semibold text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-4 transition-colors duration-150 hover:text-[color:var(--color-ink)] disabled:opacity-40"
           >
-            Not now
+            {t("milestone.notNow")}
           </button>
           <button
             type="button"
@@ -181,13 +184,13 @@ export function MilestoneToast() {
             disabled={busy}
             className="inline-flex h-10 items-center gap-2 rounded-full bg-[color:var(--color-ink)] px-5 text-[0.9rem] font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_8px_18px_-8px_rgba(20,16,8,0.4)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[1px] active:scale-[0.97] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {busy ? "Sharing…" : "Share"}
+            {busy ? t("common.sharing") : t("milestone.share")}
           </button>
         </div>
 
         {pending.length > 1 && (
           <p className="mt-3 text-center text-[0.74rem] text-[color:var(--color-ink-soft)]">
-            +{pending.length - 1} more milestone{pending.length - 1 === 1 ? "" : "s"} after this
+            {tn("milestone.more", pending.length - 1)}
           </p>
         )}
       </div>

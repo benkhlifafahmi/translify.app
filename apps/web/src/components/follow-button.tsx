@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { ApiError, getToken } from "@/lib/api";
 import { me } from "@/lib/auth";
 import { followUser, unfollowUser } from "@/lib/social";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   targetUserId: string;
@@ -30,6 +31,7 @@ export function FollowButton({
   initialFollowing,
   initialFollowerCount,
 }: Props) {
+  const { t, tn } = useI18n();
   const router = useRouter();
   const [following, setFollowing] = useState(initialFollowing);
   const [followerCount, setFollowerCount] = useState(initialFollowerCount);
@@ -64,11 +66,11 @@ export function FollowButton({
             <path d="M12 20h9" />
             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
           </svg>
-          Edit profile
+          {t("follow.editProfile")}
         </Link>
         <p className="text-[0.84rem] text-[color:var(--color-ink-soft)]">
           <span className="font-semibold text-[color:var(--color-ink)]">{followerCount}</span>{" "}
-          {followerCount === 1 ? "follower" : "followers"}
+          {tn("follow.followers", followerCount)}
         </p>
       </div>
     );
@@ -118,11 +120,11 @@ export function FollowButton({
             : "inline-flex h-10 items-center rounded-full bg-[color:var(--color-ink)] px-5 text-[0.92rem] font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_8px_18px_-8px_rgba(20,16,8,0.4)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[1px] active:scale-[0.97] active:translate-y-0 disabled:opacity-50"
         }
       >
-        {following ? "Following" : "Follow"}
+        {following ? t("follow.following") : t("follow.follow")}
       </button>
       <p className="text-[0.84rem] text-[color:var(--color-ink-soft)]">
         <span className="font-semibold text-[color:var(--color-ink)]">{followerCount}</span>{" "}
-        {followerCount === 1 ? "follower" : "followers"}
+        {tn("follow.followers", followerCount)}
       </p>
     </div>
   );

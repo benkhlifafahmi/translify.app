@@ -8,8 +8,10 @@
 import { Lumi } from "./lumi";
 import { useLumi } from "./lumi-context";
 import { LEVEL_TITLES, xpToNextLevel } from "@/lib/lumi-progress";
+import { useI18n } from "@/lib/i18n";
 
 export function LumiHud() {
+  const { t } = useI18n();
   const { progress } = useLumi();
   const xpInfo = xpToNextLevel(progress);
   const title = LEVEL_TITLES[progress.level];
@@ -30,7 +32,7 @@ export function LumiHud() {
       <div className="flex min-w-0 flex-col">
         <div className="flex items-baseline gap-2">
           <span className="font-[family-name:var(--font-display)] text-[13px] font-semibold leading-tight text-[color:var(--color-ink)]">
-            Lv {progress.level}
+            {t("lumi.levelShort", { level: progress.level })}
           </span>
           <span className="truncate text-[10px] font-medium uppercase tracking-[0.1em] text-[color:var(--color-ink-soft)]">
             {title}
@@ -46,7 +48,7 @@ export function LumiHud() {
             />
           </div>
           <span className="font-mono text-[10px] tabular-nums text-[color:var(--color-ink-soft)]">
-            {xpInfo ? `${progress.xp}/${xpInfo.next}` : `${progress.xp} · MAX`}
+            {xpInfo ? `${progress.xp}/${xpInfo.next}` : t("lumi.xpMax", { xp: progress.xp })}
           </span>
         </div>
       </div>

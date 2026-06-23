@@ -10,6 +10,7 @@ import { getGoogleAuthUrl, startAnonymousSession } from "@/lib/auth";
 import { cloneSeed, listSeeds, type Seed } from "@/lib/seeds";
 import { Lumi } from "@/components/lumi/lumi";
 import { TranslifyIcon } from "@/components/translify-mark";
+import { useI18n } from "@/lib/i18n";
 
 // ─── Study subjects → one real open-access textbook each ──────────────────────
 // Slugs mirror app/seeds/catalog.py. Books are hosted and read as-is (no live
@@ -20,7 +21,8 @@ type Tone = "saffron" | "sage" | "coral" | "plum";
 
 interface Subject {
   id: string;
-  label: string;
+  /** i18n key for the subject's display label (resolved at render). */
+  labelKey: string;
   icon: string;
   slug: string;
   book: string;
@@ -29,14 +31,14 @@ interface Subject {
 }
 
 const SUBJECTS: Subject[] = [
-  { id: "cs",         label: "Computer Science", icon: "💻", slug: "dive-into-deep-learning",          book: "Dive into Deep Learning",    author: "Zhang, Lipton, Li, Smola", tone: "plum"    },
-  { id: "biology",    label: "Biology",          icon: "🧬", slug: "openstax-biology-2e",              book: "Biology 2e",                 author: "OpenStax",                 tone: "sage"    },
-  { id: "chemistry",  label: "Chemistry",        icon: "⚗️", slug: "openstax-chemistry-2e",            book: "Chemistry 2e",               author: "OpenStax",                 tone: "coral"   },
-  { id: "physics",    label: "Physics",          icon: "🔭", slug: "openstax-university-physics-1",    book: "University Physics, Vol. 1", author: "OpenStax",                 tone: "saffron" },
-  { id: "calculus",   label: "Calculus",         icon: "📐", slug: "openstax-calculus-1",              book: "Calculus, Vol. 1",           author: "OpenStax",                 tone: "plum"    },
-  { id: "statistics", label: "Statistics",       icon: "📊", slug: "openstax-intro-statistics",        book: "Introductory Statistics",    author: "OpenStax",                 tone: "sage"    },
-  { id: "economics",  label: "Economics",        icon: "📈", slug: "openstax-principles-economics-2e", book: "Principles of Economics 2e", author: "OpenStax",                 tone: "coral"   },
-  { id: "psychology", label: "Psychology",       icon: "🧠", slug: "openstax-psychology-2e",           book: "Psychology 2e",              author: "OpenStax",                 tone: "saffron" },
+  { id: "cs",         labelKey: "join.subj.cs",         icon: "💻", slug: "dive-into-deep-learning",          book: "Dive into Deep Learning",    author: "Zhang, Lipton, Li, Smola", tone: "plum"    },
+  { id: "biology",    labelKey: "join.subj.biology",    icon: "🧬", slug: "openstax-biology-2e",              book: "Biology 2e",                 author: "OpenStax",                 tone: "sage"    },
+  { id: "chemistry",  labelKey: "join.subj.chemistry",  icon: "⚗️", slug: "openstax-chemistry-2e",            book: "Chemistry 2e",               author: "OpenStax",                 tone: "coral"   },
+  { id: "physics",    labelKey: "join.subj.physics",    icon: "🔭", slug: "openstax-university-physics-1",    book: "University Physics, Vol. 1", author: "OpenStax",                 tone: "saffron" },
+  { id: "calculus",   labelKey: "join.subj.calculus",   icon: "📐", slug: "openstax-calculus-1",              book: "Calculus, Vol. 1",           author: "OpenStax",                 tone: "plum"    },
+  { id: "statistics", labelKey: "join.subj.statistics", icon: "📊", slug: "openstax-intro-statistics",        book: "Introductory Statistics",    author: "OpenStax",                 tone: "sage"    },
+  { id: "economics",  labelKey: "join.subj.economics",  icon: "📈", slug: "openstax-principles-economics-2e", book: "Principles of Economics 2e", author: "OpenStax",                 tone: "coral"   },
+  { id: "psychology", labelKey: "join.subj.psychology", icon: "🧠", slug: "openstax-psychology-2e",           book: "Psychology 2e",              author: "OpenStax",                 tone: "saffron" },
 ];
 
 const TONE: Record<Tone, { ring: string; bg: string; tile: string; tileFg: string }> = {
@@ -74,6 +76,7 @@ const SFX = {
 export function JoinClient() {
   const router = useRouter();
   const posthog = usePostHog();
+  const { t } = useI18n();
   const startedRef = useRef(false);
 
   const [opening, setOpening] = useState<string | null>(null);
@@ -110,8 +113,8 @@ export function JoinClient() {
       SFX.error();
       setErr(
         e instanceof ApiError && e.status === 404
-          ? `${subject.label} is being added. Check back soon, or pick another subject.`
-          : "Couldn't open that book. Check your connection and try again.",
+          ? t("join.subj.errAdding", { subject: t(subject.labelKey) })
+          : t("join.subj.errOpen"),
       );
       setOpening(null);
     }
@@ -137,24 +140,23 @@ export function JoinClient() {
           </span>
         </Link>
         <Link href="/login" className="text-[0.82rem] font-semibold" style={{ color: "var(--color-ink-soft)" }}>
-          Log in
+          {t("nav.login")}
         </Link>
       </header>
 
       <main className="relative z-10 mx-auto w-full max-w-md px-4 pb-16 pt-5 sm:max-w-lg sm:pt-8">
         <section className="text-center">
           <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em]" style={{ color: "var(--color-sage-deep)" }}>
-            Free · no card to start
+            {t("join.subj.eyebrow")}
           </p>
           <h1
             className="mt-2 font-[family-name:var(--font-display)] font-semibold leading-[1.05] tracking-tight"
             style={{ fontSize: "clamp(1.85rem,6vw,2.5rem)", color: "var(--color-ink)" }}
           >
-            Pick your subject. Start studying.
+            {t("join.subj.title")}
           </h1>
           <p className="mx-auto mt-3 max-w-[34ch] text-[0.95rem] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-            Tap a subject and jump straight into a real textbook. Ask it anything with cited
-            answers, quiz yourself, and drill flashcards.
+            {t("join.subj.subtitle")}
           </p>
         </section>
 
@@ -186,7 +188,7 @@ export function JoinClient() {
                   {subject.icon}
                 </span>
                 <span className="font-[family-name:var(--font-display)] text-[1rem] font-semibold leading-tight" style={{ color: "var(--color-ink)" }}>
-                  {subject.label}
+                  {t(subject.labelKey)}
                 </span>
                 <span className="min-h-[2.4em] text-[0.74rem] leading-snug" style={{ color: "var(--color-ink-soft)" }}>
                   {subject.book}
@@ -196,7 +198,7 @@ export function JoinClient() {
 
                 {soon ? (
                   <span className="mt-0.5 rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-[0.1em]" style={{ background: "rgba(74,60,30,0.10)", color: "var(--color-ink-soft)" }}>
-                    Soon
+                    {t("join.subj.soon")}
                   </span>
                 ) : (
                   <span
@@ -228,22 +230,22 @@ export function JoinClient() {
         )}
 
         <p className="mt-6 text-center text-[0.78rem]" style={{ color: "var(--color-ink-soft)" }}>
-          No card, no email yet. One tap to start studying.
+          {t("join.subj.noCard")}
         </p>
 
         <div className="mt-9">
           <div className="relative flex items-center" role="separator" aria-hidden>
             <span className="flex-1 border-t" style={{ borderColor: "var(--color-border)" }} />
             <span className="mx-3 text-[0.7rem] font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--color-ink-soft)" }}>
-              or sign up
+              {t("join.subj.orSignUp")}
             </span>
             <span className="flex-1 border-t" style={{ borderColor: "var(--color-border)" }} />
           </div>
           <div className="mt-5">
-            <GoogleButton label="Sign up with Google" />
+            <GoogleButton label={t("join.subj.google")} />
           </div>
           <p className="mt-3 text-center text-[0.76rem]" style={{ color: "var(--color-ink-soft)" }}>
-            Bring your own PDF or EPUB after you sign up.
+            {t("join.subj.byo")}
           </p>
         </div>
       </main>
@@ -258,7 +260,8 @@ export function JoinClient() {
 }
 
 // ─── Google sign-up ───────────────────────────────────────────────────────────
-function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
+function GoogleButton({ label }: { label: string }) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const posthog = usePostHog();
 
@@ -291,7 +294,7 @@ function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
       ) : (
         <GoogleLogo />
       )}
-      {loading ? "Redirecting" : label}
+      {loading ? t("join.subj.redirecting") : label}
     </button>
   );
 }

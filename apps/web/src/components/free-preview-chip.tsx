@@ -1,5 +1,7 @@
 "use client";
 
+import { useI18n } from "@/lib/i18n";
+
 /**
  * Tiny non-blocking chip that surfaces how many free pages a Free reader has
  * left on a seed book before the paywall modal fires. Renders as a small
@@ -27,6 +29,7 @@ interface Props {
 }
 
 export function FreePreviewChip({ page, cap, threshold = 3, hidden }: Props) {
+  const { t, tn } = useI18n();
   if (hidden) return null;
   if (!Number.isFinite(cap)) return null;
   const remaining = cap - page;
@@ -34,12 +37,7 @@ export function FreePreviewChip({ page, cap, threshold = 3, hidden }: Props) {
   if (remaining > threshold) return null; // too early — no nag yet
 
   const urgent = remaining <= 1;
-  const label =
-    remaining === 0
-      ? "Last free page"
-      : remaining === 1
-        ? "1 free page left"
-        : `${remaining} free pages left`;
+  const label = remaining === 0 ? t("preview.last") : tn("preview.left", remaining);
 
   return (
     <div
@@ -56,7 +54,7 @@ export function FreePreviewChip({ page, cap, threshold = 3, hidden }: Props) {
             : "1.5px solid var(--color-border-strong)",
           boxShadow: "0 4px 12px -4px rgba(20,16,8,0.30)",
         }}
-        title="Upgrade to keep reading after the free preview"
+        title={t("preview.tip")}
       >
         <span
           aria-hidden

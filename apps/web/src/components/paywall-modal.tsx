@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Lumi } from "@/components/lumi/lumi";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   open: boolean;
@@ -24,6 +25,7 @@ interface Props {
  */
 export function PaywallModal({ open, page, cap = 10, bookTitle, onClose }: Props) {
   const router = useRouter();
+  const { t } = useI18n();
 
   // Lock body scroll while the modal is open.
   useEffect(() => {
@@ -43,7 +45,7 @@ export function PaywallModal({ open, page, cap = 10, bookTitle, onClose }: Props
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Upgrade to keep reading"
+      aria-label={t("paywall.aria")}
       className="fixed inset-0 z-[60] flex items-end justify-center p-0 sm:items-center sm:p-6"
       style={{ background: "rgba(20,16,8,0.55)", backdropFilter: "blur(6px)" }}
       onClick={onClose}
@@ -67,7 +69,7 @@ export function PaywallModal({ open, page, cap = 10, bookTitle, onClose }: Props
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t("common.close")}
           className="absolute end-3 top-3 grid h-9 w-9 place-items-center rounded-full transition-all active:scale-90"
           style={{
             background: "white",
@@ -89,30 +91,39 @@ export function PaywallModal({ open, page, cap = 10, bookTitle, onClose }: Props
             className="mt-5 text-center text-[0.72rem] font-bold uppercase tracking-[0.22em]"
             style={{ color: "var(--color-saffron-deep)" }}
           >
-            Keep reading
+            {t("paywall.eyebrow")}
           </p>
           <h2
             className="mt-1.5 text-balance text-center font-[family-name:var(--font-display)] font-semibold leading-[1.1] tracking-tight"
             style={{ fontSize: "clamp(1.5rem,5.2vw,1.85rem)", color: "var(--color-ink)" }}
           >
-            You&apos;ve read the first {cap} pages free.
+            {t("paywall.title", { cap })}
           </h2>
           <p
             className="mx-auto mt-3 max-w-[30ch] text-balance text-center text-[0.94rem] leading-relaxed"
             style={{ color: "var(--color-ink-soft)" }}
           >
             {bookTitle
-              ? <>To carry on with <em style={{ color: "var(--color-ink)" }}>{bookTitle}</em> — and to read every book in your library — start a free 14-day Reader trial.</>
-              : "Start a free 14-day Reader trial to keep going — every book in your library, unlocked."}
+              ? (() => {
+                  const [before, after] = t("paywall.bodyTitled", { title: "@@T@@" }).split("@@T@@");
+                  return (
+                    <>
+                      {before}
+                      <em style={{ color: "var(--color-ink)" }}>{bookTitle}</em>
+                      {after}
+                    </>
+                  );
+                })()
+              : t("paywall.body")}
           </p>
 
           {/* Trial benefits — short and benefit-led */}
           <ul className="mt-5 flex flex-col gap-2 rounded-2xl border-2 p-4" style={{ borderColor: "var(--color-border)", background: "var(--color-paper)" }}>
             {[
-              "Read every book — no page limits",
-              "Chat with any book, with cited answers",
-              "Smart quizzes that stick",
-              "Cancel any time, no card needed today",
+              t("paywall.benefit1"),
+              t("paywall.benefit2"),
+              t("paywall.benefit3"),
+              t("paywall.benefit4"),
             ].map((b, i) => (
               <li key={i} className="flex items-start gap-2.5 text-[0.88rem]" style={{ color: "var(--color-ink)" }}>
                 <span
@@ -137,7 +148,7 @@ export function PaywallModal({ open, page, cap = 10, bookTitle, onClose }: Props
               boxShadow: "0 6px 0 rgba(152,96,24,0.50)",
             }}
           >
-            Start my 14-day trial →
+            {t("paywall.cta")}
           </button>
 
           <button
@@ -146,12 +157,12 @@ export function PaywallModal({ open, page, cap = 10, bookTitle, onClose }: Props
             className="mt-3 h-11 w-full rounded-2xl text-[0.88rem] font-semibold transition-colors"
             style={{ color: "var(--color-ink-soft)" }}
           >
-            Maybe later — take me back to the shelf
+            {t("paywall.later")}
           </button>
 
           {typeof page === "number" && (
             <p className="mt-3 text-center text-[0.72rem]" style={{ color: "var(--color-ink-soft)" }}>
-              Page {page} of this book is past the free preview.
+              {t("paywall.pageNote", { page })}
             </p>
           )}
         </div>

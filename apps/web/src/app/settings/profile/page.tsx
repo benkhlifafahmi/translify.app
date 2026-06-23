@@ -12,6 +12,7 @@ import {
 } from "@/lib/social";
 import { AvatarPicker } from "@/components/avatar-picker";
 import { MarketingHeader } from "@/components/marketing-header";
+import { useI18n } from "@/lib/i18n";
 
 /**
  * Public-profile settings. Claim a handle, write a bio, set the public
@@ -22,6 +23,7 @@ import { MarketingHeader } from "@/components/marketing-header";
  * surfaces that as a link to /onboarding.
  */
 export default function SocialProfileSettings() {
+  const { t } = useI18n();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<PublicProfile | null>(null);
@@ -85,9 +87,9 @@ export default function SocialProfileSettings() {
     } catch (err) {
       if (err instanceof ApiError) {
         const detail = err.body as { detail?: string } | null;
-        setUsernameError(detail?.detail ?? "Couldn't claim that handle.");
+        setUsernameError(detail?.detail ?? t("profile.claimFailed"));
       } else {
-        setUsernameError("Couldn't reach the server. Try again in a moment.");
+        setUsernameError(t("profile.serverUnreachableRetry"));
       }
     } finally {
       setSavingHandle(false);
@@ -110,8 +112,8 @@ export default function SocialProfileSettings() {
     } catch (err) {
       setMetaError(
         err instanceof ApiError
-          ? "Couldn't save your profile. Try again."
-          : "Couldn't reach the server.",
+          ? t("profile.saveFailed")
+          : t("profile.serverUnreachable"),
       );
     } finally {
       setSavingMeta(false);
@@ -123,7 +125,7 @@ export default function SocialProfileSettings() {
       <>
         <MarketingHeader compact />
         <main className="mx-auto max-w-2xl px-6 py-16">
-          <p className="text-[color:var(--color-ink-soft)]">Loading your profile…</p>
+          <p className="text-[color:var(--color-ink-soft)]">{t("profile.loading")}</p>
         </main>
       </>
     );
@@ -138,15 +140,13 @@ export default function SocialProfileSettings() {
       <main className="mx-auto max-w-2xl px-5 py-12 sm:px-6 lg:py-16">
         <header className="mb-10">
           <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-ink-soft)]">
-            Your public profile
+            {t("profile.eyebrow")}
           </p>
           <h1 className="mt-2 font-[family-name:var(--font-display)] text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-tight tracking-tight">
-            {claimed ? "Your handle is yours." : "Pick a handle."}
+            {claimed ? t("profile.titleClaimed") : t("profile.titleUnclaimed")}
           </h1>
           <p className="mt-3 max-w-[55ch] text-[0.95rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-            This is the page people see when you share a sentence, a word, or
-            a milestone. You can change the bio and avatar anytime. The handle
-            is forever.
+            {t("profile.lede")}
           </p>
           {claimed && (
             <p className="mt-3 text-sm">
@@ -154,7 +154,7 @@ export default function SocialProfileSettings() {
                 href={`/u/${encodeURIComponent(profile!.username!)}`}
                 className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4"
               >
-                See your profile, @{profile!.username}
+                {t("profile.seeYourProfile", { username: profile!.username! })}
               </Link>
             </p>
           )}
@@ -163,14 +163,14 @@ export default function SocialProfileSettings() {
         {/* Handle */}
         <section className="mb-12">
           <h2 className="font-[family-name:var(--font-display)] text-[1.15rem] font-semibold tracking-tight">
-            Handle
+            {t("profile.handleHeading")}
           </h2>
           <form onSubmit={onClaim} className="mt-4 flex flex-col gap-3">
             <label
               htmlFor="username"
               className="text-[0.85rem] font-semibold text-[color:var(--color-ink)]"
             >
-              Username
+              {t("profile.usernameLabel")}
             </label>
             <div className="flex items-stretch overflow-hidden rounded-2xl border-[1.5px] border-[color:var(--color-border-strong)] bg-white focus-within:border-[color:var(--color-saffron-deep)]">
               <span className="grid place-items-center px-3.5 text-[0.95rem] font-semibold text-[color:var(--color-ink-soft)]">
@@ -181,7 +181,7 @@ export default function SocialProfileSettings() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase())}
                 disabled={claimed || savingHandle}
-                placeholder="bfahmi"
+                placeholder={t("profile.usernamePlaceholder")}
                 minLength={3}
                 maxLength={20}
                 pattern="[a-z0-9_]+"
@@ -191,8 +191,7 @@ export default function SocialProfileSettings() {
               />
             </div>
             <p className="text-[0.78rem] text-[color:var(--color-ink-soft)]">
-              3 to 20 characters. Lowercase letters, numbers, and underscores.
-              Handles cannot be changed once claimed.
+              {t("profile.usernameHelp")}
             </p>
             {usernameError && (
               <div
@@ -212,12 +211,12 @@ export default function SocialProfileSettings() {
                 disabled={savingHandle || username.length < 3}
                 className="self-start inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-ink)] px-6 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.4)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[2px] active:scale-[0.97] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
               >
-                {savingHandle ? "Claiming…" : "Claim handle"}
+                {savingHandle ? t("profile.claiming") : t("profile.claimHandle")}
               </button>
             )}
             {savedFlash === "handle" && (
               <p className="text-[0.85rem] font-semibold text-[color:var(--color-sage-deep)]">
-                ✓ Handle saved.
+                {t("profile.handleSaved")}
               </p>
             )}
           </form>
@@ -226,12 +225,12 @@ export default function SocialProfileSettings() {
         {/* Bio + avatar + visibility */}
         <section>
           <h2 className="font-[family-name:var(--font-display)] text-[1.15rem] font-semibold tracking-tight">
-            Bio and avatar
+            {t("profile.bioHeading")}
           </h2>
           <form onSubmit={onSaveMeta} className="mt-4 flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="bio" className="text-[0.85rem] font-semibold text-[color:var(--color-ink)]">
-                Bio
+                {t("profile.bioLabel")}
               </label>
               <textarea
                 id="bio"
@@ -239,11 +238,11 @@ export default function SocialProfileSettings() {
                 onChange={(e) => setBio(e.target.value.slice(0, 160))}
                 rows={3}
                 maxLength={160}
-                placeholder="A line or two about what you read."
+                placeholder={t("profile.bioPlaceholder")}
                 className="resize-none rounded-2xl border-[1.5px] border-[color:var(--color-border-strong)] bg-white px-4 py-3 text-[0.98rem] outline-none transition-colors duration-150 placeholder:text-[color:var(--color-ink-soft)]/55 focus:border-[color:var(--color-saffron-deep)]"
               />
               <p className="text-end text-[0.74rem] text-[color:var(--color-ink-soft)]">
-                {charsLeft} characters left
+                {t("profile.charsLeft", { count: charsLeft })}
               </p>
             </div>
 
@@ -264,11 +263,10 @@ export default function SocialProfileSettings() {
               />
               <span>
                 <span className="block text-[0.92rem] font-semibold text-[color:var(--color-ink)]">
-                  Public profile
+                  {t("profile.publicLabel")}
                 </span>
                 <span className="mt-0.5 block text-[0.82rem] text-[color:var(--color-ink-soft)]">
-                  When off, your /@handle page returns 404 to everyone except
-                  you. Your existing public posts stay private with you.
+                  {t("profile.publicDescription")}
                 </span>
               </span>
             </label>
@@ -292,11 +290,11 @@ export default function SocialProfileSettings() {
                 disabled={savingMeta}
                 className="inline-flex h-12 items-center gap-2 rounded-full bg-[color:var(--color-saffron)] px-6 font-semibold text-[color:var(--color-accent-foreground)] shadow-[0_2px_0_rgba(140,90,30,0.5),0_10px_22px_-8px_rgba(200,137,62,0.6)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[2px] active:scale-[0.97] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {savingMeta ? "Saving…" : "Save changes"}
+                {savingMeta ? t("profile.saving") : t("profile.saveChanges")}
               </button>
               {savedFlash === "meta" && (
                 <p className="text-[0.85rem] font-semibold text-[color:var(--color-sage-deep)]">
-                  ✓ Saved.
+                  {t("profile.metaSaved")}
                 </p>
               )}
             </div>

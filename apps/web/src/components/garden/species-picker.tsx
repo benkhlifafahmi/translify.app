@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SPECIES, type SpeciesId } from "@/lib/garden";
+import { useI18n } from "@/lib/i18n";
 import { PlantSvg } from "./plant-svg";
 
 interface SpeciesPickerProps {
@@ -10,6 +11,7 @@ interface SpeciesPickerProps {
 }
 
 export function SpeciesPicker({ selected: initial, onSelect }: SpeciesPickerProps) {
+  const { t } = useI18n();
   const [selected, setSelected] = useState<SpeciesId>(initial);
 
   const pick = (id: SpeciesId, unlocked: boolean) => {
@@ -20,9 +22,9 @@ export function SpeciesPicker({ selected: initial, onSelect }: SpeciesPickerProp
 
   return (
     <div>
-      <h3 className="mb-1 font-[family-name:var(--font-display)] text-[22px] italic">Choose a species</h3>
+      <h3 className="mb-1 font-[family-name:var(--font-display)] text-[22px] italic">{t("gmisc.species.heading")}</h3>
       <p className="mb-4 text-[13px] italic text-[color:var(--color-muted-foreground)]">
-        Pick the plant that will grow alongside this book. Each species rewards different reading habits.
+        {t("gmisc.species.subhead")}
       </p>
 
       <div className="grid grid-cols-2 gap-3">
@@ -41,20 +43,20 @@ export function SpeciesPicker({ selected: initial, onSelect }: SpeciesPickerProp
                   : "border-[color:var(--color-border)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)] hover:-translate-y-0.5 hover:shadow-[0_12px_18px_-16px_rgba(60,40,10,0.55)]",
                 !s.unlocked && "cursor-not-allowed opacity-55 hover:translate-y-0 hover:shadow-none",
               ].join(" ")}
-              title={s.blurb}
+              title={t(`gmisc.species.${s.id}.blurb`)}
             >
               <div className="mb-2 flex justify-center">
                 <PlantSvg species={s.id} stage={4} width={48} height={56} />
               </div>
               <div className="font-[family-name:var(--font-display)] text-[15px] italic">
-                {s.name}
+                {t(`gmisc.species.${s.id}.name`)}
               </div>
               <div
                 className={`mt-0.5 text-[10px] uppercase tracking-[0.16em] ${
                   active ? "text-[color:var(--color-paper)]/60" : "text-[color:var(--color-muted-foreground)]"
                 }`}
               >
-                {s.latin}
+                {t(`gmisc.species.${s.id}.latin`)}
               </div>
               {!s.unlocked && (
                 <span className="absolute bottom-1.5 right-1.5 text-[10px] opacity-60">🔒</span>

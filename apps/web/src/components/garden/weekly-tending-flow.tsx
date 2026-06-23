@@ -13,10 +13,12 @@ import {
   type TendingQuestion,
   type TendingResult,
 } from "@/lib/garden";
+import { useI18n } from "@/lib/i18n";
 
 type Phase = "intro" | "asking" | "submitting" | "result";
 
 export function WeeklyTendingFlow({ garden }: { garden: Garden }) {
+  const { t } = useI18n();
   const [phase, setPhase] = useState<Phase>("intro");
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -58,7 +60,7 @@ export function WeeklyTendingFlow({ garden }: { garden: Garden }) {
   if (!questions) {
     return (
       <p className="font-[family-name:var(--font-display)] italic text-[color:var(--color-ink-soft)]">
-        Preparing the questions…
+        {t("tend.preparing")}
       </p>
     );
   }
@@ -99,26 +101,25 @@ export function WeeklyTendingFlow({ garden }: { garden: Garden }) {
 function IntroPanel({
   garden, count, onBegin,
 }: { garden: Garden; count: number; onBegin: () => void }) {
+  const { t } = useI18n();
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      <PlantStage garden={garden} caption="the rite begins" />
+      <PlantStage garden={garden} caption={t("tend.stage.begins")} />
       <div className="flex flex-col justify-center">
         <p className="font-[family-name:var(--font-display)] text-[13px] uppercase tracking-[0.2em] italic text-[color:var(--color-muted-foreground)]">
-          Weekly tending · the rite
+          {t("tend.intro.eyebrow")}
         </p>
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-[clamp(40px,5vw,72px)] font-light italic leading-[1] tracking-[-0.02em]">
-          Five questions stand between you and a thriving plant.
+          {t("tend.intro.title")}
         </h1>
         <p className="mt-5 max-w-[58ch] font-[family-name:var(--font-display)] text-[18px] italic text-[color:var(--color-ink-soft)]">
-          Drawn from the chapters you have read since the last tending. Answer three or more
-          correctly and the watering can fills; miss the mark and {speciesShort(garden)} will
-          begin to wilt before next week's rite.
+          {t("tend.intro.body", { species: speciesShort(garden, t) })}
         </p>
 
         <dl className="mt-7 grid max-w-md grid-cols-3 border-t border-[color:var(--color-border)]">
-          <Stat label="Questions" val={count.toString()} />
-          <Stat label="Time" val="~3 min" mid />
-          <Stat label="Pass" val="3 / 5" />
+          <Stat label={t("tend.intro.stat.questions")} val={count.toString()} />
+          <Stat label={t("tend.intro.stat.time")} val={t("tend.intro.stat.time.val")} mid />
+          <Stat label={t("tend.intro.stat.pass")} val={t("tend.intro.stat.pass.val")} />
         </dl>
 
         <div className="mt-9 flex items-center gap-4">
@@ -127,14 +128,14 @@ function IntroPanel({
             onClick={onBegin}
             className="group inline-flex items-center gap-2.5 rounded-[2px] bg-[color:var(--color-ink)] px-6 py-3.5 font-[family-name:var(--font-display)] text-sm uppercase tracking-[0.16em] text-[color:var(--color-paper)] transition-all hover:translate-x-1 hover:bg-[color:var(--color-sage-deep)]"
           >
-            Begin the rite
+            {t("tend.begin")}
             <span className="transition-transform group-hover:translate-x-1">→</span>
           </button>
           <Link
             href={`/garden/${garden.bookId}`}
             className="font-[family-name:var(--font-display)] text-sm italic text-[color:var(--color-muted-foreground)] underline decoration-dashed underline-offset-4 hover:text-[color:var(--color-ink)]"
           >
-            return to the garden
+            {t("tend.returnToGarden")}
           </Link>
         </div>
       </div>
@@ -154,6 +155,7 @@ function AskingPanel({
   onAnswer: (idx: number) => void;
   onBack: () => void;
 }) {
+  const { t, tn } = useI18n();
   const picked = answers[question.id];
   const progress = ((current + (picked !== undefined ? 1 : 0)) / questions.length) * 100;
 
@@ -161,18 +163,20 @@ function AskingPanel({
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.1fr)]">
       <PlantStage
         garden={garden}
-        caption={submitting ? "the verdict is being weighed…" : `question ${current + 1} of ${questions.length}`}
+        caption={submitting
+          ? t("tend.stage.weighing")
+          : t("tend.stage.question", { current: current + 1, total: questions.length })}
       />
 
       <div className="flex flex-col">
         {/* progress */}
         <div className="mb-3 flex items-center justify-between font-[family-name:var(--font-display)] text-[12px] uppercase tracking-[0.18em] text-[color:var(--color-muted-foreground)]">
           <span>
-            Question {current + 1}
+            {t("tend.progress.question", { n: current + 1 })}
             <span className="mx-2 text-[color:var(--color-border-strong)]">/</span>
             {questions.length}
           </span>
-          <span>{Object.keys(answers).length} answered</span>
+          <span>{tn("tend.progress.answered", Object.keys(answers).length)}</span>
         </div>
         <div className="mb-7 h-[2px] bg-[color:var(--color-paper-3)]">
           <div
@@ -232,11 +236,11 @@ function AskingPanel({
             onClick={onBack}
             className="font-[family-name:var(--font-display)] text-sm italic text-[color:var(--color-muted-foreground)] underline decoration-dashed underline-offset-4 transition-colors hover:text-[color:var(--color-ink)] disabled:cursor-not-allowed disabled:no-underline disabled:opacity-40"
           >
-            ← previous question
+            {t("tend.previousQuestion")}
           </button>
           {picked !== undefined && current === questions.length - 1 && !submitting && (
             <span className="font-[family-name:var(--font-display)] text-[12px] uppercase tracking-[0.18em] italic text-[color:var(--color-muted-foreground)]">
-              weighing your answers…
+              {t("tend.weighingAnswers")}
             </span>
           )}
         </div>
@@ -248,20 +252,21 @@ function AskingPanel({
 function ResultPanel({
   garden, result, questions,
 }: { garden: Garden; result: TendingResult; questions: TendingQuestion[] }) {
-  const flavor = pickFlavor(result);
+  const { t } = useI18n();
+  const flavor = pickFlavor(result, t);
 
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
       <PlantStage
         garden={{ ...garden, stage: result.newStage, vitality: garden.vitality + result.vitalityRestored }}
-        caption={result.passed ? "watered, and growing" : "thirsty, but standing"}
-        stamp={result.passed ? "TENDED" : "MISSED"}
+        caption={result.passed ? t("tend.stage.watered") : t("tend.stage.thirsty")}
+        stamp={result.passed ? t("tend.stamp.tended") : t("tend.stamp.missed")}
         stampWarn={!result.passed}
       />
 
       <div className="flex flex-col">
         <p className="font-[family-name:var(--font-display)] text-[13px] uppercase tracking-[0.2em] italic text-[color:var(--color-muted-foreground)]">
-          The rite · concluded
+          {t("tend.result.eyebrow")}
         </p>
         <h1
           className={[
@@ -289,21 +294,21 @@ function ResultPanel({
                 : "border-[color:var(--color-coral)] bg-[color:var(--color-coral)]/10 text-[color:var(--color-coral-deep)]",
             ].join(" ")}
           >
-            {result.passed ? "passed" : "below threshold"}
+            {result.passed ? t("tend.result.passed") : t("tend.result.belowThreshold")}
           </span>
         </div>
 
         {/* rewards */}
         <dl className="mt-7 grid max-w-md grid-cols-3 border-t border-[color:var(--color-border)]">
-          <Stat label="Growth" val={`+${result.growthGained}%`} />
-          <Stat label="Vitality" val={result.passed ? "full" : `+${result.vitalityRestored}`} mid />
-          <Stat label="Next rite" val="in 7 days" />
+          <Stat label={t("tend.result.stat.growth")} val={`+${result.growthGained}%`} />
+          <Stat label={t("tend.result.stat.vitality")} val={result.passed ? t("tend.result.stat.vitality.full") : `+${result.vitalityRestored}`} mid />
+          <Stat label={t("tend.result.stat.nextRite")} val={t("tend.result.stat.nextRite.val")} />
         </dl>
 
         {/* per-question review */}
         <details className="mt-7 rounded-sm border border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/40">
           <summary className="cursor-pointer list-none px-4 py-3 font-[family-name:var(--font-display)] text-[14px] italic text-[color:var(--color-ink-soft)] transition-colors hover:text-[color:var(--color-ink)]">
-            ※ Review the questions
+            ※ {t("tend.result.review")}
           </summary>
           <ul className="border-t border-dashed border-[color:var(--color-border)]">
             {questions.map((q, i) => {
@@ -336,7 +341,7 @@ function ResultPanel({
                       </p>
                       {!correct && answerIdx !== undefined && answerIdx >= 0 && (
                         <p className="mt-1.5 text-xs italic text-[color:var(--color-muted-foreground)]">
-                          Answer: <span className="text-[color:var(--color-ink)] not-italic">{q.choices[answerIdx]}</span>
+                          {t("tend.result.answer")} <span className="text-[color:var(--color-ink)] not-italic">{q.choices[answerIdx]}</span>
                         </p>
                       )}
                       {explanation && (
@@ -357,14 +362,14 @@ function ResultPanel({
             href={`/garden/${garden.bookId}`}
             className="group inline-flex items-center gap-2.5 rounded-[2px] bg-[color:var(--color-ink)] px-6 py-3.5 font-[family-name:var(--font-display)] text-sm uppercase tracking-[0.16em] text-[color:var(--color-paper)] transition-all hover:translate-x-1 hover:bg-[color:var(--color-sage-deep)]"
           >
-            return to the garden
+            {t("tend.returnToGarden")}
             <span className="transition-transform group-hover:translate-x-1">→</span>
           </Link>
           <Link
             href="/garden"
             className="font-[family-name:var(--font-display)] text-sm italic text-[color:var(--color-muted-foreground)] underline decoration-dashed underline-offset-4 hover:text-[color:var(--color-ink)]"
           >
-            see other gardens
+            {t("tend.seeOtherGardens")}
           </Link>
         </div>
       </div>
@@ -470,28 +475,31 @@ function Stat({ label, val, mid = false }: { label: string; val: string; mid?: b
   );
 }
 
-function pickFlavor(result: TendingResult): { headline: string; body: string } {
+function pickFlavor(
+  result: TendingResult,
+  t: (key: string) => string,
+): { headline: string; body: string } {
   if (result.score === result.total) {
     return {
-      headline: "A perfect tending.",
-      body: "Every stem accounted for. Your plant lifts toward the light.",
+      headline: t("tend.flavor.perfect.headline"),
+      body: t("tend.flavor.perfect.body"),
     };
   }
   if (result.passed && result.score >= 4) {
     return {
-      headline: "Cleanly done.",
-      body: "The watering can is filled and the leaves are dark. One careful page or two will keep it this way.",
+      headline: t("tend.flavor.clean.headline"),
+      body: t("tend.flavor.clean.body"),
     };
   }
   if (result.passed) {
     return {
-      headline: "Just enough.",
-      body: "The rite passes, but a few stems remember less than they should. A second reading would not be wasted.",
+      headline: t("tend.flavor.justEnough.headline"),
+      body: t("tend.flavor.justEnough.body"),
     };
   }
   return {
-    headline: "The plant goes thirsty.",
-    body: "Not enough of the chapters held. Wilt will begin to show by the weekend — go back to the pages you missed, and try again next week.",
+    headline: t("tend.flavor.thirsty.headline"),
+    body: t("tend.flavor.thirsty.body"),
   };
 }
 
@@ -499,11 +507,11 @@ function romanizeQ(i: number): string {
   return ["I", "II", "III", "IV", "V", "VI", "VII"][i] ?? `${i + 1}`;
 }
 
-function speciesShort(garden: Garden): string {
+function speciesShort(garden: Garden, t: (key: string) => string): string {
   switch (garden.species) {
-    case "ficus": return "the fig";
-    case "helianthus": return "the sunflower";
-    case "lavandula": return "the lavender";
-    case "monstera": return "the monstera";
+    case "ficus": return t("tend.species.ficus");
+    case "helianthus": return t("tend.species.helianthus");
+    case "lavandula": return t("tend.species.lavandula");
+    case "monstera": return t("tend.species.monstera");
   }
 }

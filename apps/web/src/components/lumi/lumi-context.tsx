@@ -19,6 +19,7 @@ import {
   pingStreak,
   type LumiProgress,
 } from "@/lib/lumi-progress";
+import { useI18n } from "@/lib/i18n";
 
 // Server-safe initial state — mirrors lumi-progress.ts INITIAL.
 // Hydration uses this on both server and client, then the real value
@@ -53,6 +54,7 @@ interface LumiContextValue {
 const Ctx = createContext<LumiContextValue | null>(null);
 
 export function LumiProvider({ children }: { children: ReactNode }) {
+  const { t } = useI18n();
   // Always start from SAFE_INITIAL so SSR markup matches first client render.
   // Real progress is loaded in the effect below to avoid hydration mismatches.
   const [progress, setProgress] = useState<LumiProgress>(SAFE_INITIAL);
@@ -92,14 +94,14 @@ export function LumiProvider({ children }: { children: ReactNode }) {
           enqueueToast({
             id: `level-${result.progress.level}-${Date.now()}`,
             kind: "level-up",
-            title: `Level ${result.progress.level} reached`,
-            description: "Lumi has a new look!",
+            title: t("lumi.levelReached", { level: result.progress.level }),
+            description: t("lumi.newLook"),
             level: result.progress.level,
           });
         }, 900);
       }
     },
-    [enqueueToast],
+    [enqueueToast, t],
   );
 
   const bumpXP = useCallback(
@@ -109,7 +111,7 @@ export function LumiProvider({ children }: { children: ReactNode }) {
       enqueueToast({
         id: `xp-${Date.now()}`,
         kind: "xp",
-        title: label ?? `+${amount} XP`,
+        title: label ?? t("lumi.xpGain", { amount }),
         xp: amount,
       });
       if (result.leveledUp) {
@@ -117,14 +119,14 @@ export function LumiProvider({ children }: { children: ReactNode }) {
           enqueueToast({
             id: `level-${result.progress.level}-${Date.now()}`,
             kind: "level-up",
-            title: `Level ${result.progress.level} reached`,
-            description: "Lumi has a new look!",
+            title: t("lumi.levelReached", { level: result.progress.level }),
+            description: t("lumi.newLook"),
             level: result.progress.level,
           });
         }, 900);
       }
     },
-    [enqueueToast],
+    [enqueueToast, t],
   );
 
   const dismissToast = useCallback((id: string) => {

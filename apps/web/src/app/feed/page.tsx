@@ -16,10 +16,12 @@ import { getFeed, type Post } from "@/lib/social";
 import { PostCard } from "@/components/post-card";
 import { MarketingHeader } from "@/components/marketing-header";
 import { SocialNavBar } from "@/components/social-nav-bar";
+import { useI18n } from "@/lib/i18n";
 
 const PAGE_SIZE = 30;
 
 export default function FeedPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -57,8 +59,8 @@ export default function FeedPage() {
         }
         setError(
           err instanceof ApiError
-            ? "Couldn't load your feed."
-            : "Couldn't reach the server.",
+            ? t("feed.error.load")
+            : t("feed.error.server"),
         );
       }
     },
@@ -76,7 +78,7 @@ export default function FeedPage() {
       <>
         <MarketingHeader />
         <main className="mx-auto max-w-3xl px-5 py-16 sm:px-6">
-          <p className="text-[color:var(--color-ink-soft)]">Loading…</p>
+          <p className="text-[color:var(--color-ink-soft)]">{t("feed.loading")}</p>
         </main>
       </>
     );
@@ -99,17 +101,17 @@ export default function FeedPage() {
         <header className="mb-8 flex items-baseline justify-between gap-3">
           <div>
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-saffron-deep)]">
-              Your feed
+              {t("feed.eyebrow")}
             </p>
             <h1 className="mt-2 font-[family-name:var(--font-display)] text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-tight tracking-tight">
-              From people you follow.
+              {t("feed.heading")}
             </h1>
           </div>
           <Link
             href="/discover"
             className="hidden text-[0.86rem] font-semibold text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-4 hover:text-[color:var(--color-ink)] sm:inline-block"
           >
-            Discover →
+            {t("feed.discoverLink")}
           </Link>
         </header>
 
@@ -141,14 +143,14 @@ export default function FeedPage() {
               disabled={loadingMore}
               className="inline-flex h-11 items-center gap-2 rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)]/70 px-5 text-[0.92rem] font-semibold text-[color:var(--color-ink)] transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-[color:var(--color-paper-2)] active:scale-[0.97] disabled:opacity-50"
             >
-              {loadingMore ? "Loading…" : "Load more"}
+              {loadingMore ? t("feed.loadingMore") : t("feed.loadMore")}
             </button>
           </div>
         )}
 
         {!loading && posts.length > 0 && exhausted && (
           <p className="mt-8 text-center text-[0.82rem] text-[color:var(--color-ink-soft)]">
-            That's everything from your follows.
+            {t("feed.exhausted")}
           </p>
         )}
       </main>
@@ -182,27 +184,27 @@ function SkeletonList({ count }: { count: number }) {
 }
 
 function EmptyState() {
+  const { t } = useI18n();
   return (
     <div className="rounded-2xl border-[1.5px] border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper-2)]/40 px-6 py-14 text-center">
       <p className="font-[family-name:var(--font-display)] text-[1.2rem] font-semibold leading-tight text-[color:var(--color-ink)]">
-        Your feed is empty.
+        {t("feed.empty.title")}
       </p>
       <p className="mx-auto mt-2 max-w-[42ch] text-[0.92rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-        Follow people whose reading you admire. Their sentences, words, and
-        milestones will show up here, newest first.
+        {t("feed.empty.body")}
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         <Link
           href="/discover"
           className="inline-flex h-11 items-center rounded-full bg-[color:var(--color-ink)] px-5 text-[0.92rem] font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.4)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[1px] active:scale-[0.97] active:translate-y-0"
         >
-          Browse Discover
+          {t("feed.empty.browse")}
         </Link>
         <Link
           href="/search"
           className="inline-flex h-11 items-center rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)] px-5 text-[0.92rem] font-semibold text-[color:var(--color-ink)] transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-[color:var(--color-paper-2)] active:scale-[0.97]"
         >
-          Find people
+          {t("feed.empty.findPeople")}
         </Link>
       </div>
     </div>

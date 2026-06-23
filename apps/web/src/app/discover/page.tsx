@@ -17,20 +17,22 @@ import { ApiError } from "@/lib/api";
 import { getDiscover, type Post, type PostType } from "@/lib/social";
 import { PostCard } from "@/components/post-card";
 import { MarketingHeader } from "@/components/marketing-header";
+import { useI18n } from "@/lib/i18n";
 
 const PAGE_SIZE = 30;
 
-const FILTERS: { id: PostType | "all"; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "sentence", label: "Sentences" },
-  { id: "word", label: "Words" },
-  { id: "passage", label: "Passages" },
-  { id: "milestone", label: "Milestones" },
-  { id: "list", label: "Lists" },
-  { id: "reflection", label: "Reflections" },
+const FILTERS: { id: PostType | "all"; labelKey: string }[] = [
+  { id: "all", labelKey: "discover.filter.all" },
+  { id: "sentence", labelKey: "discover.filter.sentence" },
+  { id: "word", labelKey: "discover.filter.word" },
+  { id: "passage", labelKey: "discover.filter.passage" },
+  { id: "milestone", labelKey: "discover.filter.milestone" },
+  { id: "list", labelKey: "discover.filter.list" },
+  { id: "reflection", labelKey: "discover.filter.reflection" },
 ];
 
 export default function DiscoverPage() {
+  const { t } = useI18n();
   const [filter, setFilter] = useState<PostType | "all">("all");
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,12 +54,12 @@ export default function DiscoverPage() {
       } catch (err) {
         setError(
           err instanceof ApiError
-            ? "Couldn't load the feed. Try refreshing."
-            : "Couldn't reach the server.",
+            ? t("discover.error.api")
+            : t("discover.error.network"),
         );
       }
     },
-    [filter],
+    [filter, t],
   );
 
   // Reset + fetch when filter changes.
@@ -83,14 +85,13 @@ export default function DiscoverPage() {
       <main className="mx-auto max-w-3xl px-5 py-10 sm:px-6 lg:py-14">
         <header className="mb-8">
           <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-saffron-deep)]">
-            Discover
+            {t("discover.eyebrow")}
           </p>
           <h1 className="mt-2 font-[family-name:var(--font-display)] text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-tight tracking-tight">
-            What readers are sharing.
+            {t("discover.heading")}
           </h1>
           <p className="mt-3 max-w-[60ch] text-[0.96rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-            Sentences, words, and milestones from people reading right now.
-            Public posts only, last two weeks.
+            {t("discover.subhead")}
           </p>
         </header>
 
@@ -125,14 +126,14 @@ export default function DiscoverPage() {
                 disabled={loadingMore}
                 className="inline-flex h-11 items-center gap-2 rounded-full border-[1.5px] border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)]/70 px-5 text-[0.92rem] font-semibold text-[color:var(--color-ink)] transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-[color:var(--color-paper-2)] active:scale-[0.97] disabled:opacity-50"
               >
-                {loadingMore ? "Loading…" : "Load more"}
+                {loadingMore ? t("discover.loadMore.loading") : t("discover.loadMore.label")}
               </button>
             </div>
           )}
 
           {!loading && posts.length > 0 && exhausted && (
             <p className="mt-8 text-center text-[0.82rem] text-[color:var(--color-ink-soft)]">
-              You've reached the end. New posts show up here as readers share them.
+              {t("discover.end")}
             </p>
           )}
         </section>
@@ -148,6 +149,7 @@ function FilterPills({
   value: PostType | "all";
   onChange: (v: PostType | "all") => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {FILTERS.map((f) => {
@@ -164,7 +166,7 @@ function FilterPills({
                 : "inline-flex h-9 shrink-0 items-center rounded-full border-[1.5px] border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-4 text-[0.84rem] font-medium text-[color:var(--color-ink-soft)] transition-[background-color,border-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-[color:var(--color-border-strong)] hover:text-[color:var(--color-ink)] active:scale-[0.97]"
             }
           >
-            {f.label}
+            {t(f.labelKey)}
           </button>
         );
       })}
@@ -198,27 +200,27 @@ function SkeletonList({ count }: { count: number }) {
 }
 
 function EmptyState({ filter }: { filter: PostType | "all" }) {
-  const filterLabel = useMemo(
-    () => FILTERS.find((f) => f.id === filter)?.label.toLowerCase() ?? "posts",
-    [filter],
-  );
+  const { t } = useI18n();
+  const filterLabel = useMemo(() => {
+    const key = FILTERS.find((f) => f.id === filter)?.labelKey;
+    return key ? t(key).toLowerCase() : t("discover.empty.fallbackLabel");
+  }, [filter, t]);
   return (
     <div className="rounded-2xl border-[1.5px] border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper-2)]/40 px-6 py-14 text-center">
       <p className="font-[family-name:var(--font-display)] text-[1.2rem] font-semibold leading-tight text-[color:var(--color-ink)]">
         {filter === "all"
-          ? "No posts in the last two weeks."
-          : `No ${filterLabel} shared lately.`}
+          ? t("discover.empty.allTitle")
+          : t("discover.empty.filteredTitle", { filter: filterLabel })}
       </p>
       <p className="mx-auto mt-2 max-w-[42ch] text-[0.92rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-        Be the first one. Share a sentence, a word, or a milestone from
-        whatever you're reading.
+        {t("discover.empty.body")}
       </p>
       <p className="mt-5 text-[0.86rem]">
         <Link
           href="/join"
           className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4"
         >
-          Start reading on Translify
+          {t("discover.empty.cta")}
         </Link>
       </p>
     </div>

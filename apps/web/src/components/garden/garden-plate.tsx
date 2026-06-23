@@ -2,16 +2,24 @@
 
 import type { Garden } from "@/lib/garden";
 import { daysSince, SPECIES } from "@/lib/garden";
+import { useI18n } from "@/lib/i18n";
 import { PlantSvg } from "./plant-svg";
 import { FarmerSvg } from "./farmer-svg";
 
-const STAGE_NAMES = [
-  "seed", "sprout", "seedling", "stem", "bud forming", "in flower", "full bloom",
+const STAGE_NAME_KEYS = [
+  "gstats.stage.seed",
+  "gstats.stage.sprout",
+  "gstats.stage.seedling",
+  "gstats.stage.stem",
+  "gstats.stage.budForming",
+  "gstats.stage.inFlower",
+  "gstats.stage.fullBloom",
 ];
 
 export function GardenPlate({ garden }: { garden: Garden }) {
+  const { t, tn } = useI18n();
   const species = SPECIES.find((s) => s.id === garden.species)!;
-  const stageName = STAGE_NAMES[garden.stage];
+  const stageName = t(STAGE_NAME_KEYS[garden.stage]);
   const wilting = garden.vitality <= 1;
   const day = daysSince(garden.startedAt);
 
@@ -32,14 +40,14 @@ export function GardenPlate({ garden }: { garden: Garden }) {
 
       <div className="relative z-[2] mb-1 flex items-baseline justify-between font-[family-name:var(--font-display)] text-[13px] uppercase tracking-[0.22em] text-[color:var(--color-ink-soft)]">
         <span className="normal-case tracking-normal text-[17px] italic text-[color:var(--color-sage-deep)]">
-          specimen — <span className="font-medium not-italic">{species.name}</span>
+          {t("gstats.specimen")} — <span className="font-medium not-italic">{species.name}</span>
         </span>
         <span className="text-[color:var(--color-muted-foreground)] tabular-nums">
           № 04 · {garden.bookId.slice(-4)}
         </span>
       </div>
       <div className="relative z-[2] mb-1 italic text-[14px] text-[color:var(--color-muted-foreground)]">
-        cultivated in the soil of <em>magical realism</em> · stage {romanize(garden.stage)} of VII
+        {t("gstats.cultivated.pre")} <em>{t("gstats.cultivated.soil")}</em> · {t("gstats.cultivated.stage", { stage: romanize(garden.stage) })}
       </div>
 
       {/* SCENE */}
@@ -108,8 +116,8 @@ export function GardenPlate({ garden }: { garden: Garden }) {
         <div
           className="absolute right-4 top-[30%] z-[5] max-w-[130px] rotate-[3deg] text-right font-[family-name:var(--font-display)] text-[18px] italic leading-tight text-[color:var(--color-coral-deep)]/85"
         >
-          new bud<br />
-          this morning
+          {t("gstats.note.newBud")}<br />
+          {t("gstats.note.thisMorning")}
           <span className="mt-1 block rotate-[-160deg] text-[28px] leading-none text-[color:var(--color-coral)]">
             ↩
           </span>
@@ -117,7 +125,7 @@ export function GardenPlate({ garden }: { garden: Garden }) {
         <div
           className="absolute bottom-[110px] left-5 z-[5] -rotate-2 font-[family-name:var(--font-display)] text-[17px] italic text-[color:var(--color-sage-deep)]/85"
         >
-          ※ watered by ch. {Math.max(1, garden.pagesRead - 200)}
+          {t("gstats.note.wateredByChapter", { chapter: Math.max(1, garden.pagesRead - 200) })}
         </div>
       </div>
 
@@ -125,15 +133,15 @@ export function GardenPlate({ garden }: { garden: Garden }) {
       <div className="relative z-[2] mt-[-8px] flex justify-between border-t border-dashed border-[color:var(--color-border-strong)]/50 px-1 pb-5 pt-4 font-[family-name:var(--font-display)] text-[13px] italic text-[color:var(--color-ink-soft)]">
         <div>
           <strong className="mb-0.5 block text-[11px] not-italic font-medium uppercase tracking-[0.05em] text-[color:var(--color-muted-foreground)]">
-            Drawn from life
+            {t("gstats.caption.drawnFromLife")}
           </strong>
-          The Garden of {garden.farmer.name}, day {day}
+          {tn("gstats.caption.gardenOf", day, { name: garden.farmer.name })}
         </div>
         <div className="text-right">
           <strong className="mb-0.5 block text-[11px] not-italic font-medium uppercase tracking-[0.05em] text-[color:var(--color-muted-foreground)]">
-            Hand · Translify Almanac
+            {t("gstats.caption.hand")}
           </strong>
-          fig. {romanize(garden.stage).toLowerCase()} · {stageName}
+          {t("gstats.caption.fig", { fig: romanize(garden.stage).toLowerCase(), stage: stageName })}
         </div>
       </div>
     </div>

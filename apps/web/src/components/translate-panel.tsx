@@ -13,6 +13,7 @@ import { ApiError } from "@/lib/api";
 import { parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
 import { Lumi } from "@/components/lumi/lumi";
+import { useI18n } from "@/lib/i18n";
 
 const LANGUAGES: { code: string; label: string; flag: string }[] = [
   { code: "en", label: "English", flag: "🇬🇧" },
@@ -44,6 +45,7 @@ export function TranslatePanel({
   selectedTranslationId,
   onSelectTranslation,
 }: Props) {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [target, setTarget] = useState<string>(() => {
     if (sourceLanguage === "en") return "fr";
@@ -87,19 +89,19 @@ export function TranslatePanel({
 
   const sourceLabel =
     LANGUAGES.find((l) => l.code === sourceLanguage)?.label ??
-    (sourceLanguage ? sourceLanguage.toUpperCase() : "Unknown");
+    (sourceLanguage ? sourceLanguage.toUpperCase() : t("tpanel.unknown"));
 
   return (
     <div className="flex flex-col gap-5 p-5">
       <div>
         <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
-          The book
+          {t("tpanel.eyebrow")}
         </p>
         <h3 className="mt-1.5 font-[family-name:var(--font-display)] text-xl font-semibold leading-tight tracking-tight">
-          Read it your way.
+          {t("tpanel.title")}
         </h3>
         <p className="mt-1 text-sm text-[color:var(--color-ink-soft)]">
-          Choose a language and we'll keep the layout exactly the same.
+          {t("tpanel.subtitle")}
         </p>
       </div>
 
@@ -109,11 +111,12 @@ export function TranslatePanel({
           <div className="lumi-bubble-in flex flex-col items-center gap-2 py-4">
             <Lumi state="translating" size={140} animate />
             <p className="text-center text-[0.78rem] font-semibold italic text-[color:var(--color-saffron-deep)]">
-              Lumi is translating into{" "}
-              {LANGUAGES.find((l) => l.code === target)?.label ?? target}…
+              {t("tpanel.translatingInto", {
+                lang: LANGUAGES.find((l) => l.code === target)?.label ?? target,
+              })}
             </p>
             <p className="max-w-[220px] text-center text-[0.72rem] leading-snug text-[color:var(--color-ink-soft)]">
-              Keep the layout, swap the words — usually a minute or two.
+              {t("tpanel.translatingSub")}
             </p>
           </div>
         )}
@@ -121,7 +124,7 @@ export function TranslatePanel({
         {!isPending && (
           <>
             <label className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-              Translate into
+              {t("tpanel.translateInto")}
             </label>
             <select
               value={target}
@@ -140,7 +143,7 @@ export function TranslatePanel({
               onClick={() => create.mutate(target)}
               disabled={isPending}
             >
-              Translate this book
+              {t("tpanel.cta")}
             </Button>
           </>
         )}
@@ -154,7 +157,7 @@ export function TranslatePanel({
             <p className="rounded-lg bg-[color:var(--color-destructive)]/10 px-3 py-2 text-xs text-[color:var(--color-destructive)]">
               {create.error instanceof ApiError
                 ? create.error.message
-                : create.error.message || "Translation failed"}
+                : create.error.message || t("tpanel.failed")}
             </p>
           );
         })()}
@@ -162,7 +165,7 @@ export function TranslatePanel({
 
       <div>
         <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-          Versions
+          {t("tpanel.versions")}
         </p>
         <div className="flex flex-col gap-1.5">
           <button
@@ -177,7 +180,7 @@ export function TranslatePanel({
             <span className="flex items-center gap-2.5">
               <span className="text-base">📖</span>
               <span>
-                <span className="block font-semibold">Original</span>
+                <span className="block font-semibold">{t("tpanel.original")}</span>
                 <span
                   className={`block text-[0.7rem] ${
                     selectedTranslationId === null
@@ -206,7 +209,7 @@ export function TranslatePanel({
 
           {translations.length === 0 && (
             <p className="rounded-xl border-[1.5px] border-dashed border-[color:var(--color-border)] px-3.5 py-3 text-xs text-[color:var(--color-ink-soft)]">
-              No translations yet. Pick a language above to make one.
+              {t("tpanel.empty")}
             </p>
           )}
         </div>
@@ -228,6 +231,7 @@ function TranslationRow({
   onRetry: () => void;
   retryPending: boolean;
 }) {
+  const { t: tr } = useI18n();
   const lang = LANGUAGES.find((l) => l.code === t.target_language);
   const label = lang?.label ?? t.target_language.toUpperCase();
   const flag = lang?.flag ?? "🌐";
@@ -257,7 +261,7 @@ function TranslationRow({
                 selected ? "text-[color:var(--color-paper-3)]" : "text-[color:var(--color-ink-soft)]"
               }`}
             >
-              {statusBadge(t)}
+              {statusBadge(t, tr)}
             </span>
           </span>
         </span>
@@ -267,7 +271,7 @@ function TranslationRow({
         type="button"
         onClick={onRetry}
         disabled={!canRetry || retryPending}
-        title="Re-run translation"
+        title={tr("tpanel.retry")}
         className={`grid w-9 place-items-center rounded-r-[10px] text-base transition-colors disabled:opacity-40 ${
           selected
             ? "text-[color:var(--color-paper-3)] hover:bg-white/10 hover:text-white"
@@ -280,10 +284,13 @@ function TranslationRow({
   );
 }
 
-function statusBadge(t: Translation): string {
-  if (t.status === "ready") return "Ready to read";
-  if (t.status === "in_progress") return "Translating…";
-  if (t.status === "queued") return "Up next";
-  if (t.status === "failed") return "Hit a snag — try again";
-  return t.status;
+function statusBadge(
+  tr: Translation,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string {
+  if (tr.status === "ready") return t("tpanel.status.ready");
+  if (tr.status === "in_progress") return t("tpanel.status.inProgress");
+  if (tr.status === "queued") return t("tpanel.status.queued");
+  if (tr.status === "failed") return t("tpanel.status.failed");
+  return tr.status;
 }

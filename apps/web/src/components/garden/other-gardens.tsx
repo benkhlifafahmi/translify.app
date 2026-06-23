@@ -1,15 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import type { GardenSummary } from "@/lib/garden";
+import { useI18n } from "@/lib/i18n";
 import { PlantSvg } from "./plant-svg";
 
-const HEALTH_LABEL: Record<GardenSummary["health"], string> = {
-  thriving: "thriving",
-  budding: "budding",
-  wilting: "wilting",
-  dying: "dying",
+const HEALTH_KEY: Record<GardenSummary["health"], string> = {
+  thriving: "gmisc.gardens.health.thriving",
+  budding: "gmisc.gardens.health.budding",
+  wilting: "gmisc.gardens.health.wilting",
+  dying: "gmisc.gardens.health.dying",
 };
 
 export function OtherGardens({ gardens }: { gardens: GardenSummary[] }) {
+  const { t } = useI18n();
   const thriving = gardens.filter((g) => g.health === "thriving" || g.health === "budding").length;
   const wilting = gardens.filter((g) => g.health === "wilting" || g.health === "dying").length;
 
@@ -17,10 +21,10 @@ export function OtherGardens({ gardens }: { gardens: GardenSummary[] }) {
     <section className="mt-16">
       <div className="mb-5 flex items-baseline justify-between border-b border-[color:var(--color-border)] pb-3">
         <h2 className="font-[family-name:var(--font-display)] text-[34px] font-light italic leading-none tracking-[-0.01em]">
-          Other gardens under your care
+          {t("gmisc.gardens.heading")}
         </h2>
         <span className="font-[family-name:var(--font-display)] text-[13px] italic uppercase tracking-[0.18em] text-[color:var(--color-muted-foreground)]">
-          {thriving} thriving · {wilting} wilting
+          {t("gmisc.gardens.summary", { thriving, wilting })}
         </span>
       </div>
 
@@ -41,7 +45,7 @@ export function OtherGardens({ gardens }: { gardens: GardenSummary[] }) {
                     dying ? "text-[color:var(--color-coral-deep)]" : "text-[color:var(--color-sage-deep)]",
                   ].join(" ")}
                 >
-                  {HEALTH_LABEL[g.health]}
+                  {t(HEALTH_KEY[g.health])}
                 </span>
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
                   <PlantSvg

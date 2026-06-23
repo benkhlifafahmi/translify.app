@@ -131,7 +131,7 @@ function AccountInner() {
       }
       setFlash({
         tone: "success",
-        text: "Welcome aboard. Your plan is being activated — this page will refresh shortly.",
+        text: t("account.checkoutSuccess"),
       });
       const id = setTimeout(() => {
         getSubscription().then(setSub).catch(() => {});
@@ -140,11 +140,11 @@ function AccountInner() {
       return () => clearTimeout(id);
     }
     if (checkout === "cancelled") {
-      setFlash({ tone: "info", text: "Checkout cancelled. No charges made." });
+      setFlash({ tone: "info", text: t("account.checkoutCancelled") });
       setTab("subscription");
     }
     if (upgrade) {
-      setFlash({ tone: "info", text: upgradeFlash(upgrade) });
+      setFlash({ tone: "info", text: upgradeFlash(upgrade, t) });
       setTab("subscription");
     }
   }, [params]);
@@ -156,7 +156,7 @@ function AccountInner() {
         <div className="grid h-screen place-items-center">
           <div className="flex items-center gap-3 text-[color:var(--color-ink-soft)]">
             <span className="h-2 w-2 animate-pulse rounded-full bg-[color:var(--color-saffron)]" />
-            <span className="font-[family-name:var(--font-display)] italic">Opening your shelf…</span>
+            <span className="font-[family-name:var(--font-display)] italic">{t("account.openingShelf")}</span>
           </div>
         </div>
       </main>
@@ -233,13 +233,14 @@ function TopBar({ onLogout }: { onLogout: () => void }) {
 /* ─────────────────────── Side nav ─────────────────────── */
 
 function SideNav({ tab, setTab, sub }: { tab: Tab; setTab: (t: Tab) => void; sub: Subscription }) {
+  const { t } = useI18n();
   const items: { id: Tab; label: string; sub: string; icon: string }[] = [
-    { id: "profile",      label: "Reader card",    sub: "Name · email · language",       icon: "✦" },
-    { id: "profiles",     label: "Family readers", sub: "Switch between profiles",       icon: "❋" },
-    { id: "subscription", label: "Subscription",   sub: "Plan · billing · usage",        icon: "❀" },
-    { id: "lumi",         label: "Lumi & progress", sub: "Level · XP · achievements",     icon: "🦉" },
-    { id: "security",     label: "Security",       sub: "Password · sessions",           icon: "◇" },
-    { id: "danger",       label: "Danger zone",    sub: "Delete account",                icon: "⌫" },
+    { id: "profile",      label: t("account.navProfile"),      sub: t("account.navProfileSub"),      icon: "✦" },
+    { id: "profiles",     label: t("account.navProfiles"),     sub: t("account.navProfilesSub"),     icon: "❋" },
+    { id: "subscription", label: t("account.navSubscription"), sub: t("account.navSubscriptionSub"), icon: "❀" },
+    { id: "lumi",         label: t("account.navLumi"),         sub: t("account.navLumiSub"),         icon: "🦉" },
+    { id: "security",     label: t("account.navSecurity"),     sub: t("account.navSecuritySub"),     icon: "◇" },
+    { id: "danger",       label: t("account.navDanger"),       sub: t("account.navDangerSub"),       icon: "⌫" },
   ];
 
   return (
@@ -247,7 +248,7 @@ function SideNav({ tab, setTab, sub }: { tab: Tab; setTab: (t: Tab) => void; sub
       {/* Library-card header */}
       <div className="mb-3 rounded-2xl bg-gradient-to-br from-[#FFFCF3] to-[#F5E9CD] p-4 ring-1 ring-[color:var(--color-border)]">
         <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-saffron-deep)]">
-          Translify · reader card
+          {t("account.readerCardKicker")}
         </p>
         <p className="mt-1 font-[family-name:var(--font-display)] text-[0.95rem] font-semibold leading-snug text-[color:var(--color-ink)]">
           {planName(sub.plan)}{" "}
@@ -293,7 +294,7 @@ function SideNav({ tab, setTab, sub }: { tab: Tab; setTab: (t: Tab) => void; sub
       </nav>
 
       <div className="mt-3 rounded-xl border border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)]/60 p-3 text-[0.72rem] leading-snug text-[color:var(--color-ink-soft)]">
-        Need help?{" "}
+        {t("account.needHelp")}{" "}
         <a
           href="mailto:hello@translify.app"
           className="font-semibold text-[color:var(--color-ink)] underline decoration-[color:var(--color-saffron)] decoration-2 underline-offset-4"
@@ -356,9 +357,9 @@ function ProfileSection({
 
   return (
     <SectionShell
-      eyebrow="Reader card"
-      title="Your reader card."
-      lede="The way you appear to the books, the citations, and the people you share a shelf with."
+      eyebrow={t("account.profileEyebrow")}
+      title={t("account.profileTitle")}
+      lede={t("account.profileLede")}
     >
       {/* Quick link out to the social/public profile editor — handle, bio,
           avatar. Lives at /settings/profile because the social schema is
@@ -369,13 +370,13 @@ function ProfileSection({
       >
         <div className="min-w-0">
           <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[color:var(--color-saffron-deep)]">
-            Public profile
+            {t("account.publicProfileKicker")}
           </p>
           <p className="mt-1 font-[family-name:var(--font-display)] text-[1.05rem] font-semibold leading-tight text-[color:var(--color-ink)]">
-            Handle, bio, and avatar
+            {t("account.publicProfileTitle")}
           </p>
           <p className="mt-0.5 text-[0.84rem] leading-snug text-[color:var(--color-ink-soft)]">
-            What people see when you share a sentence to your timeline.
+            {t("account.publicProfileDesc")}
           </p>
         </div>
         <span
@@ -391,16 +392,16 @@ function ProfileSection({
       <form onSubmit={onSubmit} className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
         {/* Form column */}
         <div className="flex flex-col gap-5">
-          <Field label="What should we call you?">
+          <Field label={t("account.nameLabel")}>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="paper-input"
-              placeholder="Optional — your shelf name"
+              placeholder={t("account.namePlaceholder")}
             />
           </Field>
-          <Field label="Email">
+          <Field label={t("account.emailLabel")}>
             <input
               type="email"
               required
@@ -409,10 +410,10 @@ function ProfileSection({
               className="paper-input"
             />
             <span className="mt-1 text-[0.7rem] text-[color:var(--color-ink-soft)]">
-              Changing your email will require re-verification.
+              {t("account.emailReverifyNote")}
             </span>
           </Field>
-          <Field label="Preferred language">
+          <Field label={t("account.languageLabel")}>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {LOCALES.map((l) => {
                 const sel = language === l.code;
@@ -441,7 +442,7 @@ function ProfileSection({
           {/* Family-safe content toggle. Always visible so users see it exists;
               actual effect requires the Family plan (backend silently ignores
               the toggle on lower tiers, the preference still persists). */}
-          <Field label="Family-safe mode">
+          <Field label={t("account.familySafeLabel")}>
             <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-3 transition-colors hover:border-[color:var(--color-coral)]">
               <input
                 type="checkbox"
@@ -452,16 +453,14 @@ function ProfileSection({
               <span className="flex-1 text-start">
                 <span className="flex items-center gap-2">
                   <span className="text-[0.85rem] font-semibold text-[color:var(--color-ink)]">
-                    Kid-safe content posture
+                    {t("account.familySafeName")}
                   </span>
                   <span className="rounded-full bg-[color:var(--color-coral)]/15 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.08em] text-[color:var(--color-coral-deep)]">
-                    Family plan
+                    {t("account.familyPlanBadge")}
                   </span>
                 </span>
                 <span className="mt-1 block text-[0.72rem] leading-snug text-[color:var(--color-ink-soft)]">
-                  Lumi softens chat answers and quiz questions — no graphic violence,
-                  no explicit content, no shock-value passages. Translation faithfully
-                  reproduces the source either way.
+                  {t("account.familySafeDesc")}
                 </span>
               </span>
             </label>
@@ -472,7 +471,7 @@ function ProfileSection({
             disabled={submitting}
             className="mt-2 inline-flex h-12 items-center justify-center gap-2 self-start rounded-full bg-[color:var(--color-ink)] px-7 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)] transition-transform hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {submitting ? "Saving…" : "Save reader card"}
+            {submitting ? t("account.saving") : t("account.saveReaderCard")}
           </button>
         </div>
 
@@ -481,15 +480,15 @@ function ProfileSection({
           <div className="relative rotate-[1deg] rounded-[1.6rem] border-[1.5px] border-[color:var(--color-border-strong)] bg-gradient-to-br from-[#FFFCF3] to-[#F0DCB6] p-7 shadow-[var(--shadow-paper-lg)] transition-transform hover:rotate-0">
             <div aria-hidden className="absolute -top-3 left-8 -rotate-[6deg]">
               <span className="rounded-[2px] bg-[color:var(--color-coral)]/55 px-3 py-1 text-[0.55rem] font-bold uppercase tracking-[0.2em] text-[color:var(--color-coral-deep)] shadow-[0_2px_4px_rgba(60,40,15,0.15)]">
-                ✦ Member since {new Date().getFullYear()}
+                {t("account.memberSince", { year: String(new Date().getFullYear()) })}
               </span>
             </div>
 
             <p className="text-[0.6rem] font-bold uppercase tracking-[0.28em] text-[color:var(--color-saffron-deep)]">
-              Translify · reader card
+              {t("account.readerCardKicker")}
             </p>
             <h3 className="mt-3 font-[family-name:var(--font-display)] text-[2rem] font-semibold leading-[1.05] tracking-tight text-[color:var(--color-ink)]">
-              {name || <em className="text-[color:var(--color-ink-soft)]">Your name</em>}
+              {name || <em className="text-[color:var(--color-ink-soft)]">{t("account.yourName")}</em>}
             </h3>
 
             <div className="mt-5 flex items-center gap-4">
@@ -499,7 +498,7 @@ function ProfileSection({
               <div>
                 <p className="text-[0.78rem] font-semibold text-[color:var(--color-ink)]">{email}</p>
                 <p className="text-[0.7rem] text-[color:var(--color-ink-soft)]">
-                  reads in{" "}
+                  {t("account.readsIn")}{" "}
                   <strong className="text-[color:var(--color-ink)]">
                     {LOCALES.find((l) => l.code === language)?.label ?? language}
                   </strong>
@@ -509,7 +508,7 @@ function ProfileSection({
 
             <div className="mt-7 flex items-end justify-between border-t border-dashed border-[color:var(--color-border-strong)] pt-3">
               <p className="font-[family-name:var(--font-display)] text-[0.65rem] italic leading-snug text-[color:var(--color-ink-soft)]">
-                Lend, but never lose.<br />Read, and remember.
+                {t("account.cardMottoLine1")}<br />{t("account.cardMottoLine2")}
               </p>
               <span className="font-mono text-[0.6rem] tracking-wider text-[color:var(--color-ink-soft)]">
                 #{user.id.slice(0, 8).toUpperCase()}
@@ -536,6 +535,7 @@ function ProfilesSection({
   setFlash: (f: { tone: "success" | "error" | "info"; text: string } | null) => void;
 }) {
   const router = useRouter();
+  const { t, tn } = useI18n();
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -554,7 +554,7 @@ function ProfilesSection({
         if (!cancelled) {
           setFlash({
             tone: "error",
-            text: err instanceof ApiError ? err.message : "Couldn't load profiles.",
+            text: err instanceof ApiError ? err.message : t("account.errLoadProfiles"),
           });
         }
       }
@@ -571,7 +571,7 @@ function ProfilesSection({
     try {
       await activateProfile(id);
       setUser({ ...user, active_profile_id: id });
-      setFlash({ tone: "success", text: "Reader switched." });
+      setFlash({ tone: "success", text: t("account.readerSwitched") });
       // Force a fresh load of book/highlight context in case a child profile
       // is now active (the chat / quiz routes resolve family-safe per request,
       // but it's nice for the picker label to update everywhere).
@@ -579,7 +579,7 @@ function ProfilesSection({
     } catch (err) {
       setFlash({
         tone: "error",
-        text: err instanceof ApiError ? err.message : "Couldn't switch reader.",
+        text: err instanceof ApiError ? err.message : t("account.errSwitchReader"),
       });
     } finally {
       setBusy(null);
@@ -587,7 +587,7 @@ function ProfilesSection({
   };
 
   const onDelete = async (id: string) => {
-    if (!confirm("Delete this reader profile? Their reading history is kept under the household.")) {
+    if (!confirm(t("account.confirmDeleteProfile"))) {
       return;
     }
     setBusy(id);
@@ -597,11 +597,11 @@ function ProfilesSection({
       if (user.active_profile_id === id) {
         setUser({ ...user, active_profile_id: null });
       }
-      setFlash({ tone: "success", text: "Profile removed." });
+      setFlash({ tone: "success", text: t("account.profileRemoved") });
     } catch (err) {
       setFlash({
         tone: "error",
-        text: err instanceof ApiError ? err.message : "Couldn't delete that profile.",
+        text: err instanceof ApiError ? err.message : t("account.errDeleteProfile"),
       });
     } finally {
       setBusy(null);
@@ -622,17 +622,17 @@ function ProfilesSection({
       setNewName("");
       setNewKind("adult");
       setNewAvatar("lumi");
-      setFlash({ tone: "success", text: `${created.name} joined the shelf.` });
+      setFlash({ tone: "success", text: t("account.readerJoined", { name: created.name }) });
     } catch (err) {
       if (err instanceof ApiError && err.status === 402) {
         setFlash({
           tone: "info",
-          text: "You're at your plan's reader limit — upgrade to Family for up to 5.",
+          text: t("account.readerLimitReached"),
         });
       } else {
         setFlash({
           tone: "error",
-          text: err instanceof ApiError ? err.message : "Couldn't add that reader.",
+          text: err instanceof ApiError ? err.message : t("account.errAddReader"),
         });
       }
     } finally {
@@ -642,16 +642,16 @@ function ProfilesSection({
 
   return (
     <SectionShell
-      eyebrow="Family readers"
-      title="One household, many readers."
+      eyebrow={t("account.profilesEyebrow")}
+      title={t("account.profilesTitle")}
       lede={
         quota > 1
-          ? `Switch profiles to keep each reader's vibe distinct. Up to ${quota} readers on your plan.`
-          : "Family plans get up to 5 reader profiles — one for each person on the shelf."
+          ? t("account.profilesLedeQuota", { quota: String(quota) })
+          : t("account.profilesLedeFamily")
       }
     >
       {profiles === null ? (
-        <p className="text-[color:var(--color-ink-soft)]">Loading profiles…</p>
+        <p className="text-[color:var(--color-ink-soft)]">{t("account.loadingProfiles")}</p>
       ) : (
         <div className="flex flex-col gap-8">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -671,11 +671,11 @@ function ProfilesSection({
             <div className="rounded-2xl border border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper-2)] p-5 text-[0.8rem] text-[color:var(--color-ink-soft)]">
               {quota === 1 ? (
                 <>
-                  <strong className="text-[color:var(--color-ink)]">One reader per shelf on this plan.</strong>{" "}
-                  Upgrade to Family for up to 5 readers + per-child kid-safe mode.
+                  <strong className="text-[color:var(--color-ink)]">{t("account.oneReaderTitle")}</strong>{" "}
+                  {t("account.oneReaderUpgrade")}
                 </>
               ) : (
-                <>You've filled all {quota} reader slots — remove one to add another.</>
+                <>{t("account.slotsFilled", { quota: String(quota) })}</>
               )}
             </div>
           ) : (
@@ -684,25 +684,25 @@ function ProfilesSection({
               className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-5 shadow-[var(--shadow-paper)]"
             >
               <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-saffron-deep)]">
-                Add a reader · {remaining} slot{remaining === 1 ? "" : "s"} left
+                {tn("account.addReaderSlots", remaining)}
               </p>
               <h4 className="mt-1 font-[family-name:var(--font-display)] text-[1.4rem] font-semibold text-[color:var(--color-ink)]">
-                Who's joining the shelf?
+                {t("account.whoJoining")}
               </h4>
 
               <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr_auto]">
-                <Field label="Reader name">
+                <Field label={t("account.readerNameLabel")}>
                   <input
                     type="text"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     className="paper-input"
-                    placeholder="e.g. Yara"
+                    placeholder={t("account.readerNamePlaceholder")}
                     maxLength={60}
                     required
                   />
                 </Field>
-                <Field label="Reader kind">
+                <Field label={t("account.readerKindLabel")}>
                   <div className="flex gap-2">
                     {(["adult", "child"] as const).map((k) => {
                       const sel = newKind === k;
@@ -717,7 +717,7 @@ function ProfilesSection({
                               : "border-[color:var(--color-border)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)]"
                           }`}
                         >
-                          {k === "adult" ? "Grown-up" : "Kid (safe mode on)"}
+                          {k === "adult" ? t("account.readerKindAdult") : t("account.readerKindChild")}
                         </button>
                       );
                     })}
@@ -729,13 +729,13 @@ function ProfilesSection({
                     disabled={creating || !newName.trim()}
                     className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[color:var(--color-ink)] px-6 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)] transition-transform hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {creating ? "Adding…" : "Add reader"}
+                    {creating ? t("account.adding") : t("account.addReader")}
                   </button>
                 </div>
               </div>
 
               <div className="mt-4">
-                <Field label="Avatar">
+                <Field label={t("account.avatarLabel")}>
                   <AvatarPicker value={newAvatar} onChange={setNewAvatar} />
                 </Field>
               </div>
@@ -760,6 +760,7 @@ function ProfileCard({
   onActivate: () => void;
   onDelete?: () => void;
 }) {
+  const { t } = useI18n();
   // Avoid pulling avatarEmoji statically — keeps the bundle a touch leaner
   // for tabs that never get visited.
   const emoji = AVATAR_EMOJI[profile.avatar_seed] ?? "🦉";
@@ -773,7 +774,7 @@ function ProfileCard({
     >
       {active && (
         <span className="absolute -top-2 left-4 rounded-[2px] bg-[color:var(--color-saffron)] px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-[0.2em] text-[color:var(--color-accent-foreground)] shadow-[0_2px_4px_rgba(60,40,15,0.15)]">
-          Currently reading
+          {t("account.currentlyReading")}
         </span>
       )}
       <div className="flex items-start gap-3">
@@ -785,8 +786,8 @@ function ProfileCard({
             {profile.name}
           </p>
           <p className="text-[0.72rem] uppercase tracking-[0.16em] text-[color:var(--color-ink-soft)]">
-            {profile.kind === "child" ? "Kid · safe mode" : "Grown-up"}
-            {profile.is_default && " · default"}
+            {profile.kind === "child" ? t("account.kindChildLabel") : t("account.kindAdultLabel")}
+            {profile.is_default && t("account.defaultSuffix")}
           </p>
         </div>
       </div>
@@ -802,14 +803,14 @@ function ProfileCard({
               : "bg-[color:var(--color-ink)] text-[color:var(--color-paper)] hover:-translate-y-[1px]"
           } disabled:cursor-not-allowed`}
         >
-          {active ? "Selected" : busy ? "Switching…" : "Switch to this reader"}
+          {active ? t("account.selected") : busy ? t("account.switching") : t("account.switchToReader")}
         </button>
         {onDelete && (
           <button
             type="button"
             onClick={onDelete}
             disabled={busy}
-            aria-label={`Delete ${profile.name}`}
+            aria-label={t("account.deleteProfileAria", { name: profile.name })}
             className="grid h-9 w-9 place-items-center rounded-full border border-[color:var(--color-border)] text-[color:var(--color-ink-soft)] transition-colors hover:border-[color:var(--color-coral)] hover:text-[color:var(--color-coral-deep)] disabled:opacity-40"
           >
             ⌫
@@ -838,6 +839,7 @@ function AvatarPicker({
   value: string;
   onChange: (seed: string) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-wrap gap-2">
       {Object.entries(AVATAR_EMOJI).map(([seed, emoji]) => {
@@ -847,7 +849,7 @@ function AvatarPicker({
             key={seed}
             type="button"
             onClick={() => onChange(seed)}
-            aria-label={`Avatar ${seed}`}
+            aria-label={t("account.avatarAria", { seed })}
             className={`grid h-11 w-11 place-items-center rounded-xl border text-[1.4rem] transition-transform hover:-translate-y-[1px] ${
               sel
                 ? "border-[color:var(--color-saffron-deep)] bg-gradient-to-br from-[#FFFCF3] to-[#FBE9C2] shadow-[var(--shadow-paper)]"
@@ -873,6 +875,7 @@ function SubscriptionSection({
   setSub: (s: Subscription) => void;
   setFlash: (f: { tone: "success" | "error" | "info"; text: string } | null) => void;
 }) {
+  const { t, tn } = useI18n();
   const [cycle, setCycle] = useState<Cycle>("yearly");
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -888,7 +891,7 @@ function SubscriptionSection({
     } catch (err) {
       setFlash({
         tone: "error",
-        text: err instanceof ApiError ? err.message : "Couldn't start checkout.",
+        text: err instanceof ApiError ? err.message : t("account.errCheckout"),
       });
       setBusy(null);
     }
@@ -902,7 +905,7 @@ function SubscriptionSection({
     } catch (err) {
       setFlash({
         tone: "error",
-        text: err instanceof ApiError ? err.message : "Couldn't open the billing portal.",
+        text: err instanceof ApiError ? err.message : t("account.errPortal"),
       });
       setBusy(null);
     }
@@ -927,9 +930,9 @@ function SubscriptionSection({
 
   return (
     <SectionShell
-      eyebrow="Subscription"
-      title="Your reading passport."
-      lede="The shape of your shelf, the rights that come with it, and how much you've explored this period."
+      eyebrow={t("account.subEyebrow")}
+      title={t("account.subTitle")}
+      lede={t("account.subLede")}
     >
       {/* Status hero */}
       <div className="relative overflow-hidden rounded-[1.6rem] border-[1.5px] border-[color:var(--color-border-strong)] bg-gradient-to-br from-[#FFFCF3] via-[#F8E9C5] to-[#EFD8A6] p-7 shadow-[var(--shadow-paper-lg)] lg:p-9">
@@ -942,7 +945,7 @@ function SubscriptionSection({
               <StatusPill status={sub.status} />
               {sub.cancel_at_period_end && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--color-coral)]/20 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-[color:var(--color-coral-deep)]">
-                  ↻ Ends at period end
+                  ↻ {t("account.endsAtPeriodEnd")}
                 </span>
               )}
             </div>
@@ -950,13 +953,13 @@ function SubscriptionSection({
               {planName(sub.plan)}
               {sub.cycle && (
                 <span className="ml-3 text-[1rem] font-normal italic text-[color:var(--color-ink-soft)]">
-                  / {sub.cycle === "yearly" ? "yearly" : "monthly"}
+                  / {sub.cycle === "yearly" ? t("account.cycleYearly") : t("account.cycleMonthly")}
                 </span>
               )}
             </h3>
             {sub.current_period_end && (
               <p className="mt-2 text-[0.92rem] text-[color:var(--color-ink-soft)]">
-                {sub.cancel_at_period_end ? "Access ends" : "Renews"}{" "}
+                {sub.cancel_at_period_end ? t("account.accessEnds") : t("account.renews")}{" "}
                 <strong className="text-[color:var(--color-ink)]">
                   {formatDate(sub.current_period_end)}
                 </strong>
@@ -964,7 +967,7 @@ function SubscriptionSection({
             )}
             {sub.trial_end && new Date(sub.trial_end) > new Date() && (
               <p className="mt-2 text-[0.92rem] text-[color:var(--color-saffron-deep)]">
-                ✦ Trial ends {formatDate(sub.trial_end)} — first charge happens then.
+                ✦ {t("account.trialEnds", { date: formatDate(sub.trial_end) })}
               </p>
             )}
 
@@ -972,7 +975,7 @@ function SubscriptionSection({
             <div className="mt-6">
               <div className="flex items-baseline justify-between">
                 <span className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[color:var(--color-ink-soft)]">
-                  Pages this period
+                  {t("account.pagesThisPeriod")}
                 </span>
                 <span className="font-[family-name:var(--font-display)] text-[1.1rem] font-semibold tabular-nums text-[color:var(--color-ink)]">
                   {pagesUsed.toLocaleString()}{" "}
@@ -992,13 +995,13 @@ function SubscriptionSection({
               </div>
               {!isUnlimited(pagesLimit) && pagesUsed >= pagesLimit * 0.8 && (
                 <p className="mt-2 text-[0.78rem] text-[color:var(--color-coral-deep)]">
-                  ⚠ You&apos;ve used {pct}% of your monthly pages. Time to{" "}
+                  ⚠ {t("account.usageWarning", { pct: String(pct) })}{" "}
                   <button
                     type="button"
                     onClick={() => document.getElementById("plans")?.scrollIntoView({ behavior: "smooth" })}
                     className="font-semibold underline decoration-[color:var(--color-coral)] decoration-2 underline-offset-2"
                   >
-                    upgrade?
+                    {t("account.usageUpgradeCta")}
                   </button>
                 </p>
               )}
@@ -1013,7 +1016,7 @@ function SubscriptionSection({
                 disabled={busy !== null}
                 className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[color:var(--color-ink)] px-6 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_10px_22px_-8px_rgba(20,16,8,0.4)] transition-transform hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {busy === "portal" ? "Opening Stripe…" : "Manage in Stripe"}
+                {busy === "portal" ? t("account.openingStripe") : t("account.manageInStripe")}
                 <span className="opacity-70">↗</span>
               </button>
             )}
@@ -1024,19 +1027,19 @@ function SubscriptionSection({
               className="inline-flex h-11 items-center justify-center gap-2 rounded-full border-[1.5px] border-[color:var(--color-ink)] bg-[color:var(--color-paper)] px-5 text-sm font-semibold text-[color:var(--color-ink)] transition-transform hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <span className={busy === "refresh" ? "animate-spin inline-block" : "inline-block"}>↻</span>
-              {busy === "refresh" ? "Refreshing…" : "Refresh status"}
+              {busy === "refresh" ? t("account.refreshing") : t("account.refreshStatus")}
             </button>
           </div>
         </div>
 
         {/* Quota chips */}
         <div className="relative mt-7 flex flex-wrap gap-2">
-          <Chip on={sub.quota.chat_with_citations}>Chat with citations</Chip>
-          <Chip on={sub.quota.literary_translation}>Literary translation</Chip>
-          <Chip on={sub.quota.annotated_export}>Annotated PDF export</Chip>
-          <Chip on={sub.quota.priority_queue}>Priority queue</Chip>
-          <Chip on={sub.quota.family_safe_mode}>Kid-safe mode</Chip>
-          <Chip on={sub.quota.profiles > 1}>{sub.quota.profiles} profiles</Chip>
+          <Chip on={sub.quota.chat_with_citations}>{t("account.featChatCitations")}</Chip>
+          <Chip on={sub.quota.literary_translation}>{t("account.featLiteraryTranslation")}</Chip>
+          <Chip on={sub.quota.annotated_export}>{t("account.featAnnotatedExport")}</Chip>
+          <Chip on={sub.quota.priority_queue}>{t("account.featPriorityQueue")}</Chip>
+          <Chip on={sub.quota.family_safe_mode}>{t("account.featKidSafe")}</Chip>
+          <Chip on={sub.quota.profiles > 1}>{tn("account.featProfiles", sub.quota.profiles)}</Chip>
         </div>
       </div>
 
@@ -1046,10 +1049,10 @@ function SubscriptionSection({
           <div>
             <span className="badge-pill bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]">
               <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-saffron)]" />
-              {isSubscriber ? "Change plan" : "Choose a plan"}
+              {isSubscriber ? t("account.changePlan") : t("account.choosePlan")}
             </span>
             <h3 className="mt-3 font-[family-name:var(--font-display)] text-[clamp(1.7rem,3vw,2.2rem)] font-semibold leading-tight tracking-tight">
-              {isSubscriber ? "Upgrade, downgrade, or switch cycles." : "Stamp your passport."}
+              {isSubscriber ? t("account.changePlanHeading") : t("account.choosePlanHeading")}
             </h3>
           </div>
           <CycleToggle cycle={cycle} setCycle={setCycle} />
@@ -1075,39 +1078,40 @@ function SubscriptionSection({
 }
 
 function StatusPill({ status }: { status: Subscription["status"] }) {
+  const { t } = useI18n();
   const map: Record<Subscription["status"], { label: string; bg: string; text: string; dot: string }> = {
     inactive: {
-      label: "Free reader",
+      label: t("account.statusInactive"),
       bg: "bg-[color:var(--color-paper-3)]",
       text: "text-[color:var(--color-ink-soft)]",
       dot: "bg-[color:var(--color-ink-soft)]",
     },
     trialing: {
-      label: "On trial",
+      label: t("account.statusTrialing"),
       bg: "bg-[color:var(--color-saffron)]/25",
       text: "text-[color:var(--color-saffron-deep)]",
       dot: "bg-[color:var(--color-saffron)]",
     },
     active: {
-      label: "Active",
+      label: t("account.statusActive"),
       bg: "bg-[color:var(--color-sage)]/25",
       text: "text-[color:var(--color-sage-deep)]",
       dot: "bg-[color:var(--color-sage)]",
     },
     past_due: {
-      label: "Past due",
+      label: t("account.statusPastDue"),
       bg: "bg-[color:var(--color-coral)]/25",
       text: "text-[color:var(--color-coral-deep)]",
       dot: "bg-[color:var(--color-coral)]",
     },
     canceled: {
-      label: "Canceled",
+      label: t("account.statusCanceled"),
       bg: "bg-[color:var(--color-paper-3)]",
       text: "text-[color:var(--color-ink-soft)]",
       dot: "bg-[color:var(--color-ink-soft)]",
     },
     unpaid: {
-      label: "Unpaid",
+      label: t("account.statusUnpaid"),
       bg: "bg-[color:var(--color-coral)]/25",
       text: "text-[color:var(--color-coral-deep)]",
       dot: "bg-[color:var(--color-coral)]",
@@ -1138,6 +1142,7 @@ function Chip({ on, children }: { on: boolean; children: React.ReactNode }) {
 }
 
 function CycleToggle({ cycle, setCycle }: { cycle: Cycle; setCycle: (c: Cycle) => void }) {
+  const { t } = useI18n();
   return (
     <div className="relative inline-flex items-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-1 shadow-[0_1px_0_rgba(74,60,30,0.05)]">
       <button
@@ -1147,7 +1152,7 @@ function CycleToggle({ cycle, setCycle }: { cycle: Cycle; setCycle: (c: Cycle) =
           cycle === "monthly" ? "text-[color:var(--color-paper)]" : "text-[color:var(--color-ink-soft)]"
         }`}
       >
-        Monthly
+        {t("account.monthly")}
       </button>
       <button
         type="button"
@@ -1156,7 +1161,7 @@ function CycleToggle({ cycle, setCycle }: { cycle: Cycle; setCycle: (c: Cycle) =
           cycle === "yearly" ? "text-[color:var(--color-paper)]" : "text-[color:var(--color-ink-soft)]"
         }`}
       >
-        Yearly
+        {t("account.yearly")}
         <span className={`rounded-full px-1.5 py-0.5 text-[0.6rem] font-bold ${
           cycle === "yearly" ? "bg-[color:var(--color-saffron)] text-[color:var(--color-accent-foreground)]" : "bg-[color:var(--color-sage)]/20 text-[color:var(--color-sage-deep)]"
         }`}>
@@ -1189,13 +1194,31 @@ function PlanStamp({
   best?: boolean;
   tilt: string;
 }) {
+  const { t } = useI18n();
   const isCurrent = currentPlan === plan;
   const price = PLAN_PRICES[plan][cycle];
 
   const features: Record<typeof plan, string[]> = {
-    reader: ["600 pages / month (~3 books)", "All 14 languages", "Side-by-side reading", "Chat with citations", "Quiz mode (10 q / book)"],
-    scholar: ["Unlimited pages", "Literary translation (Anthropic)", "Priority queue", "Annotated PDF export", "Smart vocabulary lists"],
-    family: ["Everything in Scholar", "5 reader profiles", "Kid-safe mode", "Parent dashboard"],
+    reader: [
+      t("account.featReaderPages"),
+      t("account.featReaderLanguages"),
+      t("account.featReaderSideBySide"),
+      t("account.featReaderChat"),
+      t("account.featReaderQuiz"),
+    ],
+    scholar: [
+      t("account.featScholarUnlimited"),
+      t("account.featScholarLiterary"),
+      t("account.featScholarPriority"),
+      t("account.featScholarExport"),
+      t("account.featScholarVocab"),
+    ],
+    family: [
+      t("account.featFamilyEverything"),
+      t("account.featFamilyProfiles"),
+      t("account.featFamilyKidSafe"),
+      t("account.featFamilyDashboard"),
+    ],
   };
   const tones: Record<typeof plan, { ring: string; bg: string; chip: string; chipText: string }> = {
     reader: {
@@ -1217,37 +1240,37 @@ function PlanStamp({
       chipText: "text-[color:var(--color-sage-deep)]",
     },
   };
-  const t = tones[plan];
+  const tone = tones[plan];
 
   return (
     <div
-      className={`relative ${tilt} flex flex-col rounded-[1.4rem] border-[1.5px] ${t.ring} ${t.bg} p-6 shadow-[var(--shadow-paper)] transition-transform duration-300 hover:rotate-0 hover:-translate-y-1`}
+      className={`relative ${tilt} flex flex-col rounded-[1.4rem] border-[1.5px] ${tone.ring} ${tone.bg} p-6 shadow-[var(--shadow-paper)] transition-transform duration-300 hover:rotate-0 hover:-translate-y-1`}
     >
       {best && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 -rotate-[3deg]">
           <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--color-coral)] px-3 py-1 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-white shadow-[0_8px_18px_-6px_rgba(197,89,77,0.55)]">
-            ★ Most loved
+            ★ {t("account.mostLoved")}
           </span>
         </div>
       )}
       {isCurrent && (
         <div className="absolute -top-3 right-4">
           <span className="rounded-full bg-[color:var(--color-ink)] px-3 py-1 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-[color:var(--color-paper)]">
-            ✓ current
+            ✓ {t("account.currentBadge")}
           </span>
         </div>
       )}
 
-      <span className={`badge-pill ${t.chip} ${t.chipText}`}>{planName(plan)}</span>
+      <span className={`badge-pill ${tone.chip} ${tone.chipText}`}>{planName(plan)}</span>
 
       <div className="mt-5 flex items-baseline gap-1">
         <span className="font-[family-name:var(--font-display)] text-[2.6rem] font-semibold leading-none tracking-tight">
           €{price}
         </span>
-        <span className="text-sm text-[color:var(--color-ink-soft)]">/mo</span>
+        <span className="text-sm text-[color:var(--color-ink-soft)]">{t("account.perMonth")}</span>
       </div>
       <p className="mt-1 text-xs text-[color:var(--color-ink-soft)]">
-        {cycle === "yearly" ? `billed €${price * 12} yearly` : "billed monthly"}
+        {cycle === "yearly" ? t("account.billedYearly", { total: String(price * 12) }) : t("account.billedMonthly")}
       </p>
 
       <ul className="mt-5 space-y-2 text-[0.88rem] text-[color:var(--color-ink)]">
@@ -1276,12 +1299,12 @@ function PlanStamp({
         }`}
       >
         {busy
-          ? "Redirecting…"
+          ? t("account.redirecting")
           : isCurrent
-            ? "Your current plan"
+            ? t("account.yourCurrentPlan")
             : currentPlan === "free"
-              ? `Become a ${planName(plan)}`
-              : `Switch to ${planName(plan)}`}
+              ? t("account.becomePlan", { plan: planName(plan) })
+              : t("account.switchToPlan", { plan: planName(plan) })}
       </button>
     </div>
   );
@@ -1294,6 +1317,7 @@ function SecuritySection({
 }: {
   setFlash: (f: { tone: "success" | "error" | "info"; text: string } | null) => void;
 }) {
+  const { t } = useI18n();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -1301,23 +1325,23 @@ function SecuritySection({
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
-      setFlash({ tone: "error", text: "Passwords don't match." });
+      setFlash({ tone: "error", text: t("account.passwordsMismatch") });
       return;
     }
     if (password.length < 8) {
-      setFlash({ tone: "error", text: "Password must be at least 8 characters." });
+      setFlash({ tone: "error", text: t("account.passwordTooShort") });
       return;
     }
     setSubmitting(true);
     try {
       await updateProfile({ password });
-      setFlash({ tone: "success", text: "Password updated." });
+      setFlash({ tone: "success", text: t("account.passwordUpdated") });
       setPassword("");
       setConfirm("");
     } catch (err) {
       setFlash({
         tone: "error",
-        text: err instanceof ApiError ? err.message : "Couldn't update password.",
+        text: err instanceof ApiError ? err.message : t("account.errUpdatePassword"),
       });
     } finally {
       setSubmitting(false);
@@ -1326,12 +1350,12 @@ function SecuritySection({
 
   return (
     <SectionShell
-      eyebrow="Security"
-      title="Lock the cabinet."
-      lede="A new password, every once in a while. We never see the old one."
+      eyebrow={t("account.securityEyebrow")}
+      title={t("account.securityTitle")}
+      lede={t("account.securityLede")}
     >
       <form onSubmit={onSubmit} className="grid max-w-lg gap-5">
-        <Field label="New password">
+        <Field label={t("account.newPasswordLabel")}>
           <input
             type="password"
             required
@@ -1339,11 +1363,11 @@ function SecuritySection({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="paper-input"
-            placeholder="At least 8 characters"
+            placeholder={t("account.newPasswordPlaceholder")}
             autoComplete="new-password"
           />
         </Field>
-        <Field label="Confirm new password">
+        <Field label={t("account.confirmPasswordLabel")}>
           <input
             type="password"
             required
@@ -1351,7 +1375,7 @@ function SecuritySection({
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             className="paper-input"
-            placeholder="Type it once more"
+            placeholder={t("account.confirmPasswordPlaceholder")}
             autoComplete="new-password"
           />
         </Field>
@@ -1360,7 +1384,7 @@ function SecuritySection({
           disabled={submitting}
           className="mt-2 inline-flex h-12 items-center justify-center gap-2 self-start rounded-full bg-[color:var(--color-ink)] px-7 font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)] transition-transform hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {submitting ? "Updating…" : "Update password"}
+          {submitting ? t("account.updating") : t("account.updatePassword")}
         </button>
       </form>
     </SectionShell>
@@ -1370,6 +1394,7 @@ function SecuritySection({
 /* ─────────────────────── Lumi & Progress ─────────────────────── */
 
 function LumiSection() {
+  const { t, tn } = useI18n();
   const { progress } = useLumi();
   const xpInfo = xpToNextLevel(progress);
   const title = LEVEL_TITLES[progress.level];
@@ -1377,9 +1402,9 @@ function LumiSection() {
 
   return (
     <SectionShell
-      eyebrow="Companion"
-      title="Lumi & your progress"
-      lede="Track your reading journey. Every book translated, quiz aced, and day kept is a feather in Lumi's wings."
+      eyebrow={t("account.lumiEyebrow")}
+      title={t("account.lumiTitle")}
+      lede={t("account.lumiLede")}
     >
       {/* Hero card — current state of Lumi */}
       <div className="relative overflow-hidden rounded-3xl border-[1.5px] border-[color:var(--color-border)] bg-gradient-to-br from-[#FFFCF3] to-[color:var(--color-paper-2)] p-6 sm:p-8">
@@ -1398,16 +1423,19 @@ function LumiSection() {
           </div>
           <div className="flex-1 text-center sm:text-left">
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[color:var(--color-saffron-deep)]">
-              Level {progress.level} · {title}
+              {t("account.levelTitle", { level: String(progress.level), title })}
             </p>
             <h3 className="mt-1 font-[family-name:var(--font-display)] text-[clamp(1.6rem,3vw,2.2rem)] font-semibold leading-tight tracking-tight">
               {progress.xp.toLocaleString()}{" "}
-              <span className="text-[color:var(--color-ink-soft)]">XP</span>
+              <span className="text-[color:var(--color-ink-soft)]">{t("account.xp")}</span>
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-[color:var(--color-ink-soft)]">
               {xpInfo
-                ? `${xpInfo.needed.toLocaleString()} XP to Level ${progress.level + 1}.`
-                : "You've reached the highest rank. Lumi salutes you. 🦉"}
+                ? t("account.xpToNextLevel", {
+                    needed: xpInfo.needed.toLocaleString(),
+                    level: String(progress.level + 1),
+                  })
+                : t("account.highestRank")}
             </p>
 
             {/* XP bar */}
@@ -1420,7 +1448,7 @@ function LumiSection() {
               </div>
               {xpInfo && (
                 <p className="mt-1.5 font-mono text-[10px] tabular-nums text-[color:var(--color-ink-soft)]">
-                  {progress.xp} / {xpInfo.next} XP
+                  {t("account.xpProgress", { xp: String(progress.xp), next: String(xpInfo.next) })}
                 </p>
               )}
             </div>
@@ -1429,7 +1457,7 @@ function LumiSection() {
             {progress.streakDays > 0 && (
               <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-coral)]/15 px-3 py-1 text-[12px] font-semibold text-[color:var(--color-coral-deep)]">
                 <span aria-hidden>🔥</span>
-                <span>{progress.streakDays}-day streak</span>
+                <span>{tn("account.dayStreak", progress.streakDays)}</span>
               </div>
             )}
           </div>
@@ -1439,7 +1467,7 @@ function LumiSection() {
       {/* Level ladder */}
       <div className="mt-6 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)]/60 p-5">
         <h4 className="mb-4 font-[family-name:var(--font-display)] text-[1.1rem] font-semibold tracking-tight">
-          The ladder
+          {t("account.theLadder")}
         </h4>
         <div className="grid grid-cols-5 gap-3">
           {allLevels.map((lv) => {
@@ -1459,13 +1487,13 @@ function LumiSection() {
                 </div>
                 <div className="text-center">
                   <p className="font-[family-name:var(--font-display)] text-[0.75rem] font-semibold text-[color:var(--color-ink)]">
-                    Lv {lv}
+                    {t("account.ladderLevel", { level: String(lv) })}
                   </p>
                   <p className="text-[0.65rem] leading-tight text-[color:var(--color-ink-soft)]">
                     {LEVEL_TITLES[lv]}
                   </p>
                   <p className="mt-0.5 font-mono text-[0.62rem] tabular-nums text-[color:var(--color-ink-soft)]/70">
-                    {threshold} XP
+                    {t("account.xpAmount", { xp: String(threshold) })}
                   </p>
                 </div>
               </div>
@@ -1478,7 +1506,7 @@ function LumiSection() {
       <div className="mt-6 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)]/60 p-5">
         <div className="mb-4 flex items-baseline justify-between gap-3">
           <h4 className="font-[family-name:var(--font-display)] text-[1.1rem] font-semibold tracking-tight">
-            Achievements
+            {t("account.achievements")}
           </h4>
           <span className="font-mono text-[11px] tabular-nums text-[color:var(--color-ink-soft)]">
             {progress.awarded.length} / {Object.keys(ACHIEVEMENTS).length}
@@ -1520,7 +1548,7 @@ function LumiSection() {
                       : "bg-[color:var(--color-paper-3)] text-[color:var(--color-ink-soft)]"
                   }`}
                 >
-                  +{ach.xp} XP
+                  {t("account.xpReward", { xp: String(ach.xp) })}
                 </div>
               </div>
             );
@@ -1534,23 +1562,24 @@ function LumiSection() {
 /* ─────────────────────── Danger zone ─────────────────────── */
 
 function DangerSection({ user }: { user: User }) {
+  const { t } = useI18n();
   const [confirm, setConfirm] = useState("");
   const matches = confirm === user.email;
 
   return (
     <SectionShell
-      eyebrow="Danger zone"
-      title="Closing the shelf."
-      lede="Permanent, irreversible. We'll delete your books, translations, chats, quizzes — everything."
+      eyebrow={t("account.dangerEyebrow")}
+      title={t("account.dangerTitle")}
+      lede={t("account.dangerLede")}
     >
       <div className="rounded-[1.4rem] border-[1.5px] border-[color:var(--color-coral-deep)]/40 bg-[color:var(--color-coral)]/8 p-7 shadow-[var(--shadow-paper)]">
         <h3 className="font-[family-name:var(--font-display)] text-[1.4rem] font-semibold tracking-tight text-[color:var(--color-coral-deep)]">
-          Delete your account
+          {t("account.deleteAccountHeading")}
         </h3>
         <p className="mt-2 max-w-xl text-[0.95rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-          If you have an active subscription, please cancel it first via{" "}
-          <strong className="text-[color:var(--color-ink)]">Manage in Stripe</strong>{" "}
-          to avoid being charged. Then type your email below to confirm.
+          {t("account.deleteAccountIntro")}{" "}
+          <strong className="text-[color:var(--color-ink)]">{t("account.manageInStripe")}</strong>{" "}
+          {t("account.deleteAccountOutro")}
         </p>
         <div className="mt-5 grid max-w-md gap-3">
           <input
@@ -1559,7 +1588,7 @@ function DangerSection({ user }: { user: User }) {
             onChange={(e) => setConfirm(e.target.value)}
             className="paper-input"
             placeholder={user.email}
-            aria-label="Confirm email"
+            aria-label={t("account.confirmEmailAria")}
           />
           <button
             type="button"
@@ -1570,7 +1599,7 @@ function DangerSection({ user }: { user: User }) {
             }}
             className="inline-flex h-12 items-center justify-center gap-2 self-start rounded-full bg-[color:var(--color-coral-deep)] px-6 font-semibold text-white shadow-[0_2px_0_rgba(140,40,30,0.4)] transition-transform hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-30"
           >
-            Permanently delete my account
+            {t("account.permanentlyDelete")}
           </button>
         </div>
       </div>
@@ -1626,6 +1655,7 @@ function FlashBanner({
   flash: { tone: "success" | "error" | "info"; text: string };
   onDismiss: () => void;
 }) {
+  const { t } = useI18n();
   const tones = {
     success: "border-[color:var(--color-sage-deep)]/40 bg-[color:var(--color-sage)]/12 text-[color:var(--color-sage-deep)]",
     error: "border-[color:var(--color-coral-deep)]/40 bg-[color:var(--color-coral)]/12 text-[color:var(--color-coral-deep)]",
@@ -1644,7 +1674,7 @@ function FlashBanner({
         type="button"
         onClick={onDismiss}
         className="text-current/60 hover:text-current"
-        aria-label="Dismiss"
+        aria-label={t("account.dismiss")}
       >
         ×
       </button>
@@ -1653,12 +1683,13 @@ function FlashBanner({
 }
 
 function Stamp({ tone }: { tone: "active" | "trial" | "free" | "warn" }) {
+  const { t } = useI18n();
   // Decorative wax-stamp seal in the page corner — matches active state.
   const colors = {
-    active: { fg: "var(--color-sage-deep)", bg: "rgba(123,161,124,0.18)", label: "✓ READING" },
-    trial: { fg: "var(--color-saffron-deep)", bg: "rgba(224,164,88,0.20)", label: "✦ TRIAL" },
-    warn: { fg: "var(--color-coral-deep)", bg: "rgba(226,120,108,0.18)", label: "! ATTEND" },
-    free: { fg: "rgba(74,82,99,0.6)", bg: "rgba(74,82,99,0.08)", label: "FREE" },
+    active: { fg: "var(--color-sage-deep)", bg: "rgba(123,161,124,0.18)", label: `✓ ${t("account.stampReading")}` },
+    trial: { fg: "var(--color-saffron-deep)", bg: "rgba(224,164,88,0.20)", label: `✦ ${t("account.stampTrial")}` },
+    warn: { fg: "var(--color-coral-deep)", bg: "rgba(226,120,108,0.18)", label: `! ${t("account.stampAttend")}` },
+    free: { fg: "rgba(74,82,99,0.6)", bg: "rgba(74,82,99,0.08)", label: t("account.stampFree") },
   }[tone];
   return (
     <div
@@ -1696,24 +1727,27 @@ function ParchmentBackdrop() {
   );
 }
 
-function upgradeFlash(reason: string): string {
+function upgradeFlash(
+  reason: string,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string {
   switch (reason) {
     case "pages":
     case "books":   // legacy alias from older links
     case "quota":   // legacy alias from older links
-      return "This upload would put you over your plan's monthly page budget. Upgrade below to keep going.";
+      return t("account.upgradePages");
     case "quizzes":
-      return "You've used every quiz this book allows on your plan. Upgrade for unlimited.";
+      return t("account.upgradeQuizzes");
     case "chat":
-      return "Chat with citations is a Reader feature. Pick a plan below to unlock.";
+      return t("account.upgradeChat");
     case "translate":
-      return "Translations need an active plan. Pick one below — first month is on us.";
+      return t("account.upgradeTranslate");
     case "no_plan":
-      return "An active plan is required for that. Pick one below to keep going.";
+      return t("account.upgradeNoPlan");
     case "trial":
-      return "Welcome — your 2 free pages are ready. Pick a plan below whenever you're set on more.";
+      return t("account.upgradeTrial");
     default:
-      return "Upgrade your plan below to unlock more.";
+      return t("account.upgradeDefault");
   }
 }
 

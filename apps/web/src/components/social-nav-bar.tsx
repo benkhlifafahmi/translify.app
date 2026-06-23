@@ -15,6 +15,7 @@
  */
 import Link from "next/link";
 import type { User } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   user: User | null | undefined;
@@ -23,17 +24,18 @@ interface Props {
 }
 
 export function SocialNavBar({ user, active }: Props) {
+  const { t } = useI18n();
   if (user?.is_anonymous) {
     return (
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 rounded-2xl border-[1.5px] border-dashed border-[color:var(--color-border-strong)] bg-[color:var(--color-paper-2)]/40 px-5 py-3 text-[0.86rem]">
         <p className="text-[color:var(--color-ink-soft)]">
-          Add your email to share sentences and follow other readers.
+          {t("socialnav.ghostNudge")}
         </p>
         <Link
           href="/onboarding"
           className="inline-flex h-9 items-center rounded-full bg-[color:var(--color-ink)] px-4 text-[0.82rem] font-semibold text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4),0_8px_18px_-8px_rgba(20,16,8,0.4)] transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[1px] active:scale-[0.97] active:translate-y-0"
         >
-          Claim your account
+          {t("socialnav.claimAccount")}
         </Link>
       </div>
     );
@@ -42,11 +44,13 @@ export function SocialNavBar({ user, active }: Props) {
   const profileHref = user?.username
     ? `/u/${encodeURIComponent(user.username)}`
     : "/settings/profile";
-  const profileLabel = user?.username ? "Your profile" : "Claim a handle";
+  const profileLabel = user?.username
+    ? t("socialnav.yourProfile")
+    : t("socialnav.claimHandle");
 
   return (
     <nav
-      aria-label="Social"
+      aria-label={t("socialnav.ariaSocial")}
       className="-mx-1 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <Pill
@@ -58,21 +62,21 @@ export function SocialNavBar({ user, active }: Props) {
       />
       <Pill
         href="/feed"
-        label="Feed"
+        label={t("socialnav.feed")}
         active={active === "feed"}
         icon={<FeedIcon />}
         tone="sage"
       />
       <Pill
         href="/discover"
-        label="Discover"
+        label={t("socialnav.discover")}
         active={active === "discover"}
         icon={<CompassIcon />}
         tone="coral"
       />
       <Pill
         href="/search"
-        label="Find people"
+        label={t("socialnav.findPeople")}
         active={active === "search"}
         icon={<SearchIcon />}
         tone="plum"

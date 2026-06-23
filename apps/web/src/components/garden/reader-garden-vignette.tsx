@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { PlantSvg } from "./plant-svg";
 import { FarmerSvg } from "./farmer-svg";
+import { useI18n } from "@/lib/i18n";
 import {
   getGarden,
   type Farmer,
@@ -48,8 +49,13 @@ const FALLBACK_FARMER: Farmer = {
 
 export const ReaderGardenVignette = forwardRef<ReaderGardenVignetteHandle, Props>(
   function ReaderGardenVignette({ bookId }, ref) {
+    const { t } = useI18n();
     const [active, setActive] = useState<ActiveState | null>(null);
     const lockUntilRef = useRef<number>(0);
+    // Keep the latest translator available to the imperative handle without
+    // re-creating it (its dep list is intentionally empty).
+    const tRef = useRef(t);
+    tRef.current = t;
 
     const { data: garden } = useQuery<Garden>({
       queryKey: ["garden", bookId],
@@ -70,7 +76,7 @@ export const ReaderGardenVignette = forwardRef<ReaderGardenVignetteHandle, Props
           lockUntilRef.current = now + ANIMATION_DURATION_MS;
           setActive({
             kind,
-            caption: caption ?? defaultCaption(kind),
+            caption: caption ?? defaultCaption(kind, tRef.current),
             nonce: now,
           });
         },
@@ -91,7 +97,10 @@ export const ReaderGardenVignette = forwardRef<ReaderGardenVignetteHandle, Props
     const capacity = garden?.vitalityCapacity ?? 5;
 
     // Pick a stage label like "stage IV · in bud" from the current stage.
-    const stageLabel = useMemo(() => stageNames[stage] ?? "growing", [stage]);
+    const stageLabel = useMemo(
+      () => (stageNameKeys[stage] ? t(stageNameKeys[stage]) : t("gview.stage.growing")),
+      [stage, t],
+    );
 
     // No garden record yet AND no query in flight — still render the idle
     // vignette so the affordance is always present. (The first read event
@@ -100,8 +109,8 @@ export const ReaderGardenVignette = forwardRef<ReaderGardenVignetteHandle, Props
     return (
       <Link
         href={`/garden/${bookId}`}
-        aria-label="Open this book's garden"
-        title="Open this book's garden"
+        aria-label={t("gview.openGarden.aria")}
+        title={t("gview.openGarden.aria")}
         className={[
           "group fixed bottom-5 left-[calc(25%_+_1.25rem)] z-20 hidden",
           "lg:block",
@@ -124,7 +133,7 @@ export const ReaderGardenVignette = forwardRef<ReaderGardenVignetteHandle, Props
           {/* header strip */}
           <div className="relative z-[2] flex items-center justify-between px-3 pt-2.5 font-[family-name:var(--font-display)] text-[10px] uppercase tracking-[0.2em] text-[color:var(--color-muted-foreground)]">
             <span className="italic normal-case tracking-normal text-[12px] text-[color:var(--color-sage-deep)]">
-              specimen
+              {t("gview.specimen")}
             </span>
             <span className="tabular-nums">{stageLabel}</span>
           </div>
@@ -252,7 +261,10 @@ export const ReaderGardenVignette = forwardRef<ReaderGardenVignetteHandle, Props
 
           {/* footer: vitality dots + open hint */}
           <div className="relative z-[2] flex items-center justify-between border-t border-dashed border-[color:var(--color-border-strong)]/50 px-3 py-2">
-            <div className="flex gap-1" aria-label={`vitality ${vitality} of ${capacity}`}>
+            <div
+              className="flex gap-1"
+              aria-label={t("gview.vitality.aria", { v: vitality, c: capacity })}
+            >
               {Array.from({ length: capacity }).map((_, i) => (
                 <span
                   key={i}
@@ -265,7 +277,7 @@ export const ReaderGardenVignette = forwardRef<ReaderGardenVignetteHandle, Props
               ))}
             </div>
             <span className="font-[family-name:var(--font-display)] text-[11px] italic text-[color:var(--color-muted-foreground)] transition-colors group-hover:text-[color:var(--color-ink)]">
-              open garden →
+              {t("gview.openGarden.hint")} →
             </span>
           </div>
         </div>
@@ -276,14 +288,18 @@ export const ReaderGardenVignette = forwardRef<ReaderGardenVignetteHandle, Props
 
 // ---------------------------------------------------------------------------
 
-const stageNames = [
-  "stage 0", "stage I", "stage II", "stage III", "stage IV", "stage V", "stage VI",
+const stageNameKeys = [
+  "gview.stage.0", "gview.stage.1", "gview.stage.2", "gview.stage.3",
+  "gview.stage.4", "gview.stage.5", "gview.stage.6",
 ] as const;
 
-function defaultCaption(kind: VignetteActivity): string {
+function defaultCaption(
+  kind: VignetteActivity,
+  t: (key: string) => string,
+): string {
   switch (kind) {
-    case "water": return "+ watered";
-    case "plant": return "+ new leaf";
+    case "water": return t("gview.caption.watered");
+    case "plant": return t("gview.caption.newLeaf");
   }
 }
 

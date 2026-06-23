@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Lumi } from "@/components/lumi/lumi";
+import { useI18n } from "@/lib/i18n";
 
 /**
  * In-reader tutorial — contextual coach-marks with a *visible* spotlight
@@ -29,11 +30,9 @@ type Spotlight =
 interface Step {
   id: StepId;
   showAtPage: number;
-  eyebrow: string;
-  body: string;
-  cta: string;
+  /** i18n key prefix; copy lives at `tut.<keyBase>.{eyebrow,body,cta,pointer}`. */
+  keyBase: string;
   lumi?: "waving" | "happy" | "excited" | "thinking" | "reading";
-  pointer?: string;
   spotlight: Spotlight;
 }
 
@@ -41,11 +40,8 @@ const STEPS: Step[] = [
   {
     id: "tap-to-turn",
     showAtPage: 1,
-    eyebrow: "How to read",
-    body: "Tap the arrows in the top bar to flip forward and back. On a computer you can also tap the left or right edge of the page.",
-    cta: "Got it",
+    keyBase: "tap",
     lumi: "waving",
-    pointer: "⟵ ⟶ The two glowing arrows",
     spotlight: {
       kind: "anchor",
       selectors: ['[data-tutorial-anchor="topbar-prev"]', '[data-tutorial-anchor="topbar-next"]'],
@@ -54,31 +50,22 @@ const STEPS: Step[] = [
   {
     id: "select-to-act",
     showAtPage: 2,
-    eyebrow: "Try this",
-    body: "Long-press any sentence — a toolbar pops up to highlight, take a note, or ask AI to explain.",
-    cta: "Nice",
+    keyBase: "select",
     lumi: "happy",
-    pointer: "✎ Press and hold a word, then drag",
     spotlight: { kind: "canvas-text" },
   },
   {
     id: "open-chat",
     showAtPage: 4,
-    eyebrow: "Chat with the book",
-    body: "Open Chat to ask anything — Lumi answers with cited passages from this book.",
-    cta: "Got it",
+    keyBase: "chat",
     lumi: "thinking",
-    pointer: "💬 The glowing tab",
     spotlight: { kind: "anchor", selectors: ['[data-tutorial-anchor="chat-tab"]'] },
   },
   {
     id: "open-quiz",
     showAtPage: 6,
-    eyebrow: "Make it stick",
-    body: "Open Study to quiz yourself and turn your highlights into flashcards.",
-    cta: "Cool",
+    keyBase: "quiz",
     lumi: "excited",
-    pointer: "★ Your study tools",
     spotlight: {
       kind: "anchor",
       selectors: ['[data-tutorial-anchor="quiz-rail"]', '[data-tutorial-anchor="study-tab"]'],
@@ -98,6 +85,7 @@ interface Props {
 }
 
 export function ReaderTutorial({ page, disabled }: Props) {
+  const { t } = useI18n();
   const [activeStep, setActiveStep] = useState<Step | null>(null);
   const [skipped, setSkipped] = useState(false);
 
@@ -151,6 +139,11 @@ export function ReaderTutorial({ page, disabled }: Props) {
 
   if (!activeStep || skipped || disabled) return null;
 
+  const eyebrow = t(`tut.${activeStep.keyBase}.eyebrow`);
+  const body = t(`tut.${activeStep.keyBase}.body`);
+  const cta = t(`tut.${activeStep.keyBase}.cta`);
+  const pointer = t(`tut.${activeStep.keyBase}.pointer`);
+
   const markSeen = (id: StepId) => {
     try { window.localStorage.setItem(SEEN_KEY(id), "1"); } catch { /* ignore */ }
   };
@@ -179,7 +172,7 @@ export function ReaderTutorial({ page, disabled }: Props) {
       <div
         role="dialog"
         aria-modal="false"
-        aria-label={activeStep.eyebrow}
+        aria-label={eyebrow}
         className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] sm:px-6"
       >
         <div
@@ -203,34 +196,34 @@ export function ReaderTutorial({ page, disabled }: Props) {
                 className="text-[0.66rem] font-bold uppercase tracking-[0.18em]"
                 style={{ color: "var(--color-saffron-deep)" }}
               >
-                {activeStep.eyebrow}
+                {eyebrow}
               </p>
               <p
                 className="mt-0.5 text-[0.92rem] leading-snug"
                 style={{ color: "var(--color-ink)" }}
               >
-                {activeStep.body}
+                {body}
               </p>
-              {activeStep.pointer && (
+              {pointer && (
                 <p
                   className="mt-1.5 text-[0.74rem] font-medium"
                   style={{ color: "var(--color-ink-soft)" }}
                 >
-                  {activeStep.pointer}
+                  {pointer}
                 </p>
               )}
             </div>
             <button
               type="button"
               onClick={onDismiss}
-              aria-label={activeStep.cta}
+              aria-label={cta}
               className="ms-1 grid h-9 shrink-0 place-items-center self-center rounded-xl px-3.5 font-[family-name:var(--font-display)] text-[0.84rem] font-bold text-white transition-all active:translate-y-1"
               style={{
                 background: "linear-gradient(to bottom,#EDB86A,#D09040)",
                 boxShadow: "0 3px 0 rgba(152,96,24,0.50)",
               }}
             >
-              {activeStep.cta}
+              {cta}
             </button>
           </div>
           <button
@@ -239,7 +232,7 @@ export function ReaderTutorial({ page, disabled }: Props) {
             className="block w-full border-t border-dashed py-2 text-[0.74rem] font-semibold transition-colors hover:bg-[color:var(--color-paper-3)]"
             style={{ borderColor: "var(--color-border)", color: "var(--color-ink-soft)" }}
           >
-            Skip tour
+            {t("tut.skip")}
           </button>
         </div>
       </div>

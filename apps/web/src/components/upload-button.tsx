@@ -8,6 +8,7 @@ import { ApiError, getToken } from "@/lib/api";
 import { parseQuotaError, upgradeUrl } from "@/lib/quota";
 import { getSubscription, isUnlimited, type Subscription } from "@/lib/billing";
 import { useLumi } from "@/components/lumi/lumi-context";
+import { useI18n } from "@/lib/i18n";
 
 const ACCEPTED = ".pdf,.epub,application/pdf,application/epub+zip";
 
@@ -18,6 +19,7 @@ interface ActiveUpload {
 }
 
 export function UploadButton() {
+  const { t } = useI18n();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const queryClient = useQueryClient();
   const [active, setActive] = useState<ActiveUpload | null>(null);
@@ -53,7 +55,7 @@ export function UploadButton() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["books"] });
-      bumpXP(15, "+15 XP — Book added!");
+      bumpXP(15, t("upload.xp"));
     },
     onError: (err) => {
       const quota = parseQuotaError(err);
@@ -63,7 +65,7 @@ export function UploadButton() {
         );
         return;
       }
-      setError(err instanceof ApiError ? err.message : err.message || "Upload failed");
+      setError(err instanceof ApiError ? err.message : err.message || t("upload.failed"));
     },
   });
 
@@ -96,10 +98,10 @@ export function UploadButton() {
           </span>
           <div className="flex-1 min-w-0">
             <p className="font-[family-name:var(--font-display)] text-base font-semibold leading-tight text-[color:var(--color-ink)]">
-              Upgrade to add another book
+              {t("upload.exhausted.title")}
             </p>
             <p className="text-xs text-[color:var(--color-ink-soft)]">
-              Your 2 free pages are used — pick a plan to keep going
+              {t("upload.exhausted.body")}
             </p>
           </div>
           <span className="text-[color:var(--color-coral-deep)] transition-transform group-hover:translate-x-0.5">
@@ -144,12 +146,12 @@ export function UploadButton() {
         </span>
         <div className="flex-1 min-w-0">
           <p className="font-[family-name:var(--font-display)] text-base font-semibold leading-tight text-[color:var(--color-ink)]">
-            {mutation.isPending ? "Uploading…" : "Add a book"}
+            {mutation.isPending ? t("upload.uploading") : t("upload.add")}
           </p>
           <p className="text-xs text-[color:var(--color-ink-soft)]">
             {isFree
-              ? `Drop a PDF or EPUB · ${pagesLimit - pagesUsed} free pages left`
-              : "Drop a PDF or EPUB here"}
+              ? t("upload.dropFree", { n: pagesLimit - pagesUsed })
+              : t("upload.drop")}
           </p>
         </div>
       </button>

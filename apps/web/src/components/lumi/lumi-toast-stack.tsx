@@ -5,8 +5,10 @@
 
 import { useLumi } from "./lumi-context";
 import { Lumi } from "./lumi";
+import { useI18n } from "@/lib/i18n";
 
 export function LumiToastStack() {
+  const { t: translate } = useI18n();
   const { toasts, dismissToast } = useLumi();
 
   return (
@@ -45,7 +47,7 @@ export function LumiToastStack() {
               </span>
               {t.xp && t.kind === "achievement" && (
                 <span className="rounded-full bg-[color:var(--color-saffron)]/20 px-1.5 py-0.5 text-[10px] font-bold text-[color:var(--color-saffron-deep)]">
-                  +{t.xp} XP
+                  {translate("lumi.xpBadge", { xp: t.xp })}
                 </span>
               )}
             </div>

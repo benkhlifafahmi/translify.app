@@ -9,6 +9,7 @@ import { TranslifyMark } from "@/components/translify-mark";
 import { WeeklyTendingFlow } from "@/components/garden/weekly-tending-flow";
 import { getToken } from "@/lib/api";
 import { getGarden, type Garden } from "@/lib/garden";
+import { useI18n } from "@/lib/i18n";
 
 export default function TendingPage({
   params,
@@ -17,6 +18,7 @@ export default function TendingPage({
 }) {
   const { bookId } = use(params);
   const router = useRouter();
+  const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
@@ -35,7 +37,7 @@ export default function TendingPage({
   if (!mounted || isLoading || !garden) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10">
-        <p className="text-[color:var(--color-ink-soft)]">Preparing the rite…</p>
+        <p className="text-[color:var(--color-ink-soft)]">{t("gpage.preparing")}</p>
       </main>
     );
   }
@@ -55,7 +57,7 @@ export default function TendingPage({
         <TranslifyMark href="/library" size={36} wordmarkClassName="text-xl" />
         <div className="flex items-center gap-3 font-[family-name:var(--font-display)] text-[12px] uppercase tracking-[0.18em] text-[color:var(--color-muted-foreground)]">
           <Link href={`/garden/${bookId}`} className="transition-colors hover:text-[color:var(--color-ink)]">
-            ← {truncate(garden.bookTitle, 36)}
+            {t("gpage.back", { title: truncate(garden.bookTitle, 36) })}
           </Link>
         </div>
       </header>
