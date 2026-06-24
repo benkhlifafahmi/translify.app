@@ -183,13 +183,37 @@ function SectionCard({
 
   return (
     <div className="card-paper overflow-hidden">
-      <div className="flex items-center gap-2 px-5 py-4">
+      <div className="flex items-center gap-3 px-5 py-4">
+        {start != null && (
+          <button
+            type="button"
+            onClick={() => onSeek?.(start)}
+            title={t("studyGuide.watchSection")}
+            aria-label={t("studyGuide.watchSection")}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[color:var(--color-coral)] text-white shadow-[0_2px_0_rgba(140,50,40,0.35)] transition-transform hover:scale-105 active:scale-95"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex flex-1 items-center gap-2.5 text-left"
+          className="flex flex-1 items-center justify-between gap-3 text-left"
           aria-expanded={open}
         >
+          <span className="min-w-0">
+            <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold leading-tight tracking-tight">
+              {section.title}
+            </h3>
+            {start != null && (
+              <span className="mt-0.5 block text-[0.7rem] font-semibold tabular-nums text-[color:var(--color-ink-soft)]">
+                {formatDuration(start)}
+                {section.time_end_seconds != null && <>–{formatDuration(section.time_end_seconds)}</>}
+              </span>
+            )}
+          </span>
           <svg
             className={`shrink-0 text-[color:var(--color-ink-soft)] transition-transform ${open ? "rotate-90" : ""}`}
             width="16"
@@ -203,25 +227,7 @@ function SectionCard({
           >
             <path d="m9 18 6-6-6-6" />
           </svg>
-          <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-            {section.title}
-          </h3>
         </button>
-        {start != null && (
-          <button
-            type="button"
-            onClick={() => onSeek?.(start)}
-            title={t("studyGuide.watchSection")}
-            aria-label={t("studyGuide.watchSection")}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-coral)]/8 px-2.5 py-1 text-[0.7rem] font-semibold tabular-nums text-[color:var(--color-coral-deep)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-coral-deep)]"
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M8 5v14l11-7z" />
-            </svg>
-            {formatDuration(start)}
-            {section.time_end_seconds != null && <>–{formatDuration(section.time_end_seconds)}</>}
-          </button>
-        )}
       </div>
 
       {open && (
