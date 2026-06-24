@@ -30,6 +30,37 @@ GRADE_MAX_TOKENS = 600
 MAX_CONTEXT_CHARS = 30_000
 
 _JSON_OBJECT_RE = re.compile(r"\{.*\}", re.DOTALL)
+_FENCE_RE = re.compile(r"^```[A-Za-z0-9]*\s*|\s*```$")
+
+
+def _loads_json(text: str, *, what: str) -> dict:
+    """Parse a JSON object from a model response.
+
+    Tolerates ```json fences and surrounding prose. On failure logs the raw
+    output (so a malformed generation can actually be inspected) and raises.
+    """
+    raw = (text or "").strip()
+    candidate = _FENCE_RE.sub("", raw).strip() if raw.startswith("```") else raw
+
+    # Try the whole (de-fenced) body first, then the greedy {...} slice.
+    attempts = [candidate]
+    m = _JSON_OBJECT_RE.search(candidate)
+    if m and m.group(0) != candidate:
+        attempts.append(m.group(0))
+
+    for attempt in attempts:
+        try:
+            obj = json.loads(attempt)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, dict):
+            return obj
+
+    log.error(
+        "%s: could not parse model JSON (len=%d). Raw output (first 2000 chars):\n%s",
+        what, len(raw), raw[:2000],
+    )
+    raise RuntimeError(f"{what} JSON was malformed")
 
 
 # ───────────────────────── Generation ─────────────────────────
@@ -71,6 +102,13 @@ async def generate_study_guide(
         max_tokens=GEN_MAX_TOKENS,
         temperature=0.6,
         response_format="json",
+    )
+    # Logged so a malformed generation can be debugged: which model answered
+    # (Gemini vs. the Haiku fallback) and whether it hit the token cap (a
+    # truncated response is invalid JSON).
+    log.info(
+        "study-guide generated: model=%s out_tokens=%s chars=%d",
+        resp.model, resp.output_tokens, len(resp.text or ""),
     )
     return _parse_guide(resp.text)
 
@@ -195,13 +233,7 @@ def _coerce_seconds(value: object) -> int | None:
 
 
 def _parse_guide(text: str) -> list[dict]:
-    match = _JSON_OBJECT_RE.search(text)
-    if not match:
-        raise RuntimeError("Study-guide model returned no JSON object")
-    try:
-        data = json.loads(match.group(0))
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Study-guide JSON was malformed: {exc}") from exc
+    data = _loads_json(text, what="Study-guide")
 
     raw_sections = data.get("sections")
     if not isinstance(raw_sections, list) or not raw_sections:
@@ -327,13 +359,7 @@ async def grade_answer(
 
 
 def _parse_grade(text: str, *, fallback_answer: str) -> dict:
-    match = _JSON_OBJECT_RE.search(text)
-    if not match:
-        raise RuntimeError("Grading model returned no JSON object")
-    try:
-        data = json.loads(match.group(0))
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Grading JSON was malformed: {exc}") from exc
+    data = _loads_json(text, what="Grading")
 
     correct = bool(data.get("correct"))
     feedback = str(data.get("feedback", "")).strip()
