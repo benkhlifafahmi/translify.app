@@ -80,30 +80,34 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   const videoId = youtubeVideoId(book.source_url);
 
   return (
-    <main className="flex min-h-[100dvh] flex-col bg-[color:var(--color-paper)]">
+    <main className="flex min-h-[100dvh] flex-col bg-[color:var(--color-paper)] lg:h-[100dvh] lg:min-h-0 lg:overflow-hidden">
       <WatchHeader book={book} />
 
       {!ready ? (
         <NotReadyState book={book} />
       ) : (
-        <>
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:px-8">
-          {/* Player column */}
-          <section id="watch-player" className="lg:col-span-7">
-            {videoId ? (
-              <YouTubePlayer ref={playerRef} videoId={videoId} />
-            ) : (
-              <div className="grid aspect-video w-full place-items-center rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper-2)] text-sm text-[color:var(--color-ink-soft)]">
-                {t("watch.noVideo")}
-              </div>
-            )}
-            <p className="mt-3 px-1 text-[0.7rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-              {t("media.captionsNote")}
-            </p>
-          </section>
+        <div className="mx-auto flex w-full max-w-[100rem] flex-col gap-4 px-4 py-4 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-12 lg:grid-rows-1 lg:gap-6 lg:overflow-hidden lg:px-6">
+          {/* LEFT: video pinned at the top, study material scrolls beneath it. */}
+          <div className="flex flex-col gap-4 lg:col-span-8 lg:min-h-0 lg:gap-0 lg:overflow-hidden">
+            <div id="watch-player" className="lg:shrink-0">
+              {videoId ? (
+                <YouTubePlayer ref={playerRef} videoId={videoId} />
+              ) : (
+                <div className="grid aspect-video w-full place-items-center rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper-2)] text-sm text-[color:var(--color-ink-soft)]">
+                  {t("watch.noVideo")}
+                </div>
+              )}
+              <p className="mt-2 px-1 text-[0.7rem] leading-relaxed text-[color:var(--color-ink-soft)]">
+                {t("media.captionsNote")}
+              </p>
+            </div>
+            <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2 lg:pt-4">
+              <StudyGuide bookId={id} />
+            </div>
+          </div>
 
-          {/* Study column — reuses the reader's Chat + Quiz panels verbatim. */}
-          <aside className="flex h-[70vh] flex-col overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/30 lg:col-span-5 lg:h-[calc(100dvh-7rem)]">
+          {/* RIGHT: Chat / Quiz fixed to the side (own internal scroll). */}
+          <aside className="flex h-[70vh] flex-col overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/30 lg:col-span-4 lg:h-auto lg:min-h-0">
             <div className="flex shrink-0 items-center gap-1 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/60 px-3 py-2">
               <WatchTab active={tab === "chat"} onClick={() => setTab("chat")} icon="💬" label={t("app.tab.chat")} />
               <WatchTab active={tab === "quiz"} onClick={() => setTab("quiz")} icon="✦" label={t("watch.tab.quiz")} />
@@ -121,11 +125,6 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
             </div>
           </aside>
         </div>
-
-        <section className="mx-auto w-full max-w-7xl px-4 pb-12 lg:px-8">
-          <StudyGuide bookId={id} />
-        </section>
-        </>
       )}
     </main>
   );

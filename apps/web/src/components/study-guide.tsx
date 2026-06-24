@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -41,6 +41,17 @@ export function StudyGuide({ bookId }: { bookId: string }) {
 
   const notFound = error instanceof ApiError && error.status === 404;
   const loadError = error && !notFound ? error : null;
+
+  // Generate immediately the first time a book has no guide — no click needed.
+  // A ref guards against re-firing; if generation errors (e.g. quota) the
+  // empty state lets the user retry manually rather than auto-looping.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (notFound && !autoStarted.current) {
+      autoStarted.current = true;
+      generate.mutate();
+    }
+  }, [notFound]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) {
     return (
