@@ -27,6 +27,7 @@ from app.routes.profiles import router as profiles_router
 from app.routes.quizzes import router as quizzes_router
 from app.routes.seeds import router as seeds_router
 from app.routes.social import router as social_router
+from app.routes.shares import router as shares_router
 from app.routes.social_auth import router as social_auth_router
 from app.routes.study_guide import router as study_guide_router
 from app.routes.translations import router as translations_router
@@ -132,6 +133,7 @@ app.include_router(highlights_router)
 app.include_router(profiles_router)
 app.include_router(quizzes_router)
 app.include_router(study_guide_router)
+app.include_router(shares_router)
 app.include_router(garden_router)
 app.include_router(billing_router)
 app.include_router(onboarding_router)

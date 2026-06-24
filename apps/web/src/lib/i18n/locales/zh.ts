@@ -1,6 +1,28 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const zh: Dict = {
+  // Workspace sharing — v1 (YouTube courses)
+  "share.inviteHeading": "通过邮件邀请",
+  "share.invitePlaceholder": "name@example.com、another@…",
+  "share.invite": "发送",
+  "share.inviting": "正在发送…",
+  "share.invited": "邀请已发送！",
+  "share.inviteError": "发送失败。请检查邮箱地址后重试。",
+  "share.button": "分享",
+  "share.title": "分享此课程",
+  "share.desc": "任何拥有链接的人都可以观看视频、阅读学习材料，并保存自己的副本进行学习。",
+  "share.create": "创建分享链接",
+  "share.creating": "正在创建…",
+  "share.copy": "复制链接",
+  "share.copied": "已复制！",
+  "share.stop": "停止分享",
+  "share.viewOnly": "仅查看。你的聊天和进度保持私密。",
+  "shared.save": "保存副本",
+  "shared.saving": "正在保存…",
+  "shared.viewOnlyBadge": "共享课程 · 仅查看",
+  "shared.notFound": "此共享课程不存在或已停止共享。",
+  "shared.loading": "正在加载…",
+  "shared.cta": "用 AI 学习任意 YouTube 视频",
   // Study guide (AI-generated study material) — v1
   "studyGuide.watchSection": "观看视频的这一部分",
   "studyGuide.title": "学习材料",

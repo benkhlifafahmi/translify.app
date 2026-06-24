@@ -15,6 +15,7 @@ import { formatDuration, youtubeVideoId } from "@/lib/media";
 import type { Citation } from "@/lib/chats";
 import { Lumi } from "@/components/lumi/lumi";
 import { TranslifyIcon } from "@/components/translify-mark";
+import { ShareButton } from "@/components/share-button";
 
 type Tab = "chat" | "quiz";
 
@@ -181,6 +182,8 @@ function WatchHeader({ book }: { book: Book }) {
           {book.duration_seconds != null && <> · {formatDuration(book.duration_seconds)}</>}
         </p>
       </div>
+
+      <ShareButton bookId={book.id} />
 
       {book.source_url && (
         <a

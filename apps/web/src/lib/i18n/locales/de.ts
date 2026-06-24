@@ -1,6 +1,28 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const de: Dict = {
+  // Workspace sharing — v1 (YouTube courses)
+  "share.inviteHeading": "Per E-Mail einladen",
+  "share.invitePlaceholder": "name@beispiel.com, weitere@…",
+  "share.invite": "Senden",
+  "share.inviting": "Wird gesendet…",
+  "share.invited": "Einladung gesendet!",
+  "share.inviteError": "Senden fehlgeschlagen. Prüfe die Adressen und versuche es erneut.",
+  "share.button": "Teilen",
+  "share.title": "Diesen Kurs teilen",
+  "share.desc": "Jede Person mit dem Link kann das Video ansehen, das Lernmaterial lesen und eine eigene Kopie zum Lernen speichern.",
+  "share.create": "Freigabelink erstellen",
+  "share.creating": "Wird erstellt…",
+  "share.copy": "Link kopieren",
+  "share.copied": "Kopiert!",
+  "share.stop": "Freigabe beenden",
+  "share.viewOnly": "Nur Ansicht. Dein Chat und Fortschritt bleiben privat.",
+  "shared.save": "Kopie speichern",
+  "shared.saving": "Wird gespeichert…",
+  "shared.viewOnlyBadge": "Geteilter Kurs · nur Ansicht",
+  "shared.notFound": "Dieser geteilte Kurs existiert nicht oder wird nicht mehr geteilt.",
+  "shared.loading": "Wird geladen…",
+  "shared.cta": "Lerne mit jedem YouTube-Video per KI",
   // Study guide (AI-generated study material) — v1
   "studyGuide.watchSection": "Diesen Teil des Videos ansehen",
   "studyGuide.title": "Lernmaterial",

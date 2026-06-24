@@ -549,6 +549,97 @@ Questions about this charge? Just reply to this email.
     return subject, _layout(preheader=preheader, hero=hero, body=body), text
 
 
+# ─────────────────────────────  Course invitation  ─────────────────────────────
+
+
+def course_invite(
+    *,
+    inviter_name: str | None,
+    course_title: str,
+    share_url: str,
+) -> tuple[str, str, str]:
+    """Invite someone to a shared (view-only) YouTube-course workspace.
+
+    The link is the public share URL — anyone with it can watch the video,
+    read the study material, and save their own copy.
+    """
+    inviter = (inviter_name and inviter_name.strip()) or "Someone"
+    safe_inviter = html.escape(inviter)
+    safe_title = html.escape(course_title)
+
+    subject = f"{inviter} shared a course with you on Translify"
+    preheader = f"{course_title} — watch it with AI-made notes, key points, and exercises."
+
+    hero = _hero(
+        eyebrow="A course, shared with you",
+        headline="Study this together.",
+        accent_word="together",
+    )
+
+    body = f"""
+<p style="margin:24px 0 18px;font-family:{BODY_FONT_STACK};font-size:16px;
+          line-height:1.65;color:{INK}">
+  Hello —
+</p>
+<p style="margin:0 0 14px;font-family:{BODY_FONT_STACK};font-size:16px;
+          line-height:1.65;color:{INK}">
+  <strong>{safe_inviter}</strong> shared a course with you on Translify:
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+       style="margin:6px 0 22px;background:{PAPER_2};border:1px solid {BORDER};
+              border-radius:12px">
+  <tr><td style="padding:16px 20px;font-family:{DISPLAY_FONT_STACK};
+             font-size:18px;font-weight:600;color:{INK};line-height:1.35">
+    ▶ {safe_title}
+  </td></tr>
+</table>
+
+<p style="margin:0 0 28px;font-family:{BODY_FONT_STACK};font-size:16px;
+          line-height:1.65;color:{INK}">
+  Watch the video alongside study notes, key points, and practice exercises —
+  all generated from the course. You can also save your own copy to study it
+  interactively.
+</p>
+
+{_button(label="Open the course", href=share_url, tone="ink")}
+
+{_link_fallback(share_url)}
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+       style="margin-top:32px">
+  <tr><td style="border-top:1px dashed {BORDER};padding-top:18px">
+    <p style="margin:0;font-family:{BODY_FONT_STACK};font-size:13px;
+              line-height:1.6;color:{INK_SOFT}">
+      Didn't expect this? You can safely ignore this email — the link just
+      opens a shared, view-only course page.
+    </p>
+  </td></tr>
+</table>
+"""
+
+    text = f"""\
+Hello —
+
+{inviter} shared a course with you on Translify:
+
+  ▶ {course_title}
+
+Watch the video alongside study notes, key points, and practice exercises —
+all generated from the course. You can also save your own copy to study it
+interactively. Open it here:
+
+  {share_url}
+
+Didn't expect this? You can safely ignore this email — the link just opens a
+shared, view-only course page.
+
+— Translify · hello@translify.app
+"""
+
+    return subject, _layout(preheader=preheader, hero=hero, body=body), text
+
+
 # ─────────────────────────────  Admin broadcast / 1:1  ─────────────────────────────
 
 

@@ -32,6 +32,7 @@ from app.models.subscription import (
     UsageCounter,
 )
 from app.models.translation import Translation, TranslationStatus
+from app.models.workspace_share import WorkspaceShare
 
 __all__ = [
     "Book",
@@ -70,4 +71,5 @@ __all__ = [
     "Translation",
     "TranslationStatus",
     "UsageCounter",
+    "WorkspaceShare",
 ]

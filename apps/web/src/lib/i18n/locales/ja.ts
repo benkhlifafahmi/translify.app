@@ -1,6 +1,28 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const ja: Dict = {
+  // Workspace sharing — v1 (YouTube courses)
+  "share.inviteHeading": "メールで招待",
+  "share.invitePlaceholder": "name@example.com, another@…",
+  "share.invite": "送信",
+  "share.inviting": "送信中…",
+  "share.invited": "招待を送信しました！",
+  "share.inviteError": "送信できませんでした。アドレスを確認してもう一度お試しください。",
+  "share.button": "共有",
+  "share.title": "このコースを共有",
+  "share.desc": "リンクを知っている人は誰でも、動画を視聴し学習教材を読み、自分用のコピーを保存して学習できます。",
+  "share.create": "共有リンクを作成",
+  "share.creating": "作成中…",
+  "share.copy": "リンクをコピー",
+  "share.copied": "コピーしました！",
+  "share.stop": "共有を停止",
+  "share.viewOnly": "閲覧のみ。あなたのチャットと進捗は非公開のままです。",
+  "shared.save": "コピーを保存",
+  "shared.saving": "保存中…",
+  "shared.viewOnlyBadge": "共有コース・閲覧のみ",
+  "shared.notFound": "この共有コースは存在しないか、共有が解除されています。",
+  "shared.loading": "読み込み中…",
+  "shared.cta": "AIでYouTube動画を学習しよう",
   // Study guide (AI-generated study material) — v1
   "studyGuide.watchSection": "この部分の動画を見る",
   "studyGuide.title": "学習教材",
