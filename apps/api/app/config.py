@@ -67,10 +67,9 @@ class Settings(BaseSettings):
 
     # Transcript service — used by the media (YouTube) import to fetch a
     # video's captions *without* hitting YouTube directly (our server IP gets
-    # blocked). We GET ``{url}?v=<video_id>`` and scrape the timestamped
-    # ``transcript-segment`` spans from the returned HTML. Override the URL to
-    # swap providers or self-host without a code change.
-    transcript_service_url: str = "https://youtubetotranscript.com/transcript"
+    # blocked). We POST ``{"video_id": ...}`` and read the JSON transcript.
+    # Override the URL to swap providers or self-host without a code change.
+    transcript_service_url: str = "https://yt-to-text.com/api/v1/Subtitles"
     transcript_timeout_seconds: float = 20.0
 
     # IP geolocation — used by GET /geo to suggest a UI language from the

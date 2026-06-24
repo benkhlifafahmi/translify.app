@@ -3,22 +3,28 @@
 v1 of the media-import feature uses *existing captions only* — no audio
 download, no speech-to-text.
 
-We don't query YouTube directly: our server IP gets blocked. Instead we fetch
-the transcript from an external service that exposes it as HTML
-(``settings.transcript_service_url?v=<id>``) and pull the timestamped
-``transcript-segment`` spans out of the page with BeautifulSoup. Each span
-looks like::
+We don't query YouTube directly (our server IP gets blocked). Instead we POST
+to an external transcript API (``settings.transcript_service_url``) with
+``{"video_id": "<id>"}`` and read its JSON::
 
-    <span data-start="8.0" data-duration="5.0"
-          class="transcript-segment ...">this course took me weeks ...</span>
+    {
+      "status": "READY",
+      "durationSeconds": 884,
+      "data": {"transcripts": [{"t": "text", "s": "8.0", "e": "13.0"}, ...]}
+    }
 
-Everything here is synchronous/blocking (httpx sync client + bs4), so callers
-must invoke it via ``asyncio.to_thread``.
+Each segment carries text (``t``), start (``s``), and *end* (``e``) — duration
+is ``e - s``. Some videos return a non-READY status with an empty transcript
+while the service prepares it, so we poll briefly.
+
+Everything here is synchronous/blocking (httpx sync client), so callers must
+invoke it via ``asyncio.to_thread``.
 """
 from __future__ import annotations
 
 import logging
 import re
+import time
 from dataclasses import dataclass
 from urllib.parse import parse_qs, urlparse
 
@@ -28,12 +34,15 @@ log = logging.getLogger(__name__)
 _ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 _PATH_PREFIXES = ("embed", "shorts", "v", "live")
 
-# Browser-like UA — the transcript service serves different (or no) content to
-# obvious bots.
 _USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    "(KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
 )
+
+# The transcript API expects these app headers and, for some videos, prepares
+# the transcript asynchronously — poll a few times before giving up.
+_MAX_ATTEMPTS = 6
+_POLL_DELAY_SECONDS = 2.5
 
 
 class TranscriptUnavailable(Exception):
@@ -107,28 +116,33 @@ def _to_float(value: object) -> float:
         return 0.0
 
 
-def _parse_segments(html: str) -> list[TranscriptSegment]:
-    """Pull timestamped transcript segments out of the service's HTML.
+def _parse_payload(payload: object) -> list[TranscriptSegment]:
+    """Extract timestamped segments from the API's JSON body.
 
-    Targets ``<span class="transcript-segment ...">`` elements carrying
-    ``data-start`` and ``data-duration`` attributes. Tolerant of extra classes
-    and missing/garbled timing attributes (those fall back to 0).
+    Shape: ``{"data": {"transcripts": [{"t": str, "s": str, "e": str}, ...]}}``
+    where ``s``/``e`` are start/end seconds as strings. Tolerant of missing or
+    malformed fields.
     """
-    from bs4 import BeautifulSoup
+    if not isinstance(payload, dict):
+        return []
+    data = payload.get("data")
+    transcripts = data.get("transcripts") if isinstance(data, dict) else None
+    if not isinstance(transcripts, list):
+        return []
 
-    soup = BeautifulSoup(html, "html.parser")
     segments: list[TranscriptSegment] = []
-    # ``[class*="transcript-segment"]`` matches any span whose class attribute
-    # *contains* the token, so future utility classes on the element don't
-    # break extraction.
-    for span in soup.select('span[class*="transcript-segment"]'):
-        text = span.get_text(" ", strip=True)
+    for item in transcripts:
+        if not isinstance(item, dict):
+            continue
+        text = str(item.get("t") or "").strip()
         if not text:
             continue
+        start = _to_float(item.get("s"))
+        end = _to_float(item.get("e"))
         segments.append(
             TranscriptSegment(
-                start_seconds=_to_float(span.get("data-start")),
-                duration_seconds=_to_float(span.get("data-duration")),
+                start_seconds=start,
+                duration_seconds=max(0.0, end - start),
                 text=text,
             )
         )
@@ -136,44 +150,69 @@ def _parse_segments(html: str) -> list[TranscriptSegment]:
 
 
 def fetch_transcript(video_id: str) -> FetchedTranscript:
-    """Fetch a video's transcript via the external transcript service.
+    """Fetch a video's transcript via the external transcript API.
 
-    Raises ``TranscriptUnavailable`` (with a user-facing message) on any
-    failure: network/HTTP error, blocked request, or no captions for the
-    video.
+    POSTs ``{"video_id": ...}`` and reads the JSON. Polls briefly while the
+    service prepares a not-yet-ready transcript. Raises ``TranscriptUnavailable``
+    (with a user-facing message) on network/HTTP failure or when the video has
+    no captions.
     """
     import httpx
 
     from app.config import settings
 
-    try:
-        resp = httpx.get(
-            settings.transcript_service_url,
-            params={"v": video_id},
-            headers={
-                "User-Agent": _USER_AGENT,
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.9",
-            },
-            timeout=settings.transcript_timeout_seconds,
-            follow_redirects=True,
-        )
-        resp.raise_for_status()
-    except Exception as exc:  # network, HTTP status, timeout — keep it friendly
-        log.warning("transcript service request failed for %s: %s", video_id, exc)
-        raise TranscriptUnavailable(
-            "We couldn't fetch this video's transcript right now. It may have "
-            "no captions, or the transcript service is busy — please try again."
-        ) from exc
+    headers = {
+        "Accept": "*/*",
+        "Accept-Language": "en,en-US;q=0.9",
+        "Content-Type": "application/json",
+        "Origin": "https://tubetranscript.com",
+        "Referer": "https://tubetranscript.com/",
+        "User-Agent": _USER_AGENT,
+        "x-app-version": "1",
+        "x-source": "tubetranscript",
+    }
 
-    segments = _parse_segments(resp.text)
-    if not segments:
-        raise TranscriptUnavailable(
-            "This video has no captions available, so we can't turn it into "
-            "study material yet. Try a video that has captions or subtitles."
-        )
+    with httpx.Client(
+        timeout=settings.transcript_timeout_seconds, follow_redirects=True
+    ) as client:
+        for attempt in range(1, _MAX_ATTEMPTS + 1):
+            try:
+                resp = client.post(
+                    settings.transcript_service_url,
+                    json={"video_id": video_id},
+                    headers=headers,
+                )
+                resp.raise_for_status()
+                payload = resp.json()
+            except Exception as exc:  # network, HTTP status, bad JSON
+                log.warning(
+                    "transcript request failed for %s (attempt %d): %s",
+                    video_id, attempt, exc,
+                )
+                raise TranscriptUnavailable(
+                    "We couldn't fetch this video's transcript right now. It "
+                    "may have no captions, or the service is busy — please try "
+                    "again in a moment."
+                ) from exc
 
-    log.info("transcript: video=%s segments=%d", video_id, len(segments))
-    # The service doesn't expose language metadata; the pipeline treats a
-    # missing language as "unknown" and leaves source_language null.
-    return FetchedTranscript(segments=segments, language_code=None, is_generated=False)
+            segments = _parse_payload(payload)
+            if segments:
+                log.info(
+                    "transcript: video=%s segments=%d attempt=%d",
+                    video_id, len(segments), attempt,
+                )
+                return FetchedTranscript(
+                    segments=segments, language_code=None, is_generated=False
+                )
+
+            status = str((payload or {}).get("status") or "").upper() if isinstance(payload, dict) else ""
+            # READY + no segments => genuinely no captions; stop polling.
+            if status == "READY":
+                break
+            if attempt < _MAX_ATTEMPTS:
+                time.sleep(_POLL_DELAY_SECONDS)
+
+    raise TranscriptUnavailable(
+        "This video has no captions available, so we can't turn it into "
+        "study material yet. Try a video that has captions or subtitles."
+    )
