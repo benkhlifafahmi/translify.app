@@ -12,6 +12,9 @@ export interface StudySection {
   /** Markdown notes. */
   summary: string;
   key_points: string[];
+  /** Video time range this section covers (media books only; null otherwise). */
+  time_start_seconds: number | null;
+  time_end_seconds: number | null;
   exercises: StudyExercise[];
 }
 

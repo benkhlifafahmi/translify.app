@@ -23,6 +23,9 @@ class StudySectionPublic(BaseModel):
     title: str
     summary: str
     key_points: list[str] = []
+    # Video time range this section covers (media books only; null otherwise).
+    time_start_seconds: int | None = None
+    time_end_seconds: int | None = None
     exercises: list[StudyExercisePublic] = []
 
 

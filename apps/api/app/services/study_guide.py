@@ -55,10 +55,11 @@ async def generate_study_guide(
     if not chunks:
         raise RuntimeError("Book has no chunks; cannot generate a study guide.")
 
-    context = _build_context(chunks)
+    context, has_timestamps = _build_context(chunks)
     system, user = _build_prompts(
         book_title=book_title,
         context=context,
+        has_timestamps=has_timestamps,
         output_language=output_language,
         family_safe=family_safe,
     )
@@ -78,6 +79,7 @@ def _build_prompts(
     *,
     book_title: str,
     context: str,
+    has_timestamps: bool,
     output_language: str | None,
     family_safe: bool,
 ) -> tuple[str, str]:
@@ -101,17 +103,38 @@ def _build_prompts(
         + safe_addendum(family_safe)
     )
 
+    # When the source is a timestamped transcript, ask the model to tag each
+    # section with the video time range it covers so the reader can watch that
+    # span while studying it.
+    if has_timestamps:
+        timeline_instruction = (
+            "Each source passage is prefixed with its start time in whole "
+            "seconds, like [t=754]. For every section set \"start_seconds\" to "
+            "the [t=...] value of the first passage it covers and "
+            "\"end_seconds\" to the [t=...] value where the next section begins "
+            "(for the last section, the final passage's time). Sections must "
+            "stay in chronological order.\n"
+        )
+    else:
+        timeline_instruction = (
+            "There are no timestamps in the source — set \"start_seconds\" and "
+            "\"end_seconds\" to null.\n"
+        )
+
     user = (
         f"Title: {book_title}\n\n"
         f"=== SOURCE ===\n{context}\n=== END SOURCE ===\n\n"
         "Produce between 4 and 8 sections covering the material in order.\n"
-        "Return STRICT JSON of the form:\n"
+        + timeline_instruction
+        + "Return STRICT JSON of the form:\n"
         "{\n"
         '  "sections": [\n'
         "    {\n"
         '      "title": "<short section title>",\n'
         '      "summary": "<study notes in Markdown — short paragraphs and/or bullet lists>",\n'
         '      "key_points": ["<takeaway>", "<takeaway>"],\n'
+        '      "start_seconds": <integer seconds or null>,\n'
+        '      "end_seconds": <integer seconds or null>,\n'
         '      "exercises": [\n'
         "        {\n"
         '          "question": "<open-ended question the learner answers in their own words>",\n'
@@ -135,22 +158,40 @@ async def _load_chunks(session: AsyncSession, book_id: uuid.UUID) -> list[Chunk]
     return list(result.scalars().all())
 
 
-def _build_context(chunks: Sequence[Chunk]) -> str:
+def _build_context(chunks: Sequence[Chunk]) -> tuple[str, bool]:
+    """Join chunk text for the prompt. Returns (context, has_timestamps).
+
+    For media transcripts each passage is prefixed with its start time as
+    ``[t=<seconds>]`` so the model can tag sections with a video time range.
+    """
+    has_timestamps = any(c.time_start_seconds is not None for c in chunks)
     parts: list[str] = []
     total = 0
     for c in chunks:
         snippet = c.text.strip()
         if not snippet:
             continue
-        if total + len(snippet) > MAX_CONTEXT_CHARS:
+        prefix = ""
+        if has_timestamps and c.time_start_seconds is not None:
+            prefix = f"[t={int(c.time_start_seconds)}] "
+        block = prefix + snippet
+        if total + len(block) > MAX_CONTEXT_CHARS:
             # Take a final partial slice so the tail isn't silently dropped.
             remaining = MAX_CONTEXT_CHARS - total
             if remaining > 200:
-                parts.append(snippet[:remaining])
+                parts.append(block[:remaining])
             break
-        parts.append(snippet)
-        total += len(snippet)
-    return "\n\n".join(parts)
+        parts.append(block)
+        total += len(block)
+    return "\n\n".join(parts), has_timestamps
+
+
+def _coerce_seconds(value: object) -> int | None:
+    try:
+        n = int(round(float(value)))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    return n if n >= 0 else None
 
 
 def _parse_guide(text: str) -> list[dict]:
@@ -204,12 +245,31 @@ def _parse_guide(text: str) -> list[dict]:
                 "title": title.strip(),
                 "summary": summary.strip(),
                 "key_points": key_points,
+                "time_start_seconds": _coerce_seconds(sec.get("start_seconds")),
+                "time_end_seconds": _coerce_seconds(sec.get("end_seconds")),
                 "exercises": exercises,
             }
         )
 
     if not sections:
         raise RuntimeError("Study guide contained no usable sections")
+
+    # Tidy the time ranges: drop a non-increasing end, and fill a missing end
+    # with the next section's start so each timestamped section has a span.
+    for i, s in enumerate(sections):
+        start = s["time_start_seconds"]
+        end = s["time_end_seconds"]
+        if start is None:
+            s["time_end_seconds"] = None
+            continue
+        if end is None and i + 1 < len(sections):
+            nxt = sections[i + 1]["time_start_seconds"]
+            if isinstance(nxt, int) and nxt > start:
+                end = nxt
+        if end is not None and end <= start:
+            end = None
+        s["time_end_seconds"] = end
+
     return sections
 
 

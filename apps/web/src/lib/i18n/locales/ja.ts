@@ -2,6 +2,7 @@ import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const ja: Dict = {
   // Study guide (AI-generated study material) — v1
+  "studyGuide.watchSection": "この部分の動画を見る",
   "studyGuide.title": "学習教材",
   "studyGuide.subtitle": "この動画からAIが生成したノートと演習問題。",
   "studyGuide.loading": "学習ガイドを読み込んでいます…",

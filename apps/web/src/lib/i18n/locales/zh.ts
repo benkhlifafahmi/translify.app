@@ -2,6 +2,7 @@ import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const zh: Dict = {
   // Study guide (AI-generated study material) — v1
+  "studyGuide.watchSection": "观看视频的这一部分",
   "studyGuide.title": "学习材料",
   "studyGuide.subtitle": "由 AI 根据此视频生成的笔记和练习。",
   "studyGuide.loading": "正在加载学习指南…",

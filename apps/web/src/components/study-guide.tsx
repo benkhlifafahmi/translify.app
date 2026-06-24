@@ -10,6 +10,7 @@ import { ApiError } from "@/lib/api";
 import { parseQuotaError } from "@/lib/quota";
 import { UpgradeNudge } from "@/components/upgrade-nudge";
 import { useI18n } from "@/lib/i18n";
+import { formatDuration } from "@/lib/media";
 import {
   generateStudyGuide,
   getStudyGuide,
@@ -20,7 +21,14 @@ import {
   type StudySection,
 } from "@/lib/study-guide";
 
-export function StudyGuide({ bookId }: { bookId: string }) {
+export function StudyGuide({
+  bookId,
+  onSeek,
+}: {
+  bookId: string;
+  /** Seek the video player to a section's start time (media books). */
+  onSeek?: (seconds: number) => void;
+}) {
   const { t } = useI18n();
   const qc = useQueryClient();
 
@@ -118,7 +126,13 @@ export function StudyGuide({ bookId }: { bookId: string }) {
     >
       <div className="flex flex-col gap-3">
         {guide.sections.map((section, i) => (
-          <SectionCard key={section.id} bookId={bookId} section={section} defaultOpen={i === 0} />
+          <SectionCard
+            key={section.id}
+            bookId={bookId}
+            section={section}
+            defaultOpen={i === 0}
+            onSeek={onSeek}
+          />
         ))}
       </div>
     </Shell>
@@ -156,39 +170,59 @@ function SectionCard({
   bookId,
   section,
   defaultOpen,
+  onSeek,
 }: {
   bookId: string;
   section: StudySection;
   defaultOpen: boolean;
+  onSeek?: (seconds: number) => void;
 }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(defaultOpen);
+  const start = section.time_start_seconds;
 
   return (
     <div className="card-paper overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
-        aria-expanded={open}
-      >
-        <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-          {section.title}
-        </h3>
-        <svg
-          className={`shrink-0 transition-transform ${open ? "rotate-90" : ""}`}
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <div className="flex items-center gap-2 px-5 py-4">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="flex flex-1 items-center gap-2.5 text-left"
+          aria-expanded={open}
         >
-          <path d="m9 18 6-6-6-6" />
-        </svg>
-      </button>
+          <svg
+            className={`shrink-0 text-[color:var(--color-ink-soft)] transition-transform ${open ? "rotate-90" : ""}`}
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+          <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
+            {section.title}
+          </h3>
+        </button>
+        {start != null && (
+          <button
+            type="button"
+            onClick={() => onSeek?.(start)}
+            title={t("studyGuide.watchSection")}
+            aria-label={t("studyGuide.watchSection")}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-coral)]/8 px-2.5 py-1 text-[0.7rem] font-semibold tabular-nums text-[color:var(--color-coral-deep)] transition-all hover:-translate-y-[1px] hover:border-[color:var(--color-coral-deep)]"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            {formatDuration(start)}
+            {section.time_end_seconds != null && <>–{formatDuration(section.time_end_seconds)}</>}
+          </button>
+        )}
+      </div>
 
       {open && (
         <div className="border-t border-[color:var(--color-border)] px-5 py-4">

@@ -46,13 +46,23 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
   // Chat citations on a media book carry a transcript timestamp — seek the
   // player to it and bring the player into view (matters on mobile, where the
   // chat panel sits below the video).
-  const onCitationClick = useCallback((c: Citation) => {
-    if (c.time_start_seconds == null) return;
-    playerRef.current?.seekTo(c.time_start_seconds);
+  // Seek the player and bring it into view (matters on mobile, where the
+  // player sits above the scrolling content). Shared by chat citations and
+  // study-guide section timelines.
+  const seekTo = useCallback((seconds: number) => {
+    playerRef.current?.seekTo(seconds);
     document
       .getElementById("watch-player")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
+
+  const onCitationClick = useCallback(
+    (c: Citation) => {
+      if (c.time_start_seconds == null) return;
+      seekTo(c.time_start_seconds);
+    },
+    [seekTo],
+  );
 
   if (!mounted || isLoading) {
     return (
@@ -86,28 +96,31 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
       {!ready ? (
         <NotReadyState book={book} />
       ) : (
-        <div className="mx-auto flex w-full max-w-[100rem] flex-col gap-4 px-4 py-4 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-12 lg:grid-rows-1 lg:gap-6 lg:overflow-hidden lg:px-6">
-          {/* LEFT: video pinned at the top, study material scrolls beneath it. */}
-          <div className="flex flex-col gap-4 lg:col-span-8 lg:min-h-0 lg:gap-0 lg:overflow-hidden">
-            <div id="watch-player" className="lg:shrink-0">
-              {videoId ? (
-                <YouTubePlayer ref={playerRef} videoId={videoId} />
-              ) : (
-                <div className="grid aspect-video w-full place-items-center rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper-2)] text-sm text-[color:var(--color-ink-soft)]">
-                  {t("watch.noVideo")}
-                </div>
-              )}
-              <p className="mt-2 px-1 text-[0.7rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-                {t("media.captionsNote")}
-              </p>
-            </div>
-            <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-2 lg:pt-4">
-              <StudyGuide bookId={id} />
-            </div>
+        <div className="mx-auto flex w-full max-w-[100rem] flex-col gap-4 px-4 py-4 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-12 lg:grid-rows-[auto_minmax(0,1fr)] lg:gap-x-6 lg:gap-y-4 lg:overflow-hidden lg:px-6">
+          {/* Video — top of the right rail (first on mobile so it's reachable). */}
+          <div
+            id="watch-player"
+            className="order-1 lg:order-none lg:col-span-4 lg:col-start-9 lg:row-start-1"
+          >
+            {videoId ? (
+              <YouTubePlayer ref={playerRef} videoId={videoId} />
+            ) : (
+              <div className="grid aspect-video w-full place-items-center rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper-2)] text-sm text-[color:var(--color-ink-soft)]">
+                {t("watch.noVideo")}
+              </div>
+            )}
+            <p className="mt-2 px-1 text-[0.7rem] leading-relaxed text-[color:var(--color-ink-soft)]">
+              {t("media.captionsNote")}
+            </p>
           </div>
 
-          {/* RIGHT: Chat / Quiz fixed to the side (own internal scroll). */}
-          <aside className="flex h-[70vh] flex-col overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/30 lg:col-span-4 lg:h-auto lg:min-h-0">
+          {/* Study material — the focus: wide left column, scrolls on its own. */}
+          <div className="order-2 lg:order-none lg:col-span-8 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:min-h-0 lg:overflow-y-auto lg:pr-2">
+            <StudyGuide bookId={id} onSeek={seekTo} />
+          </div>
+
+          {/* Chat / Quiz — under the video on the right rail (own scroll). */}
+          <aside className="order-3 flex h-[70vh] flex-col overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper-2)]/30 lg:order-none lg:col-span-4 lg:col-start-9 lg:row-start-2 lg:h-auto lg:min-h-0">
             <div className="flex shrink-0 items-center gap-1 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/60 px-3 py-2">
               <WatchTab active={tab === "chat"} onClick={() => setTab("chat")} icon="💬" label={t("app.tab.chat")} />
               <WatchTab active={tab === "quiz"} onClick={() => setTab("quiz")} icon="✦" label={t("watch.tab.quiz")} />
