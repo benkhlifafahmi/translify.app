@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
@@ -18,6 +19,10 @@ export function ShareButton({ bookId }: { bookId: string }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [emailInput, setEmailInput] = useState("");
+  // Portal the modal to <body> so the header's backdrop-filter doesn't trap
+  // its position:fixed. `mounted` guards against SSR (no document on server).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const { data: share } = useQuery<ShareInfo>({
     queryKey: ["share", bookId],
@@ -87,8 +92,9 @@ export function ShareButton({ bookId }: { bookId: string }) {
         <span className="hidden sm:inline">{t("share.button")}</span>
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+      {open && mounted &&
+        createPortal(
+          <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
           <button
             type="button"
             aria-label={t("common.close")}
@@ -193,8 +199,9 @@ export function ShareButton({ bookId }: { bookId: string }) {
               )}
             </div>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
