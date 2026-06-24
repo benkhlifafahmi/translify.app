@@ -1,6 +1,27 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const fr: Dict = {
+  // Study guide (AI-generated study material) — v1
+  "studyGuide.title": "Matériel d’étude",
+  "studyGuide.subtitle": "Notes et exercices générés par IA à partir de cette vidéo.",
+  "studyGuide.loading": "Chargement de votre guide d’étude…",
+  "studyGuide.generate": "Générer le matériel d’étude",
+  "studyGuide.generating": "Rédaction de votre guide…",
+  "studyGuide.generatingBody": "Lumi transforme cette vidéo en sections, notes et exercices. Cela prend un instant.",
+  "studyGuide.regenerate": "Régénérer",
+  "studyGuide.empty.title": "Transformez cette vidéo en guide d’étude",
+  "studyGuide.empty.body": "Obtenez des notes section par section, des points clés et des exercices qui vérifient votre compréhension.",
+  "studyGuide.keyPoints": "Points clés",
+  "studyGuide.showHint": "Indice",
+  "studyGuide.answerPlaceholder": "Saisissez votre réponse…",
+  "studyGuide.check": "Vérifier la réponse",
+  "studyGuide.checking": "Vérification…",
+  "studyGuide.tryAgain": "Réessayer",
+  "studyGuide.correct": "Correct",
+  "studyGuide.incorrect": "Pas tout à fait",
+  "studyGuide.modelAnswer": "Réponse modèle",
+  "studyGuide.failed": "Impossible de générer le guide d’étude. Veuillez réessayer.",
+  "studyGuide.gradeFailed": "Impossible de vérifier cette réponse. Veuillez réessayer.",
   // Media (YouTube import) — v1
   "media.import.button": "Ajouter une vidéo",
   "media.import.title": "Importer une vidéo YouTube",

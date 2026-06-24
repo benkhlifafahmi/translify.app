@@ -1,6 +1,27 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const zh: Dict = {
+  // Study guide (AI-generated study material) — v1
+  "studyGuide.title": "学习材料",
+  "studyGuide.subtitle": "由 AI 根据此视频生成的笔记和练习。",
+  "studyGuide.loading": "正在加载学习指南…",
+  "studyGuide.generate": "生成学习材料",
+  "studyGuide.generating": "正在编写你的学习指南…",
+  "studyGuide.generatingBody": "Lumi 正在把这个视频整理成章节、笔记和练习，请稍候。",
+  "studyGuide.regenerate": "重新生成",
+  "studyGuide.empty.title": "把这个视频变成学习指南",
+  "studyGuide.empty.body": "获得逐节笔记、要点，以及检验你理解程度的练习。",
+  "studyGuide.keyPoints": "要点",
+  "studyGuide.showHint": "提示",
+  "studyGuide.answerPlaceholder": "输入你的答案…",
+  "studyGuide.check": "检查答案",
+  "studyGuide.checking": "正在检查…",
+  "studyGuide.tryAgain": "再试一次",
+  "studyGuide.correct": "正确",
+  "studyGuide.incorrect": "还差一点",
+  "studyGuide.modelAnswer": "参考答案",
+  "studyGuide.failed": "无法生成学习指南，请重试。",
+  "studyGuide.gradeFailed": "无法检查该答案，请重试。",
   // Media (YouTube import) — v1
   "media.import.button": "添加视频",
   "media.import.title": "导入 YouTube 视频",

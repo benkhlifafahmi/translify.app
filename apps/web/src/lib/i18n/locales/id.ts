@@ -1,6 +1,27 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const id: Dict = {
+  // Study guide (AI-generated study material) — v1
+  "studyGuide.title": "Materi belajar",
+  "studyGuide.subtitle": "Catatan dan latihan yang dibuat AI dari video ini.",
+  "studyGuide.loading": "Memuat panduan belajar…",
+  "studyGuide.generate": "Buat materi belajar",
+  "studyGuide.generating": "Menulis panduan belajarmu…",
+  "studyGuide.generatingBody": "Lumi sedang mengubah video ini menjadi bagian, catatan, dan latihan. Perlu beberapa saat.",
+  "studyGuide.regenerate": "Buat ulang",
+  "studyGuide.empty.title": "Ubah video ini menjadi panduan belajar",
+  "studyGuide.empty.body": "Dapatkan catatan per bagian, poin penting, dan latihan yang menguji pemahamanmu.",
+  "studyGuide.keyPoints": "Poin penting",
+  "studyGuide.showHint": "Petunjuk",
+  "studyGuide.answerPlaceholder": "Ketik jawabanmu…",
+  "studyGuide.check": "Periksa jawaban",
+  "studyGuide.checking": "Memeriksa…",
+  "studyGuide.tryAgain": "Coba lagi",
+  "studyGuide.correct": "Benar",
+  "studyGuide.incorrect": "Belum tepat",
+  "studyGuide.modelAnswer": "Jawaban model",
+  "studyGuide.failed": "Tidak dapat membuat panduan belajar. Silakan coba lagi.",
+  "studyGuide.gradeFailed": "Tidak dapat memeriksa jawaban itu. Silakan coba lagi.",
   // Media (YouTube import) — v1
   "media.import.button": "Tambah video",
   "media.import.title": "Impor video YouTube",

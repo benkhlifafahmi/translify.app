@@ -1,6 +1,27 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const ar: Dict = {
+  // Study guide (AI-generated study material) — v1
+  "studyGuide.title": "مواد الدراسة",
+  "studyGuide.subtitle": "ملاحظات وتمارين أنشأها الذكاء الاصطناعي من هذا الفيديو.",
+  "studyGuide.loading": "جارٍ تحميل دليل الدراسة…",
+  "studyGuide.generate": "إنشاء مواد الدراسة",
+  "studyGuide.generating": "جارٍ كتابة دليلك…",
+  "studyGuide.generatingBody": "تقوم Lumi بتحويل هذا الفيديو إلى أقسام وملاحظات وتمارين. يستغرق ذلك لحظات.",
+  "studyGuide.regenerate": "إعادة الإنشاء",
+  "studyGuide.empty.title": "حوّل هذا الفيديو إلى دليل دراسة",
+  "studyGuide.empty.body": "احصل على ملاحظات قسمًا بقسم ونقاط رئيسية وتمارين تختبر فهمك.",
+  "studyGuide.keyPoints": "النقاط الرئيسية",
+  "studyGuide.showHint": "تلميح",
+  "studyGuide.answerPlaceholder": "اكتب إجابتك…",
+  "studyGuide.check": "تحقق من الإجابة",
+  "studyGuide.checking": "جارٍ التحقق…",
+  "studyGuide.tryAgain": "حاول مرة أخرى",
+  "studyGuide.correct": "صحيح",
+  "studyGuide.incorrect": "ليس تمامًا",
+  "studyGuide.modelAnswer": "الإجابة النموذجية",
+  "studyGuide.failed": "تعذّر إنشاء دليل الدراسة. يرجى المحاولة مرة أخرى.",
+  "studyGuide.gradeFailed": "تعذّر التحقق من تلك الإجابة. يرجى المحاولة مرة أخرى.",
   // Media (YouTube import) — v1
   "media.import.button": "إضافة فيديو",
   "media.import.title": "استيراد فيديو من يوتيوب",

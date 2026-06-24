@@ -24,6 +24,7 @@ from app.models.social import (
     PostType,
     PostVisibility,
 )
+from app.models.study_guide import StudyGuide
 from app.models.subscription import (
     StripeEvent,
     Subscription,
@@ -62,6 +63,7 @@ __all__ = [
     "Quiz",
     "QuizAttempt",
     "ReaderProfile",
+    "StudyGuide",
     "StripeEvent",
     "Subscription",
     "SubscriptionStatus",

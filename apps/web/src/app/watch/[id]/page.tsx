@@ -10,6 +10,7 @@ import { useI18n } from "@/lib/i18n";
 import { YouTubePlayer, type YouTubePlayerHandle } from "@/components/youtube-player";
 import { ChatPanel } from "@/components/chat-panel";
 import { QuizPanel } from "@/components/quiz-panel";
+import { StudyGuide } from "@/components/study-guide";
 import { formatDuration, youtubeVideoId } from "@/lib/media";
 import type { Citation } from "@/lib/chats";
 import { Lumi } from "@/components/lumi/lumi";
@@ -85,7 +86,8 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
       {!ready ? (
         <NotReadyState book={book} />
       ) : (
-        <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:px-8">
+        <>
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:px-8">
           {/* Player column */}
           <section id="watch-player" className="lg:col-span-7">
             {videoId ? (
@@ -119,6 +121,11 @@ export default function WatchPage({ params }: { params: Promise<{ id: string }> 
             </div>
           </aside>
         </div>
+
+        <section className="mx-auto w-full max-w-7xl px-4 pb-12 lg:px-8">
+          <StudyGuide bookId={id} />
+        </section>
+        </>
       )}
     </main>
   );

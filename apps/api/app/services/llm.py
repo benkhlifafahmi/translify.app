@@ -73,6 +73,19 @@ TASK_CONFIG: dict[str, dict[str, str]] = {
         "primary": "gemini-2.5-flash",
         "fallback": "claude-haiku-4-5-20251001",
     },
+    "study_guide": {
+        # Generates a structured study guide (notes + exercises) from a whole
+        # transcript/book. Needs solid instruction-following + a large context
+        # window; Flash is the cost-effective fit. Haiku catches outages.
+        "primary": "gemini-2.5-flash",
+        "fallback": "claude-haiku-4-5-20251001",
+    },
+    "study_grade": {
+        # Grades a single free-text exercise answer against a reference — short
+        # structured output, so Flash Lite is plenty.
+        "primary": "gemini-2.5-flash-lite",
+        "fallback": "claude-haiku-4-5-20251001",
+    },
 }
 
 

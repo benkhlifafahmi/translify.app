@@ -1,6 +1,27 @@
 import type { Dict, Testimonial, FaqItem } from "./types";
 
 export const en: Dict = {
+  // Study guide (AI-generated study material) — v1
+  "studyGuide.title": "Study material",
+  "studyGuide.subtitle": "AI-generated notes and exercises from this video.",
+  "studyGuide.loading": "Loading your study guide…",
+  "studyGuide.generate": "Generate study material",
+  "studyGuide.generating": "Writing your study guide…",
+  "studyGuide.generatingBody": "Lumi is turning this video into sections, notes, and exercises. This takes a moment.",
+  "studyGuide.regenerate": "Regenerate",
+  "studyGuide.empty.title": "Turn this video into a study guide",
+  "studyGuide.empty.body": "Get section-by-section notes, key points, and exercises that check your understanding.",
+  "studyGuide.keyPoints": "Key points",
+  "studyGuide.showHint": "Hint",
+  "studyGuide.answerPlaceholder": "Type your answer…",
+  "studyGuide.check": "Check answer",
+  "studyGuide.checking": "Checking…",
+  "studyGuide.tryAgain": "Try again",
+  "studyGuide.correct": "Correct",
+  "studyGuide.incorrect": "Not quite",
+  "studyGuide.modelAnswer": "Model answer",
+  "studyGuide.failed": "Couldn’t generate the study guide. Please try again.",
+  "studyGuide.gradeFailed": "Couldn’t check that answer. Please try again.",
   // Media (YouTube import) — v1
   "media.import.button": "Add a video",
   "media.import.title": "Import a YouTube video",
