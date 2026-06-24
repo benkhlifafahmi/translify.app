@@ -32,6 +32,7 @@ dependencies = [
     "beautifulsoup4>=4.12.0",
     "lxml>=5.0.0",
     "tiktoken>=0.8.0",
+    "json-repair>=0.30.0",
     "python-multipart>=0.0.18",
     "langdetect>=1.0.9",
     "pymupdf-fonts>=1.0.5",

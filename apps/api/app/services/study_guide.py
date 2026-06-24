@@ -23,11 +23,20 @@ from app.services.llm import complete
 
 log = logging.getLogger(__name__)
 
-GEN_MAX_TOKENS = 6_000
+# Output cap. The model only uses what it needs, so a high ceiling just lets
+# long videos produce more sections without forcing short ones to cost more.
+GEN_MAX_TOKENS = 16_000
 GRADE_MAX_TOKENS = 600
-# Study guides cover the whole text, so we feed more context than the quiz
-# sampler does. Gemini Flash handles large prompts cheaply.
-MAX_CONTEXT_CHARS = 30_000
+# Feed the whole transcript. Gemini 2.5 Flash has a 1M-token context window and
+# cheap input, so this only needs to be big enough to cover a multi-hour video
+# (~250k chars ≈ 4 hours of speech ≈ ~60k tokens). The old 30k cap silently
+# dropped everything past the first ~20-30 minutes.
+MAX_CONTEXT_CHARS = 250_000
+# Roughly one section per this many chars of transcript (~8 minutes of speech),
+# clamped so short clips still get a few sections and long courses don't sprawl.
+CHARS_PER_SECTION = 5_000
+MIN_SECTIONS = 4
+MAX_SECTIONS = 16
 
 _JSON_OBJECT_RE = re.compile(r"\{.*\}", re.DOTALL)
 _FENCE_RE = re.compile(r"^```[A-Za-z0-9]*\s*|\s*```$")
@@ -55,6 +64,20 @@ def _loads_json(text: str, *, what: str) -> dict:
             continue
         if isinstance(obj, dict):
             return obj
+
+    # Strict parse failed. LLMs reliably trip on one of two things in long
+    # prose fields: an unescaped quote/newline, or truncation. json-repair
+    # fixes both (it escapes stray chars and closes open structures), so try it
+    # before giving up.
+    try:
+        from json_repair import repair_json
+
+        repaired = repair_json(candidate, return_objects=True)
+        if isinstance(repaired, dict) and repaired:
+            log.warning("%s: strict JSON parse failed; recovered via json-repair", what)
+            return repaired
+    except Exception:
+        log.exception("%s: json-repair fallback errored", what)
 
     log.error(
         "%s: could not parse model JSON (len=%d). Raw output (first 2000 chars):\n%s",
@@ -87,10 +110,14 @@ async def generate_study_guide(
         raise RuntimeError("Book has no chunks; cannot generate a study guide.")
 
     context, has_timestamps = _build_context(chunks)
+    # Scale the number of sections to the length of the material so a 2-hour
+    # course isn't crushed into the same 4-8 sections as a 10-minute clip.
+    target_sections = max(MIN_SECTIONS, min(MAX_SECTIONS, len(context) // CHARS_PER_SECTION))
     system, user = _build_prompts(
         book_title=book_title,
         context=context,
         has_timestamps=has_timestamps,
+        target_sections=target_sections,
         output_language=output_language,
         family_safe=family_safe,
     )
@@ -118,6 +145,7 @@ def _build_prompts(
     book_title: str,
     context: str,
     has_timestamps: bool,
+    target_sections: int,
     output_language: str | None,
     family_safe: bool,
 ) -> tuple[str, str]:
@@ -162,7 +190,9 @@ def _build_prompts(
     user = (
         f"Title: {book_title}\n\n"
         f"=== SOURCE ===\n{context}\n=== END SOURCE ===\n\n"
-        "Produce between 4 and 8 sections covering the material in order.\n"
+        f"Produce about {target_sections} sections that cover the ENTIRE source "
+        "in order — use more sections for longer material so nothing important "
+        "is skipped, and don't stop early.\n"
         + timeline_instruction
         + "Return STRICT JSON of the form:\n"
         "{\n"
