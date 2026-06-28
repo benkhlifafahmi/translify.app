@@ -4,35 +4,37 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { BookCard } from "@/components/book-card";
 import { UploadButton } from "@/components/upload-button";
 import { YouTubeImportButton } from "@/components/youtube-import-button";
 import { TrialBanner } from "@/components/trial-banner";
 import { ConversionModal } from "@/components/conversion-modal";
 import { FolderEditor } from "@/components/folder-editor";
+import { LibrarySidebar, type LibraryView } from "@/components/library/library-sidebar";
 import { me, logout, type User } from "@/lib/auth";
 import { listBooks, moveBookToFolder, type Book } from "@/lib/books";
-import { listFolders, folderColorToken, type Folder } from "@/lib/folders";
+import { listFolders, type Folder } from "@/lib/folders";
 import {
   listAllHighlights,
   HIGHLIGHT_COLOR_CLASS,
   type Highlight,
 } from "@/lib/highlights";
 import { listBookProgress, type BookProgressListItem } from "@/lib/progress";
-import { TranslifyMark } from "@/components/translify-mark";
 import { getToken } from "@/lib/api";
-import { LumiHud } from "@/components/lumi/lumi-hud";
-import { LumiGuide } from "@/components/lumi/lumi-guide";
 import { Lumi } from "@/components/lumi/lumi";
+import { LumiGuide } from "@/components/lumi/lumi-guide";
 import { useLumi } from "@/components/lumi/lumi-context";
 import { MilestoneToast } from "@/components/milestone-toast";
-import { SocialNavBar } from "@/components/social-nav-bar";
 import { useI18n } from "@/lib/i18n";
 
 type SortKey = "recent" | "added" | "title";
-/** "all" = everything, "unsorted" = books with no folder, else a folder id. */
-type FolderFilter = "all" | "unsorted" | (string & {});
+
+const SPINE_TONES = [
+  { from: "#F4D6A2", to: "#E0A458", spine: "#C8893E" },
+  { from: "#C9DCC8", to: "#7BA17C", spine: "#5F8763" },
+  { from: "#F2BAB1", to: "#E2786C", spine: "#C5594D" },
+  { from: "#D6CFE5", to: "#9B8FBE", spine: "#6B5B95" },
+];
 
 export default function LibraryPage() {
   const router = useRouter();
@@ -60,9 +62,7 @@ export default function LibraryPage() {
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data) return false;
-      const anyPending = data.some(
-        (b) => b.status === "uploaded" || b.status === "processing",
-      );
+      const anyPending = data.some((b) => b.status === "uploaded" || b.status === "processing");
       return anyPending ? 3000 : false;
     },
   });
@@ -101,16 +101,11 @@ export default function LibraryPage() {
     () => Object.fromEntries((books ?? []).map((b) => [b.id, b] as const)),
     [books],
   );
-
-  // book_id → last_read_at, for the "Recently read" sort.
   const lastReadByBook = useMemo(
     () => Object.fromEntries((progress ?? []).map((p) => [p.book_id, p.last_read_at] as const)),
     [progress],
   );
 
-  // Continue-reading: progress rows joined with their Book, freshest first,
-  // skipping orphans (book deleted, progress kept). Capped at 6 to keep the
-  // strip glanceable; the rest are still reachable in the grid below.
   const continueItems = useMemo(() => {
     if (!progress || !books) return [];
     return progress
@@ -121,18 +116,17 @@ export default function LibraryPage() {
       .slice(0, 6);
   }, [progress, books, bookById]);
 
-  // ── Find + organise state ───────────────────────────────────────────────
+  // ── View + find state ───────────────────────────────────────────────────
+  const [view, setView] = useState<LibraryView>("all");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("recent");
-  const [folderFilter, setFolderFilter] = useState<FolderFilter>("all");
+  const [mobileNav, setMobileNav] = useState(false);
 
   const orderedFolders = useMemo(
     () => (folders ?? []).slice().sort((a, b) => a.position - b.position || a.name.localeCompare(b.name)),
     [folders],
   );
 
-  // Live counts per folder (from loaded books, not the cached book_count which
-  // can lag a move). NULL folder → "unsorted".
   const countByFolder = useMemo(() => {
     const m: Record<string, number> = { all: 0, unsorted: 0 };
     for (const b of books ?? []) {
@@ -143,16 +137,20 @@ export default function LibraryPage() {
     return m;
   }, [books]);
 
-  // A filter pointing at a now-deleted folder should fall back to "all".
+  // A view pointing at a deleted folder falls back to "all".
   useEffect(() => {
-    if (folderFilter === "all" || folderFilter === "unsorted") return;
-    if (folders && !folders.some((f) => f.id === folderFilter)) setFolderFilter("all");
-  }, [folders, folderFilter]);
+    if (view === "all" || view === "unsorted") return;
+    if (folders && !folders.some((f) => f.id === view)) setView("all");
+  }, [folders, view]);
+
+  const activeFolder = view !== "all" && view !== "unsorted"
+    ? orderedFolders.find((f) => f.id === view) ?? null
+    : null;
 
   const visibleBooks = useMemo(() => {
     let list = books ?? [];
-    if (folderFilter === "unsorted") list = list.filter((b) => !b.folder_id);
-    else if (folderFilter !== "all") list = list.filter((b) => b.folder_id === folderFilter);
+    if (view === "unsorted") list = list.filter((b) => !b.folder_id);
+    else if (view !== "all") list = list.filter((b) => b.folder_id === view);
 
     const q = query.trim().toLowerCase();
     if (q) {
@@ -168,10 +166,8 @@ export default function LibraryPage() {
       const rb = lastReadByBook[b.id] ?? b.created_at;
       return rb.localeCompare(ra);
     });
-  }, [books, folderFilter, query, sort, lastReadByBook]);
+  }, [books, view, query, sort, lastReadByBook]);
 
-  // Move-book mutation — shared by chip drops and each card's overflow menu.
-  // Optimistic so the card leaves its shelf immediately.
   const moveBook = useMutation({
     mutationFn: ({ bookId, folderId }: { bookId: string; folderId: string | null }) =>
       moveBookToFolder(bookId, folderId),
@@ -196,13 +192,11 @@ export default function LibraryPage() {
     if (userError) router.replace("/login");
   }, [userError, router]);
 
-  // Lumi achievement triggers — react to library state changes.
   const { award } = useLumi();
   useEffect(() => {
     if (!user) return;
     award("welcome");
   }, [user, award]);
-
   useEffect(() => {
     if (!books) return;
     if (books.length >= 1) award("first-upload");
@@ -215,7 +209,6 @@ export default function LibraryPage() {
     router.replace("/login");
   };
 
-  // Folder editor state — null target == "create new".
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
   const openCreate = () => { setEditingFolder(null); setEditorOpen(true); };
@@ -223,192 +216,145 @@ export default function LibraryPage() {
 
   if (!mounted || userLoading) {
     return (
-      <main className="mx-auto max-w-5xl px-6 py-10">
+      <main className="grid min-h-screen place-items-center px-6">
         <p className="text-[color:var(--color-ink-soft)]">{t("library.loading")}</p>
       </main>
     );
   }
 
-  const greeting = pickGreeting(t);
-  const name = user?.display_name || (user?.email ? user.email.split("@")[0] : t("library.unnamedReader"));
   const hasBooks = !!books && books.length > 0;
-  const showFinder = (books?.length ?? 0) >= 6;
-  const showChips = orderedFolders.length > 0;
-  const activeFolder = folderFilter !== "all" && folderFilter !== "unsorted"
-    ? orderedFolders.find((f) => f.id === folderFilter) ?? null
-    : null;
+  const viewTitle = view === "all"
+    ? t("library.allBooks")
+    : view === "unsorted"
+      ? t("library.unsorted")
+      : activeFolder?.name ?? t("library.allBooks");
+  const isAllView = view === "all";
 
   return (
-    <main className="relative min-h-screen pb-24">
+    <div className="relative min-h-screen bg-[color:var(--color-paper)]">
       <MilestoneToast />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-[color:var(--color-saffron)]/12 blur-3xl"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-20 top-40 h-[24rem] w-[24rem] rounded-full bg-[color:var(--color-sage)]/10 blur-3xl"
-      />
-
-      <TrialBanner />
       <ConversionModal />
 
-      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6 lg:px-10">
-        <TranslifyMark href="/library" size={36} wordmarkClassName="text-xl" />
-
-        <div className="flex items-center gap-2">
-          <div className="hidden md:block">
-            <LumiHud />
-          </div>
-          <Link
-            href="/garden"
-            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3.5 text-xs font-semibold text-[color:var(--color-ink)] transition-[transform,border-color] duration-150 hover:-translate-y-[1px] hover:border-[color:var(--color-sage)]"
-          >
-            <span aria-hidden>🌿</span> {t("bookCard.garden")}
-          </Link>
-          <Link
-            href="/account"
-            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3.5 text-xs font-semibold text-[color:var(--color-ink)] transition-[transform,border-color] duration-150 hover:-translate-y-[1px] hover:border-[color:var(--color-border-strong)]"
-          >
-            <span aria-hidden>✦</span> {t("library.account")}
-          </Link>
-          <Button variant="ghost" size="sm" onClick={onLogout}>
-            {t("library.logOut")}
-          </Button>
-        </div>
-      </header>
-
-      <section className="relative z-10 mx-auto max-w-6xl px-6 pt-2 lg:px-10">
-        <SocialNavBar user={user} />
-      </section>
-
-      <section className="relative z-10 mx-auto max-w-6xl px-6 pt-8 lg:px-10">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="mb-1 inline-flex items-center gap-2 rounded-full bg-[color:var(--color-paper-3)] px-3 py-1 text-xs font-semibold text-[color:var(--color-ink-soft)]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-sage)]" />
-              {greeting}
-            </p>
-            <h1 className="mt-3 font-[family-name:var(--font-display)] text-[2.4rem] font-semibold leading-[1.05] tracking-tight sm:text-[2.8rem]">
-              {(() => {
-                const tpl = t("library.titleNamed", { name: "@@NAME@@" });
-                const [before, after] = tpl.split("@@NAME@@");
-                return (
-                  <>
-                    {before}
-                    <em className="text-[color:var(--color-saffron-deep)]">{name}</em>
-                    {after}
-                  </>
-                );
-              })()}
-            </h1>
-            <p className="mt-2 max-w-xl text-[0.95rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-              {hasBooks ? t("library.subtitleWithBooks") : t("library.subtitleEmpty")}
-            </p>
-          </div>
-
-          {/* Create actions: Upload is primary; folder + import are secondary. */}
-          <div className="flex flex-col items-stretch gap-2 sm:items-end">
-            <UploadButton />
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={openCreate}
-                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-[color:var(--color-border-strong)] bg-[color:var(--color-paper)] px-4 text-sm font-semibold text-[color:var(--color-ink)] transition-[transform,border-color,background-color] duration-150 hover:-translate-y-[1px] hover:border-[color:var(--color-saffron-deep)] hover:bg-[color:var(--color-paper-2)]"
-              >
-                <PlusIcon />
-                {t("library.newFolder")}
-              </button>
+      <div className="flex">
+        <LibrarySidebar
+          user={user}
+          folders={orderedFolders}
+          counts={countByFolder}
+          activeView={view}
+          onSelectView={setView}
+          onNewFolder={openCreate}
+          onEditFolder={openEdit}
+          onDropBook={(bookId, folderId) => moveBook.mutate({ bookId, folderId })}
+          onLogout={onLogout}
+          upload={
+            <div className="flex flex-col gap-2">
+              <UploadButton />
               <YouTubeImportButton />
             </div>
-          </div>
-        </div>
+          }
+          mobileOpen={mobileNav}
+          onMobileClose={() => setMobileNav(false)}
+        />
 
-        {continueItems.length > 0 && <ContinueReadingStrip items={continueItems} />}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <TrialBanner />
 
-        {/* ── Your books ──────────────────────────────────────────────── */}
-        <section className="mt-12">
-          {hasBooks && (
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="flex items-baseline gap-2.5 font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight">
-                  {t("library.yourBooks")}
-                  <span className="text-sm font-medium text-[color:var(--color-ink-soft)]">
+          {/* Sticky content header */}
+          <header className="sticky top-0 z-20 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/85 backdrop-blur-md">
+            <div className="flex items-center gap-3 px-4 py-3.5 sm:px-6 lg:px-8">
+              <button
+                type="button"
+                onClick={() => setMobileNav(true)}
+                aria-label={t("library.openNav")}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[color:var(--color-border)] text-[color:var(--color-ink)] transition-colors hover:bg-[color:var(--color-paper-2)] lg:hidden"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                  <path d="M3 6h18M3 12h18M3 18h18" />
+                </svg>
+              </button>
+
+              <div className="flex min-w-0 items-baseline gap-2.5">
+                <h1 className="truncate font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight text-[color:var(--color-ink)] sm:text-[1.6rem]">
+                  {viewTitle}
+                </h1>
+                {hasBooks && (
+                  <span className="shrink-0 text-sm font-medium text-[color:var(--color-ink-soft)]">
                     {visibleBooks.length}
                   </span>
-                </h2>
-
-                {showFinder && (
-                  <div className="flex w-full items-center gap-2 sm:w-auto">
-                    <SearchField value={query} onChange={setQuery} />
-                    <SortMenu value={sort} onChange={setSort} />
-                  </div>
                 )}
               </div>
 
-              {showChips && (
-                <FolderChips
-                  folders={orderedFolders}
-                  counts={countByFolder}
-                  active={folderFilter}
-                  onSelect={setFolderFilter}
-                  onDropBook={(bookId, folderId) => moveBook.mutate({ bookId, folderId })}
-                  onNew={openCreate}
-                  onEdit={openEdit}
-                  activeFolder={activeFolder}
-                />
-              )}
+              <div className="ms-auto flex items-center gap-2">
+                {hasBooks && (
+                  <>
+                    <SearchField value={query} onChange={setQuery} />
+                    <SortMenu value={sort} onChange={setSort} />
+                  </>
+                )}
+                {activeFolder && (
+                  <button
+                    type="button"
+                    onClick={() => openEdit(activeFolder)}
+                    className="hidden h-10 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3.5 text-sm font-medium text-[color:var(--color-ink-soft)] transition-colors hover:border-[color:var(--color-border-strong)] hover:text-[color:var(--color-ink)] sm:inline-flex"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z" />
+                    </svg>
+                    {t("library.editFolder")}
+                  </button>
+                )}
+              </div>
             </div>
-          )}
+          </header>
 
-          <div className="mt-6">
+          <main className="relative mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            {/* soft warm wash, kept very subtle */}
+            <div aria-hidden className="pointer-events-none absolute -right-10 -top-6 h-72 w-72 rounded-full bg-[color:var(--color-sage)]/8 blur-3xl" />
+
             {booksLoading ? (
               <GridSkeleton />
             ) : !hasBooks ? (
               <EmptyLibrary />
-            ) : visibleBooks.length === 0 ? (
-              query.trim() ? (
-                <NoResults onClear={() => setQuery("")} />
-              ) : (
-                <EmptyFolderState onShowAll={() => setFolderFilter("all")} />
-              )
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {visibleBooks.map((book, i) => (
-                  <BookCard
-                    key={book.id}
-                    book={book}
-                    index={i}
-                    noteCount={noteCountsByBook[book.id] ?? 0}
-                    folders={orderedFolders.filter((f) => f.id !== book.folder_id)}
-                    onMove={(folderId) => moveBook.mutate({ bookId: book.id, folderId })}
-                  />
-                ))}
-              </div>
+              <>
+                {isAllView && continueItems.length > 0 && (
+                  <ContinueReadingStrip items={continueItems} />
+                )}
+
+                {visibleBooks.length === 0 ? (
+                  query.trim() ? (
+                    <NoResults onClear={() => setQuery("")} />
+                  ) : (
+                    <EmptyFolderState onShowAll={() => setView("all")} />
+                  )
+                ) : (
+                  <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 ${isAllView && continueItems.length > 0 ? "mt-8" : ""}`}>
+                    {visibleBooks.map((book, i) => (
+                      <BookCard
+                        key={book.id}
+                        book={book}
+                        index={i}
+                        noteCount={noteCountsByBook[book.id] ?? 0}
+                        folders={orderedFolders.filter((f) => f.id !== book.folder_id)}
+                        onMove={(folderId) => moveBook.mutate({ bookId: book.id, folderId })}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {isAllView && recentHighlights.length > 0 && (
+                  <RecentNotesStrip highlights={recentHighlights} bookTitleById={bookTitleById} />
+                )}
+              </>
             )}
-          </div>
-        </section>
+          </main>
+        </div>
+      </div>
 
-        {recentHighlights.length > 0 && (
-          <RecentNotesStrip highlights={recentHighlights} bookTitleById={bookTitleById} />
-        )}
-      </section>
-
-      <FolderEditor
-        folder={editingFolder}
-        open={editorOpen}
-        onClose={() => setEditorOpen(false)}
-      />
-    </main>
+      <FolderEditor folder={editingFolder} open={editorOpen} onClose={() => setEditorOpen(false)} />
+    </div>
   );
-}
-
-function pickGreeting(t: (key: string) => string) {
-  const hour = new Date().getHours();
-  if (hour < 5) return t("library.greet.late");
-  if (hour < 12) return t("library.greet.morning");
-  if (hour < 18) return t("library.greet.afternoon");
-  return t("library.greet.evening");
 }
 
 /* ── Find + sort controls ─────────────────────────────────────────────── */
@@ -416,11 +362,10 @@ function pickGreeting(t: (key: string) => string) {
 function SearchField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const { t } = useI18n();
   return (
-    <div className="relative flex-1 sm:w-64 sm:flex-none">
+    <div className="relative w-36 sm:w-60">
       <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 grid place-items-center text-[color:var(--color-ink-soft)]">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
+          <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
         </svg>
       </span>
       <input
@@ -463,13 +408,13 @@ function SortMenu({ value, onChange }: { value: SortKey; onChange: (v: SortKey) 
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="inline-flex h-10 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3.5 text-sm font-medium text-[color:var(--color-ink)] transition-[border-color,background-color] duration-150 hover:border-[color:var(--color-border-strong)] hover:bg-[color:var(--color-paper-2)]"
+        title={t("library.sort.label")}
+        className="inline-flex h-10 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3 text-sm font-medium text-[color:var(--color-ink)] transition-[border-color,background-color] duration-150 hover:border-[color:var(--color-border-strong)] hover:bg-[color:var(--color-paper-2)]"
       >
         <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 6h13M3 12h9M3 18h5" />
         </svg>
-        <span className="hidden sm:inline text-[color:var(--color-ink-soft)]">{t("library.sort.label")}:</span>
-        <span>{current.label}</span>
+        <span className="hidden md:inline">{current.label}</span>
         <svg aria-hidden width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-150 ${open ? "rotate-180" : ""}`}>
           <path d="m6 9 6 6 6-6" />
         </svg>
@@ -507,165 +452,13 @@ function SortMenu({ value, onChange }: { value: SortKey; onChange: (v: SortKey) 
   );
 }
 
-/* ── Folder filter chips (also drop targets) ──────────────────────────── */
-
-function FolderChips({
-  folders,
-  counts,
-  active,
-  onSelect,
-  onDropBook,
-  onNew,
-  onEdit,
-  activeFolder,
-}: {
-  folders: Folder[];
-  counts: Record<string, number>;
-  active: FolderFilter;
-  onSelect: (f: FolderFilter) => void;
-  onDropBook: (bookId: string, folderId: string | null) => void;
-  onNew: () => void;
-  onEdit: (f: Folder) => void;
-  activeFolder: Folder | null;
-}) {
-  const { t } = useI18n();
-  return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <Chip
-        label={t("library.allBooks")}
-        count={counts.all ?? 0}
-        selected={active === "all"}
-        onClick={() => onSelect("all")}
-      />
-      <Chip
-        emoji="📥"
-        label={t("library.unsorted")}
-        count={counts.unsorted ?? 0}
-        selected={active === "unsorted"}
-        onClick={() => onSelect("unsorted")}
-        onDropBook={(bookId) => onDropBook(bookId, null)}
-      />
-      {folders.map((f) => (
-        <Chip
-          key={f.id}
-          emoji={f.emoji}
-          label={f.name}
-          count={counts[f.id] ?? 0}
-          color={folderColorToken(f.color).ring}
-          selected={active === f.id}
-          onClick={() => onSelect(f.id)}
-          onDropBook={(bookId) => onDropBook(bookId, f.id)}
-        />
-      ))}
-      <button
-        type="button"
-        onClick={onNew}
-        aria-label={t("library.newFolder")}
-        title={t("library.newFolder")}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-dashed border-[color:var(--color-border-strong)] text-[color:var(--color-ink-soft)] transition-colors duration-150 hover:border-[color:var(--color-saffron-deep)] hover:text-[color:var(--color-saffron-deep)]"
-      >
-        <PlusIcon />
-      </button>
-
-      {/* Edit affordance for the currently-filtered folder, kept out of the
-          chip itself so the chip stays a single tap target. */}
-      {activeFolder && (
-        <button
-          type="button"
-          onClick={() => onEdit(activeFolder)}
-          className="ml-1 inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-[color:var(--color-ink-soft)] transition-colors duration-150 hover:bg-[color:var(--color-paper-3)] hover:text-[color:var(--color-ink)]"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z" />
-          </svg>
-          {t("library.editFolder")}
-        </button>
-      )}
-    </div>
-  );
-}
-
-function Chip({
-  label,
-  count,
-  selected,
-  onClick,
-  emoji,
-  color,
-  onDropBook,
-}: {
-  label: string;
-  count: number;
-  selected: boolean;
-  onClick: () => void;
-  emoji?: string;
-  color?: string;
-  onDropBook?: (bookId: string) => void;
-}) {
-  const [over, setOver] = useState(false);
-  const droppable = !!onDropBook;
-  // Drop-target highlight: a deterministic ring keyed to the folder colour
-  // (or saffron for Unsorted), driven inline so it never depends on Tailwind's
-  // ring CSS variables.
-  const ringColor = color ?? "var(--color-saffron-deep)";
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      onDragOver={droppable ? (e) => {
-        if (!e.dataTransfer.types.includes("application/x-translify-book")) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
-        if (!over) setOver(true);
-      } : undefined}
-      onDragLeave={droppable ? () => setOver(false) : undefined}
-      onDrop={droppable ? (e) => {
-        e.preventDefault();
-        setOver(false);
-        const bookId = e.dataTransfer.getData("application/x-translify-book");
-        if (bookId) onDropBook!(bookId);
-      } : undefined}
-      aria-pressed={selected}
-      className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[0.84rem] font-medium transition-[transform,background-color,border-color,box-shadow] duration-150 ${
-        selected
-          ? "border-transparent bg-[color:var(--color-ink)] text-[color:var(--color-paper)] shadow-[0_2px_0_rgba(20,16,8,0.4)]"
-          : "border-[color:var(--color-border)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)] hover:-translate-y-[1px] hover:border-[color:var(--color-border-strong)] hover:bg-[color:var(--color-paper-2)]"
-      }`}
-      style={over ? { borderColor: ringColor, boxShadow: `0 0 0 3px color-mix(in oklab, ${ringColor} 35%, transparent)` } : undefined}
-    >
-      {emoji ? (
-        <span aria-hidden className="text-[0.95rem] leading-none">{emoji}</span>
-      ) : color === undefined ? null : (
-        <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: color }} />
-      )}
-      <span className="max-w-[12rem] truncate">{label}</span>
-      <span className={selected ? "text-[color:var(--color-paper)]/70" : "text-[color:var(--color-ink-soft)]"}>
-        {count}
-      </span>
-    </button>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
-
 /* ── States ───────────────────────────────────────────────────────────── */
 
 function GridSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {[0, 1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="card-paper h-44 animate-pulse"
-          style={{ animationDelay: `${i * 80}ms` }}
-        />
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="card-paper h-44 animate-pulse" style={{ animationDelay: `${i * 70}ms` }} />
       ))}
     </div>
   );
@@ -674,7 +467,7 @@ function GridSkeleton() {
 function NoResults({ onClear }: { onClear: () => void }) {
   const { t } = useI18n();
   return (
-    <div className="grid place-items-center gap-3 rounded-2xl border border-dashed border-[color:var(--color-border-strong)] py-14 text-center">
+    <div className="grid place-items-center gap-3 rounded-2xl border border-dashed border-[color:var(--color-border-strong)] py-16 text-center">
       <Lumi state="thinking" size={68} animate />
       <div>
         <p className="font-[family-name:var(--font-display)] text-base font-semibold text-[color:var(--color-ink)]">
@@ -696,7 +489,7 @@ function NoResults({ onClear }: { onClear: () => void }) {
 function EmptyFolderState({ onShowAll }: { onShowAll: () => void }) {
   const { t } = useI18n();
   return (
-    <div className="grid place-items-center gap-3 rounded-2xl border border-dashed border-[color:var(--color-border-strong)] py-14 text-center">
+    <div className="grid place-items-center gap-3 rounded-2xl border border-dashed border-[color:var(--color-border-strong)] py-16 text-center">
       <Lumi state="sleepy" size={64} animate />
       <p className="max-w-xs text-sm text-[color:var(--color-ink-soft)]">{t("library.folderEmpty")}</p>
       <button
@@ -717,50 +510,48 @@ function ContinueReadingStrip({
 }) {
   const { t } = useI18n();
   return (
-    <section className="mt-10">
-      <h2 className="mb-3 font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
+    <section>
+      <h2 className="mb-3 font-[family-name:var(--font-display)] text-base font-semibold tracking-tight text-[color:var(--color-ink)]">
         {t("library.continueReading")}
       </h2>
       <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:thin]">
-        {items.map(({ progress, book }) => {
+        {items.map(({ progress, book }, i) => {
           const pct = pageCountPct(progress.current_page, book.page_count);
+          const tone = SPINE_TONES[i % SPINE_TONES.length];
           return (
             <Link
               key={book.id}
               href={`/library/${book.id}`}
-              className="group relative flex w-72 shrink-0 flex-col gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-4 transition-[transform,border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[2px] hover:border-[color:var(--color-sage)] hover:shadow-[var(--shadow-paper-lg)]"
+              className="group flex w-72 shrink-0 items-center gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-3 transition-[transform,border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[2px] hover:border-[color:var(--color-sage)] hover:shadow-[var(--shadow-paper-lg)]"
             >
-              <div className="flex items-start justify-between gap-2">
+              <div
+                className="relative h-16 w-11 shrink-0 overflow-hidden rounded-md shadow-[0_6px_14px_-6px_rgba(60,40,15,0.4)]"
+                style={{ background: `linear-gradient(160deg, ${tone.from}, ${tone.to})` }}
+              >
+                <div className="absolute inset-y-1 left-0 w-1 rounded-r" style={{ background: tone.spine }} />
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <h3 className="line-clamp-2 font-[family-name:var(--font-display)] text-sm font-semibold leading-snug tracking-tight">
                   {book.title}
                 </h3>
-                <span aria-hidden className="text-base">📖</span>
+                {pct != null ? (
+                  <div className="mt-0.5 flex flex-col gap-1">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
+                      <div className="h-full rounded-full bg-[color:var(--color-sage)]" style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="flex items-center justify-between text-[0.7rem] font-semibold text-[color:var(--color-ink-soft)]">
+                      <span>
+                        {progress.current_page != null && book.page_count != null
+                          ? `p. ${progress.current_page} / ${book.page_count}`
+                          : progress.current_page != null ? `p. ${progress.current_page}` : ""}
+                      </span>
+                      <span>{pct}%</span>
+                    </div>
+                  </div>
+                ) : (
+                  book.author && <p className="line-clamp-1 text-xs text-[color:var(--color-ink-soft)]">{book.author}</p>
+                )}
               </div>
-              {book.author && (
-                <p className="-mt-2 line-clamp-1 text-xs text-[color:var(--color-ink-soft)]">
-                  {book.author}
-                </p>
-              )}
-              {pct != null && (
-                <div className="mt-auto flex flex-col gap-1">
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--color-paper-3)]">
-                    <div
-                      className="h-full rounded-full bg-[color:var(--color-sage)]"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-[0.7rem] font-semibold text-[color:var(--color-ink-soft)]">
-                    <span>
-                      {progress.current_page != null && book.page_count != null
-                        ? `p. ${progress.current_page} / ${book.page_count}`
-                        : progress.current_page != null
-                          ? `p. ${progress.current_page}`
-                          : ""}
-                    </span>
-                    <span>{pct}%</span>
-                  </div>
-                </div>
-              )}
             </Link>
           );
         })}
@@ -783,21 +574,19 @@ function RecentNotesStrip({
 }) {
   const { t } = useI18n();
   return (
-    <section className="mt-12">
+    <section className="mt-12 border-t border-[color:var(--color-border)] pt-8">
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
+        <h2 className="font-[family-name:var(--font-display)] text-base font-semibold tracking-tight text-[color:var(--color-ink)]">
           {t("library.recentNotes")}
         </h2>
-        <span className="text-xs text-[color:var(--color-ink-soft)]">
-          {t("library.latest", { n: highlights.length })}
-        </span>
+        <span className="text-xs text-[color:var(--color-ink-soft)]">{t("library.latest", { n: highlights.length })}</span>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:thin]">
         {highlights.map((h) => (
           <Link
             key={h.id}
             href={`/library/${h.book_id}?highlight=${h.id}`}
-            className="group relative flex w-72 shrink-0 flex-col gap-2 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-3 transition-[transform,border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[2px] hover:border-[color:var(--color-saffron)] hover:shadow-[var(--shadow-paper-lg)]"
+            className="group flex w-72 shrink-0 flex-col gap-2 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-paper)] p-3 transition-[transform,border-color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-[2px] hover:border-[color:var(--color-saffron)] hover:shadow-[var(--shadow-paper-lg)]"
           >
             <div className="flex items-center justify-between gap-2">
               <span className="line-clamp-1 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-[color:var(--color-ink-soft)]">
@@ -807,21 +596,11 @@ function RecentNotesStrip({
                 p. {h.page}
               </span>
             </div>
-            <blockquote
-              className={`line-clamp-3 rounded-md px-2 py-1.5 text-xs italic leading-relaxed text-[color:var(--color-ink)] ${HIGHLIGHT_COLOR_CLASS[h.color]}`}
-            >
+            <blockquote className={`line-clamp-3 rounded-md px-2 py-1.5 text-xs italic leading-relaxed text-[color:var(--color-ink)] ${HIGHLIGHT_COLOR_CLASS[h.color]}`}>
               “{h.text}”
             </blockquote>
-            {h.note && (
-              <p className="line-clamp-2 text-xs leading-relaxed text-[color:var(--color-ink-soft)]">
-                {h.note}
-              </p>
-            )}
-            {h.ai_answer && (
-              <p className="line-clamp-1 text-[0.7rem] font-semibold text-[color:var(--color-coral-deep)]">
-                {t("library.aiExplained")}
-              </p>
-            )}
+            {h.note && <p className="line-clamp-2 text-xs leading-relaxed text-[color:var(--color-ink-soft)]">{h.note}</p>}
+            {h.ai_answer && <p className="line-clamp-1 text-[0.7rem] font-semibold text-[color:var(--color-coral-deep)]">{t("library.aiExplained")}</p>}
           </Link>
         ))}
       </div>
@@ -833,15 +612,8 @@ function EmptyLibrary() {
   const { t } = useI18n();
   return (
     <div className="card-paper-lifted relative mx-auto max-w-3xl overflow-hidden p-8 sm:p-12">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-[color:var(--color-saffron)]/20 blur-2xl"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-12 -bottom-12 h-44 w-44 rounded-full bg-[color:var(--color-sage)]/15 blur-2xl"
-      />
-
+      <div aria-hidden className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-[color:var(--color-saffron)]/20 blur-2xl" />
+      <div aria-hidden className="pointer-events-none absolute -right-12 -bottom-12 h-44 w-44 rounded-full bg-[color:var(--color-sage)]/15 blur-2xl" />
       <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-2">
         <LumiGuide
           state="waving"
@@ -850,7 +622,6 @@ function EmptyLibrary() {
           bubblePosition="right"
         />
       </div>
-
       <div className="relative mt-8 border-t border-dashed border-[color:var(--color-border-strong)] pt-6 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--color-ink-soft)]">
           {t("library.dragHere")}
