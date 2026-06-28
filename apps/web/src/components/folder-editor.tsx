@@ -7,12 +7,12 @@ import {
   deleteFolder as deleteFolderApi,
   updateFolder,
   uploadFolderCover,
+  folderColorToken,
   FOLDER_COLORS,
   FOLDER_EMOJI_SUGGESTIONS,
   type Folder,
   type FolderColor,
 } from "@/lib/folders";
-import { folderColorToken } from "./folder-shelf";
 
 /**
  * Modal/sheet for creating or editing a folder.

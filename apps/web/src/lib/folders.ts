@@ -26,6 +26,29 @@ export const FOLDER_EMOJI_SUGGESTIONS = [
   "☕", "🪐", "🎭", "📜", "🪶", "🕯️",
 ] as const;
 
+export type ColorToken = {
+  gradient: string;
+  ring: string;
+  ink: string;
+  badgeBg: string;
+};
+
+/** Translate a folder colour token into a gradient + ring + ink set. Shared by
+ *  the folder chips, the folder editor, and anywhere a folder shows its colour. */
+export function folderColorToken(color: string): ColorToken {
+  const t: Record<string, ColorToken> = {
+    saffron: { gradient: "linear-gradient(135deg,#F4D6A2,#D09040)", ring: "#D09040", ink: "var(--color-saffron-deep)", badgeBg: "rgba(224,164,80,0.18)" },
+    sage:    { gradient: "linear-gradient(135deg,#C9DCC8,#5A8C5A)", ring: "#5A8C5A", ink: "var(--color-sage-deep)",    badgeBg: "rgba(123,161,124,0.18)" },
+    plum:    { gradient: "linear-gradient(135deg,#D6CFE5,#6B5B95)", ring: "#6B5B95", ink: "var(--color-plum)",          badgeBg: "rgba(107,91,149,0.18)" },
+    coral:   { gradient: "linear-gradient(135deg,#F2BAB1,#C0604A)", ring: "#C0604A", ink: "var(--color-coral-deep)",    badgeBg: "rgba(226,120,108,0.18)" },
+    ink:     { gradient: "linear-gradient(135deg,#5C5C70,#20283A)", ring: "#20283A", ink: "#20283A",                    badgeBg: "rgba(32,40,58,0.18)" },
+    ocean:   { gradient: "linear-gradient(135deg,#A6CBD8,#3F6F86)", ring: "#3F6F86", ink: "#2F546A",                    badgeBg: "rgba(63,111,134,0.18)" },
+    rose:    { gradient: "linear-gradient(135deg,#F8C8D6,#B85775)", ring: "#B85775", ink: "#9A3F5C",                    badgeBg: "rgba(184,87,117,0.18)" },
+    honey:   { gradient: "linear-gradient(135deg,#FBE08C,#C99325)", ring: "#C99325", ink: "#8E6710",                    badgeBg: "rgba(201,147,37,0.20)" },
+  };
+  return t[color] ?? t.saffron;
+}
+
 export interface Folder {
   id: string;
   name: string;
