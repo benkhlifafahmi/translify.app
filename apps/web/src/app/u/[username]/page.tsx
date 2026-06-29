@@ -17,7 +17,7 @@ import { ApiError } from "@/lib/api";
 import { getPublicProfile, listUserPosts, type Post, type PublicProfile } from "@/lib/social";
 import { PostCard } from "@/components/post-card";
 import { FollowButton } from "@/components/follow-button";
-import { MarketingHeader } from "@/components/marketing-header";
+import { AppShell } from "@/components/library/app-shell";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://translify.app";
 
@@ -85,9 +85,8 @@ export default async function ProfilePage({ params }: PageProps) {
   const displayName = profile.display_name ?? `@${profile.username}`;
 
   return (
-    <>
-      <MarketingHeader />
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-6 lg:py-14">
+    <AppShell title={displayName}>
+      <div className="mx-auto max-w-3xl">
         <header className="flex flex-col gap-5 sm:flex-row sm:items-start">
           <Avatar
             src={profile.avatar_url}
@@ -133,8 +132,8 @@ export default async function ProfilePage({ params }: PageProps) {
             </ul>
           )}
         </section>
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }
 

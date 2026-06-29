@@ -11,11 +11,9 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError, getToken } from "@/lib/api";
-import { me, type User } from "@/lib/auth";
 import { getFeed, type Post } from "@/lib/social";
 import { PostCard } from "@/components/post-card";
-import { MarketingHeader } from "@/components/marketing-header";
-import { SocialNavBar } from "@/components/social-nav-bar";
+import { AppShell } from "@/components/library/app-shell";
 import { useI18n } from "@/lib/i18n";
 
 const PAGE_SIZE = 30;
@@ -24,14 +22,13 @@ export default function FeedPage() {
   const { t } = useI18n();
   const router = useRouter();
   const [authed, setAuthed] = useState<boolean | null>(null);
-  const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [exhausted, setExhausted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Bounce un-authed users + fetch the viewer (for the SocialNavBar handle).
+  // Bounce un-authed users to login; the shell handles the nav rail.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!getToken()) {
@@ -40,9 +37,6 @@ export default function FeedPage() {
       return;
     }
     setAuthed(true);
-    me()
-      .then(setUser)
-      .catch(() => { /* silent — bar falls back to "Claim a handle" */ });
   }, [router]);
 
   const fetchPage = useCallback(
@@ -75,12 +69,11 @@ export default function FeedPage() {
 
   if (authed === null || authed === false) {
     return (
-      <>
-        <MarketingHeader />
-        <main className="mx-auto max-w-3xl px-5 py-16 sm:px-6">
+      <AppShell title={t("feed.heading")}>
+        <div className="mx-auto max-w-3xl">
           <p className="text-[color:var(--color-ink-soft)]">{t("feed.loading")}</p>
-        </main>
-      </>
+        </div>
+      </AppShell>
     );
   }
 
@@ -95,26 +88,8 @@ export default function FeedPage() {
   };
 
   return (
-    <>
-      <MarketingHeader />
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-6 lg:py-14">
-        <header className="mb-8 flex items-baseline justify-between gap-3">
-          <div>
-            <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-saffron-deep)]">
-              {t("feed.eyebrow")}
-            </p>
-            <h1 className="mt-2 font-[family-name:var(--font-display)] text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-tight tracking-tight">
-              {t("feed.heading")}
-            </h1>
-          </div>
-          <Link
-            href="/discover"
-            className="hidden text-[0.86rem] font-semibold text-[color:var(--color-ink-soft)] underline decoration-dotted underline-offset-4 hover:text-[color:var(--color-ink)] sm:inline-block"
-          >
-            {t("feed.discoverLink")}
-          </Link>
-        </header>
-
+    <AppShell title={t("feed.heading")}>
+      <div className="mx-auto max-w-3xl">
         {loading && posts.length === 0 ? (
           <SkeletonList count={3} />
         ) : posts.length === 0 ? (
@@ -153,8 +128,8 @@ export default function FeedPage() {
             {t("feed.exhausted")}
           </p>
         )}
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }
 

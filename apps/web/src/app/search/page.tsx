@@ -17,7 +17,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { ApiError } from "@/lib/api";
 import { searchUsers, type UserSearchResult } from "@/lib/social";
-import { MarketingHeader } from "@/components/marketing-header";
+import { AppShell } from "@/components/library/app-shell";
 import { useI18n } from "@/lib/i18n";
 
 const DEBOUNCE_MS = 250;
@@ -32,11 +32,11 @@ export default function SearchPage() {
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n();
   return (
-    <>
-      <MarketingHeader />
-      <main className="mx-auto max-w-2xl px-5 py-10 sm:px-6 lg:py-14">{children}</main>
-    </>
+    <AppShell title={t("search.heading")}>
+      <div className="mx-auto max-w-2xl">{children}</div>
+    </AppShell>
   );
 }
 
@@ -98,15 +98,6 @@ function SearchInner() {
 
   return (
     <Shell>
-      <header className="mb-7">
-        <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-ink-soft)]">
-          {t("search.eyebrow")}
-        </p>
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-tight tracking-tight">
-          {t("search.heading")}
-        </h1>
-      </header>
-
       <div className="relative">
         <span
           aria-hidden

@@ -8,15 +8,18 @@ import { folderColorToken, type Folder } from "@/lib/folders";
 import type { User } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 
-/** "all" = everything, "unsorted" = books with no folder, else a folder id. */
-export type LibraryView = "all" | "unsorted" | (string & {});
+/** Which library collection is in focus: "all", "unsorted", a folder id, or
+ *  null when the active page isn't the library shelf. */
+export type ActiveFolder = "all" | "unsorted" | (string & {}) | null;
+/** Which community surface is in focus, or null. */
+export type ActiveNav = "feed" | "discover" | "search" | "profile" | null;
 
 interface Props {
   user?: User | null;
   folders: Folder[];
   counts: Record<string, number>;
-  activeView: LibraryView;
-  onSelectView: (v: LibraryView) => void;
+  activeFolder: ActiveFolder;
+  activeNav: ActiveNav;
   onNewFolder: () => void;
   onEditFolder: (f: Folder) => void;
   onDropBook: (bookId: string, folderId: string | null) => void;
@@ -26,11 +29,19 @@ interface Props {
   onMobileClose: () => void;
 }
 
+/** Folder collection → its /library URL. */
+function viewHref(view: "all" | "unsorted" | string): string {
+  if (view === "all") return "/library";
+  if (view === "unsorted") return "/library?folder=unsorted";
+  return `/library?folder=${encodeURIComponent(view)}`;
+}
+
 /**
- * The library's primary navigation rail. It absorbs everything that used to be
- * scattered across the page chrome (header links, the social bar, the folder
- * chips) into one calm, scannable column, so the content pane only ever shows
- * one collection at a time.
+ * The app's primary navigation rail, shared across the library shelf and the
+ * social surfaces. It absorbs everything that used to live in per-page chrome
+ * (marketing header, social pill bar, folder chips) into one calm column, so
+ * moving between Library, Feed, Discover, and profiles never drops the user
+ * back to a bare page.
  *
  * Desktop: a sticky paper-toned aside. Mobile: an off-canvas drawer.
  */
@@ -52,7 +63,7 @@ export function LibrarySidebar(props: Props) {
           className={`absolute inset-y-0 start-0 flex w-72 max-w-[82%] flex-col bg-[color:var(--color-paper-2)] shadow-[0_24px_60px_-20px_rgba(20,16,8,0.5)] transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
           aria-hidden={!mobileOpen}
         >
-          <SidebarBody {...props} onAfterSelect={onMobileClose} />
+          <SidebarBody {...props} onNavigate={onMobileClose} />
         </aside>
       </div>
     </>
@@ -63,17 +74,16 @@ function SidebarBody({
   user,
   folders,
   counts,
-  activeView,
-  onSelectView,
+  activeFolder,
+  activeNav,
   onNewFolder,
   onEditFolder,
   onDropBook,
   onLogout,
   upload,
-  onAfterSelect,
-}: Props & { onAfterSelect?: () => void }) {
+  onNavigate,
+}: Props & { onNavigate?: () => void }) {
   const { t } = useI18n();
-  const select = (v: LibraryView) => { onSelectView(v); onAfterSelect?.(); };
 
   const profileHref = user?.username
     ? `/u/${encodeURIComponent(user.username)}`
@@ -92,18 +102,20 @@ function SidebarBody({
       {/* Scrollable nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-2 [scrollbar-width:thin]">
         <NavItem
+          href={viewHref("all")}
           icon={<HomeIcon />}
           label={t("library.allBooks")}
           count={counts.all ?? 0}
-          active={activeView === "all"}
-          onClick={() => select("all")}
+          active={activeFolder === "all"}
+          onNavigate={onNavigate}
         />
         <NavItem
+          href={viewHref("unsorted")}
           icon={<InboxIcon />}
           label={t("library.unsorted")}
           count={counts.unsorted ?? 0}
-          active={activeView === "unsorted"}
-          onClick={() => select("unsorted")}
+          active={activeFolder === "unsorted"}
+          onNavigate={onNavigate}
           onDropBook={(id) => onDropBook(id, null)}
         />
 
@@ -132,12 +144,13 @@ function SidebarBody({
             folders.map((f) => (
               <NavItem
                 key={f.id}
+                href={viewHref(f.id)}
                 emoji={f.emoji}
                 color={folderColorToken(f.color).ring}
                 label={f.name}
                 count={counts[f.id] ?? 0}
-                active={activeView === f.id}
-                onClick={() => select(f.id)}
+                active={activeFolder === f.id}
+                onNavigate={onNavigate}
                 onEdit={() => onEditFolder(f)}
                 onDropBook={(id) => onDropBook(id, f.id)}
               />
@@ -148,10 +161,10 @@ function SidebarBody({
         {!isAnon && (
           <>
             <SectionLabel className="mt-6">{t("library.nav.community")}</SectionLabel>
-            <ExternalItem href={profileHref} icon={<UserIcon />} label={profileLabel} />
-            <ExternalItem href="/feed" icon={<FeedIcon />} label={t("socialnav.feed")} />
-            <ExternalItem href="/discover" icon={<CompassIcon />} label={t("socialnav.discover")} />
-            <ExternalItem href="/search" icon={<SearchIcon />} label={t("socialnav.findPeople")} />
+            <ExternalItem href={profileHref} icon={<UserIcon />} label={profileLabel} active={activeNav === "profile"} onNavigate={onNavigate} />
+            <ExternalItem href="/feed" icon={<FeedIcon />} label={t("socialnav.feed")} active={activeNav === "feed"} onNavigate={onNavigate} />
+            <ExternalItem href="/discover" icon={<CompassIcon />} label={t("socialnav.discover")} active={activeNav === "discover"} onNavigate={onNavigate} />
+            <ExternalItem href="/search" icon={<SearchIcon />} label={t("socialnav.findPeople")} active={activeNav === "search"} onNavigate={onNavigate} />
           </>
         )}
       </nav>
@@ -162,8 +175,8 @@ function SidebarBody({
           <LumiHud />
         </div>
         <div className="flex flex-col">
-          <ExternalItem href="/garden" icon={<span aria-hidden className="text-[0.95rem] leading-none">🌿</span>} label={t("bookCard.garden")} compact />
-          <ExternalItem href="/account" icon={<GearIcon />} label={t("library.account")} compact />
+          <ExternalItem href="/garden" icon={<span aria-hidden className="text-[0.95rem] leading-none">🌿</span>} label={t("bookCard.garden")} compact onNavigate={onNavigate} />
+          <ExternalItem href="/account" icon={<GearIcon />} label={t("library.account")} compact onNavigate={onNavigate} />
           <button
             type="button"
             onClick={onLogout}
@@ -187,25 +200,27 @@ function SectionLabel({ children, className = "" }: { children: React.ReactNode;
 }
 
 function NavItem({
+  href,
   label,
   count,
   active,
-  onClick,
   icon,
   emoji,
   color,
   onEdit,
   onDropBook,
+  onNavigate,
 }: {
+  href: string;
   label: string;
   count: number;
   active: boolean;
-  onClick: () => void;
   icon?: React.ReactNode;
   emoji?: string;
   color?: string;
   onEdit?: () => void;
   onDropBook?: (bookId: string) => void;
+  onNavigate?: () => void;
 }) {
   const { t } = useI18n();
   const [over, setOver] = useState(false);
@@ -213,9 +228,9 @@ function NavItem({
   const ringColor = color ?? "var(--color-saffron-deep)";
   return (
     <div className="group/nav relative">
-      <button
-        type="button"
-        onClick={onClick}
+      <Link
+        href={href}
+        onClick={onNavigate}
         aria-current={active ? "page" : undefined}
         onDragOver={droppable ? (e) => {
           if (!e.dataTransfer.types.includes("application/x-translify-book")) return;
@@ -244,11 +259,11 @@ function NavItem({
         <span className={`shrink-0 text-[0.72rem] tabular-nums text-[color:var(--color-ink-soft)] ${onEdit ? "group-hover/nav:opacity-0" : ""}`}>
           {count}
         </span>
-      </button>
+      </Link>
       {onEdit && (
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onEdit(); }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(); }}
           aria-label={t("library.editFolder")}
           title={t("library.editFolder")}
           className="absolute end-2 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-[color:var(--color-ink-soft)] opacity-0 transition-opacity hover:text-[color:var(--color-ink)] focus-visible:opacity-100 group-hover/nav:opacity-100"
@@ -265,17 +280,27 @@ function ExternalItem({
   icon,
   label,
   compact = false,
+  active = false,
+  onNavigate,
 }: {
   href: string;
   icon: React.ReactNode;
   label: string;
   compact?: boolean;
+  active?: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2.5 rounded-lg px-3 text-start text-[color:var(--color-ink)] transition-colors duration-150 hover:bg-[color:var(--color-paper-3)]/70 ${
-        compact ? "py-2 text-[0.84rem] text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-ink)]" : "py-2 text-[0.88rem]"
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-start transition-colors duration-150 ${compact ? "text-[0.84rem]" : "text-[0.88rem]"} ${
+        active
+          ? "bg-[color:var(--color-saffron)]/22 font-semibold text-[color:var(--color-ink)]"
+          : compact
+            ? "text-[color:var(--color-ink-soft)] hover:bg-[color:var(--color-paper-3)]/70 hover:text-[color:var(--color-ink)]"
+            : "text-[color:var(--color-ink)] hover:bg-[color:var(--color-paper-3)]/70"
       }`}
     >
       <span className="grid w-5 shrink-0 place-items-center">{icon}</span>

@@ -11,7 +11,7 @@ import {
   type PublicProfile,
 } from "@/lib/social";
 import { AvatarPicker } from "@/components/avatar-picker";
-import { MarketingHeader } from "@/components/marketing-header";
+import { AppShell } from "@/components/library/app-shell";
 import { useI18n } from "@/lib/i18n";
 
 /**
@@ -122,12 +122,11 @@ export default function SocialProfileSettings() {
 
   if (loading) {
     return (
-      <>
-        <MarketingHeader compact />
-        <main className="mx-auto max-w-2xl px-6 py-16">
+      <AppShell title={t("profile.titleUnclaimed")}>
+        <div className="mx-auto max-w-2xl">
           <p className="text-[color:var(--color-ink-soft)]">{t("profile.loading")}</p>
-        </main>
-      </>
+        </div>
+      </AppShell>
     );
   }
 
@@ -135,17 +134,10 @@ export default function SocialProfileSettings() {
   const charsLeft = 160 - bio.length;
 
   return (
-    <>
-      <MarketingHeader compact />
-      <main className="mx-auto max-w-2xl px-5 py-12 sm:px-6 lg:py-16">
+    <AppShell title={claimed ? t("profile.titleClaimed") : t("profile.titleUnclaimed")}>
+      <div className="mx-auto max-w-2xl">
         <header className="mb-10">
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-ink-soft)]">
-            {t("profile.eyebrow")}
-          </p>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-tight tracking-tight">
-            {claimed ? t("profile.titleClaimed") : t("profile.titleUnclaimed")}
-          </h1>
-          <p className="mt-3 max-w-[55ch] text-[0.95rem] leading-relaxed text-[color:var(--color-ink-soft)]">
+          <p className="max-w-[55ch] text-[0.95rem] leading-relaxed text-[color:var(--color-ink-soft)]">
             {t("profile.lede")}
           </p>
           {claimed && (
@@ -300,7 +292,7 @@ export default function SocialProfileSettings() {
             </div>
           </form>
         </section>
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }

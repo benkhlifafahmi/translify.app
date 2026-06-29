@@ -16,7 +16,7 @@ import Link from "next/link";
 import { ApiError } from "@/lib/api";
 import { getDiscover, type Post, type PostType } from "@/lib/social";
 import { PostCard } from "@/components/post-card";
-import { MarketingHeader } from "@/components/marketing-header";
+import { AppShell } from "@/components/library/app-shell";
 import { useI18n } from "@/lib/i18n";
 
 const PAGE_SIZE = 30;
@@ -80,21 +80,8 @@ export default function DiscoverPage() {
   };
 
   return (
-    <>
-      <MarketingHeader />
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-6 lg:py-14">
-        <header className="mb-8">
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[color:var(--color-saffron-deep)]">
-            {t("discover.eyebrow")}
-          </p>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-tight tracking-tight">
-            {t("discover.heading")}
-          </h1>
-          <p className="mt-3 max-w-[60ch] text-[0.96rem] leading-relaxed text-[color:var(--color-ink-soft)]">
-            {t("discover.subhead")}
-          </p>
-        </header>
-
+    <AppShell title={t("discover.heading")}>
+      <div className="mx-auto max-w-3xl">
         <FilterPills value={filter} onChange={setFilter} />
 
         <section className="mt-8">
@@ -137,8 +124,8 @@ export default function DiscoverPage() {
             </p>
           )}
         </section>
-      </main>
-    </>
+      </div>
+    </AppShell>
   );
 }
 

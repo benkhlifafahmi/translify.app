@@ -1,17 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookCard } from "@/components/book-card";
-import { UploadButton } from "@/components/upload-button";
-import { YouTubeImportButton } from "@/components/youtube-import-button";
 import { TrialBanner } from "@/components/trial-banner";
 import { ConversionModal } from "@/components/conversion-modal";
-import { FolderEditor } from "@/components/folder-editor";
-import { LibrarySidebar, type LibraryView } from "@/components/library/library-sidebar";
-import { me, logout, type User } from "@/lib/auth";
+import { AppShell } from "@/components/library/app-shell";
+import { me, type User } from "@/lib/auth";
 import { listBooks, moveBookToFolder, type Book } from "@/lib/books";
 import { listFolders, type Folder } from "@/lib/folders";
 import {
@@ -24,7 +21,6 @@ import { getToken } from "@/lib/api";
 import { Lumi } from "@/components/lumi/lumi";
 import { LumiGuide } from "@/components/lumi/lumi-guide";
 import { useLumi } from "@/components/lumi/lumi-context";
-import { MilestoneToast } from "@/components/milestone-toast";
 import { useI18n } from "@/lib/i18n";
 
 type SortKey = "recent" | "added" | "title";
@@ -37,8 +33,19 @@ const SPINE_TONES = [
 ];
 
 export default function LibraryPage() {
+  // useSearchParams (in LibraryInner, for the ?folder= view) must sit under a
+  // Suspense boundary so the route isn't bailed out of build-time prerender.
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[color:var(--color-paper)]" />}>
+      <LibraryInner />
+    </Suspense>
+  );
+}
+
+function LibraryInner() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -48,12 +55,6 @@ export default function LibraryPage() {
   }, [mounted, router]);
 
   const enabled = mounted && !!getToken();
-
-  const { data: user, isLoading: userLoading, isError: userError } = useQuery<User>({
-    queryKey: ["me"],
-    queryFn: me,
-    enabled,
-  });
 
   const { data: books, isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["books"],
@@ -67,23 +68,9 @@ export default function LibraryPage() {
     },
   });
 
-  const { data: folders } = useQuery<Folder[]>({
-    queryKey: ["folders"],
-    queryFn: listFolders,
-    enabled,
-  });
-
-  const { data: highlights } = useQuery<Highlight[]>({
-    queryKey: ["highlights", "all"],
-    queryFn: listAllHighlights,
-    enabled,
-  });
-
-  const { data: progress } = useQuery<BookProgressListItem[]>({
-    queryKey: ["book-progress", "all"],
-    queryFn: listBookProgress,
-    enabled,
-  });
+  const { data: folders } = useQuery<Folder[]>({ queryKey: ["folders"], queryFn: listFolders, enabled });
+  const { data: highlights } = useQuery<Highlight[]>({ queryKey: ["highlights", "all"], queryFn: listAllHighlights, enabled });
+  const { data: progress } = useQuery<BookProgressListItem[]>({ queryKey: ["book-progress", "all"], queryFn: listBookProgress, enabled });
 
   const noteCountsByBook = useMemo(() => (
     (highlights ?? []).reduce<Record<string, number>>((acc, h) => {
@@ -116,32 +103,18 @@ export default function LibraryPage() {
       .slice(0, 6);
   }, [progress, books, bookById]);
 
-  // ── View + find state ───────────────────────────────────────────────────
-  const [view, setView] = useState<LibraryView>("all");
+  // ── Find state (folder view comes from the URL via the sidebar) ─────────
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("recent");
-  const [mobileNav, setMobileNav] = useState(false);
+
+  const folderParam = searchParams.get("folder");
+  const view: "all" | "unsorted" | string =
+    folderParam === "unsorted" ? "unsorted" : folderParam || "all";
 
   const orderedFolders = useMemo(
     () => (folders ?? []).slice().sort((a, b) => a.position - b.position || a.name.localeCompare(b.name)),
     [folders],
   );
-
-  const countByFolder = useMemo(() => {
-    const m: Record<string, number> = { all: 0, unsorted: 0 };
-    for (const b of books ?? []) {
-      m.all += 1;
-      const k = b.folder_id ?? "unsorted";
-      m[k] = (m[k] ?? 0) + 1;
-    }
-    return m;
-  }, [books]);
-
-  // A view pointing at a deleted folder falls back to "all".
-  useEffect(() => {
-    if (view === "all" || view === "unsorted") return;
-    if (folders && !folders.some((f) => f.id === view)) setView("all");
-  }, [folders, view]);
 
   const activeFolder = view !== "all" && view !== "unsorted"
     ? orderedFolders.find((f) => f.id === view) ?? null
@@ -168,6 +141,8 @@ export default function LibraryPage() {
     });
   }, [books, view, query, sort, lastReadByBook]);
 
+  // Per-card move (the overflow menu). Drag-to-file onto sidebar folders is
+  // handled inside AppShell.
   const moveBook = useMutation({
     mutationFn: ({ bookId, folderId }: { bookId: string; folderId: string | null }) =>
       moveBookToFolder(bookId, folderId),
@@ -179,24 +154,17 @@ export default function LibraryPage() {
       );
       return { prev };
     },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(["books"], ctx.prev);
-    },
+    onError: (_e, _v, ctx) => { if (ctx?.prev) queryClient.setQueryData(["books"], ctx.prev); },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["books"] });
       queryClient.invalidateQueries({ queryKey: ["folders"] });
     },
   });
 
-  useEffect(() => {
-    if (userError) router.replace("/login");
-  }, [userError, router]);
-
+  // Lumi achievement triggers.
+  const { data: user } = useQuery<User>({ queryKey: ["me"], queryFn: me, enabled });
   const { award } = useLumi();
-  useEffect(() => {
-    if (!user) return;
-    award("welcome");
-  }, [user, award]);
+  useEffect(() => { if (user) award("welcome"); }, [user, award]);
   useEffect(() => {
     if (!books) return;
     if (books.length >= 1) award("first-upload");
@@ -204,156 +172,75 @@ export default function LibraryPage() {
     if (books.some((b) => b.status === "ready")) award("first-translation");
   }, [books, award]);
 
-  const onLogout = async () => {
-    await logout();
-    router.replace("/login");
-  };
-
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
-  const openCreate = () => { setEditingFolder(null); setEditorOpen(true); };
-  const openEdit = (f: Folder) => { setEditingFolder(f); setEditorOpen(true); };
-
-  if (!mounted || userLoading) {
-    return (
-      <main className="grid min-h-screen place-items-center px-6">
-        <p className="text-[color:var(--color-ink-soft)]">{t("library.loading")}</p>
-      </main>
-    );
-  }
-
   const hasBooks = !!books && books.length > 0;
+  const isAllView = view === "all";
   const viewTitle = view === "all"
     ? t("library.allBooks")
     : view === "unsorted"
       ? t("library.unsorted")
       : activeFolder?.name ?? t("library.allBooks");
-  const isAllView = view === "all";
+
+  const titleNode = (
+    <>
+      {viewTitle}
+      {hasBooks && (
+        <span className="ms-2.5 align-middle text-sm font-medium text-[color:var(--color-ink-soft)]">
+          {visibleBooks.length}
+        </span>
+      )}
+    </>
+  );
 
   return (
-    <div className="relative min-h-screen bg-[color:var(--color-paper)]">
-      <MilestoneToast />
+    <AppShell
+      title={titleNode}
+      toolbar={hasBooks ? (
+        <>
+          <SearchField value={query} onChange={setQuery} />
+          <SortMenu value={sort} onChange={setSort} />
+        </>
+      ) : null}
+    >
+      <TrialBanner />
       <ConversionModal />
 
-      <div className="flex">
-        <LibrarySidebar
-          user={user}
-          folders={orderedFolders}
-          counts={countByFolder}
-          activeView={view}
-          onSelectView={setView}
-          onNewFolder={openCreate}
-          onEditFolder={openEdit}
-          onDropBook={(bookId, folderId) => moveBook.mutate({ bookId, folderId })}
-          onLogout={onLogout}
-          upload={
-            <div className="flex flex-col gap-2">
-              <UploadButton />
-              <YouTubeImportButton />
-            </div>
-          }
-          mobileOpen={mobileNav}
-          onMobileClose={() => setMobileNav(false)}
-        />
+      <div aria-hidden className="pointer-events-none absolute -right-10 -top-6 h-72 w-72 rounded-full bg-[color:var(--color-sage)]/8 blur-3xl" />
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <TrialBanner />
+      {!mounted || booksLoading ? (
+        <GridSkeleton />
+      ) : !hasBooks ? (
+        <EmptyLibrary />
+      ) : (
+        <>
+          {isAllView && continueItems.length > 0 && <ContinueReadingStrip items={continueItems} />}
 
-          {/* Sticky content header */}
-          <header className="sticky top-0 z-20 border-b border-[color:var(--color-border)] bg-[color:var(--color-paper)]/85 backdrop-blur-md">
-            <div className="flex items-center gap-3 px-4 py-3.5 sm:px-6 lg:px-8">
-              <button
-                type="button"
-                onClick={() => setMobileNav(true)}
-                aria-label={t("library.openNav")}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[color:var(--color-border)] text-[color:var(--color-ink)] transition-colors hover:bg-[color:var(--color-paper-2)] lg:hidden"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                  <path d="M3 6h18M3 12h18M3 18h18" />
-                </svg>
-              </button>
-
-              <div className="flex min-w-0 items-baseline gap-2.5">
-                <h1 className="truncate font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight text-[color:var(--color-ink)] sm:text-[1.6rem]">
-                  {viewTitle}
-                </h1>
-                {hasBooks && (
-                  <span className="shrink-0 text-sm font-medium text-[color:var(--color-ink-soft)]">
-                    {visibleBooks.length}
-                  </span>
-                )}
-              </div>
-
-              <div className="ms-auto flex items-center gap-2">
-                {hasBooks && (
-                  <>
-                    <SearchField value={query} onChange={setQuery} />
-                    <SortMenu value={sort} onChange={setSort} />
-                  </>
-                )}
-                {activeFolder && (
-                  <button
-                    type="button"
-                    onClick={() => openEdit(activeFolder)}
-                    className="hidden h-10 items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-paper)] px-3.5 text-sm font-medium text-[color:var(--color-ink-soft)] transition-colors hover:border-[color:var(--color-border-strong)] hover:text-[color:var(--color-ink)] sm:inline-flex"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z" />
-                    </svg>
-                    {t("library.editFolder")}
-                  </button>
-                )}
-              </div>
-            </div>
-          </header>
-
-          <main className="relative mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-            {/* soft warm wash, kept very subtle */}
-            <div aria-hidden className="pointer-events-none absolute -right-10 -top-6 h-72 w-72 rounded-full bg-[color:var(--color-sage)]/8 blur-3xl" />
-
-            {booksLoading ? (
-              <GridSkeleton />
-            ) : !hasBooks ? (
-              <EmptyLibrary />
+          {visibleBooks.length === 0 ? (
+            query.trim() ? (
+              <NoResults onClear={() => setQuery("")} />
             ) : (
-              <>
-                {isAllView && continueItems.length > 0 && (
-                  <ContinueReadingStrip items={continueItems} />
-                )}
+              <EmptyFolderState onShowAll={() => router.push("/library")} />
+            )
+          ) : (
+            <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 ${isAllView && continueItems.length > 0 ? "mt-8" : ""}`}>
+              {visibleBooks.map((book, i) => (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  index={i}
+                  noteCount={noteCountsByBook[book.id] ?? 0}
+                  folders={orderedFolders.filter((f) => f.id !== book.folder_id)}
+                  onMove={(folderId) => moveBook.mutate({ bookId: book.id, folderId })}
+                />
+              ))}
+            </div>
+          )}
 
-                {visibleBooks.length === 0 ? (
-                  query.trim() ? (
-                    <NoResults onClear={() => setQuery("")} />
-                  ) : (
-                    <EmptyFolderState onShowAll={() => setView("all")} />
-                  )
-                ) : (
-                  <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 ${isAllView && continueItems.length > 0 ? "mt-8" : ""}`}>
-                    {visibleBooks.map((book, i) => (
-                      <BookCard
-                        key={book.id}
-                        book={book}
-                        index={i}
-                        noteCount={noteCountsByBook[book.id] ?? 0}
-                        folders={orderedFolders.filter((f) => f.id !== book.folder_id)}
-                        onMove={(folderId) => moveBook.mutate({ bookId: book.id, folderId })}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {isAllView && recentHighlights.length > 0 && (
-                  <RecentNotesStrip highlights={recentHighlights} bookTitleById={bookTitleById} />
-                )}
-              </>
-            )}
-          </main>
-        </div>
-      </div>
-
-      <FolderEditor folder={editingFolder} open={editorOpen} onClose={() => setEditorOpen(false)} />
-    </div>
+          {isAllView && recentHighlights.length > 0 && (
+            <RecentNotesStrip highlights={recentHighlights} bookTitleById={bookTitleById} />
+          )}
+        </>
+      )}
+    </AppShell>
   );
 }
 
@@ -452,7 +339,7 @@ function SortMenu({ value, onChange }: { value: SortKey; onChange: (v: SortKey) 
   );
 }
 
-/* ── States ───────────────────────────────────────────────────────────── */
+/* ── States + rails ───────────────────────────────────────────────────── */
 
 function GridSkeleton() {
   return (
